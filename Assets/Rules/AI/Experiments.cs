@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using RestartedTavern.Rules.Cards;
 
 namespace RestartedTavern.Rules.AI
 {
     /// <summary>
-    /// The roadmap step 3 balance questions, as bot-vs-bot experiments:
-    /// the Gold cap, the going-second compensation and the impact of permanent damage.
+    /// The roadmap step 3 balance questions as bot-vs-bot experiments: game length (and how
+    /// to even it out), whether damage matters, going second, and the Gold cap.
     /// </summary>
     public static class Experiments
     {
@@ -20,83 +21,101 @@ namespace RestartedTavern.Rules.AI
             public List<MatchResult> Results = new List<MatchResult>();
         }
 
-        private const string Goobers = "Goober Mob";
-        private const string Jungle = "Jungle Stampede";
-        private const string Zoo = "Zoo Patrol";
+        private sealed class Deck
+        {
+            public string Name;
+            public List<string> Cards;
+        }
 
         public static List<Section> Build(int games)
         {
-            var g = PrototypeCards.GooberMobDeck();
-            var j = PrototypeCards.JungleStampedeDeck();
-            var z = PrototypeCards.ZooPatrolDeck();
+            var decks = new[]
+            {
+                new Deck { Name = "Goober Mob", Cards = PrototypeCards.GooberMobDeck() },
+                new Deck { Name = "Jungle Stampede", Cards = PrototypeCards.JungleStampedeDeck() },
+                new Deck { Name = "Zoo Patrol", Cards = PrototypeCards.ZooPatrolDeck() },
+                new Deck { Name = "Vesper's Ledger", Cards = PrototypeCards.VespersLedgerDeck() },
+                new Deck { Name = "Sparkwrench Scrappers", Cards = PrototypeCards.SparkwrenchScrappersDeck() },
+            };
             var sections = new List<Section>();
 
-            MatchConfig M(string name, string an, List<string> a, string bn, List<string> b, Action<FormatConfig> tweak = null)
+            MatchConfig M(string name, Deck a, Deck b, Action<FormatConfig> tweak = null, BotStyle styleA = null, BotStyle styleB = null)
             {
                 var f = FormatConfig.Standard();
                 tweak?.Invoke(f);
-                return new MatchConfig { Name = name, Format = f, DeckAName = an, DeckA = a, DeckBName = bn, DeckB = b, Games = games };
+                return new MatchConfig
+                {
+                    Name = name, Format = f, Games = games,
+                    DeckAName = a.Name, DeckA = a.Cards, StyleA = styleA ?? BotStyle.Greedy(),
+                    DeckBName = b.Name, DeckB = b.Cards, StyleB = styleB ?? BotStyle.Greedy(),
+                };
             }
 
-            var baseline = new Section
+            var roundRobin = new Section
             {
-                Title = "Baseline",
-                Question = "How do the two prototype decks do against each other with the current rules?",
+                Title = "Round robin (current rules, Greedy bots)",
+                Question = "How long are games, and does damage on creatures decide anything? Every deck against every deck.",
             };
-            baseline.Configs.Add(M("Goober Mob vs Jungle Stampede", Goobers, g, Jungle, j));
-            baseline.Configs.Add(M("Goober Mob mirror", Goobers, g, Goobers, g));
-            baseline.Configs.Add(M("Jungle Stampede mirror", Jungle, j, Jungle, j));
-            baseline.Configs.Add(M("Zoo Patrol vs Goober Mob", Zoo, z, Goobers, g));
-            baseline.Configs.Add(M("Zoo Patrol vs Jungle Stampede", Zoo, z, Jungle, j));
-            baseline.Configs.Add(M("Zoo Patrol mirror", Zoo, z, Zoo, z));
-            sections.Add(baseline);
+            for (int i = 0; i < decks.Length; i++)
+                for (int j = i; j < decks.Length; j++)
+                    roundRobin.Configs.Add(i == j
+                        ? M(decks[i].Name + " mirror", decks[i], decks[j])
+                        : M(decks[i].Name + " vs " + decks[j].Name, decks[i], decks[j]));
+            sections.Add(roundRobin);
+
+            var styles = new Section
+            {
+                Title = "Bot play styles",
+                Question = "Do the results hold with a defensive player? Control blocks freely, keeps blockers home and saves Gold. "
+                           + "In \"Greedy vs Control\", A win% is the Greedy side.",
+            };
+            foreach (var d in decks)
+                styles.Configs.Add(M(d.Name + " mirror, Control vs Control", d, d, null, BotStyle.Control(), BotStyle.Control()));
+            foreach (var d in decks)
+                styles.Configs.Add(M(d.Name + " mirror, Greedy vs Control", d, d, null, BotStyle.Greedy(), BotStyle.Control()));
+            sections.Add(styles);
+
+            var life = new Section
+            {
+                Title = "Game length lever: starting life",
+                Question = "Can starting life even out game length between fast and slow decks? Compare with the 30-life mirrors in the round robin.",
+            };
+            foreach (int l in new[] { 25, 35 })
+                foreach (var d in decks)
+                    life.Configs.Add(M(d.Name + " mirror, " + l + " life", d, d, f => f.StartingLife = l));
+            sections.Add(life);
+
+            var damage = new Section
+            {
+                Title = "Permanent damage (GAME_DESIGN §7.3)",
+                Question = "What changes when damage wears off at end of turn like in MTG? Compare with the round-robin mirrors (permanent damage).",
+            };
+            foreach (var d in decks)
+                damage.Configs.Add(M(d.Name + " mirror, damage wears off (MTG)", d, d, f => f.DamageWearsOff = true));
+            sections.Add(damage);
 
             var second = new Section
             {
-                Title = "Going-second compensation (GAME_DESIGN §3)",
-                Question = "How much should going second be compensated? Look at the first-player win rate in mirrors (50% is fair). "
-                           + "Current rule (since 2026-10-09): the first player skips their first draw, and the second player has +1 mana on their first turn.",
+                Title = "Going second (GAME_DESIGN §3)",
+                Question = "First-player win rate in mirrors (50% is fair). Current rule: everyone draws on turn 1; the second player has +1 mana on their first turn.",
             };
-            var options = new (string label, Action<FormatConfig> tweak)[]
+            foreach (var d in new[] { decks[0], decks[1], decks[3] })
             {
-                ("no compensation besides the draw skip", f => f.SecondPlayerFirstTurnBonusMana = 0),
-                ("1 starting Gold (old rule)", f => { f.SecondPlayerFirstTurnBonusMana = 0; f.SecondPlayerStartingGold = 1; }),
-                ("+1 mana on first turn (current rule)", f => { }),
-                ("+1 mana on first turn and 1 Gold", f => f.SecondPlayerStartingGold = 1),
-                ("+2 mana on first turn", f => f.SecondPlayerFirstTurnBonusMana = 2),
-                ("+1 card and +1 mana on first turn", f => f.SecondPlayerExtraCards = 1),
-            };
-            foreach (var (label, tweak) in options)
-            {
-                second.Configs.Add(M("Goober mirror, 2nd player: " + label, Goobers, g, Goobers, g, tweak));
-                second.Configs.Add(M("Jungle mirror, 2nd player: " + label, Jungle, j, Jungle, j, tweak));
+                second.Configs.Add(M(d.Name + " mirror, current rule", d, d));
+                second.Configs.Add(M(d.Name + " mirror, old rule (first player skips draw)", d, d, f => f.FirstPlayerSkipsDraw = true));
+                second.Configs.Add(M(d.Name + " mirror, current rule + 1 starting Gold", d, d, f => f.SecondPlayerStartingGold = 1));
             }
             sections.Add(second);
 
             var cap = new Section
             {
                 Title = "Gold cap (GAME_DESIGN §5.2)",
-                Question = "What does the cap of 5 do? Compare wasted mana, Gold spent and instant-speed play.",
+                Question = "Does the cap matter in the decks with the most Gold use?",
             };
-            foreach (int c in new[] { 3, 5, 7, 10 })
-                cap.Configs.Add(M("Goober Mob vs Jungle Stampede, Gold cap " + c, Goobers, g, Jungle, j, f => f.GoldCap = c));
+            foreach (var d in new[] { decks[3], decks[4] })
+                foreach (int c in new[] { 3, 5, 8 })
+                    cap.Configs.Add(M(d.Name + " mirror, Gold cap " + c, d, d, f => f.GoldCap = c));
             sections.Add(cap);
-
-            var damage = new Section
-            {
-                Title = "Permanent damage (GAME_DESIGN §7.3)",
-                Question = "What does permanent damage change compared to MTG-style damage that wears off at end of turn?",
-            };
-            foreach (bool wearsOff in new[] { false, true })
-            {
-                string label = wearsOff ? "damage wears off (MTG)" : "permanent damage";
-                damage.Configs.Add(M("Goober Mob vs Jungle Stampede, " + label, Goobers, g, Jungle, j, f => f.DamageWearsOff = wearsOff));
-                damage.Configs.Add(M("Goober mirror, " + label, Goobers, g, Goobers, g, f => f.DamageWearsOff = wearsOff));
-                damage.Configs.Add(M("Jungle mirror, " + label, Jungle, j, Jungle, j, f => f.DamageWearsOff = wearsOff));
-                damage.Configs.Add(M("Zoo Patrol vs Jungle Stampede, " + label, Zoo, z, Jungle, j, f => f.DamageWearsOff = wearsOff));
-                damage.Configs.Add(M("Zoo Patrol mirror, " + label, Zoo, z, Zoo, z, f => f.DamageWearsOff = wearsOff));
-            }
-            sections.Add(damage);
             return sections;
         }
 
@@ -111,15 +130,18 @@ namespace RestartedTavern.Rules.AI
             var sb = new StringBuilder();
             sb.AppendLine("# Simulation Report");
             sb.AppendLine();
-            sb.AppendLine("Bot-vs-bot results for roadmap step 3 (DEVELOPMENT §5). Both players are `GreedyBot`: a simple, deterministic, rule-based player. "
-                          + "It plays like a careful beginner, so **treat these numbers as hints about the rules, not as card balance**. "
-                          + "Human playtests on the debug table decide.");
+            sb.AppendLine("Bot-vs-bot results for roadmap step 3 (DEVELOPMENT §5). Players are `GreedyBot`s in two styles: **Greedy** (develops and races) and **Control** (blocks, holds back, saves Gold). "
+                          + "They play like careful beginners, so **treat these numbers as hints about the rules, not as card balance**. Human playtests on the debug table decide.");
             sb.AppendLine();
             sb.AppendLine($"{games} games per row · decks swap seats every game, and who goes first is random · games over 120 turns count as draws · run time {duration.TotalSeconds:0}s.");
             sb.AppendLine();
-            sb.AppendLine("Columns: **A win%** = the first-named deck's win rate · **1st win%** = how often the player who went first won · **Turns** = average game length (both players' turns) · "
-                          + "**Wasted** = the share of unspent mana lost to the Gold cap · **Gold spent** and **Opp-turn casts** are per game · "
-                          + "**Wounded** = the share of creatures carrying damage at the start of a turn · **Deaths** = creature deaths per game · **Heal** = healing per game.");
+            sb.AppendLine("Columns: **A win%** = the first-named side's win rate · **1st win%** = how often the player who went first won · "
+                          + "**Turns** = average game length (both players' turns) ± standard deviation · **Long** / **Short** = share of games over "
+                          + MatchResult.LongGameTurns + " / under " + MatchResult.ShortGameTurns + " turns · "
+                          + "**Dmg→death** = share of all damage dealt to creatures that was still on a creature when it died (includes killing blows) · "
+                          + "**Chip→death** = share of *chip damage* (damage a creature carried into a later turn) that was still on it when it died; the rest was healed away or sat on survivors, so it **never decided anything** · "
+                          + "**Wounded** = share of creatures carrying damage at the start of a turn · **Deaths** / **Heal** / **Gold spent** are per game · "
+                          + "**Wasted** = share of unspent mana lost to the Gold cap.");
             foreach (var s in sections)
             {
                 sb.AppendLine();
@@ -127,21 +149,24 @@ namespace RestartedTavern.Rules.AI
                 sb.AppendLine();
                 sb.AppendLine("*" + s.Question + "*");
                 sb.AppendLine();
-                sb.AppendLine("| Matchup | A win% | 1st win% | Draws | Turns | Wasted | Gold spent | Opp-turn casts | Wounded | Deaths | Heal |");
-                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|");
+                sb.AppendLine("| Matchup | A win% | 1st win% | Turns | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Wasted | Draws |");
+                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
                 foreach (var r in s.Results)
                 {
                     sb.Append("| ").Append(r.Config.Name)
                       .Append(" | ").Append(Pct(r.WinRateA))
                       .Append(" | ").Append(Pct(r.FirstPlayerWinRate))
-                      .Append(" | ").Append(r.Draws)
-                      .Append(" | ").Append(F(r.AvgTurns))
-                      .Append(" | ").Append(Pct(r.GoldWastedShare))
-                      .Append(" | ").Append(F(r.PerGame(r.GoldSpent)))
-                      .Append(" | ").Append(F(r.PerGame(r.InstantsOnOpponentsTurn)))
+                      .Append(" | ").Append(F(r.AvgTurns)).Append(" ± ").Append(F(r.TurnsStdDev))
+                      .Append(" | ").Append(Pct(r.LongGameShare))
+                      .Append(" | ").Append(Pct(r.ShortGameShare))
+                      .Append(" | ").Append(Pct(r.DamageThatKilledShare))
+                      .Append(" | ").Append(Pct(r.ChipThatKilledShare))
                       .Append(" | ").Append(Pct(r.WoundedShare))
                       .Append(" | ").Append(F(r.PerGame(r.CreatureDeaths)))
                       .Append(" | ").Append(F(r.PerGame(r.HealingDone)))
+                      .Append(" | ").Append(F(r.PerGame(r.GoldSpent)))
+                      .Append(" | ").Append(Pct(r.GoldWastedShare))
+                      .Append(" | ").Append(r.Draws)
                       .AppendLine(" |");
                 }
             }

@@ -54,6 +54,7 @@ namespace RestartedTavern.Rules
         public void AddCounters(ObjectId creature, int count) => _runner.AddCounters(creature, count);
 
         public void Fight(CardInstance a, CardInstance b) => _runner.Fight(a, b);
+        public void Destroy(CardInstance permanent) => _runner.MoveCard(permanent, Zone.Graveyard);
 
         public void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants) =>
             _runner.ModifyUntilEndOfTurn(creature, power, health, grants);

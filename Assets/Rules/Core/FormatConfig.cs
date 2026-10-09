@@ -16,8 +16,11 @@ namespace RestartedTavern.Rules
         public int ManaCap { get; set; } = 10;
         public int GoldCap { get; set; } = 5;
 
-        /// <summary>1v1: the first player skips their turn-1 draw (§3). Multiplayer: everyone draws (§13).</summary>
-        public bool FirstPlayerSkipsDraw { get; set; } = true;
+        /// <summary>
+        /// Experiment switch: the first player skips their turn-1 draw (the MTG rule). Off since
+        /// 2026-10-09: everyone draws (§3, §13).
+        /// </summary>
+        public bool FirstPlayerSkipsDraw { get; set; }
 
         /// <summary>Gold the second player starts with. 0 since 2026-10-09 (replaced by the first-turn mana bonus); kept for experiments.</summary>
         public int SecondPlayerStartingGold { get; set; }
@@ -48,7 +51,6 @@ namespace RestartedTavern.Rules
             MinPlayers = 3,
             MaxPlayers = 4,
             StartingLife = 40,
-            FirstPlayerSkipsDraw = false,
             SecondPlayerFirstTurnBonusMana = 0,
         };
 

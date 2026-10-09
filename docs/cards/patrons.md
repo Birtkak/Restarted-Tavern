@@ -15,7 +15,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ revised in the final pass
 | 1 | Wizards + Goobers | **Grizzle Coinflick**, goblin pyromancer-for-hire | Whenever you cast a spell that costs **5 or more**, create a 1/1 Goober. | (2) Deal 1 damage to any target. | ✅ |
 | 2 | Wizards + Sensationalists | **Madame Vesper**, the debt collector | Whenever a creature an opponent controls dies, gain 1 Gold. | (3) Draw a card and lose 2 life. | ✅ |
 | 3 | Wizards + Wild | **Old Mossbank**, the druid banker | Your **spells and creatures** that cost 6 or more cost 1 less. | (2) Give a creature +2/+2 until end of turn. | ✅ |
-| 4 | Wizards + Glitterworld | **Auditor Prime**, a construct accountant | Your Overcharge **and Equip** costs are 1 lower (minimum 1). | (1) Look at the top card of your deck. You may put it on the bottom. | ✅ |
+| 4 | Wizards + Glitterworld | **Auditor Prime**, a construct accountant | Your Invest **and Equip** costs are 1 lower (minimum 1). | (1) Look at the top card of your deck. You may put it on the bottom. | ✅ |
 | 5 | Goobers + Sensationalists | **Skabba**, goblin cult chieftain | Whenever one of your creatures dies, deal 1 damage to each opponent. **This triggers at most 3 times each turn.** | (1) Sacrifice a creature: Draw a card. | ✅ |
 | 6 | Goobers + Wild | **Mukk the Grub King**, a goblin riding a giant beast | Your creatures with Trample get +1/+0. | (2) A creature you control gains Trample until end of turn. | ✅ |
 | 7 | Goobers + Glitterworld | **Sparkwrench**, goblin mechanic | Your Equipment spells cost 1 less. | (2) Attach an Equipment you control to another creature you control. | ✅ |
@@ -28,5 +28,5 @@ Status tags: ✅ approved · 🟡 draft · ✏️ revised in the final pass
 ## Final-pass changes
 1. **Grizzle**: 6+ → **5+**. After Call the Horde was cut, Goobers had no spells costing 6+. Now Overrun the Gates, Scrapheap Inferno and Golden Handshake count too, and it lines up with Crooked Accountant's "5 or more".
 2. **Old Mossbank**: it discounted big *creatures* only, which did nothing for the Wizards half of the pair. Now it also discounts big *spells* (Grand Illusion, The Grand Ledger, Everything Has a Price).
-3. **Auditor Prime**: Glitterworld has no Overcharge cards, so the passive only helped Wizards. It now also lowers **Equip** costs.
+3. **Auditor Prime**: Glitterworld has no Invest cards, so the passive only helped Wizards. It now also lowers **Equip** costs.
 4. **Skabba**: Goober tokens + Snik's copies + Goober Demolisher could deal 10+ damage from a single board wipe. Capped at 3 triggers per turn.

@@ -10,6 +10,7 @@ namespace RestartedTavern.Rules.Cards
     public static class PrototypeCards
     {
         public const string GooberToken = "goober_token";
+        public const string SpiritToken = "spirit_token";
 
         public static CardDatabase CreateDatabase() => new CardDatabase(All());
 
@@ -31,6 +32,18 @@ namespace RestartedTavern.Rules.Cards
             "hover_tank", "orbital_strike_network",
             "canopy_critter", "mossback_tortoise", "primal_clash", "growth_spurt", "apex_instinct",
             "sabretooth_prowler", "primeval_behemoth");
+
+        /// <summary>Legal Standard deck: Wizards + Sensationalists (the Madame Vesper pair). Lifelink, drains, removal, flyers: a slower deck.</summary>
+        public static List<string> VespersLedgerDeck() => FourOfEach(
+            "gilded_rat", "candle_cultist", "hex_of_frailty", "apprentice_forger", "candlelit_acolyte",
+            "sticky_fingers", "fatal_rumor", "hungry_shade", "ritual_slaughter", "hired_enforcer",
+            "wraith_swarm", "the_grand_ledger", "barkeeps_tonic", "tavern_bouncer", "wandering_adventurer");
+
+        /// <summary>Legal Standard deck: Goobers + Glitterworld (the Sparkwrench pair). Burn and pings: damage everywhere.</summary>
+        public static List<string> SparkwrenchScrappersDeck() => FourOfEach(
+            "goober_rascal", "spark_snot", "fuse_goober", "brawling_runt", "goober_warchief", "hog_rider",
+            "barrel_bomber", "mob_rush", "static_shock", "spark_drone", "chain_zap", "sky_patrol_drone",
+            "riot_suppressor", "grid_overload", "hover_tank");
 
         private static List<string> FourOfEach(params string[] ids)
         {
@@ -114,11 +127,11 @@ namespace RestartedTavern.Rules.Cards
             yield return new CardDefinition
             {
                 Id = "jungle_remedy", Name = "Jungle Remedy", Type = CardType.Instant, Cost = 1, Faction = "evergrowing_wild",
-                Rarity = Rarity.Common, Text = "Heal 4 from a creature. Overcharge 1: Put a +1/+1 counter on it.",
+                Rarity = Rarity.Common, Text = "Heal 4 from a creature. Invest 1: Put a +1/+1 counter on it.",
                 SpellTarget = TargetSpec.Creature,
                 SpellEffects = { new HealEffect { Amount = 4 } },
-                OverchargeCost = 1,
-                OverchargeEffects = { new AddCountersEffect { Count = 1 } },
+                InvestCost = 1,
+                InvestEffects = { new AddCountersEffect { Count = 1 } },
             };
             yield return Creature("vine_spider", "Vine Spider", 2, 2, 3, "evergrowing_wild", Rarity.Common, "Spider",
                 Keyword.Reach, "Reach.");
@@ -246,15 +259,89 @@ namespace RestartedTavern.Rules.Cards
             });
             yield return orbital;
 
+            // ---------------------------------------------------------------- Shadow Money Wizards
+            var forger = Creature("apprentice_forger", "Apprentice Forger", 2, 1, 2, "shadow_money_wizards", Rarity.Common, "Wizard",
+                Keyword.Flying, "Flying. Arrival: Gain 1 Gold.");
+            forger.Triggers.Add(new TriggeredAbility { When = TriggerEvent.Arrival, Effects = { new GainGoldEffect { Amount = 1 } } });
+            yield return forger;
+            var rat = Creature("gilded_rat", "Gilded Rat", 1, 2, 1, "shadow_money_wizards", Rarity.Common, "Rat",
+                Keyword.None, "Last Breath: Gain 2 Gold.");
+            rat.Triggers.Add(new TriggeredAbility { When = TriggerEvent.LastBreath, Effects = { new GainGoldEffect { Amount = 2 } } });
+            yield return rat;
+            yield return new CardDefinition
+            {
+                Id = "sticky_fingers", Name = "Sticky Fingers", Type = CardType.Instant, Cost = 2, Faction = "shadow_money_wizards",
+                Rarity = Rarity.Common, Text = "Target creature gets -3/-0 until end of turn. Invest 1: Draw a card.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new PumpTargetEffect { Power = -3 } },
+                InvestCost = 1,
+                InvestEffects = { new DrawCardsEffect { Count = 1 } },
+            };
+            var enforcer = Creature("hired_enforcer", "Hired Enforcer", 5, 5, 4, "shadow_money_wizards", Rarity.Common, "Wizard",
+                Keyword.Flying, "Flying. Arrival: Each opponent gains 2 Gold.");
+            enforcer.Triggers.Add(new TriggeredAbility { When = TriggerEvent.Arrival, Effects = { new GainGoldEffect { Amount = 2, EachOpponent = true } } });
+            yield return enforcer;
+            yield return new CardDefinition
+            {
+                Id = "the_grand_ledger", Name = "The Grand Ledger", Type = CardType.Sorcery, Cost = 7, Faction = "shadow_money_wizards",
+                Rarity = Rarity.Rare, Text = "Draw 4 cards. Invest 3: Draw 2 more and gain 3 life.",
+                SpellEffects = { new DrawCardsEffect { Count = 4 } },
+                InvestCost = 3,
+                InvestEffects = { new DrawCardsEffect { Count = 2 }, new GainLifeEffect { Amount = 3 } },
+            };
+
+            // ---------------------------------------------------------------- Sensationalists
+            yield return new CardDefinition
+            {
+                Id = SpiritToken, Name = "Spirit", Type = CardType.Creature, Power = 1, Health = 1, Keywords = Keyword.Flying,
+                Subtypes = new[] { "Spirit" }, Faction = "sensationalists", IsToken = true,
+            };
+            var cultist = Creature("candle_cultist", "Candle Cultist", 1, 1, 1, "sensationalists", Rarity.Common, "Human",
+                Keyword.None, "Last Breath: Each opponent loses 1 life and you gain 1 life.");
+            cultist.Triggers.Add(new TriggeredAbility { When = TriggerEvent.LastBreath, Effects = { new DrainEffect { Amount = 1 } } });
+            yield return cultist;
+            var frailty = new CardDefinition
+            {
+                Id = "hex_of_frailty", Name = "Hex of Frailty", Type = CardType.Curse, Cost = 1, Faction = "sensationalists",
+                Rarity = Rarity.Common, Text = "Attach to an enemy creature. It gets -1/-1.",
+                SpellTarget = TargetSpec.CreatureYouDontControl,
+            };
+            frailty.Statics.Add(new AttachedCreatureModifier { Power = -1, Health = -1 });
+            yield return frailty;
+            yield return Creature("candlelit_acolyte", "Candlelit Acolyte", 2, 2, 2, "sensationalists", Rarity.Common, "Human",
+                Keyword.Lifelink, "Lifelink.");
+            yield return new CardDefinition
+            {
+                Id = "fatal_rumor", Name = "Fatal Rumor", Type = CardType.Instant, Cost = 2, Faction = "sensationalists",
+                Rarity = Rarity.Common, Text = "Target creature gets -2/-2 until end of turn.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new PumpTargetEffect { Power = -2, Health = -2 } },
+            };
+            yield return Creature("hungry_shade", "Hungry Shade", 3, 3, 2, "sensationalists", Rarity.Uncommon, "Spirit",
+                Keyword.Flying | Keyword.Lifelink, "Flying. Lifelink.");
+            yield return new CardDefinition
+            {
+                Id = "ritual_slaughter", Name = "Ritual Slaughter", Type = CardType.Instant, Cost = 4, Faction = "sensationalists",
+                Rarity = Rarity.Common, Text = "Destroy target creature. You lose 2 life.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new DestroyEffect(), new LoseLifeEffect { Amount = 2 } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "wraith_swarm", Name = "Wraith Swarm", Type = CardType.Sorcery, Cost = 5, Faction = "sensationalists",
+                Rarity = Rarity.Uncommon, Text = "Create three 1/1 Spirits with Flying.",
+                SpellEffects = { new CreateTokensEffect { TokenId = SpiritToken, Count = 3 } },
+            };
+
             // ---------------------------------------------------------------- Neutral
             yield return new CardDefinition
             {
                 Id = "barkeeps_tonic", Name = "Barkeep's Tonic", Type = CardType.Instant, Cost = 1, Faction = "neutral",
-                Rarity = Rarity.Common, Text = "Heal 3 from a creature or your Patron. Overcharge 1: Draw a card.",
+                Rarity = Rarity.Common, Text = "Heal 3 from a creature or your Patron. Invest 1: Draw a card.",
                 SpellTarget = TargetSpec.CreatureOrYou,
                 SpellEffects = { new HealEffect { Amount = 3 } },
-                OverchargeCost = 1,
-                OverchargeEffects = { new DrawCardsEffect { Count = 1 } },
+                InvestCost = 1,
+                InvestEffects = { new DrawCardsEffect { Count = 1 } },
             };
             yield return Creature("hired_sellsword", "Hired Sellsword", 2, 2, 3, "neutral", Rarity.Common, "Human",
                 Keyword.None, "");

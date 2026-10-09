@@ -73,7 +73,7 @@ PlayerState    { id, teamId, seat, eliminated, patronId, life, maxMana, mana, go
                  zones: { deck, hand, battlefield, graveyard, exile } }
 
 CardDefinition { id, name, type, cost, power?, health?, keywords[],
-                 abilities[], overcharge?, equipCost?, faction | "neutral",
+                 abilities[], invest?, equipCost?, faction | "neutral",
                  rarity, text }
 
 PatronDefinition { id, name, factions[2], passive, power { goldCost, effect } }
@@ -144,7 +144,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 **Implemented**
 - Setup: a random first player, 7-card hands, the **London mulligan**, the first player skips the turn-1 draw, and the second player gets 1 Gold. `FormatConfig.MultiplayerStandard()` uses 40 life and no compensation.
 - Turn structure (§6): Start, Draw, Main 1, the combat steps, Main 2, End, and Cleanup (discard down to 7, then unspent mana becomes Gold capped at 5, then "until end of turn" effects end).
-- Mana and Gold (§5): mana is only available on your own turn. Everything except creatures can be paid with any mix of mana and Gold (creatures: mana only). Overcharge is paid with Gold only.
+- Mana and Gold (§5): mana is only available on your own turn. Everything except creatures can be paid with any mix of mana and Gold (creatures: mana only). Invest is paid with Gold only.
 - **The Chain** (§8): LIFO; the caster keeps priority; it resolves when every living player passes in a row; spells fizzle when their target is illegal; the fixed priority windows; auto-pass for players who have no other option (`GameState.AutoPass`).
 - **Multiple targets** (MTG 115, 608.2b): a spell has a list of target slots (optional slots for "up to N"). Targets are distinct, and illegal targets are skipped at resolution; the spell only fizzles when every target is gone. **Fight** (§11.1).
 - Triggers: Arrival, Last Breath, Attacks, Start/End of your turn. They use APNAP order and a target choice when they're put on the Chain. A trigger with no legal target is removed.

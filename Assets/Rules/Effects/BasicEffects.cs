@@ -111,12 +111,62 @@ namespace RestartedTavern.Rules
         public override void Resolve(EffectContext ctx) => ctx.Draw(ctx.Controller, Count);
     }
 
-    /// <summary>"Gain N Gold." (the controller)</summary>
+    /// <summary>"Gain N Gold." (the controller), or "Each opponent gains N Gold." (shady deals)</summary>
     public sealed class GainGoldEffect : Effect
     {
         public int Amount { get; set; }
+        public bool EachOpponent { get; set; }
 
-        public override void Resolve(EffectContext ctx) => ctx.GainGold(ctx.Controller, Amount);
+        public override void Resolve(EffectContext ctx)
+        {
+            if (!EachOpponent)
+            {
+                ctx.GainGold(ctx.Controller, Amount);
+                return;
+            }
+            foreach (var p in new List<PlayerState>(ctx.Opponents())) ctx.GainGold(p.Id, Amount);
+        }
+    }
+
+    /// <summary>
+    /// "You gain N life." Treated like healing your Patron, so it can't go above starting life
+    /// (GAME_DESIGN §11.1, same as Lifelink).
+    /// </summary>
+    public sealed class GainLifeEffect : Effect
+    {
+        public int Amount { get; set; }
+
+        public override void Resolve(EffectContext ctx) => ctx.Heal(Target.ForPlayer(ctx.Controller), Amount);
+    }
+
+    /// <summary>"You lose N life." Life loss is not damage.</summary>
+    public sealed class LoseLifeEffect : Effect
+    {
+        public int Amount { get; set; }
+
+        public override void Resolve(EffectContext ctx) => ctx.LoseLife(ctx.Controller, Amount);
+    }
+
+    /// <summary>"Each opponent loses N life and you gain N life." (Sensationalist drain)</summary>
+    public sealed class DrainEffect : Effect
+    {
+        public int Amount { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            foreach (var p in new List<PlayerState>(ctx.Opponents())) ctx.LoseLife(p.Id, Amount);
+            ctx.Heal(Target.ForPlayer(ctx.Controller), Amount);
+        }
+    }
+
+    /// <summary>"Destroy [target] creature."</summary>
+    public sealed class DestroyEffect : Effect
+    {
+        public override void Resolve(EffectContext ctx)
+        {
+            var c = ctx.CreatureAt(TargetIndex);
+            if (c != null) ctx.Destroy(c);
+        }
     }
 
     /// <summary>"Create N [token]s [with Keyword until end of turn]."</summary>

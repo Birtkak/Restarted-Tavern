@@ -63,7 +63,7 @@ namespace RestartedTavern.Rules
         public Target? Target => Targets != null && Targets.Length > 0 ? Targets[0] : (Target?)null;
         public int ManaPaid;
         public int GoldPaid;
-        public bool Overcharged;
+        public bool Invested;
         public override string ToString() => Player + " casts " + DefinitionId + Card + (Targets?.Length > 0 ? " @" + string.Join(",", Targets) : "");
     }
 

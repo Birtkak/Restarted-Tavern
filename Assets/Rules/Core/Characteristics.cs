@@ -52,6 +52,26 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
+    /// "Enchanted / equipped creature gets +P/+H [and Keyword]": affects whatever the source
+    /// (a Curse or Equipment) is attached to. Negative values for Curses (Hex of Frailty: -1/-1).
+    /// </summary>
+    public sealed class AttachedCreatureModifier : StaticAbility
+    {
+        public int Power { get; set; }
+        public int Health { get; set; }
+        public Keyword Grants { get; set; }
+
+        public override void Apply(GameState state, CardDatabase db, CardInstance source, CardInstance affected,
+            ref Characteristics ch)
+        {
+            if (source.AttachedToObject.IsNone || affected.Id != source.AttachedToObject) return;
+            ch.Power += Power;
+            ch.MaxHealth += Health;
+            ch.Keywords |= Grants;
+        }
+    }
+
+    /// <summary>
     /// Computes current characteristics, following the MTG layer order (CR 613) for the
     /// parts the engine supports today:
     ///   layer 6 (abilities) and layer 7c (P/T modifiers), in timestamp order:

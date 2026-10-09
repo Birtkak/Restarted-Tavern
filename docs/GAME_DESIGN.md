@@ -28,11 +28,11 @@ This game only **deviates** from MTG in these areas:
 | Area | MTG | Restarted Tavern |
 |---|---|---|
 | **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per turn up to 10, refilled each turn (§5.1). No lands |
-| **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for everything except creatures (§5.2) |
+| **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for Instants, Sorceries and activated abilities (mana is used first), and Invest is paid only with Gold. Permanents are mana only (§5.2) |
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
-| *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Gold-paid Power (§9). It works like a commander that never enters the battlefield |
-| *Going second* | Only the first player skips their draw | Also, in 1v1 the second player has **+1 mana on their first turn** |
+| *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Power paid like any activated ability (§9). It works like a commander that never enters the battlefield |
+| *Going second* | The first player skips their draw | Nobody skips their draw. In 1v1 the second player has **+1 mana on their first turn** instead |
 
 Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
 
@@ -64,7 +64,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Maximum hand size | 7 (discard down to 7 at the end of your turn) | 🔒 |
 | Mulligan | **London mulligan**: shuffle and draw 7, then put 1 card on the bottom for each mulligan taken | 🔒 |
 | Who goes first | Random | 🟡 |
-| Going-second compensation | The first player skips their turn-1 draw; the second player has **+1 mana on their first turn** (2 instead of 1; unspent, it becomes Gold as usual). This replaced "starts with 1 Gold" on 2026-10-09 after bot simulations (playtest/PLAYTEST.md): Gold can't pay for creatures, so it barely helped | 🔒 |
+| Going-second compensation | **The first player draws on turn 1 like everyone else** (no draw skip, since 2026-10-09). The second player has **+1 mana on their first turn** (2 instead of 1; unspent, it becomes Gold as usual); the first player gets no bonus mana. This replaced "starts with 1 Gold" on 2026-10-09 after bot simulations (playtest/PLAYTEST.md): Gold can't pay for creatures, so it barely helped | 🔒 |
 
 ---
 
@@ -79,7 +79,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Exile | Public (by default) | No | Removed from the game; recursion can't easily reach it |
 | Patron zone | Public | No | Holds your Patron, who is your face (§9) |
 
-🟡 Possible extra zone later: a **Stack / Chain** for resolving spells (see §8).
+The **Chain** (MTG: the stack) holds spells and abilities while they wait to resolve (§8).
 
 ---
 
@@ -93,17 +93,25 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 Unused mana is not lost.
 
 - At the end of your turn, each point of unspent mana becomes **1 Gold** (a separate counter).
-- Gold is **capped at 5** 🔒. Mana over the cap is lost. This allows big save-up turns, so Overcharge costs must be balanced with a 5-Gold burst in mind.
-- 🔒 **Everything except creatures can be paid with any mix of mana and Gold**: Instants, Sorceries, Equipment, Relics, Curses, all activated abilities (including **Equip**) and **Patron Powers**. The player chooses the split.
-  - Timing doesn't change: a Sorcery or Relic is still cast in your own main phase. On other players' turns you only have Gold, so only Instants, abilities and Patron Powers can be used there.
-  - So a typical turn can be "creature with mana, Equipment or spell with Gold".
-- 🔒 **Creatures can only be paid with mana**, so Gold can't be used to ramp out big threats early.
-- **Overcharge X** bonuses (see §11) can **only** be paid with Gold 🔒.
+- Gold is **capped at 5** 🔒. Mana over the cap is lost. This allows big save-up turns, so Invest costs must be balanced with a 5-Gold burst in mind.
+- 🔒 **What Gold can pay for**:
+
+  | Cost | Mana | Gold |
+  |---|---|---|
+  | Casting a **permanent** (creature, Equipment, Relic, Curse): anything that enters the battlefield | ✅ | ❌ |
+  | **Instants** and **Sorceries** | ✅ | ✅ |
+  | **Activated abilities**, including **Equip** and **Patron Powers** | ✅ | ✅ |
+  | **Invest X** (§11) | ❌ | ✅ **only Gold** |
+
+- 🔒 **Mana is always used first.** When a cost can be paid with both, your available mana is spent first automatically, and Gold pays only what mana can't. There's no choosing the split. (Invest is separate: it is always paid with Gold.)
+  - Timing doesn't change: a Sorcery is still cast in your own main phase. On other players' turns you have no mana, so Instants, abilities and Patron Powers are paid with Gold there.
+  - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 2 mana and then 2 Gold.
+- 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early.
 - 🔒 **Clarification**: your mana pool is only filled during your own turn. On other players' turns you have **no mana, only Gold**, so Gold is how you cast Instants on opponents' turns.
-- 🔒 **Taxes** ("unless they pay N") can be paid with any mix of mana and Gold.
+- 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (mana first).
 - 🔒 Gold gained above the cap of 5 is lost.
-- 🟡 **Bank** (rules term, introduced with the v0.2 drafts): when unspent mana becomes Gold at the end of your turn, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
-- 🟡 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap.
+- 🔒 **Bank** (rules term, introduced with set v0.2): when unspent mana becomes Gold at the end of your turn, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
+- 🔒 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap.
 
 **Why this works**
 - It removes the bad feeling of "I held up mana for a trick and the opponent didn't attack". The mana is banked instead of wasted.
@@ -113,8 +121,8 @@ Unused mana is not lost.
 
 **Alternatives considered**
 - **B. Gold can pay for anything, but converts at a 2:1 ratio.** Simpler, but it turns into generic ramp.
-- **C. Gold can only be spent on "Overcharge" bonuses** (cards with an extra effect if you pay X Gold). Very clean design space, but it's narrow on its own.
-- 🟡 **Combining A and C** is possible: Gold pays for instants and abilities, and also feeds Overcharge.
+- **C. Gold can only be spent on "Invest" bonuses** (cards with an extra effect if you pay X Gold). Very clean design space, but it's narrow on its own.
+- ✅ What we chose combines A and C: Gold pays for Instants, Sorceries and abilities (after mana), and is the only way to pay for Invest.
 
 🔒 Named **Gold**: unused mana is "banked" as money, which fits the tavern (paying your tab) and the Shadow Money Wizards.
 
@@ -123,7 +131,7 @@ Unused mana is not lost.
 ## 6. Turn Structure 🔒
 
 1. **Start phase**: raise max mana by 1 (to a max of 10), refill mana, untap your permanents, trigger "at start of turn" effects.
-2. **Draw phase**: draw 1 card (the first player skips their draw on turn 1).
+2. **Draw phase**: draw 1 card. Every player draws, including the first player on turn 1 (§3).
 3. **Main phase 1**: play creatures, sorceries and permanents; activate abilities.
 4. **Combat phase**: declare attackers, then declare blockers, then deal damage (see §7).
 5. **Main phase 2**: the same as main phase 1. Lets you react to the result of combat (for example, finish off wounded creatures).
@@ -136,7 +144,7 @@ There is **no automatic healing** at end of turn (see §7.3).
 ## 7. Creatures & Combat
 
 ### 7.1 Stats
-Creatures have **Power / Health**. Damage is tracked as **Health remaining**, not as damage marked on the card.
+Creatures have **Power / Health**. Damage stays on the creature (it isn't removed at end of turn), and the card shows **Health remaining** = max Health − damage.
 
 ### 7.2 Combat model 🔒 MTG-style blocking
 1. **Declare attackers**: the active player taps untapped, non-summoning-sick creatures to attack. Each attacker attacks a **player** (in multiplayer, the attacker picks which opponent for each creature).
@@ -172,7 +180,7 @@ Creatures can't attack the turn they enter the battlefield (unless they have **H
 - **Priority** then passes around the table in turn order. Whoever has priority may add **one** Instant or ability to the Chain, or pass.
 - After anything is added, priority goes around the table again, so players can respond to responses as long as they want.
 - When **all players pass in a row**, the **top** item of the Chain resolves (last in, first out). Then the active player gets priority again, and the loop continues until the Chain is empty.
-- If a spell's targets are no longer valid when it resolves, it **fizzles** (it goes to the graveyard and does nothing).
+- If **all** of a spell's targets are no longer valid when it resolves, it **fizzles** (it goes to the graveyard and does nothing). If only some are, it resolves and skips the illegal ones (MTG 608.2b).
 - Triggered abilities (Arrival, Last Breath…) also go on the Chain, so they can be responded to.
 - **Fixed windows** where players get priority even when the Chain is empty: 🟡 each main phase, the start of combat, after attackers are declared, after blockers are declared, and the end phase.
 - 🟡 UX note: the client should auto-pass for players who have no legal response (or who choose "auto-pass this turn"), so the back-and-forth stays fast, especially with 4 players.
@@ -186,7 +194,7 @@ Every deck is led by a **Patron**, a tavern regular you play *as*. The Patron is
 
 - The Patron **is the player**: your 30 life is the Patron's life, and "attack a player" means attacking their Patron.
 - The Patron sits in the **Patron zone** (public). In v0.1 it can't be removed from the game.
-- **Patron Power**: each Patron has a unique activated power, paid with **any mix of mana and Gold** 🔒 (§5.2). 🟡 It can be used once per turn, at instant speed (so it can also be used on opponents' turns, through the Chain).
+- **Patron Power**: each Patron has a unique activated power, paid with mana and/or Gold like any activated ability (mana first, §5.2) 🔒. 🟡 It can be used once per turn, at instant speed (so it can also be used on opponents' turns, through the Chain).
 - **Passive**: 🟡 each Patron has one always-on ability.
 - 🔒 The Patron **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
 - Future singleton format: the Patron becomes the commander-style deck leader.
@@ -217,7 +225,7 @@ The 10 Patrons (one per faction pair) are in [cards/patrons.md](cards/patrons.md
 | Wizards + Goobers | **Grizzle Coinflick**, goblin pyromancer-for-hire | Whenever you cast a spell that costs 6+, create a 1/1 Goober | (2) Deal 1 damage to any target |
 | Wizards + Sensationalists | **Madame Vesper**, the debt collector | Whenever a creature an opponent controls dies, gain 1 Gold | (3) Draw a card and lose 2 life |
 | Wizards + Wild | **Old Mossbank**, the druid banker | Your creatures with 6+ Power cost 1 less | (2) Give a creature +2/+2 until end of turn |
-| Wizards + Glitterworld | **Auditor Prime**, a construct accountant | Your Overcharge costs are 1 lower (minimum 1) | (1) Look at the top card of your deck; you may put it on the bottom |
+| Wizards + Glitterworld | **Auditor Prime**, a construct accountant | Your Invest costs are 1 lower (minimum 1) | (1) Look at the top card of your deck; you may put it on the bottom |
 | Goobers + Sensationalists | **Skabba**, goblin cult chieftain | Whenever one of your creatures dies, deal 1 damage to each opponent | (1) Sacrifice a creature: draw a card |
 | Goobers + Wild | **Mukk the Grub King**, a goblin riding a giant beast | Your creatures with Trample get +1 Power | (2) A creature you control gains Trample until end of turn |
 | Goobers + Glitterworld | **Sparkwrench**, goblin mechanic | Equipment costs 1 less | (2) Move an Equipment to another creature you control |
@@ -233,7 +241,7 @@ The 10 Patrons (one per faction pair) are in [cards/patrons.md](cards/patrons.md
 | **Creature** | Your main phase | Battlefield | Has Power / Health; damage is permanent |
 | **Sorcery** | Your main phase, with an empty Chain | Graveyard | |
 | **Instant** | Whenever you have priority (§8); can be paid with Gold | Graveyard | |
-| **Equipment** | Your main phase | Battlefield | **Equip X** (main phase): attach to a creature you control. When the creature leaves, the Equipment stays on the battlefield unattached. Glitterworld's core type |
+| **Equipment** | Your main phase (mana only) | Battlefield | **Equip X** (main phase; mana, then Gold): attach to a creature you control. When the creature leaves, the Equipment stays on the battlefield unattached. Glitterworld's core type |
 | **Relic** | Your main phase | Battlefield | A non-creature permanent with ongoing effects and/or activated abilities |
 | **Curse** | Your main phase | Battlefield, attached to an **enemy creature or opponent** | A negative ongoing effect. Goes to the graveyard if what it's attached to leaves. Sensationalists' core type |
 
@@ -250,7 +258,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | **Haste** | Can attack the turn it enters | 🟡 |
 | **Flying** | Can only be blocked by Flying / Reach | 🟡 |
 | **Lifelink** | Damage dealt also heals its controller | 🟡 |
-| **Overcharge X: …** | Optional extra cost, paid only with Gold, for a bonus effect | 🔒 |
+| **Invest X: …** | Optional extra cost, paid only with Gold, for a bonus effect | 🔒 |
 | **Arrival** | Triggers when this creature enters the battlefield | 🟡 |
 | **Last Breath** | Triggers when this creature dies | 🟡 |
 | **Reach** | Can block creatures with Flying | 🟡 |
@@ -262,8 +270,8 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Fight**: two creatures each deal damage equal to their Power to the other, at the same time. This is not combat, so Trample doesn't apply. The damage is permanent, like all damage.
 - **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Patron restores life, up to the starting life total.
 - **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
-- **Damaged** 🟡: a creature with damage on it (Health remaining below its max). This is plain card text, not a keyword: Bloodied, Wound and Pristine stay rejected as keywords (§11). "Health remaining" is max Health minus damage.
-- **Can't be healed** 🟡: Heal effects remove no damage from it. It can still get bigger (+1/+1 counters, buffs).
+- **Damaged** 🔒: a creature with damage on it (Health remaining below its max). This is plain card text, not a keyword: Bloodied, Wound and Pristine stay rejected as keywords (§11). "Health remaining" is max Health minus damage.
+- **Can't be healed** 🔒: Heal effects remove no damage from it. It can still get bigger (+1/+1 counters, buffs).
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
 
 ---
@@ -278,7 +286,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## 13. Multiplayer (3–4 players) 🔒 (future format)
 - **Seating and turns**: turn order goes clockwise. Priority on the Chain also goes clockwise, starting from the active player.
 - **Starting life: 40.**
-- **Turn order compensation: none.** Every player draws on their first turn, including the first player (unlike 1v1).
+- **Turn order compensation: none.** Every player draws on their first turn, as in 1v1, and nobody gets bonus mana (the 1v1 second-player +1 mana doesn't apply).
 - **Attacking**: free-for-all. **Each attacking creature chooses any opponent** to attack. Each defending player only declares blockers against attackers that are attacking *them*.
 - **Elimination** 🟡: when a player loses, they leave the game. All cards they **own** leave with them, any of their spells or abilities on the Chain are removed, and control of anything of theirs that someone else controls ends. Effects that player controlled stop ("until end of turn" effects end immediately).
 - 🟡 Card wording for multiplayer: "each opponent", "target opponent", "the player to your left/right". Effects like "each player" include you.
@@ -293,7 +301,9 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
-| 2026-10-09 | **Gold pays for everything except creatures** (§5.2): Instants, Sorceries, Equipment, Relics, Curses, activated abilities (incl. Equip) and Patron Powers take any mix of mana and Gold. Creatures are mana only. Overcharge stays Gold only. Set v0.2 card drafts added: 10 per faction plus 20 Neutral. |
+| 2026-10-09 | **Set v0.2 approved**: all 70 additions (10 per faction, 20 Neutral) confirmed. The rules terms they use are now locked: **bank**, per-player Gold cap, **damaged**, **can't be healed** (§5.2, §11.1). |
+| 2026-10-09 | **No draw skip**: the first player now draws on turn 1. The second player keeps +1 mana on their first turn; the first player gets no bonus mana (§3). |
+| 2026-10-09 | **Payment rules** (§5.2): casting any permanent (creature, Equipment, Relic, Curse) uses mana only. Instants, Sorceries, activated abilities, Equip and Patron Powers can use Gold, **mana is always spent first automatically**. **Overcharge is renamed Invest** and is the only cost paid only with Gold. Set v0.2 card drafts added: 10 per faction plus 20 Neutral. |
 | 2026-10-09 | **Going second**: the 1 starting Gold is replaced by **+1 mana on the second player's first turn** (§3). In bot mirrors the first-player win rate dropped from 73–67% to 66–60%. Next card work: more Glitterworld and Wild cards (pings, fights), so permanent damage shows up in tests. |
 | 2026-10-09 | **Losing a buff can't kill** (§7.3): when a Health buff ends, damage is capped so the creature keeps 1 Health. This deviates from MTG. |
 | 2026-10-09 | Tech: Unity 6000.6.4f1 + C#, PC (Windows) first, local first with online later. The rules engine is a Unity assembly with no engine references (DEVELOPMENT §0). |
@@ -305,5 +315,5 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | 2026-10-09 | Reserve renamed **Gold**. Shadow Money Wizards do money through *shady deals*. Patrons don't fight. The Patron drafts are a good direction. |
 | 2026-10-09 | Five factions: Shadow Money Wizards, Goobers, Sensationalists, Evergrowing Wild, Glitterworld. The Patron is the player's face. Trample is the only damage-related core keyword. The second player starts with 1 Gold. |
 | 2026-10-09 | Healing only through cards (no built-in rule). Gold capped at 5. 5 factions, each Patron unlocks a fixed pair, plus Neutral cards. Max hand size 7. Drawing from an empty deck makes you lose. |
-| 2026-10-09 | Gold pays for Instants, activated abilities, Overcharge (Gold only) and Patron powers. Combat uses MTG-style blocking. Timing uses a single response Chain. Deck identity comes from a Patron card plus factions. |
+| 2026-10-09 | Gold pays for Instants, activated abilities, Invest (Gold only) and Patron powers. Combat uses MTG-style blocking. Timing uses a single response Chain. Deck identity comes from a Patron card plus factions. |
 | 2026-10-09 | Repo restarted from scratch. Locked: Standard = 60 cards, max 4 copies, 30 life, 7-card hand, +1 mana per turn up to 10, zones Deck/Hand/Battlefield/Graveyard/Exile, damage on creatures is permanent. Future goals: singleton/big-deck format, up to 4 players. |

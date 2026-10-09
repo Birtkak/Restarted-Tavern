@@ -9,14 +9,22 @@ namespace RestartedTavern.Rules.AI
     /// first"). It looks one action ahead and never bluffs, so it plays like a careful beginner:
     /// it develops its biggest threat, uses removal only when it kills, attacks when no blocker
     /// would eat its creature for free, blocks when it wins or trades evenly, and chump-blocks only
-    /// to survive. Deterministic: same state, same choice.
+    /// to survive. Deterministic: same state, same choice. A <see cref="BotStyle"/> tunes it
+    /// (Greedy by default, or Control).
     /// </summary>
     public sealed class GreedyBot
     {
         private readonly GameEngine _engine;
+        private readonly BotStyle _style;
         private CardDatabase Db => _engine.Cards;
 
-        public GreedyBot(GameEngine engine) { _engine = engine; }
+        public GreedyBot(GameEngine engine, BotStyle style = null)
+        {
+            _engine = engine;
+            _style = style ?? BotStyle.Greedy();
+        }
+
+        public BotStyle Style => _style;
 
         public PlayerAction Choose(GameState s, PlayerId me)
         {
@@ -75,7 +83,11 @@ namespace RestartedTavern.Rules.AI
             var def = Db.Get(card.DefinitionId);
             double value;
 
-            if (def.IsPermanent)
+            if (def.Type == CardType.Curse)
+            {
+                value = CurseValue(s, me, def, a.Target);
+            }
+            else if (def.IsPermanent)
             {
                 // Develop: bigger is better, so the curve gets used.
                 value = 2 * def.Cost + 1;
@@ -86,10 +98,10 @@ namespace RestartedTavern.Rules.AI
                 value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card);
             }
 
-            if (a.Overcharge) value += EffectValue(s, me, def.OverchargeEffects, a.Targets, a.Card) + 0.1;
+            if (a.Invest) value += EffectValue(s, me, def.InvestEffects, a.Targets, a.Card) + 0.1;
 
             // Gold is flexible (instant speed); spend mana first when it's our turn.
-            if (s.ActivePlayer == me) value -= 0.4 * a.GoldPaid;
+            if (s.ActivePlayer == me) value -= _style.GoldOnOwnTurnPenalty * Math.Max(0, Payment.GoldNeeded(p, def));
             return value;
         }
 
@@ -128,9 +140,28 @@ namespace RestartedTavern.Rules.AI
                         v += FightValue(s, me, first, second, bonus.power, bonus.health);
                         break;
                     case DrawCardsEffect d: v += 2.0 * d.Count; break;
-                    case GainGoldEffect g: v += 0.5 * g.Amount; break;
+                    case GainGoldEffect g: v += (g.EachOpponent ? -0.5 : 0.5) * g.Amount; break;
+                    case GainLifeEffect l: v += HealValue(s, me, l.Amount, Target.ForPlayer(me)); break;
+                    case LoseLifeEffect l: v -= (s.GetPlayer(me).Life <= l.Amount ? 100 : 0.3 * l.Amount); break;
+                    case DrainEffect d: v += 0.6 * d.Amount + HealValue(s, me, d.Amount, Target.ForPlayer(me)); break;
+                    case DestroyEffect _:
+                    {
+                        var c = Creature(s, target);
+                        if (c != null) v += c.Controller == me ? -Worth(s, c) - 2 : Worth(s, c) + 1;
+                        break;
+                    }
                     case CreateTokensEffect t: v += 2.0 * t.Count; break;
                     case AddCountersEffect c: v += CreatureOwnerSign(s, me, target) * 2.0 * c.Count; break;
+                    case PumpTargetEffect pt when pt.Health < 0:
+                    {
+                        // A -X/-X kills if it takes all the Health that's left (Fatal Rumor).
+                        var c = Creature(s, target);
+                        if (c != null && -pt.Health >= Stats(s, c).RemainingHealth)
+                            v += c.Controller == me ? -Worth(s, c) - 2 : Worth(s, c) + 1;
+                        else
+                            v += CreatureOwnerSign(s, me, target) * (pt.Power + pt.Health) * 0.5;
+                        break;
+                    }
                     case PumpTargetEffect pt:
                         v += CreatureOwnerSign(s, me, target) * (pt.Power + pt.Health) * 0.5;
                         pumps[pt.TargetIndex] = (pt.Power, pt.Health);
@@ -151,6 +182,20 @@ namespace RestartedTavern.Rules.AI
             return v;
         }
 
+        /// <summary>A Curse is worth what its -X/-Y does to the creature it's attached to.</summary>
+        private double CurseValue(GameState s, PlayerId me, CardDefinition curse, Target? target)
+        {
+            var c = Creature(s, target);
+            if (c == null) return 2 * curse.Cost; // a Curse on a player: count it as a normal permanent
+            double v = 0;
+            foreach (var st in curse.Statics.OfType<AttachedCreatureModifier>())
+            {
+                bool kills = -st.Health >= Stats(s, c).RemainingHealth;
+                v += kills ? Worth(s, c) + 1 : -(st.Power + st.Health) * 0.7;
+            }
+            return c.Controller == me ? -v : v;
+        }
+
         private static CardInstance Creature(GameState s, Target? t) =>
             t.HasValue && !t.Value.IsPlayer ? s.FindOnBattlefield(t.Value.Object) : null;
 
@@ -163,7 +208,7 @@ namespace RestartedTavern.Rules.AI
             int myPower = a.Power + bonusPower, myRemaining = a.RemainingHealth + bonusHealth;
             bool kills = myPower >= b.RemainingHealth;
             bool dies = b.Power >= myRemaining;
-            double gain = kills ? Worth(s, theirs) + 1 : 0.4 * myPower;     // wounds stick (§7.3)
+            double gain = kills ? Worth(s, theirs) + 1 : _style.ChipDamageValue * myPower;     // wounds stick (§7.3)
             double loss = dies ? Worth(s, mine) : 0.4 * b.Power;
             return gain - loss;
         }
@@ -195,7 +240,7 @@ namespace RestartedTavern.Rules.AI
             double worth = Worth(s, c);
             if (c.Controller == me) return kills ? -worth - 2 : -amount;
             // Chip damage sticks (§7.3), so it has some value even when it doesn't kill.
-            return kills ? worth + 1 : 0.4 * amount;
+            return kills ? worth + 1 : _style.ChipDamageValue * amount;
         }
 
         private double HealValue(GameState s, PlayerId me, int amount, Target? target)
@@ -234,6 +279,16 @@ namespace RestartedTavern.Rules.AI
                     .Sum(id => Stats(s, s.FindOnBattlefield(id)).Power);
                 int blockers = defender.Battlefield.Count(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped);
                 if (potential >= defender.Life && blockers == 0) return group.First();
+            }
+
+            // Control keeps some untapped creatures home as blockers.
+            if (_style.KeepBackShare > 0)
+            {
+                int enemyCreatures = s.Players.Where(p => s.AreOpponents(me, p.Id))
+                    .Sum(p => p.Battlefield.Count(c => Db.Get(c.DefinitionId).IsCreature));
+                int untapped = s.GetPlayer(me).Battlefield.Count(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped);
+                int keepBack = (int)Math.Ceiling(enemyCreatures * _style.KeepBackShare);
+                if (untapped <= keepBack) return legal.First(a => a.Kind == ActionKind.FinishAttacks);
             }
 
             foreach (var a in attacks)
@@ -298,7 +353,7 @@ namespace RestartedTavern.Rules.AI
                     bool kills = bs.Power >= att.RemainingHealth;
                     bool survives = att.Power < bs.RemainingHealth;
                     if (kills && survives && cost < goodCost) { good = a; goodCost = cost; }
-                    else if (kills && cost <= attDef.Cost && cost < tradeCost) { trade = a; tradeCost = cost; }
+                    else if (kills && cost <= attDef.Cost + _style.TradeCostSlack && cost < tradeCost) { trade = a; tradeCost = cost; }
                     else if (survives && cost < wallCost) { wall = a; wallCost = cost; }
                     else if (cost < chumpCost) { chump = a; chumpCost = cost; }
                 }
@@ -306,7 +361,7 @@ namespace RestartedTavern.Rules.AI
                 if (good != null) return good;
                 if (trade != null) return trade;
                 // Soaking a hit costs permanent damage (§7.3), so only wall up when life is getting low.
-                if (wall != null && (lethal || s.GetPlayer(me).Life <= 12)) return wall;
+                if (wall != null && (lethal || s.GetPlayer(me).Life <= _style.WallBlockAtLife)) return wall;
                 if (lethal && chump != null) return chump;
             }
             return finish;

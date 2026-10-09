@@ -38,10 +38,8 @@ namespace RestartedTavern.Rules
         public Target[] Targets { get; set; } = Array.Empty<Target>();
         /// <summary>The first target, if any.</summary>
         public Target? Target => Targets.Length > 0 ? Targets[0] : (Target?)null;
-        /// <summary>PlayCard (Instants): how much of the cost is paid with Gold instead of mana.</summary>
-        public int GoldPaid { get; set; }
-        /// <summary>PlayCard: also pay the Overcharge cost (Gold only).</summary>
-        public bool Overcharge { get; set; }
+        /// <summary>PlayCard: also pay the Invest cost (Gold only).</summary>
+        public bool Invest { get; set; }
 
         public static PlayerAction Pass(PlayerId p) => new PlayerAction { Kind = ActionKind.PassPriority, Player = p };
         public static PlayerAction Keep(PlayerId p) => new PlayerAction { Kind = ActionKind.Keep, Player = p };
@@ -52,11 +50,11 @@ namespace RestartedTavern.Rules
         public static PlayerAction FinishBlocks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishBlocks, Player = p };
         public static PlayerAction ChooseTarget(PlayerId p, Target t) => new PlayerAction { Kind = ActionKind.ChooseTarget, Player = p, Targets = new[] { t } };
 
-        public static PlayerAction Play(PlayerId p, ObjectId card, Target? target = null, int goldPaid = 0, bool overcharge = false) =>
-            Play(p, card, target.HasValue ? new[] { target.Value } : Array.Empty<Target>(), goldPaid, overcharge);
+        public static PlayerAction Play(PlayerId p, ObjectId card, Target? target = null, bool invest = false) =>
+            Play(p, card, target.HasValue ? new[] { target.Value } : Array.Empty<Target>(), invest);
 
-        public static PlayerAction Play(PlayerId p, ObjectId card, Target[] targets, int goldPaid = 0, bool overcharge = false) =>
-            new PlayerAction { Kind = ActionKind.PlayCard, Player = p, Card = card, Targets = targets, GoldPaid = goldPaid, Overcharge = overcharge };
+        public static PlayerAction Play(PlayerId p, ObjectId card, Target[] targets, bool invest = false) =>
+            new PlayerAction { Kind = ActionKind.PlayCard, Player = p, Card = card, Targets = targets, Invest = invest };
 
         public static PlayerAction Attack(PlayerId p, ObjectId attacker, PlayerId defender) =>
             new PlayerAction { Kind = ActionKind.DeclareAttacker, Player = p, Card = attacker, Defender = defender };
@@ -69,8 +67,8 @@ namespace RestartedTavern.Rules
             if (other is null) return false;
             return Kind == other.Kind && Player == other.Player && Card == other.Card
                 && BlockedAttacker == other.BlockedAttacker && Defender == other.Defender
-                && Targets.SequenceEqual(other.Targets) && GoldPaid == other.GoldPaid
-                && Overcharge == other.Overcharge;
+                && Targets.SequenceEqual(other.Targets)
+                && Invest == other.Invest;
         }
 
         public override bool Equals(object obj) => obj is PlayerAction other && Equals(other);
@@ -85,8 +83,7 @@ namespace RestartedTavern.Rules
                 h = h * 31 + BlockedAttacker.Value;
                 h = h * 31 + Defender.Value;
                 foreach (var t in Targets) h = h * 31 + t.GetHashCode();
-                h = h * 31 + GoldPaid;
-                h = h * 31 + (Overcharge ? 1 : 0);
+                h = h * 31 + (Invest ? 1 : 0);
                 return h;
             }
         }
@@ -99,8 +96,7 @@ namespace RestartedTavern.Rules
             if (Kind == ActionKind.DeclareAttacker) sb.Append(" -> ").Append(Defender);
             if (Kind == ActionKind.DeclareBlocker) sb.Append(" blocks ").Append(BlockedAttacker);
             if (Targets.Length > 0) sb.Append(" @").Append(string.Join(",", Targets));
-            if (GoldPaid > 0) sb.Append(" gold=").Append(GoldPaid);
-            if (Overcharge) sb.Append(" overcharge");
+            if (Invest) sb.Append(" invest");
             return sb.ToString();
         }
     }

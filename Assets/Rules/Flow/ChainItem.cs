@@ -34,7 +34,7 @@ namespace RestartedTavern.Rules
         /// <summary>Shared, immutable references into the card definition.</summary>
         public List<Effect> Effects { get; set; } = new List<Effect>();
 
-        public bool Overcharged { get; set; }
+        public bool Invested { get; set; }
 
         public ChainItem Clone()
         {

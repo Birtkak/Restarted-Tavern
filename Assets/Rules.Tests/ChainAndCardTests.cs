@@ -34,7 +34,7 @@ namespace RestartedTavern.Rules.Tests
 
             g.Do(PlayerAction.Play(g.Active, snot.Id, Target.ForObject(target.Id)));
             g.Pass(); // active passes, other may respond
-            g.Do(PlayerAction.Play(g.Other, remedy.Id, Target.ForObject(target.Id), goldPaid: 1));
+            g.Do(PlayerAction.Play(g.Other, remedy.Id, Target.ForObject(target.Id)));
             g.PassRound(); // remedy resolves first: heals the 1 damage
             Assert.AreEqual(0, target.Damage);
             g.PassRound(); // then the snot: 2 damage
@@ -147,17 +147,17 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void JungleRemedy_Overcharge_PaidWithGoldOnly()
+        public void JungleRemedy_Invest_PaidWithGoldOnly()
         {
             var g = TestGame.AtFirstMainPhase();
             var beast = g.AddToBattlefield(g.Active, "ironbark_grizzly", damage: 4); // 4/5, 1 left
             var remedy = g.AddToHand(g.Active, "jungle_remedy");
             g.SetMana(g.Active, 5);
             g.P(g.Active).Gold = 0;
-            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Overcharge), "no Gold, no Overcharge");
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Invest), "no Gold, no Invest");
 
             g.P(g.Active).Gold = 1;
-            g.Do(PlayerAction.Play(g.Active, remedy.Id, Target.ForObject(beast.Id), overcharge: true));
+            g.Do(PlayerAction.Play(g.Active, remedy.Id, Target.ForObject(beast.Id), invest: true));
             Assert.AreEqual(4, g.P(g.Active).Mana);
             Assert.AreEqual(0, g.P(g.Active).Gold);
             g.PassRound();

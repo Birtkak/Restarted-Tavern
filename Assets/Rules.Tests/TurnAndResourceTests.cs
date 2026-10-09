@@ -14,7 +14,8 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             Assert.AreEqual(30, g.P(g.Active).Life);
             Assert.AreEqual(30, g.P(g.Other).Life);
-            Assert.AreEqual(7, g.P(g.Active).Hand.Count, "first player skips the turn-1 draw");
+            Assert.AreEqual(8, g.P(g.Active).Hand.Count, "§3: the first player draws on turn 1 too");
+            Assert.AreEqual(1, g.P(g.Active).Mana, "no bonus mana for the first player");
             Assert.AreEqual(7, g.P(g.Other).Hand.Count);
             Assert.AreEqual(0, g.P(g.Active).Gold);
             Assert.AreEqual(0, g.P(g.Other).Gold, "no starting Gold since 2026-10-09");
@@ -114,44 +115,54 @@ namespace RestartedTavern.Rules.Tests
             var gang = g.AddToHand(g.Active, "gob_gang"); // Sorcery, cost 2
             g.SetMana(g.Active, 0);
             g.P(g.Active).Gold = 2;
-            Assert.IsTrue(g.Legal(g.Active).Any(a => a.Card == gang.Id && a.GoldPaid == 2));
+            Assert.IsTrue(g.Legal(g.Active).Any(a => a.Card == gang.Id));
 
             g.PassRound(); // beginning of combat: no more sorcery speed
             Assert.IsFalse(g.Legal(g.Active).Any(a => a.Card == gang.Id));
         }
 
         [Test]
-        public void Gold_PaysForInstants_InAnyMix()
+        public void Payment_UsesManaFirst_ThenGold()
         {
             var g = TestGame.AtFirstMainPhase();
-            var target = g.AddToBattlefield(g.Other, "hired_sellsword");
-            var snot = g.AddToHand(g.Active, "spark_snot");
-            g.SetMana(g.Active, 1);
-            g.P(g.Active).Gold = 1;
-            var plays = g.Legal(g.Active).Where(a => a.Card == snot.Id && a.Target == Target.ForObject(target.Id)).ToList();
-            CollectionAssert.AreEquivalent(new[] { 0, 1 }, plays.Select(a => a.GoldPaid));
+            var zap = g.AddToHand(g.Active, "chain_zap"); // Sorcery, cost 3
+            g.SetMana(g.Active, 2);
+            g.P(g.Active).Gold = 3;
+            g.Do(PlayerAction.Play(g.Active, zap.Id, new Target[0]));
+            Assert.AreEqual(0, g.P(g.Active).Mana, "all mana spent first");
+            Assert.AreEqual(2, g.P(g.Active).Gold, "Gold only covers the rest");
         }
 
         [Test]
-        public void Gold_PaysForNonCreatures_SoACreatureAndAnEquipmentFitInOneTurn()
+        public void Invest_IsAlwaysPaidWithGold_AfterTheCost()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var beast = g.AddToBattlefield(g.Active, "ironbark_grizzly", damage: 4);
+            var remedy = g.AddToHand(g.Active, "jungle_remedy"); // cost 1, Invest 1
+            g.SetMana(g.Active, 0);
+            g.P(g.Active).Gold = 1;
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Card == remedy.Id && a.Invest), "1 Gold pays the cost, nothing left to Invest");
+
+            g.P(g.Active).Gold = 2;
+            g.Do(PlayerAction.Play(g.Active, remedy.Id, Target.ForObject(beast.Id), invest: true));
+            Assert.AreEqual(0, g.P(g.Active).Gold);
+        }
+
+        [Test]
+        public void Permanents_AreManaOnly_EvenEquipment()
         {
             var shiv = new CardDefinition { Id = "test_shiv", Name = "Test Shiv", Type = CardType.Equipment, Cost = 2 };
             var g = TestGame.AtFirstMainPhase(extraCards: new[] { shiv });
             var sword = g.AddToHand(g.Active, "hired_sellsword");
             var equipment = g.AddToHand(g.Active, "test_shiv");
+            g.SetMana(g.Active, 0);
+            g.P(g.Active).Gold = 5;
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Card == sword.Id || a.Card == equipment.Id), "§5.2: permanents can't use Gold");
+
             g.SetMana(g.Active, 2);
-            g.P(g.Active).Gold = 2;
-
-            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Card == sword.Id && a.GoldPaid > 0), "creatures: mana only");
-            g.Do(PlayerAction.Play(g.Active, sword.Id));
-            g.PassRound();
-            g.Do(PlayerAction.Play(g.Active, equipment.Id, goldPaid: 2));
-            g.PassRound();
-
+            g.Do(PlayerAction.Play(g.Active, equipment.Id));
             Assert.AreEqual(0, g.P(g.Active).Mana);
-            Assert.AreEqual(0, g.P(g.Active).Gold);
-            Assert.IsNotNull(g.OnBattlefield(g.Active, "test_shiv"));
-            Assert.IsNotNull(g.OnBattlefield(g.Active, "hired_sellsword"));
+            Assert.AreEqual(5, g.P(g.Active).Gold);
         }
 
         [Test]
@@ -164,7 +175,7 @@ namespace RestartedTavern.Rules.Tests
 
             g.Pass(); // active passes in main phase 1 → other gets priority
             Assert.AreEqual(g.Other, g.State.PriorityPlayer);
-            g.Do(PlayerAction.Play(g.Other, snot.Id, Target.ForObject(creature.Id), goldPaid: 1));
+            g.Do(PlayerAction.Play(g.Other, snot.Id, Target.ForObject(creature.Id)));
             Assert.AreEqual(0, g.P(g.Other).Gold);
             g.PassRound();
             Assert.AreEqual(2, creature.Damage);
@@ -177,12 +188,12 @@ namespace RestartedTavern.Rules.Tests
             var first = g.Active;
             g.AddToHand(first, "spark_snot");
             g.AddToHand(first, "spark_snot");
+            int excess = g.P(first).Hand.Count - 7; // 8 after the turn-1 draw, +2 added
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.DiscardToHandSize);
-            Assert.AreEqual(2, g.State.Pending.Count);
-            g.Do(PlayerAction.Discard(first, g.P(first).Hand[0].Id));
-            g.Do(PlayerAction.Discard(first, g.P(first).Hand[0].Id));
+            Assert.AreEqual(excess, g.State.Pending.Count);
+            for (int i = 0; i < excess; i++) g.Do(PlayerAction.Discard(first, g.P(first).Hand[0].Id));
             Assert.AreEqual(7, g.P(first).Hand.Count);
-            Assert.AreEqual(2, g.P(first).Graveyard.Count);
+            Assert.AreEqual(excess, g.P(first).Graveyard.Count);
             Assert.AreNotEqual(first, g.Active, "next turn started");
         }
 

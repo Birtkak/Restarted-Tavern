@@ -48,7 +48,7 @@ namespace RestartedTavern.Rules.Tests
 
             g.Do(PlayerAction.Play(g.Active, clash.Id, new[] { Target.ForObject(runt.Id), Target.ForObject(sword.Id) }));
             g.Pass();
-            g.Do(PlayerAction.Play(g.Other, snot.Id, Target.ForObject(runt.Id), goldPaid: 1)); // kill the fighter in response
+            g.Do(PlayerAction.Play(g.Other, snot.Id, Target.ForObject(runt.Id))); // kill the fighter in response
             g.PassRound();
             g.PassRound();
 

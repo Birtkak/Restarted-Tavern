@@ -59,16 +59,17 @@ namespace RestartedTavern.Rules
             var card = p.Hand.Find(c => c.Id == a.Card);
             var def = Def(card);
 
-            // §5.2: Gold can pay for everything except creatures (any mix); Overcharge is Gold only.
-            int manaPaid = def.Cost - a.GoldPaid;
+            // §5.2: mana first, then Gold (not for permanents); Invest is paid only with Gold.
+            int goldForCost = Payment.GoldNeeded(p, def);
+            int manaPaid = def.Cost - goldForCost;
             p.Mana -= manaPaid;
             if (manaPaid > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
-            int goldPaid = a.GoldPaid + (a.Overcharge ? def.OverchargeCost.Value : 0);
+            int goldPaid = goldForCost + (a.Invest ? def.InvestCost.Value : 0);
             if (goldPaid > 0) ChangeGold(p.Id, -goldPaid);
 
             var onChain = MoveCard(card, Zone.Chain, a.Player);
             var effects = new List<Effect>(def.SpellEffects);
-            if (a.Overcharge && !def.IsPermanent) effects.AddRange(def.OverchargeEffects);
+            if (a.Invest && !def.IsPermanent) effects.AddRange(def.InvestEffects);
 
             var item = new ChainItem
             {
@@ -80,7 +81,7 @@ namespace RestartedTavern.Rules
                 SourceDefinitionId = def.Id,
                 TargetSlots = def.SpellTargets,
                 Effects = effects,
-                Overcharged = a.Overcharge,
+                Invested = a.Invest,
             };
             item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
@@ -88,7 +89,7 @@ namespace RestartedTavern.Rules
             Emit(new SpellCastEvent
             {
                 Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Targets = a.Targets,
-                ManaPaid = manaPaid, GoldPaid = goldPaid, Overcharged = a.Overcharge,
+                ManaPaid = manaPaid, GoldPaid = goldPaid, Invested = a.Invest,
             });
 
             // MTG 117.3c: the player who cast a spell receives priority afterwards.
@@ -130,8 +131,8 @@ namespace RestartedTavern.Rules
                         if (t.IsPlayer) permanent.AttachedToPlayer = t.Player;
                         else permanent.AttachedToObject = t.Object;
                     }
-                    if (item.Overcharged)
-                        RunEffects(def.OverchargeEffects, item.Controller, permanent.Id, targets);
+                    if (item.Invested)
+                        RunEffects(def.InvestEffects, item.Controller, permanent.Id, targets);
                 }
                 else
                 {

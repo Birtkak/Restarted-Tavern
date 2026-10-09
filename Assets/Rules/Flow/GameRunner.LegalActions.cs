@@ -81,8 +81,8 @@ namespace RestartedTavern.Rules
 
         /// <summary>
         /// GAME_DESIGN §10 timing + §5.2 payment. Timing: Instants whenever you have priority,
-        /// everything else in your own main phase with an empty Chain. Payment: creatures mana
-        /// only; everything else any mix of mana and Gold (one action per possible split).
+        /// everything else in your own main phase with an empty Chain. Payment is automatic:
+        /// permanents use mana only; Instants and Sorceries use mana first, then Gold.
         /// </summary>
         private void AddPlayableCards(PlayerId player, List<PlayerAction> result)
         {
@@ -96,21 +96,15 @@ namespace RestartedTavern.Rules
                 var def = Def(card);
                 bool instant = def.Type == CardType.Instant;
                 if (!instant && !sorcerySpeed) continue;
-                // §5.2: everything except creatures can be paid with any mix of mana and Gold.
-                bool goldAllowed = !def.IsCreature;
+                if (!Payment.CanPay(p, def)) continue;
 
                 var targetChoices = EnumerateTargetChoices(player, def.SpellTargets);
                 if (targetChoices.Count == 0) continue;
 
-                int maxGold = goldAllowed ? Math.Min(p.Gold, def.Cost) : 0;
-                for (int gold = 0; gold <= maxGold; gold++)
-                {
-                    if (def.Cost - gold > p.Mana) continue;
-                    bool canOvercharge = def.OverchargeCost.HasValue && p.Gold - gold >= def.OverchargeCost.Value;
-                    for (int oc = 0; oc <= (canOvercharge ? 1 : 0); oc++)
-                        foreach (var targets in targetChoices)
-                            result.Add(PlayerAction.Play(player, card.Id, targets, gold, oc == 1));
-                }
+                bool canInvest = Payment.CanInvest(p, def);
+                for (int invest = 0; invest <= (canInvest ? 1 : 0); invest++)
+                    foreach (var targets in targetChoices)
+                        result.Add(PlayerAction.Play(player, card.Id, targets, invest == 1));
             }
         }
     }

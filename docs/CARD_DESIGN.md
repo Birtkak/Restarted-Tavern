@@ -40,7 +40,7 @@ Starting values for the budget, to be tuned in playtesting.
 | Card draw (1 card) | ~2–3 |
 | Removal on a creature (kills something) | most of the budget |
 | Drawback (lose life, discard, give opponents Gold) | gives back ~1–2 |
-| Overcharge | Not counted against the base stats. The **Overcharge** bonus is priced on its own: about 1 Gold ≈ 1 stat point of effect |
+| Invest | Not counted against the base stats. The **Invest** bonus is priced on its own: about 1 Gold ≈ 1 stat point of effect |
 
 ### 2.2 Guidelines 🟡
 - **Health matters more than usual**: damage is permanent, so extra Health is worth more over a game than extra Power. A 2/3 is noticeably better than a 3/2.
@@ -48,7 +48,7 @@ Starting values for the budget, to be tuned in playtesting.
 - **Healing** cards should be efficient. Healing is card-only, so an overcosted heal is never played.
 - **Top-end exception**: Legendary creatures costing 7+ may go about 3 points over budget. They are the payoff for surviving to 10 mana.
 - **Gold is worth less than mana**: it has a cap and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold.
-- **Non-creature cards are effectively cheaper**: everything except creatures can be paid with banked Gold next to a creature paid with mana (GAME_DESIGN §5.2). That's up to 5 extra "mana" for spells, Equipment, Relics and Curses on a burst turn. Price non-creature cards with that in mind, and watch Equipment most: its cost + Equip should match a creature of the same total, not undercut it.
+- **Spells and abilities are effectively cheaper**: Instants, Sorceries, Equip and activated abilities can use banked Gold once mana runs out (GAME_DESIGN §5.2). That's up to 5 extra "mana" on a burst turn. Permanents can't use Gold, so a creature-heavy turn can't be stretched. Price spells, Equip costs and abilities with that in mind.
 
 ---
 
@@ -61,7 +61,7 @@ Starting values for the budget, to be tuned in playtesting.
 | Patrons | 10 | (one per pair, see GAME_DESIGN §9.3) |
 | **Total** | **120** | |
 
-🟡 **Set v0.2 (drafting since 2026-10-09):** +10 cards per faction (5 C / 3 U / 2 R) and +20 Neutral (10 C / 6 U / 4 R), so 30 per faction, 30 Neutral and 10 Patrons (190 total). The goal is depth for the mechanics already in place, not new keywords. Drafts are in each card list under "Set v0.2 additions".
+🔒 **Set v0.2 (approved 2026-10-09):** +10 cards per faction (5 C / 3 U / 2 R) and +20 Neutral (10 C / 6 U / 4 R), so 30 per faction, 30 Neutral and 10 Patrons (190 total). The goal is depth for the mechanics already in place, not new keywords. The cards are in each card list under "Set v0.2 additions".
 
 🟡 Mana curve for each faction's 20 cards: about 3 one-drops, 4 two-drops, 4 three-drops, 3 four-drops, 3 five-drops, 2 six-drops, and 1 card at 7–10. Plus about 6 non-creature cards spread across the curve.
 
@@ -74,7 +74,7 @@ What each faction **does best** (primary), **can do** (secondary), and **never d
 |---|---|---|---|---|---|
 | **Removal style** | Bounce, bribe (steal for a turn), counter | Burn (direct damage) | Destroy, sacrifice, -X/-X | **Fight** (a creature deals its Power to another) | **Pings** (lots of 1s) |
 | **Card draw** | ★ primary | rummage (discard, then draw) | pay life to draw | draw when big creatures arrive | — |
-| **Gold** | ★ primary (shady deals) | steal Gold | — | — | Equipment and Equip paid with Gold (any deck can, Glitterworld leans on it most) |
+| **Gold** | ★ primary (shady deals) | steal Gold | — | — | Equip costs paid with Gold |
 | **Healing** | — | — | drain / Lifelink | ★ heal creatures | repair *machines* |
 | **Big creatures** | — | — | a few, with drawbacks | ★ primary | via Equipment |
 | **Go wide (many small creatures)** | — | ★ primary | spawn tokens from deaths | critter swarms | — |
@@ -94,7 +94,7 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 |---|---|---|---|---|
 | **Back-Alley Appraiser** | 2 | Creature: Wizard (C) | 1/3 | Arrival: You may discard a card. If you do, gain 2 Gold. |
 | **Silver-Tongued Deal** | 3 | Instant (U) | — | Gain control of target creature until end of turn. Untap it. It gains Haste. Each opponent gains 2 Gold. |
-| **The Grand Ledger** | 7 | Sorcery (R) | — | Draw 4 cards. Overcharge 3: Draw 2 more and gain 3 life. |
+| **The Grand Ledger** | 7 | Sorcery (R) | — | Draw 4 cards. Invest 3: Draw 2 more and gain 3 life. |
 
 ### Goobers
 | Name | Cost | Type | Stats | Text |
@@ -108,7 +108,7 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 |---|---|---|---|---|
 | **Candlelit Acolyte** | 2 | Creature: Human (C) | 2/2 | Lifelink. |
 | **Hex of Withering** | 3 | Curse (C) | — | Attach to an enemy creature. It gets -2/-0. At the start of its controller's turn, deal 1 damage to it. |
-| **Midnight Ritual** | 1 | Instant (U) | — | As an extra cost, sacrifice a creature. Draw 2 cards. Overcharge 2: Return a creature card with cost 3 or less from your graveyard to the battlefield. |
+| **Midnight Ritual** | 1 | Instant (U) | — | As an extra cost, sacrifice a creature. Draw 2 cards. Invest 2: Return a creature card with cost 3 or less from your graveyard to the battlefield. |
 
 ### Evergrowing Wild
 | Name | Cost | Type | Stats | Text |
@@ -128,4 +128,4 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
 | **Tavern Bouncer** | 3 | Creature: Human (C) | 2/5 | — |
-| **Barkeep's Tonic** | 1 | Instant (C) | — | Heal 3 from a creature or your Patron. Overcharge 1: Draw a card. |
+| **Barkeep's Tonic** | 1 | Instant (C) | — | Heal 3 from a creature or your Patron. Invest 1: Draw a card. |

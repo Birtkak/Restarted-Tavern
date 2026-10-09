@@ -134,8 +134,13 @@ namespace RestartedTavern.Rules
                         var t = target.IsPlayer ? null : state.FindObject(target.Object);
                         if (t != null) sb.Append(" (").Append(t.Controller).Append(')');
                     }
-                    if (a.GoldPaid > 0) sb.Append("  [").Append(a.GoldPaid).Append(" Gold]");
-                    if (a.Overcharge) sb.Append("  +OVERCHARGE");
+                    var card = state.FindObject(a.Card);
+                    if (card?.DefinitionId != null)
+                    {
+                        int gold = Payment.GoldNeeded(state.GetPlayer(a.Player), _db.Get(card.DefinitionId));
+                        if (gold > 0) sb.Append("  [uses ").Append(gold).Append(" Gold]");
+                    }
+                    if (a.Invest) sb.Append("  +INVEST");
                     return sb.ToString();
                 }
                 default: return a.ToString();
@@ -153,7 +158,7 @@ namespace RestartedTavern.Rules
                 case SpellCastEvent s:
                     return s.Player + " casts " + Name(s.DefinitionId)
                            + (s.Targets != null && s.Targets.Length > 0 ? " -> " + string.Join(", ", s.Targets.Select(t => Name(state, t))) : "")
-                           + (s.Overcharged ? " (Overcharged)" : "");
+                           + (s.Invested ? " (Invested)" : "");
                 case AbilityTriggeredEvent t:
                     return Name(t.SourceDefinitionId) + " triggers (" + t.When + ")"
                            + (t.Target.HasValue ? " -> " + Name(state, t.Target.Value) : "");

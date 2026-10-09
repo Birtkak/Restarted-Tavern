@@ -22,7 +22,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(20, a.Games);
             Assert.AreEqual(0, a.Draws, "games should end well before the turn limit");
             Assert.AreEqual(a.WinsA, b.WinsA);
-            Assert.AreEqual(a.TotalTurns, b.TotalTurns);
+            CollectionAssert.AreEqual(a.GameLengths, b.GameLengths);
             Assert.Greater(a.CreatureTurnSamples, 0);
         }
 

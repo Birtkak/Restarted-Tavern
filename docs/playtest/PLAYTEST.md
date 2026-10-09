@@ -14,11 +14,13 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
   ```
   Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.SimulationMenu.RunReport -simGames 1000
   ```
-  It rewrites `docs/playtest/SIMULATION_REPORT.md`. About 2 minutes for 1000 games per row. Experiments live in `Assets/Rules/AI/Experiments.cs`; experiment-only rule switches are on `FormatConfig` (`DamageWearsOff`, `SecondPlayerExtraCards`, `SecondPlayerStartingGold`).
+  It rewrites `docs/playtest/SIMULATION_REPORT.md`. Games run in parallel; the full suite (56 matchups) takes about **2.5 minutes at the default 500 games per row** (about 5 minutes at 1000). Add `-simSections "round,second"` to run only the sections whose title contains those words. Experiments live in `Assets/Rules/AI/Experiments.cs`; experiment-only rule switches are on `FormatConfig` (`DamageWearsOff`, `SecondPlayerExtraCards`, `SecondPlayerStartingGold`).
 
 ---
 
 ## Findings so far (2026-10-09, 1000 games per row)
+
+➡ **The latest analysis, with 5 decks, 2 bot styles and the chip-damage metric, is in [RULES_REVIEW.md](RULES_REVIEW.md).** The sections below are from the earlier 3-deck runs.
 
 Three prototype decks, all legal 60-card Standard decks: **Goober Mob** (Goobers + Neutral), **Jungle Stampede** (Wild + big Goobers + Neutral) and **Zoo Patrol** (Wild + Glitterworld: pings, fights, healing).
 

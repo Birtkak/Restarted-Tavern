@@ -35,9 +35,9 @@ namespace RestartedTavern.Rules
         /// <summary>What an Instant or Sorcery does when it resolves.</summary>
         public List<Effect> SpellEffects { get; set; } = new List<Effect>();
 
-        /// <summary>Overcharge X (GAME_DESIGN §11): optional extra cost, paid only with Gold.</summary>
-        public int? OverchargeCost { get; set; }
-        public List<Effect> OverchargeEffects { get; set; } = new List<Effect>();
+        /// <summary>Invest X (GAME_DESIGN §11): optional extra cost, paid only with Gold.</summary>
+        public int? InvestCost { get; set; }
+        public List<Effect> InvestEffects { get; set; } = new List<Effect>();
 
         public List<TriggeredAbility> Triggers { get; set; } = new List<TriggeredAbility>();
         public List<StaticAbility> Statics { get; set; } = new List<StaticAbility>();

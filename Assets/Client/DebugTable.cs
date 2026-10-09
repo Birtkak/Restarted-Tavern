@@ -29,10 +29,12 @@ namespace RestartedTavern.Client
         private const int MaxUndo = 200;
         private const int MaxLog = 400;
 
-        private static readonly string[] DeckNames = { "Goober Mob", "Jungle Stampede", "Zoo Patrol" };
+        private static readonly string[] DeckNames =
+            { "Goober Mob", "Jungle Stampede", "Zoo Patrol", "Vesper's Ledger", "Sparkwrench Scrappers" };
         private static readonly Func<List<string>>[] Decks =
         {
             PrototypeCards.GooberMobDeck, PrototypeCards.JungleStampedeDeck, PrototypeCards.ZooPatrolDeck,
+            PrototypeCards.VespersLedgerDeck, PrototypeCards.SparkwrenchScrappersDeck,
         };
 
         /// <summary>Deck choice per seat (index into <see cref="Decks"/>). Applies from the next new game.</summary>
@@ -243,7 +245,7 @@ namespace RestartedTavern.Client
             _bot[0] = GUILayout.Toggle(_bot[0], " P1 bot", GUILayout.Width(70));
             _bot[1] = GUILayout.Toggle(_bot[1], " P2 bot", GUILayout.Width(70));
             for (int seat = 0; seat < 2; seat++)
-                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(150)))
+                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(190)))
                     _deckChoice[seat] = (_deckChoice[seat] + 1) % Decks.Length; // used by the next New game
 
             GUILayout.EndHorizontal();
