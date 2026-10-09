@@ -32,7 +32,7 @@ This game only **deviates** from MTG in these areas:
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | **Life gain** | Uncapped | Gaining life (Lifelink, drains) can't take you above your starting life (§11.1) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
-| *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Power paid like any activated ability (§9). It works like a commander that never enters the battlefield |
+| *Deck identity* | Colors (Commander uses a command zone) | A **Tavern Dweller** in the Tavern Dweller zone sets the factions and acts as the player's face, with a Power paid like any activated ability (§9). It works like a commander that never enters the battlefield |
 | *Going second* | The first player skips their draw | Same as MTG (no other compensation) |
 
 Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
@@ -78,7 +78,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Battlefield | Public | No | Creatures and other permanents |
 | Graveyard | Public | Yes | Destroyed or used cards |
 | Exile | Public (by default) | No | Removed from the game; recursion can't easily reach it |
-| Patron zone | Public | No | Holds your Patron, who is your face (§9) |
+| Tavern Dweller zone | Public | No | Holds your Tavern Dweller, who is your face (§9) |
 
 The **Chain** (MTG: the stack) holds spells and abilities while they wait to resolve (§8).
 
@@ -88,7 +88,7 @@ The **Chain** (MTG: the stack) holds spells and abilities while they wait to res
 
 ### 5.1 Mana crystals 🔒
 - At the start of your turn your **max mana goes up by 1** (cap **10**), and your mana refills to max.
-- Mana has no color 🔒. Which cards a deck can use is decided by its Patron's factions (§9).
+- Mana has no color 🔒. Which cards a deck can use is decided by its Tavern Dweller's factions (§9).
 
 ### 5.2 Gold 🔒
 Unused mana is not lost.
@@ -101,11 +101,11 @@ Unused mana is not lost.
   |---|---|---|
   | Casting a **permanent** (creature, Equipment, Relic, Curse): anything that enters the battlefield | ✅ | ❌ |
   | **Instants** and **Sorceries** | ✅ | ✅ |
-  | **Activated abilities**, including **Equip** and **Patron Powers** | ✅ | ✅ |
+  | **Activated abilities**, including **Equip** and **Tavern Dweller Powers** | ✅ | ✅ |
   | **Invest X** (§11) | ❌ | ✅ **only Gold** |
 
 - 🔒 **Mana is always used first.** When a cost can be paid with both, your available mana is spent first automatically, and Gold pays only what mana can't. There's no choosing the split. (Invest is separate: it is always paid with Gold.)
-  - Timing doesn't change: a Sorcery is still cast in your own main phase. On other players' turns you have no mana, so Instants, abilities and Patron Powers are paid with Gold there.
+  - Timing doesn't change: a Sorcery is still cast in your own main phase. On other players' turns you have no mana, so Instants, abilities and Tavern Dweller Powers are paid with Gold there.
   - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 2 mana and then 2 Gold.
 - 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early.
 - 🔒 **Clarification**: your mana pool is only filled during your own turn. On other players' turns you have **no mana, only Gold**, so Gold is how you cast Instants on opponents' turns.
@@ -166,18 +166,18 @@ Damage stays on a creature until it is healed or the creature dies. Health can't
 Design consequences:
 - Chip damage builds up, so big creatures are worn down over time instead of being a wall you have to "answer or lose to".
 - Healing becomes a real card role. It needs to be common enough that big creatures aren't just liabilities.
-- 🔒 **No built-in healing.** Healing only comes from cards: healing spells, **Lifelink**-style effects and Patron powers.
+- 🔒 **No built-in healing.** Healing only comes from cards: healing spells, **Lifelink**-style effects and Tavern Dweller powers.
 - Design rule 🟡: every faction needs *some* answer to accumulated damage (healing, sacrifice-for-value, or just cheap creatures you don't mind losing), so that no faction is stuck with crippled creatures.
 - Damage needs clear UI support: show current/max health.
 
 ### 7.4 Summoning sickness 🔒 (MTG)
 Creatures can't attack the turn they enter the battlefield (unless they have **Haste**). They *can* block right away.
-🟡 The same rule applies to **Tap abilities** (abilities whose cost includes tapping the creature): they can't be used the turn the creature arrives, unless it has Haste.
+🔒 The same rule applies to **Tap abilities** (abilities whose cost includes tapping the creature): they can't be used the turn the creature arrives, unless it has Haste (MTG 302.6). Non-creature permanents can use Tap abilities right away.
 
 ---
 
 ## 8. Timing & Responses 🔒 The Chain (full back-and-forth)
-- When a player plays a spell, activates an ability or uses their Patron Power, it goes on top of the **Chain**.
+- When a player plays a spell, activates an ability or uses their Tavern Dweller Power, it goes on top of the **Chain**.
 - **Priority** then passes around the table in turn order. Whoever has priority may add **one** Instant or ability to the Chain, or pass.
 - After anything is added, priority goes around the table again, so players can respond to responses as long as they want.
 - When **all players pass in a row**, the **top** item of the Chain resolves (last in, first out). Then the active player gets priority again, and the loop continues until the Chain is empty.
@@ -188,20 +188,21 @@ Creatures can't attack the turn they enter the battlefield (unless they have **H
 
 ---
 
-## 9. Patrons & Factions
+## 9. Tavern Dwellers & Factions
 
-### 9.1 The Patron is your face 🔒
-Every deck is led by a **Patron**, a tavern regular you play *as*. The Patron is not part of the 60 cards.
+### 9.1 The Tavern Dweller is your face 🔒
+Every deck is led by a **Tavern Dweller**, a tavern regular you play *as*. The Tavern Dweller is not part of the 60 cards.
 
-- The Patron **is the player**: your 30 life is the Patron's life, and "attack a player" means attacking their Patron.
-- The Patron sits in the **Patron zone** (public). In v0.1 it can't be removed from the game.
-- **Patron Power**: each Patron has a unique activated power, paid with mana and/or Gold like any activated ability (mana first, §5.2) 🔒. 🟡 It can be used once per turn, at instant speed (so it can also be used on opponents' turns, through the Chain).
-- **Passive**: 🟡 each Patron has one always-on ability.
-- 🔒 The Patron **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
-- Future singleton format: the Patron becomes the commander-style deck leader.
+- The Tavern Dweller **is the player**: your 30 life is the Tavern Dweller's life, and "attack a player" means attacking their Tavern Dweller.
+- The Tavern Dweller sits in the **Tavern Dweller zone** (public). In v0.1 it can't be removed from the game.
+- **Tavern Dweller Power**: each Tavern Dweller has a unique activated power, paid with mana and/or Gold like any activated ability (mana first, §5.2) 🔒. 🔒 It can be used **once each turn** (MTG "once each turn": once on your turn and once on each opponent's turn), at instant speed, through the Chain, so opponents can respond to it.
+- **Passive**: 🟡 each Tavern Dweller has one always-on ability: a triggered ability, a static ability, or a cost change. It works from the Tavern Dweller zone.
+- 🔒 **Deck rule**: every deck has exactly one Tavern Dweller, and every card in it is from one of the Tavern Dweller's two factions or Neutral.
+- 🔒 The Tavern Dweller **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
+- Future singleton format: the Tavern Dweller becomes the commander-style deck leader.
 
 ### 9.2 Factions 🔒
-There are **5 factions**. Every card belongs to one faction or is **Neutral** (playable in any deck). Each Patron unlocks a **fixed pair** of factions, giving 10 possible pairs. 🟡 There may be several Patrons per pair over time.
+There are **5 factions**. Every card belongs to one faction or is **Neutral** (playable in any deck). Each Tavern Dweller unlocks a **fixed pair** of factions, giving 10 possible pairs. 🟡 There may be several Tavern Dwellers per pair over time.
 
 | Faction | Inspired by | Identity | Plays like |
 |---|---|---|---|
@@ -219,20 +220,8 @@ There are **5 factions**. Every card belongs to one faction or is **Neutral** (p
 - **Wizards** avoid combat and win through value and spells.
 - 🟡 Healing (cards only) is spread out: Wild (creatures that endure), Sensationalists (drain/lifelink), Glitterworld (repair *machines*).
 
-### 9.3 Patron list
-The 10 Patrons (one per faction pair) are in [cards/patrons.md](cards/patrons.md).
-
----|---|---|---|
-| Wizards + Goobers | **Grizzle Coinflick**, goblin pyromancer-for-hire | Whenever you cast a spell that costs 6+, create a 1/1 Goober | (2) Deal 1 damage to any target |
-| Wizards + Sensationalists | **Madame Vesper**, the debt collector | Whenever a creature an opponent controls dies, gain 1 Gold | (3) Draw a card and lose 2 life |
-| Wizards + Wild | **Old Mossbank**, the druid banker | Your creatures with 6+ Power cost 1 less | (2) Give a creature +2/+2 until end of turn |
-| Wizards + Glitterworld | **Auditor Prime**, a construct accountant | Your Invest costs are 1 lower (minimum 1) | (1) Look at the top card of your deck; you may put it on the bottom |
-| Goobers + Sensationalists | **Skabba**, goblin cult chieftain | Whenever one of your creatures dies, deal 1 damage to each opponent | (1) Sacrifice a creature: draw a card |
-| Goobers + Wild | **Mukk the Grub King**, a goblin riding a giant beast | Your creatures with Trample get +1 Power | (2) A creature you control gains Trample until end of turn |
-| Goobers + Glitterworld | **Sparkwrench**, goblin mechanic | Equipment costs 1 less | (2) Move an Equipment to another creature you control |
-| Sensationalists + Wild | **The Rotmother**, a jungle witch of rot and rebirth | When a creature with 5+ Power you control dies, create a 2/2 Spawn | (3) Return a creature card from your graveyard to your hand, then lose 3 life |
-| Sensationalists + Glitterworld | **Vox Nocturne**, a cult leader who broadcasts horror live on the city's screens | Whenever an opponent's creature dies, you gain 1 life | (2) Deal 1 damage to a creature; if it dies, draw a card |
-| Wild + Glitterworld | **Keeper Z-00**, the city's zookeeper unit | Your creatures with 5+ Health enter with a +1/+1 counter | (2) Heal 3 from a creature |
+### 9.3 Tavern Dweller list
+The 10 Tavern Dwellers (one per faction pair) are in [cards/tavern_dwellers.md](cards/tavern_dwellers.md). That list is the source of truth.
 
 ---
 
@@ -242,7 +231,7 @@ The 10 Patrons (one per faction pair) are in [cards/patrons.md](cards/patrons.md
 | **Creature** | Your main phase | Battlefield | Has Power / Health; damage is permanent |
 | **Sorcery** | Your main phase, with an empty Chain | Graveyard | |
 | **Instant** | Whenever you have priority (§8); can be paid with Gold | Graveyard | |
-| **Equipment** | Your main phase (mana only) | Battlefield | **Equip X** (main phase; mana, then Gold): attach to a creature you control. When the creature leaves, the Equipment stays on the battlefield unattached. Glitterworld's core type |
+| **Equipment** | Your main phase (mana only) | Battlefield | **Equip X** (main phase, empty Chain; mana, then Gold): attach to target creature you control. It's an activated ability, so it uses the Chain (MTG 701.3). Equipping it again moves it; the creature it leaves loses the bonus (which can't kill, §7.3). When the creature leaves, the Equipment stays on the battlefield unattached. Glitterworld's core type |
 | **Relic** | Your main phase | Battlefield | A non-creature permanent with ongoing effects and/or activated abilities |
 | **Curse** | Your main phase | Battlefield, attached to an **enemy creature or opponent** | A negative ongoing effect. Goes to the graveyard if what it's attached to leaves. Sensationalists' core type |
 
@@ -269,12 +258,13 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 
 ### 11.1 Rules terms 🔒 (MTG, except Heal)
 - **Fight**: two creatures each deal damage equal to their Power to the other, at the same time. This is not combat, so Trample doesn't apply. The damage is permanent, like all damage.
-- **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Patron restores life, up to the starting life total.
-- **Gain life** 🔒: works exactly like healing your Patron, so life can't go above the starting life total (30 in Standard). This covers Lifelink, drains ("you gain 1 life") and any other life gain. Deviation from MTG, where life gain is uncapped (decided 2026-10-09).
+- **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Tavern Dweller restores life, up to the starting life total.
+- **Gain life** 🔒: works exactly like healing your Tavern Dweller, so life can't go above the starting life total (30 in Standard). This covers Lifelink, drains ("you gain 1 life") and any other life gain. Deviation from MTG, where life gain is uncapped (decided 2026-10-09).
 - **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
 - **Damaged** 🔒: a creature with damage on it (Health remaining below its max). This is plain card text, not a keyword: Bloodied, Wound and Pristine stay rejected as keywords (§11). "Health remaining" is max Health minus damage.
 - **Can't be healed** 🔒: Heal effects remove no damage from it. It can still get bigger (+1/+1 counters, buffs).
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
+- **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with mana first, then Gold (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means your main phase with an empty Chain.
 
 ---
 
@@ -303,20 +293,21 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
-| 2026-10-09 | **Rules review** (playtest/RULES_REVIEW.md). Going first: back to the **MTG default** (the first player skips their turn-1 draw, no other compensation); human playtests will judge it. Gold sinks: **Patron Powers** are the fix, so implement them next and then re-measure the Gold cap. Game-length stalls: **no new rule**; add late-game sinks and finishers in cards first. **Life gain is capped at starting life** (§11.1). |
+| 2026-10-09 | **Patrons are renamed Tavern Dwellers** (in rules text, docs and code: `TavernDweller`). **Tavern Dweller Powers: once each turn** (MTG default), so up to once on your turn and once on each opponent's turn. **"Pay N Gold" costs are Gold only**, like Invest; generic ability costs (Equip, X, Powers) stay mana first. **Archon Lumen** deals one separate 1-damage ping per Equipment, each with its own target. Deck rule: every card is from the Tavern Dweller's factions or Neutral. Activated abilities, Equip and all 10 Tavern Dwellers are implemented (DEVELOPMENT §7). |
+| 2026-10-09 | **Rules review** (playtest/RULES_REVIEW.md). Going first: back to the **MTG default** (the first player skips their turn-1 draw, no other compensation); human playtests will judge it. Gold sinks: **Tavern Dweller Powers** are the fix, so implement them next and then re-measure the Gold cap. Game-length stalls: **no new rule**; add late-game sinks and finishers in cards first. **Life gain is capped at starting life** (§11.1). |
 | 2026-10-09 | **Set v0.2 approved**: all 70 additions (10 per faction, 20 Neutral) confirmed. The rules terms they use are now locked: **bank**, per-player Gold cap, **damaged**, **can't be healed** (§5.2, §11.1). |
 | 2026-10-09 | **No draw skip**: the first player now draws on turn 1. The second player keeps +1 mana on their first turn; the first player gets no bonus mana (§3). |
-| 2026-10-09 | **Payment rules** (§5.2): casting any permanent (creature, Equipment, Relic, Curse) uses mana only. Instants, Sorceries, activated abilities, Equip and Patron Powers can use Gold, **mana is always spent first automatically**. **Overcharge is renamed Invest** and is the only cost paid only with Gold. Set v0.2 card drafts added: 10 per faction plus 20 Neutral. |
+| 2026-10-09 | **Payment rules** (§5.2): casting any permanent (creature, Equipment, Relic, Curse) uses mana only. Instants, Sorceries, activated abilities, Equip and Tavern Dweller Powers can use Gold, **mana is always spent first automatically**. **Overcharge is renamed Invest** and is the only cost paid only with Gold. Set v0.2 card drafts added: 10 per faction plus 20 Neutral. |
 | 2026-10-09 | **Going second**: the 1 starting Gold is replaced by **+1 mana on the second player's first turn** (§3). In bot mirrors the first-player win rate dropped from 73–67% to 66–60%. Next card work: more Glitterworld and Wild cards (pings, fights), so permanent damage shows up in tests. |
 | 2026-10-09 | **Losing a buff can't kill** (§7.3): when a Health buff ends, damage is capped so the creature keeps 1 Health. This deviates from MTG. |
 | 2026-10-09 | Tech: Unity 6000.6.4f1 + C#, PC (Windows) first, local first with online later. The rules engine is a Unity assembly with no engine references (DEVELOPMENT §0). |
-| 2026-10-09 | **First set v0.1 complete**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons (docs/cards/). |
+| 2026-10-09 | **First set v0.1 complete**: 5 factions × 20 cards, 10 Neutral cards, 10 Tavern Dwellers (docs/cards/). |
 | 2026-10-09 | **MTG rules are the default foundation**: everything outside mana and damage follows the MTG Comprehensive Rules (§1.1). |
 | 2026-10-09 | Faction pie locked (CARD_DESIGN §4). Multiplayer: free-for-all attacks, 40 life, no turn-order compensation, teams (2v2) planned for later. |
 | 2026-10-09 | Rarities: Common/Uncommon/Rare/Legendary (Legendary rule: only one with a given name on the battlefield). Vanilla stats = 2×cost+1. First set ~120 cards. See CARD_DESIGN.md. |
 | 2026-10-09 | Two main phases. Chain uses full back-and-forth priority. Permanent types: Equipment, Relics, Curses (no Locations). London mulligan. |
-| 2026-10-09 | Reserve renamed **Gold**. Shadow Money Wizards do money through *shady deals*. Patrons don't fight. The Patron drafts are a good direction. |
-| 2026-10-09 | Five factions: Shadow Money Wizards, Goobers, Sensationalists, Evergrowing Wild, Glitterworld. The Patron is the player's face. Trample is the only damage-related core keyword. The second player starts with 1 Gold. |
-| 2026-10-09 | Healing only through cards (no built-in rule). Gold capped at 5. 5 factions, each Patron unlocks a fixed pair, plus Neutral cards. Max hand size 7. Drawing from an empty deck makes you lose. |
-| 2026-10-09 | Gold pays for Instants, activated abilities, Invest (Gold only) and Patron powers. Combat uses MTG-style blocking. Timing uses a single response Chain. Deck identity comes from a Patron card plus factions. |
+| 2026-10-09 | Reserve renamed **Gold**. Shadow Money Wizards do money through *shady deals*. Tavern Dwellers don't fight. The Tavern Dweller drafts are a good direction. |
+| 2026-10-09 | Five factions: Shadow Money Wizards, Goobers, Sensationalists, Evergrowing Wild, Glitterworld. The Tavern Dweller is the player's face. Trample is the only damage-related core keyword. The second player starts with 1 Gold. |
+| 2026-10-09 | Healing only through cards (no built-in rule). Gold capped at 5. 5 factions, each Tavern Dweller unlocks a fixed pair, plus Neutral cards. Max hand size 7. Drawing from an empty deck makes you lose. |
+| 2026-10-09 | Gold pays for Instants, activated abilities, Invest (Gold only) and Tavern Dweller powers. Combat uses MTG-style blocking. Timing uses a single response Chain. Deck identity comes from a Tavern Dweller card plus factions. |
 | 2026-10-09 | Repo restarted from scratch. Locked: Standard = 60 cards, max 4 copies, 30 life, 7-card hand, +1 mana per turn up to 10, zones Deck/Hand/Battlefield/Graveyard/Exile, damage on creatures is permanent. Future goals: singleton/big-deck format, up to 4 players. |

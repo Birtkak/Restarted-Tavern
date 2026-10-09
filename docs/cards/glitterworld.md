@@ -47,19 +47,19 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 
 Goal: **more depth for the mechanics already in place**: Gold (banking, spending, the cap), permanent damage and healing, Invest, the Chain, Arrival and Last Breath. Target per faction: +10 cards, 5 Common / 3 Uncommon / 2 Rare.
 
-**Engine** column: ✓ = the engine can run it today; otherwise it names what's missing (see DEVELOPMENT §7).
+**Engine** column: ✓ = the engine can run it today; ✓ implemented = it's in the prototype card pool; otherwise it names what's missing (see DEVELOPMENT §7).
 New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1 (**damaged**, **can't be healed**).
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| 21 | **Gilded Knuckles** | 1 | Equipment | C | — | Equipped creature gets +2/+0. Equip 1. | Cheap to cast; the Equip can be paid with banked Gold | Equip | ✅ |
-| 22 | **Patch-Up Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Heal 2 from target Construct or equipped creature. | Machine repair on a drone | target filter (Construct/equipped) | ✅ |
-| 23 | **Scrap Collector** | 2 | Creature: Construct | C | 2/2 | Whenever an Equipment you control becomes unattached, gain 1 Gold. | When an equipped creature dies, you get Gold back to re-equip | unattach trigger | ✅ |
+| 21 | **Gilded Knuckles** | 1 | Equipment | C | — | Equipped creature gets +2/+0. Equip 1. | Cheap to cast; the Equip can be paid with banked Gold | ✓ implemented | ✅ |
+| 22 | **Patch-Up Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Heal 2 from target Construct or equipped creature. | Machine repair on a drone | ✓ implemented | ✅ |
+| 23 | **Scrap Collector** | 2 | Creature: Construct | C | 2/2 | Whenever an Equipment you control becomes unattached, gain 1 Gold. | When an equipped creature dies, you get Gold back to re-equip | ✓ implemented | ✅ |
 | 24 | **Finisher Protocol** | 2 | Instant | C | — | Destroy target creature with 2 or less Health remaining. | The ping plan's closer: spread damage, then delete | remaining-Health target filter | ✅ |
-| 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to a creature." Equip 1. | Ping engine on any attacker | Equip + granted trigger | ✅ |
+| 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to a creature." Equip 1. | Ping engine on any attacker | ✓ implemented | ✅ |
 | 26 | **Smart Rounds** | 3 | Sorcery | U | — | Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage. | Chains across a wounded board, and rewards having pinged before | conditional each-damaged | ✅ |
-| 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | filtered heal | ✅ |
-| 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | Equip + granted trigger | ✅ |
+| 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | ✓ implemented | ✅ |
+| 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | ✓ implemented | ✅ |
 | 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | Equip + damage prevention | ✅ |
 | 30 | **Neon Executioner** | 6 | Creature: Construct | R | 4/6 | Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | damage-dealt trigger | ✅ |
 

@@ -11,12 +11,18 @@ namespace RestartedTavern.Rules
         Creature,
         CreatureYouControl,
         CreatureYouDontControl,
-        /// <summary>"a creature or your Patron" (Barkeep's Tonic).</summary>
+        /// <summary>"a creature or your Tavern Dweller" (Barkeep's Tonic).</summary>
         CreatureOrYou,
         Player,
         Opponent,
         /// <summary>Curses: an enemy creature or an opponent (GAME_DESIGN §10).</summary>
         EnemyCreatureOrOpponent,
+        /// <summary>"target Construct or equipped creature" (Back-Street Mechanic, Patch-Up Drone).</summary>
+        ConstructOrEquippedCreature,
+        /// <summary>"target Equipment you control" (Courier Bot, Sparkwrench).</summary>
+        EquipmentYouControl,
+        /// <summary>"a creature card from your graveyard" (The Rotmother).</summary>
+        CreatureCardInYourGraveyard,
     }
 
     /// <summary>
@@ -28,8 +34,11 @@ namespace RestartedTavern.Rules
     {
         public TargetSpec Spec { get; set; }
         public bool Optional { get; set; }
+        /// <summary>Only creatures with this subtype ("other Goobers you control"). Null = any.</summary>
+        public string Subtype { get; set; }
 
-        public static TargetSlot Of(TargetSpec spec, bool optional = false) => new TargetSlot { Spec = spec, Optional = optional };
+        public static TargetSlot Of(TargetSpec spec, bool optional = false, string subtype = null) =>
+            new TargetSlot { Spec = spec, Optional = optional, Subtype = subtype };
     }
 
     /// <summary>A chosen target: either a player or a game object.</summary>

@@ -129,7 +129,7 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
-    /// "You gain N life." Treated like healing your Patron, so it can't go above starting life
+    /// "You gain N life." Treated like healing your Tavern Dweller, so it can't go above starting life
     /// (GAME_DESIGN §11.1, same as Lifelink).
     /// </summary>
     public sealed class GainLifeEffect : Effect

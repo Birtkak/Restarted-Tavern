@@ -16,7 +16,7 @@ namespace RestartedTavern.Client.Editor
     /// </summary>
     public static class SimulationMenu
     {
-        private const int DefaultGames = 500; // ~2.5 min for the full suite (games run in parallel)
+        private const int DefaultGames = 500; // ~6 min for the full suite (84 matchups, games run in parallel)
 
         [MenuItem("Restarted Tavern/Run Simulation Report")]
         public static void RunReport()

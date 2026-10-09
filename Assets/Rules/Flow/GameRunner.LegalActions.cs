@@ -19,7 +19,11 @@ namespace RestartedTavern.Rules
 
             if (S.PriorityPlayer != player) return result;
             result.Add(PlayerAction.Pass(player));
-            AddPlayableCards(player, result);
+            bool sorcerySpeed = S.ActivePlayer == player
+                && (S.Step == Step.Main1 || S.Step == Step.Main2)
+                && S.Chain.Count == 0;
+            AddPlayableCards(player, result, sorcerySpeed);
+            AddActivatableAbilities(player, result, sorcerySpeed);
             return result;
         }
 
@@ -46,6 +50,13 @@ namespace RestartedTavern.Rules
                     foreach (var t in EnumerateTargets(player, trigger.Ability.Target,
                                  trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None))
                         result.Add(PlayerAction.ChooseTarget(player, t));
+                    if (trigger.Ability.TargetOptional) // "you may": decline
+                        result.Add(new PlayerAction { Kind = ActionKind.ChooseTarget, Player = player });
+                    break;
+
+                case DecisionKind.TopOrBottom:
+                    result.Add(PlayerAction.ChooseOption(player, 0));
+                    result.Add(PlayerAction.ChooseOption(player, 1));
                     break;
 
                 case DecisionKind.DeclareAttackers:
@@ -84,24 +95,21 @@ namespace RestartedTavern.Rules
         /// everything else in your own main phase with an empty Chain. Payment is automatic:
         /// permanents use mana only; Instants and Sorceries use mana first, then Gold.
         /// </summary>
-        private void AddPlayableCards(PlayerId player, List<PlayerAction> result)
+        private void AddPlayableCards(PlayerId player, List<PlayerAction> result, bool sorcerySpeed)
         {
             var p = S.GetPlayer(player);
-            bool sorcerySpeed = S.ActivePlayer == player
-                && (S.Step == Step.Main1 || S.Step == Step.Main2)
-                && S.Chain.Count == 0;
 
             foreach (var card in p.Hand)
             {
                 var def = Def(card);
                 bool instant = def.Type == CardType.Instant;
                 if (!instant && !sorcerySpeed) continue;
-                if (!Payment.CanPay(p, def)) continue;
+                if (!Payment.CanPay(S, Db, p, def)) continue;
 
                 var targetChoices = EnumerateTargetChoices(player, def.SpellTargets);
                 if (targetChoices.Count == 0) continue;
 
-                bool canInvest = Payment.CanInvest(p, def);
+                bool canInvest = Payment.CanInvest(S, Db, p, def);
                 for (int invest = 0; invest <= (canInvest ? 1 : 0); invest++)
                     foreach (var targets in targetChoices)
                         result.Add(PlayerAction.Play(player, card.Id, targets, invest == 1));

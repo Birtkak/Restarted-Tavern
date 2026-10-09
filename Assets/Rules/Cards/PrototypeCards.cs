@@ -7,7 +7,7 @@ namespace RestartedTavern.Rules.Cards
     /// as-is from the v0.1 card lists. Only cards the engine can fully express today are here.
     /// Later these move to data files (DEVELOPMENT §3).
     /// </summary>
-    public static class PrototypeCards
+    public static partial class PrototypeCards
     {
         public const string GooberToken = "goober_token";
         public const string SpiritToken = "spirit_token";
@@ -44,6 +44,20 @@ namespace RestartedTavern.Rules.Cards
             "goober_rascal", "spark_snot", "fuse_goober", "brawling_runt", "goober_warchief", "hog_rider",
             "barrel_bomber", "mob_rush", "static_shock", "spark_drone", "chain_zap", "sky_patrol_drone",
             "riot_suppressor", "grid_overload", "hover_tank");
+
+        /// <summary>Legal Standard deck: Wizards + Glitterworld (the Auditor Prime pair). The Equipment deck: Equip costs are a Gold sink.</summary>
+        public static List<string> AuditorsArsenalDeck() => FourOfEach(
+            "neon_shiv", "courier_bot", "spark_drone", "pulse_blade", "back_street_mechanic", "alley_tinker",
+            "apprentice_forger", "overclock_rig", "sky_patrol_drone", "arc_welder", "rail_cannon", "hover_tank",
+            "megacorp_exosuit", "patrol_captain", "titan_frame_guardian");
+
+        /// <summary>The Tavern Dweller each prototype deck is built around (GAME_DESIGN §9).</summary>
+        public const string GooberMobTavernDweller = "skabba";
+        public const string JungleStampedeTavernDweller = "mukk_the_grub_king";
+        public const string ZooPatrolTavernDweller = "keeper_z00";
+        public const string VespersLedgerTavernDweller = "madame_vesper";
+        public const string SparkwrenchScrappersTavernDweller = "sparkwrench";
+        public const string AuditorsArsenalTavernDweller = "auditor_prime";
 
         private static List<string> FourOfEach(params string[] ids)
         {
@@ -337,7 +351,7 @@ namespace RestartedTavern.Rules.Cards
             yield return new CardDefinition
             {
                 Id = "barkeeps_tonic", Name = "Barkeep's Tonic", Type = CardType.Instant, Cost = 1, Faction = "neutral",
-                Rarity = Rarity.Common, Text = "Heal 3 from a creature or your Patron. Invest 1: Draw a card.",
+                Rarity = Rarity.Common, Text = "Heal 3 from a creature or your Tavern Dweller. Invest 1: Draw a card.",
                 SpellTarget = TargetSpec.CreatureOrYou,
                 SpellEffects = { new HealEffect { Amount = 3 } },
                 InvestCost = 1,
@@ -351,6 +365,9 @@ namespace RestartedTavern.Rules.Cards
                 "Human", Keyword.None, "Arrival: Draw a card.");
             adventurer.Triggers.Add(new TriggeredAbility { When = TriggerEvent.Arrival, Effects = { new DrawCardsEffect { Count = 1 } } });
             yield return adventurer;
+
+            foreach (var c in AbilityCards()) yield return c;
+            foreach (var c in TavernDwellers()) yield return c;
         }
 
         private static CardDefinition Creature(string id, string name, int cost, int power, int health, string faction,

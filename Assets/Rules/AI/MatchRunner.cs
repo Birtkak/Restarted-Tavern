@@ -12,9 +12,11 @@ namespace RestartedTavern.Rules.AI
         public FormatConfig Format { get; set; } = FormatConfig.Standard();
         public string DeckAName { get; set; }
         public List<string> DeckA { get; set; }
+        public string TavernDwellerA { get; set; }
         public BotStyle StyleA { get; set; } = BotStyle.Greedy();
         public string DeckBName { get; set; }
         public List<string> DeckB { get; set; }
+        public string TavernDwellerB { get; set; }
         public BotStyle StyleB { get; set; } = BotStyle.Greedy();
         public int Games { get; set; } = 1000;
         public ulong FirstSeed { get; set; } = 1;
@@ -35,6 +37,8 @@ namespace RestartedTavern.Rules.AI
         /// <summary>Unspent mana at end of turn, how much of it became Gold, and Gold spent.</summary>
         public long UnspentMana, GoldBanked, GoldSpent;
         public long InstantsOnOpponentsTurn;
+        /// <summary>Tavern Dweller Powers used, how many of them on an opponent's turn, other activated abilities, and Gold paid for both.</summary>
+        public long PowersUsed, PowersOnOpponentsTurn, AbilitiesActivated, GoldOnAbilities;
         public long CreatureDeaths, HealingDone, DamageToCreatures, DamageToPlayers;
         /// <summary>Damage that was still on a creature when it died (the rest was healed or never mattered).</summary>
         public long DamageOnDeath;
@@ -77,6 +81,8 @@ namespace RestartedTavern.Rules.AI
             GameLengths.AddRange(o.GameLengths);
             UnspentMana += o.UnspentMana; GoldBanked += o.GoldBanked; GoldSpent += o.GoldSpent;
             InstantsOnOpponentsTurn += o.InstantsOnOpponentsTurn;
+            PowersUsed += o.PowersUsed; PowersOnOpponentsTurn += o.PowersOnOpponentsTurn;
+            AbilitiesActivated += o.AbilitiesActivated; GoldOnAbilities += o.GoldOnAbilities;
             CreatureDeaths += o.CreatureDeaths; HealingDone += o.HealingDone;
             DamageToCreatures += o.DamageToCreatures; DamageToPlayers += o.DamageToPlayers;
             DamageOnDeath += o.DamageOnDeath; ChipCarried += o.ChipCarried; ChipThatKilled += o.ChipThatKilled;
@@ -101,13 +107,13 @@ namespace RestartedTavern.Rules.AI
             if (Parallel)
             {
                 System.Threading.Tasks.Parallel.For(0, cfg.Games,
-                    () => new GameEngine(db),
+                    () => new GameEngine(db) { CacheLegalActions = true },
                     (g, _, engine) => { perGame[g] = PlayGame(cfg, db, engine, g); return engine; },
                     _ => { });
             }
             else
             {
-                var engine = new GameEngine(db);
+                var engine = new GameEngine(db) { CacheLegalActions = true };
                 for (int g = 0; g < cfg.Games; g++) perGame[g] = PlayGame(cfg, db, engine, g);
             }
 
@@ -124,8 +130,8 @@ namespace RestartedTavern.Rules.AI
             {
                 bool aFirstSeat = g % 2 == 0;
                 var setups = aFirstSeat
-                    ? new[] { new PlayerSetup { Deck = cfg.DeckA }, new PlayerSetup { Deck = cfg.DeckB } }
-                    : new[] { new PlayerSetup { Deck = cfg.DeckB }, new PlayerSetup { Deck = cfg.DeckA } };
+                    ? new[] { new PlayerSetup { Deck = cfg.DeckA, TavernDwellerId = cfg.TavernDwellerA }, new PlayerSetup { Deck = cfg.DeckB, TavernDwellerId = cfg.TavernDwellerB } }
+                    : new[] { new PlayerSetup { Deck = cfg.DeckB, TavernDwellerId = cfg.TavernDwellerB }, new PlayerSetup { Deck = cfg.DeckA, TavernDwellerId = cfg.TavernDwellerA } };
                 var deckAPlayer = new PlayerId(aFirstSeat ? 1 : 2);
 
                 var events = new List<GameEvent>();
@@ -182,6 +188,18 @@ namespace RestartedTavern.Rules.AI
                         break;
                     case SpellCastEvent c when c.Player != s.ActivePlayer:
                         r.InstantsOnOpponentsTurn++;
+                        break;
+                    case AbilityActivatedEvent a:
+                        if (a.IsTavernDwellerPower)
+                        {
+                            r.PowersUsed++;
+                            if (a.Player != s.ActivePlayer) r.PowersOnOpponentsTurn++;
+                        }
+                        else
+                        {
+                            r.AbilitiesActivated++;
+                        }
+                        r.GoldOnAbilities += a.GoldPaid;
                         break;
                     case CreatureDiedEvent d:
                         r.CreatureDeaths++;

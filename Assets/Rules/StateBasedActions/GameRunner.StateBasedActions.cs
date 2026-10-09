@@ -68,7 +68,11 @@ namespace RestartedTavern.Rules
 
             if (losers.Count == 0 && toGraveyard.Count == 0 && toUnattach.Count == 0) return false;
 
-            foreach (var c in toUnattach) c.AttachedToObject = ObjectId.None;
+            foreach (var c in toUnattach)
+            {
+                c.AttachedToObject = ObjectId.None;
+                QueueWatcherTriggers(TriggerEvent.EquipmentUnattached, c.Controller);
+            }
             foreach (var c in toGraveyard) MoveCard(c, Zone.Graveyard);
             foreach (var (player, reason) in losers) Lose(player, reason);
             CheckGameOver();

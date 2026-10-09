@@ -26,6 +26,7 @@ namespace RestartedTavern.Rules
                 RememberAll(p.Hand);
                 RememberAll(p.Graveyard);
                 RememberAll(p.Exile);
+                RememberAll(p.TavernDwellerZone);
             }
             foreach (var item in state.Chain)
                 if (item.Card != null) _known[item.Card.Id] = item.Card.DefinitionId;
@@ -75,7 +76,13 @@ namespace RestartedTavern.Rules
             sb.Append(def.Name);
             if (card.IsToken) sb.Append(" (token)");
 
-            if (def.IsCreature && card.Zone == Zone.Battlefield)
+            if (def.IsTavernDweller)
+            {
+                sb.Append(sep).Append("Tavern Dweller (").Append(string.Join(" + ", def.TavernDwellerFactions)).Append(')');
+                if (multiline && def.Text.Length > 0) sb.Append('\n').Append(def.Text);
+                if (PowerUsedThisTurn(state, card)) sb.Append(sep).Append("Power used this turn");
+            }
+            else if (def.IsCreature && card.Zone == Zone.Battlefield)
             {
                 var ch = CharacteristicsCalculator.Compute(state, _db, card);
                 sb.Append(sep).Append(ch.Power).Append('/').Append(ch.MaxHealth);
@@ -87,6 +94,7 @@ namespace RestartedTavern.Rules
                 if (card.SummoningSick && !ch.Has(Keyword.Haste)) status.Add("sick");
                 if (state.Combat != null && state.Combat.IsAttacking(card.Id)) status.Add("ATTACKING");
                 if (state.Combat != null && state.Combat.IsBlocking(card.Id)) status.Add("BLOCKING");
+                if (CharacteristicsCalculator.IsEquipped(state, _db, card)) status.Add("equipped");
                 if (status.Count > 0) sb.Append(sep).Append(string.Join(" ", status));
             }
             else
@@ -95,9 +103,14 @@ namespace RestartedTavern.Rules
                 if (def.IsCreature) sb.Append(' ').Append(def.Power).Append('/').Append(def.Health);
                 if (multiline && def.Text.Length > 0) sb.Append('\n').Append(def.Text);
                 if (card.Zone == Zone.Battlefield && card.Tapped) sb.Append(sep).Append("TAPPED");
+                if (card.Zone == Zone.Battlefield && !card.AttachedToObject.IsNone)
+                    sb.Append(sep).Append("on ").Append(Name(state, card.AttachedToObject));
             }
             return sb.ToString();
         }
+
+        private static bool PowerUsedThisTurn(GameState state, CardInstance tavernDweller) =>
+            state.UsesThisTurn.ContainsKey("ability:" + tavernDweller.Id.Value + ":0");
 
         public static string KeywordText(Keyword k)
         {
@@ -121,7 +134,12 @@ namespace RestartedTavern.Rules
                 case ActionKind.Discard: return "Discard: " + Name(state, a.Card);
                 case ActionKind.FinishAttacks: return "Done attacking";
                 case ActionKind.FinishBlocks: return "Done blocking";
-                case ActionKind.ChooseTarget: return "Target: " + Name(state, a.Target.Value);
+                case ActionKind.ChooseTarget: return a.Target.HasValue ? "Target: " + Name(state, a.Target.Value) : "No target (decline)";
+                case ActionKind.ChooseOption:
+                    if (state.Pending?.Kind == DecisionKind.TopOrBottom)
+                        return (a.Option == 1 ? "Put on the bottom: " : "Leave on top: ") + Name(state, state.Pending.Card);
+                    return "Option " + a.Option;
+                case ActionKind.ActivateAbility: return DescribeActivation(state, a);
                 case ActionKind.DeclareAttacker: return "Attack " + a.Defender + " with " + Name(state, a.Card);
                 case ActionKind.DeclareBlocker: return "Block " + Name(state, a.BlockedAttacker) + " with " + Name(state, a.Card);
                 case ActionKind.PlayCard:
@@ -137,7 +155,7 @@ namespace RestartedTavern.Rules
                     var card = state.FindObject(a.Card);
                     if (card?.DefinitionId != null)
                     {
-                        int gold = Payment.GoldNeeded(state.GetPlayer(a.Player), _db.Get(card.DefinitionId));
+                        int gold = Payment.GoldNeeded(state, _db, state.GetPlayer(a.Player), _db.Get(card.DefinitionId));
                         if (gold > 0) sb.Append("  [uses ").Append(gold).Append(" Gold]");
                     }
                     if (a.Invest) sb.Append("  +INVEST");
@@ -145,6 +163,30 @@ namespace RestartedTavern.Rules
                 }
                 default: return a.ToString();
             }
+        }
+
+        private string DescribeActivation(GameState state, PlayerAction a)
+        {
+            var source = state.FindObject(a.Card);
+            var def = _db.Get(source.DefinitionId);
+            var abilities = new GameRunner(_db, state, null).AbilitiesOf(source);
+            var ab = abilities[a.AbilityIndex];
+            var sb = new StringBuilder();
+            sb.Append(ab.IsTavernDwellerPower ? "Tavern Dweller Power (" + def.Name + "): " : def.Name + ": ").Append(ab.Text);
+            for (int i = 0; i < a.Targets.Length; i++)
+            {
+                var target = a.Targets[i];
+                sb.Append(i == 0 ? " -> " : ", ").Append(Name(state, target));
+                var t = target.IsPlayer ? null : state.FindObject(target.Object);
+                if (t != null && t.Zone == Zone.Battlefield) sb.Append(" (").Append(t.Controller).Append(')');
+            }
+            if (ab.HasX) sb.Append("  [X=").Append(a.X).Append(']');
+            if (!a.Sacrifice.IsNone) sb.Append("  [sacrifice ").Append(Name(state, a.Sacrifice)).Append(']');
+            var p = state.GetPlayer(a.Player);
+            int generic = Costs.AbilityCost(state, _db, a.Player, ab) + (ab.HasX ? a.X : 0);
+            int gold = Payment.GoldNeeded(p, generic, true, ab.GoldCost);
+            if (gold > 0) sb.Append("  [uses ").Append(gold).Append(" Gold]");
+            return sb.ToString();
         }
 
         /// <summary>Describe an event. Draws are only named for <paramref name="viewer"/> (null = everyone sees everything).</summary>
@@ -159,6 +201,11 @@ namespace RestartedTavern.Rules
                     return s.Player + " casts " + Name(s.DefinitionId)
                            + (s.Targets != null && s.Targets.Length > 0 ? " -> " + string.Join(", ", s.Targets.Select(t => Name(state, t))) : "")
                            + (s.Invested ? " (Invested)" : "");
+                case AbilityActivatedEvent act:
+                    return act.Player + (act.IsTavernDwellerPower ? " uses the Tavern Dweller Power of " : " activates ") + Name(act.SourceDefinitionId)
+                           + (act.Targets != null && act.Targets.Length > 0 ? " -> " + string.Join(", ", act.Targets.Select(t => Name(state, t))) : "")
+                           + (act.X > 0 ? " (X=" + act.X + ")" : "");
+                case AttachedEvent at: return Name(at.EquipmentDefinitionId) + " is attached to " + Name(state, at.AttachedTo);
                 case AbilityTriggeredEvent t:
                     return Name(t.SourceDefinitionId) + " triggers (" + t.When + ")"
                            + (t.Target.HasValue ? " -> " + Name(state, t.Target.Value) : "");

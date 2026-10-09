@@ -12,6 +12,11 @@ namespace RestartedTavern.Rules
         ChooseTriggerTarget,
         /// <summary>Cleanup: discard down to the max hand size.</summary>
         DiscardToHandSize,
+        /// <summary>
+        /// A resolving effect looked at the top card of the deck: 0 = leave it on top, 1 = put it on
+        /// the bottom (Auditor Prime). Answered with ChooseOption.
+        /// </summary>
+        TopOrBottom,
     }
 
     /// <summary>
@@ -26,6 +31,8 @@ namespace RestartedTavern.Rules
         public int Count { get; set; }
         /// <summary>ChooseTriggerTarget: the trigger being put on the Chain.</summary>
         public PendingTrigger Trigger { get; set; }
+        /// <summary>TopOrBottom: the card looked at.</summary>
+        public ObjectId Card { get; set; }
 
         public PendingDecision Clone()
         {

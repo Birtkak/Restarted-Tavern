@@ -1,0 +1,53 @@
+using System;
+using System.Collections.Generic;
+
+namespace RestartedTavern.Rules
+{
+    /// <summary>
+    /// "[Cost]: [Effect]." (MTG 602). Activating puts the ability on the Chain (GAME_DESIGN §8).
+    /// Payment (§5.2): the generic part (<see cref="Cost"/> and X) is paid with mana first, then
+    /// Gold; <see cref="GoldCost"/> ("Pay N Gold") is paid only with Gold, like Invest.
+    /// Equip and Tavern Dweller Powers are activated abilities with extra rules (see the flags).
+    /// </summary>
+    public sealed class ActivatedAbility
+    {
+        /// <summary>Generic cost: mana first, then Gold (§5.2).</summary>
+        public int Cost { get; set; }
+        /// <summary>"X, ...": X is added to the generic cost. See <see cref="XTargets"/>.</summary>
+        public bool HasX { get; set; }
+        /// <summary>"Pay N Gold": paid only with Gold (decided 2026-10-09).</summary>
+        public int GoldCost { get; set; }
+        /// <summary>"Tap: ..." Creatures can't use it the turn they arrive unless they have Haste (§7.4).</summary>
+        public bool TapCost { get; set; }
+        /// <summary>"Sacrifice a creature: ..." The creature is chosen as part of the action.</summary>
+        public bool SacrificeCreatureCost { get; set; }
+        /// <summary>"Pay N life: ..."</summary>
+        public int LifeCost { get; set; }
+
+        /// <summary>"Activate only as a sorcery": your main phase, empty Chain.</summary>
+        public bool SorcerySpeed { get; set; }
+        /// <summary>"Activate only once each turn" (MTG: once in each turn, yours or not).</summary>
+        public bool OncePerTurn { get; set; }
+        /// <summary>Equip X (§10): sorcery speed, target creature you control, Equip cost modifiers apply.</summary>
+        public bool IsEquip { get; set; }
+        /// <summary>A Tavern Dweller Power (§9.1): once each turn, instant speed.</summary>
+        public bool IsTavernDwellerPower { get; set; }
+
+        public List<TargetSlot> Targets { get; set; } = new List<TargetSlot>();
+        /// <summary>The source can't be one of its own targets.</summary>
+        public bool TargetsExcludeSource { get; set; }
+        /// <summary>
+        /// "Choose up to X [slot]" (Snik): X is the number of targets chosen, from 1 up to what you
+        /// can pay. Paying for more X than you choose does nothing, so it isn't offered.
+        /// </summary>
+        public TargetSlot XTargets { get; set; }
+        /// <summary>Extra legality check for a whole target combination (e.g. "another creature").</summary>
+        public Func<GameState, CardInstance, Target[], bool> TargetsAllowed { get; set; }
+
+        public List<Effect> Effects { get; set; } = new List<Effect>();
+        public string Text { get; set; } = "";
+
+        public bool LimitedPerTurn => OncePerTurn || IsTavernDwellerPower;
+        public bool IsSorcerySpeed => SorcerySpeed || IsEquip;
+    }
+}

@@ -168,12 +168,12 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void BarkeepsTonic_HealsThePatron_UpToStartingLife()
+        public void BarkeepsTonic_HealsTheTavernDweller_UpToStartingLife()
         {
             var g = TestGame.AtFirstMainPhase();
             var tonic = g.AddToHand(g.Active, "barkeeps_tonic");
             g.P(g.Active).Life = 29;
-            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Target == Target.ForPlayer(g.Other)), "only your own Patron");
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Target == Target.ForPlayer(g.Other)), "only your own Tavern Dweller");
             g.Do(PlayerAction.Play(g.Active, tonic.Id, Target.ForPlayer(g.Active)));
             g.PassRound();
             Assert.AreEqual(30, g.P(g.Active).Life);

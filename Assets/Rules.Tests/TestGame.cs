@@ -88,6 +88,20 @@ namespace RestartedTavern.Rules.Tests
             Timestamp = State.NextTimestamp++,
         };
 
+        /// <summary>Give a player a Tavern Dweller (test setup, bypasses deck validation).</summary>
+        public CardInstance SetTavernDweller(PlayerId player, string tavernDwellerId)
+        {
+            var c = NewCard(player, tavernDwellerId, Zone.TavernDweller);
+            P(player).TavernDwellerZone.Clear();
+            P(player).TavernDwellerZone.Add(c);
+            P(player).TavernDwellerId = tavernDwellerId;
+            return c;
+        }
+
+        /// <summary>The legal activations of the source's ability <paramref name="index"/>.</summary>
+        public List<PlayerAction> Activations(PlayerId player, CardInstance source, int index = 0) =>
+            Legal(player).Where(a => a.Kind == ActionKind.ActivateAbility && a.Card == source.Id && a.AbilityIndex == index).ToList();
+
         public void SetMana(PlayerId player, int mana)
         {
             P(player).Mana = mana;
@@ -120,6 +134,7 @@ namespace RestartedTavern.Rules.Tests
                         case DecisionKind.DiscardToHandSize:
                             Do(PlayerAction.Discard(State.Pending.Player, P(State.Pending.Player).Hand[0].Id));
                             continue;
+                        case DecisionKind.TopOrBottom: Do(PlayerAction.ChooseOption(State.Pending.Player, 0)); continue;
                         default: Assert.Fail("PassUntil hit a decision: " + State.Pending); return;
                     }
                 }

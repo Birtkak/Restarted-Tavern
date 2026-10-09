@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 64 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
+**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine prototype runs with 106 passing EditMode tests, including activated abilities, Equip and all 10 Tavern Dwellers. A hot-seat **debug table** in Unity can play it (§7).
 
 ---
 
@@ -69,14 +69,14 @@ FormatConfig   { deckSize, copyLimit, minPlayers, maxPlayers, startingLife,
 GameState      { players[], activePlayer, priorityPlayer, passesInRow,
                  turnNumber, phase, chain[], rngState, nextObjectId }
 
-PlayerState    { id, teamId, seat, eliminated, patronId, life, maxMana, mana, gold, attachedCurses[],
+PlayerState    { id, teamId, seat, eliminated, tavernDwellerId, life, maxMana, mana, gold, attachedCurses[],
                  zones: { deck, hand, battlefield, graveyard, exile } }
 
 CardDefinition { id, name, type, cost, power?, health?, keywords[],
                  abilities[], invest?, equipCost?, faction | "neutral",
                  rarity, text }
 
-PatronDefinition { id, name, factions[2], passive, power { goldCost, effect } }
+CardDefinition (type TavernDweller) { id, name, tavernDwellerFactions[2], triggers/statics (passive), abilities[0] (Power) }
 
 CardInstance   { objectId, definitionId, owner, controller,
                  currentHealth, tapped, summoningSick, counters{}, attachments[] }
@@ -120,7 +120,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 ---
 
 ## 5. Roadmap (draft)
-1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons.
+1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Tavern Dwellers.
 2. ✅ **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards (§7).
 3. 🚧 **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage. *Bot simulations and the first findings are in [playtest/PLAYTEST.md](playtest/PLAYTEST.md); human playtests are next.*
 4. **Minimal visual client** in Unity (Windows build): hot-seat 1v1.
@@ -142,9 +142,9 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 **API** (`GameEngine`): `CreateGame(format, players, seed)`, `GetLegalActions(state, player)`, `Apply(state, action) → events`, `WaitingOn(state)`. `Apply` **changes the state in place** and only accepts actions from the legal list. Call `GameState.Clone()` first to keep the old state (for AI search or undo). `GameState.CreateViewFor(player)` hides the other players' hands, all decks and the RNG.
 
 **Implemented**
-- Setup: a random first player, 7-card hands, the **London mulligan**, the first player skips the turn-1 draw, and the second player gets 1 Gold. `FormatConfig.MultiplayerStandard()` uses 40 life and no compensation.
+- Setup: a random first player, 7-card hands, the **London mulligan**, and the first player skips the turn-1 draw (MTG default, §3). `FormatConfig.MultiplayerStandard()` uses 40 life and no compensation.
 - Turn structure (§6): Start, Draw, Main 1, the combat steps, Main 2, End, and Cleanup (discard down to 7, then unspent mana becomes Gold capped at 5, then "until end of turn" effects end).
-- Mana and Gold (§5): mana is only available on your own turn. Everything except creatures can be paid with any mix of mana and Gold (creatures: mana only). Invest is paid with Gold only.
+- Mana and Gold (§5): mana is only available on your own turn. Permanents are paid with mana only; Instants, Sorceries and abilities use mana first, then Gold, automatically. Invest and "Pay N Gold" are paid with Gold only.
 - **The Chain** (§8): LIFO; the caster keeps priority; it resolves when every living player passes in a row; spells fizzle when their target is illegal; the fixed priority windows; auto-pass for players who have no other option (`GameState.AutoPass`).
 - **Multiple targets** (MTG 115, 608.2b): a spell has a list of target slots (optional slots for "up to N"). Targets are distinct, and illegal targets are skipped at resolution; the spell only fizzles when every target is gone. **Fight** (§11.1).
 - Triggers: Arrival, Last Breath, Attacks, Start/End of your turn. They use APNAP order and a target choice when they're put on the Chain. A trigger with no legal target is removed.
@@ -153,9 +153,15 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - State-based actions (MTG 704): 0 life, drawing from an empty deck, lethal damage, the Legendary rule, illegal Curses, unattaching Equipment, and the game ending when one team is left.
 - Continuous effects: static anthems/lords, +1/+1 counters and until-end-of-turn modifiers, applied in MTG layer order.
 - New object ids on every zone change. Tokens stop existing when they leave the battlefield.
-- 37 prototype cards (Goobers, Evergrowing Wild, Glitterworld without Equipment, Neutral) and three legal 60-card decks (Goober Mob, Jungle Stampede, Zoo Patrol) in `Assets/Rules/Cards/PrototypeCards.cs`.
+- **Activated abilities** (MTG 602, `Core/ActivatedAbility.cs`, `Flow/GameRunner.Abilities.cs`): generic costs (mana first, then Gold, §5.2), X costs, "Pay N Gold" (Gold only), Tap (not while summoning sick unless Haste, §7.4), sacrifice and life costs; "only as a sorcery" and "once each turn" (tracked in `GameState.UsesThisTurn`, reset every turn). They go on the Chain as `ChainItemKind.ActivatedAbility` and resolve even if the source left. Legal actions list every target combination and sacrifice choice (`ActionKind.ActivateAbility`, `PlayerAction.AbilityIndex/X/Sacrifice`).
+- **Equip** (§10, MTG 701.3): a sorcery-speed ability with Equip cost modifiers; Equipment bonuses are continuous effects (`AttachedCreatureModifier`), including **granted triggered and activated abilities** (Pulse Blade, Overclock Rig). Moving Equipment ends the old bonus without killing (§7.3); when the creature leaves, the Equipment stays unattached.
+- **Layers**: `CharacteristicsCalculator` applies layer 6 (keywords) before layer 7c (Power/Health), so "creatures with Trample get +1/+0" sees granted Trample.
+- **Tavern Dwellers** (§9): a `CardType.TavernDweller` card in the public Tavern Dweller zone (`PlayerState.TavernDwellerZone`). Passives are triggered abilities (new watcher triggers: a creature dies, a spell is cast, Equip is paid, Equipment becomes unattached; with "you / opponents", min Power/cost and "at most N times each turn"), statics (anthems that work from the Tavern Dweller zone), cost modifiers (`CostModifierAbility`: spells, Invest, Equip) and "enters with a counter". The Power is an activated ability, once each turn, at instant speed. Deck validation checks that every card is from the Tavern Dweller's factions or Neutral. `FormatConfig.TavernDwellersEnabled` is an experiment switch.
+- Other new mechanics: optional ("you may") trigger targets, triggers that fire once per Equipment (Archon Lumen), combat-damage-to-a-player triggers, token copies, graveyard targets, and a mid-resolution choice (`DecisionKind.TopOrBottom`, `ActionKind.ChooseOption`).
+- **Prototype cards** (`Assets/Rules/Cards/`): the 37 original cards, the Glitterworld Equipment package (Neon Shiv, Pulse Blade, Overclock Rig, Rail Cannon, Megacorp Exosuit, Courier Bot, Back-Street Mechanic, Alley Tinker, Arc Welder, Patrol Captain, Titan-Frame Guardian, Archon Lumen), Snik, Grove Elder, Mercenary Contract, the v0.2 cards Gilded Knuckles, Marksman Scope, Drone Launcher, Patch-Up Drone, Scrap Collector, Repair Bay, Tip Jar, Hired Muscle and Wound Dresser, and all 10 Tavern Dwellers. Six legal decks, each with its Tavern Dweller: Goober Mob (Skabba), Jungle Stampede (Mukk), Zoo Patrol (Keeper Z-00), Vesper's Ledger (Madame Vesper), Sparkwrench Scrappers (Sparkwrench) and Auditor's Arsenal (Auditor Prime, the Equipment deck).
+- `GameEngine.CacheLegalActions` (opt-in, used by `MatchRunner`): the bot's legal-action list is reused by `Apply`'s validation, so it isn't enumerated twice.
 
-**Tests** (`Assets/Rules.Tests`, 64 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 106 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
@@ -163,7 +169,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 **Debug table** (`Assets/Client/DebugTable.cs`, scene `Assets/Scenes/DebugTable.unity`). This is a hot-seat IMGUI table for 1v1 with the three prototype decks (`PrototypeCards`); the P1/P2 deck buttons choose them for the next game.
 - Waiting on someone: the top bar names them and their header turns green.
 - Your options: their legal actions are listed as buttons. Cards they can act with are tinted green, and clicking a card filters the list to the actions that involve it.
-- What's on the table: the board shows Power/Health, damage, keywords, and tapped/sick/attacking/blocking states, plus the Chain (top first) and the current combat.
+- What's on the table: each player's Tavern Dweller (text, factions, "Power used this turn"), the board with Power/Health, damage, keywords, tapped/sick/attacking/blocking/equipped states and what each Equipment is attached to, plus the Chain (top first, with ability texts and Tavern Dweller Powers marked) and the current combat. Abilities and Powers appear in the action list like any other action; click the Tavern Dweller or a permanent to see only its actions.
 - Hidden information: a hand is shown only while its owner is the one to act (or with *Show all hands*). In hot-seat the log doesn't name drawn cards.
 - Controls: *Undo* (last 200 states), *New game* (with a seed), *Auto-pass*, and either player can be handed to a random bot.
 - Build: menu **Restarted Tavern → Build Windows Debug Table**, or headless:
@@ -174,10 +180,11 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
-**Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_ABILITIES_AND_PATRONS.md](handoff/NEXT_ABILITIES_AND_PATRONS.md))
-- Activated abilities (Tap: …, Pay X Gold: …) and **Patron powers and passives**.
+**Not yet implemented** (next steps)
+- Cards blocked on other features: Hardlight Aegis (damage prevention), Champion's Belt (combat-kill trigger), the "bank" / spend-Gold triggers, Offshore Account (per-player Gold cap), and the other v0.2 cards whose Engine column names a missing feature.
+- A Tavern Dweller zone that can be targeted or removed (v0.1: it can't), and Tavern Dwellers in multiplayer politics.
+- Snik copies by **target** (chosen on activation). Copying something that left in response uses nothing (MTG would use last known information).
 - Rules terms introduced by the v0.2 drafts: **bank** triggers (in the cleanup step), per-player Gold caps, "can't be healed", "damaged" target filters, spend-Gold triggers.
-- Equip, and casting Curses/Relics with real cards (the rules support exists, but no cards use it yet).
 - Player choices that are currently automatic: how an attacker splits damage among several blockers (§7.2), which Legendary to keep, and ordering your own simultaneous triggers.
 - Divided damage ("deal 3 damage divided as you choose"), X costs, "may" choices, rummaging, and "whenever this is dealt damage" triggers (Worldroot Hydra).
 - Replacement effects, control-changing effects, and filtering events by hidden information.

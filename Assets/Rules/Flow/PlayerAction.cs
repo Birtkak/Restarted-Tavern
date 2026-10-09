@@ -17,6 +17,10 @@ namespace RestartedTavern.Rules
         FinishBlocks,
         ChooseTarget,
         Discard,
+        /// <summary>Activate an ability of a permanent or the Tavern Dweller's Power (MTG 602, GAME_DESIGN §9.1).</summary>
+        ActivateAbility,
+        /// <summary>Answer a yes/no or pick-one choice made while something resolves (PendingDecision.Options).</summary>
+        ChooseOption,
     }
 
     /// <summary>
@@ -40,6 +44,14 @@ namespace RestartedTavern.Rules
         public Target? Target => Targets.Length > 0 ? Targets[0] : (Target?)null;
         /// <summary>PlayCard: also pay the Invest cost (Gold only).</summary>
         public bool Invest { get; set; }
+        /// <summary>ActivateAbility: index into the source's abilities (printed first, then granted ones).</summary>
+        public int AbilityIndex { get; set; }
+        /// <summary>ActivateAbility: the value chosen for X.</summary>
+        public int X { get; set; }
+        /// <summary>ActivateAbility: the creature sacrificed to pay the cost.</summary>
+        public ObjectId Sacrifice { get; set; }
+        /// <summary>ChooseOption: the option picked.</summary>
+        public int Option { get; set; }
 
         public static PlayerAction Pass(PlayerId p) => new PlayerAction { Kind = ActionKind.PassPriority, Player = p };
         public static PlayerAction Keep(PlayerId p) => new PlayerAction { Kind = ActionKind.Keep, Player = p };
@@ -49,6 +61,16 @@ namespace RestartedTavern.Rules
         public static PlayerAction FinishAttacks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishAttacks, Player = p };
         public static PlayerAction FinishBlocks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishBlocks, Player = p };
         public static PlayerAction ChooseTarget(PlayerId p, Target t) => new PlayerAction { Kind = ActionKind.ChooseTarget, Player = p, Targets = new[] { t } };
+
+        public static PlayerAction ChooseOption(PlayerId p, int option) => new PlayerAction { Kind = ActionKind.ChooseOption, Player = p, Option = option };
+
+        public static PlayerAction Activate(PlayerId p, ObjectId source, int abilityIndex, Target[] targets = null, int x = 0,
+            ObjectId sacrifice = default) =>
+            new PlayerAction
+            {
+                Kind = ActionKind.ActivateAbility, Player = p, Card = source, AbilityIndex = abilityIndex,
+                Targets = targets ?? Array.Empty<Target>(), X = x, Sacrifice = sacrifice,
+            };
 
         public static PlayerAction Play(PlayerId p, ObjectId card, Target? target = null, bool invest = false) =>
             Play(p, card, target.HasValue ? new[] { target.Value } : Array.Empty<Target>(), invest);
@@ -68,7 +90,8 @@ namespace RestartedTavern.Rules
             return Kind == other.Kind && Player == other.Player && Card == other.Card
                 && BlockedAttacker == other.BlockedAttacker && Defender == other.Defender
                 && Targets.SequenceEqual(other.Targets)
-                && Invest == other.Invest;
+                && Invest == other.Invest && AbilityIndex == other.AbilityIndex && X == other.X
+                && Sacrifice == other.Sacrifice && Option == other.Option;
         }
 
         public override bool Equals(object obj) => obj is PlayerAction other && Equals(other);
@@ -84,6 +107,10 @@ namespace RestartedTavern.Rules
                 h = h * 31 + Defender.Value;
                 foreach (var t in Targets) h = h * 31 + t.GetHashCode();
                 h = h * 31 + (Invest ? 1 : 0);
+                h = h * 31 + AbilityIndex;
+                h = h * 31 + X;
+                h = h * 31 + Sacrifice.Value;
+                h = h * 31 + Option;
                 return h;
             }
         }
@@ -97,6 +124,10 @@ namespace RestartedTavern.Rules
             if (Kind == ActionKind.DeclareBlocker) sb.Append(" blocks ").Append(BlockedAttacker);
             if (Targets.Length > 0) sb.Append(" @").Append(string.Join(",", Targets));
             if (Invest) sb.Append(" invest");
+            if (Kind == ActionKind.ActivateAbility) sb.Append(" ability").Append(AbilityIndex);
+            if (X != 0) sb.Append(" X=").Append(X);
+            if (!Sacrifice.IsNone) sb.Append(" sac ").Append(Sacrifice);
+            if (Kind == ActionKind.ChooseOption) sb.Append(' ').Append(Option);
             return sb.ToString();
         }
     }

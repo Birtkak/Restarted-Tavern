@@ -12,8 +12,8 @@ namespace RestartedTavern.Rules.Tests
         public void PrototypeDecks_AreLegalStandardDecks()
         {
             var db = PrototypeCards.CreateDatabase();
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.GooberMobDeck()));
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.JungleStampedeDeck()));
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.GooberMobDeck(), PrototypeCards.GooberMobTavernDweller));
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.JungleStampedeDeck(), PrototypeCards.JungleStampedeTavernDweller));
         }
 
         [Test]
@@ -27,8 +27,8 @@ namespace RestartedTavern.Rules.Tests
                 var events = new List<GameEvent>();
                 var state = engine.CreateGame(FormatConfig.Standard(), new[]
                 {
-                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck() },
-                    new PlayerSetup { Deck = PrototypeCards.JungleStampedeDeck() },
+                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
+                    new PlayerSetup { Deck = PrototypeCards.JungleStampedeDeck(), TavernDwellerId = PrototypeCards.JungleStampedeTavernDweller },
                 }, seed, events);
                 text.Remember(state, events);
                 var rng = new DeterministicRng(seed);

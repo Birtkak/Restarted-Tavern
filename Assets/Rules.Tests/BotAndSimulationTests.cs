@@ -14,8 +14,8 @@ namespace RestartedTavern.Rules.Tests
             var db = PrototypeCards.CreateDatabase();
             var cfg = new MatchConfig
             {
-                Name = "smoke", DeckAName = "G", DeckA = PrototypeCards.GooberMobDeck(),
-                DeckBName = "J", DeckB = PrototypeCards.JungleStampedeDeck(), Games = 20,
+                Name = "smoke", DeckAName = "G", DeckA = PrototypeCards.GooberMobDeck(), TavernDwellerA = PrototypeCards.GooberMobTavernDweller,
+                DeckBName = "J", DeckB = PrototypeCards.JungleStampedeDeck(), TavernDwellerB = PrototypeCards.JungleStampedeTavernDweller, Games = 20,
             };
             var a = MatchRunner.Run(cfg, db);
             var b = MatchRunner.Run(cfg, db);
@@ -24,6 +24,35 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(a.WinsA, b.WinsA);
             CollectionAssert.AreEqual(a.GameLengths, b.GameLengths);
             Assert.Greater(a.CreatureTurnSamples, 0);
+        }
+
+        [Test]
+        public void GreedyBot_UsesTavernDwellerPowersAndEquip()
+        {
+            var db = PrototypeCards.CreateDatabase();
+            var cfg = new MatchConfig
+            {
+                Name = "arsenal", DeckAName = "A", DeckA = PrototypeCards.AuditorsArsenalDeck(), TavernDwellerA = PrototypeCards.AuditorsArsenalTavernDweller,
+                DeckBName = "Z", DeckB = PrototypeCards.ZooPatrolDeck(), TavernDwellerB = PrototypeCards.ZooPatrolTavernDweller, Games = 10,
+            };
+            var r = MatchRunner.Run(cfg, db);
+            Assert.AreEqual(0, r.Draws);
+            Assert.Greater(r.PowersUsed, 0, "Tavern Dweller Powers get used");
+            Assert.Greater(r.PowersOnOpponentsTurn, 0, "some on the opponent's turn, with Gold");
+            Assert.Greater(r.AbilitiesActivated, 0, "Equip and Tap abilities get used");
+        }
+
+        [Test]
+        public void GreedyBot_EquipsItsBestCreature()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var shiv = g.AddToBattlefield(g.Active, "megacorp_exosuit");
+            g.AddToBattlefield(g.Active, "goober_rascal");
+            var bouncer = g.AddToBattlefield(g.Active, "ironbark_grizzly");
+            g.SetMana(g.Active, 3);
+            var choice = new GreedyBot(g.Engine).Choose(g.State, g.Active);
+            Assert.AreEqual(ActionKind.ActivateAbility, choice.Kind);
+            Assert.AreEqual(Target.ForObject(bouncer.Id), choice.Target);
         }
 
         [Test]
@@ -59,8 +88,8 @@ namespace RestartedTavern.Rules.Tests
             {
                 var state = engine.CreateGame(FormatConfig.Standard(), new[]
                 {
-                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck() },
-                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck() },
+                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
+                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
                 }, seed);
                 var rng = new DeterministicRng(seed);
                 var botPlayer = new PlayerId(seed % 2 == 0 ? 1 : 2);
@@ -94,7 +123,8 @@ namespace RestartedTavern.Rules.Tests
             format.SecondPlayerFirstTurnBonusMana = 1;
             format.FirstPlayerSkipsDraw = false;
             var deck = PrototypeCards.GooberMobDeck();
-            var s = engine.CreateGame(format, new[] { new PlayerSetup { Deck = deck }, new PlayerSetup { Deck = deck } }, 3);
+            var tavernDweller = PrototypeCards.GooberMobTavernDweller;
+            var s = engine.CreateGame(format, new[] { new PlayerSetup { Deck = deck, TavernDwellerId = tavernDweller }, new PlayerSetup { Deck = deck, TavernDwellerId = tavernDweller } }, 3);
             s.AutoPass = false;
             engine.Apply(s, PlayerAction.Keep(s.Pending.Player));
             engine.Apply(s, PlayerAction.Keep(s.Pending.Player));

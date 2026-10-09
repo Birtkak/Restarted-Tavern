@@ -1,8 +1,9 @@
-# Patrons — Card List
+# Tavern Dwellers — Card List
 
-One Patron per faction pair (10 total). The Patron **is your face**: it starts in the Patron zone, has your life total, and never attacks or blocks (GAME_DESIGN §9).
+One Tavern Dweller per faction pair (10 total). The Tavern Dweller **is your face**: it starts in the Tavern Dweller zone, has your life total, and never attacks or blocks (GAME_DESIGN §9). (Called **Patrons** until 2026-10-09.)
 - **Passive**: always on.
-- **Power (N)**: costs N **Gold**. Once per turn, at instant speed (it goes on the Chain).
+- **Power (N)**: costs N, paid like any activated ability: **mana first, then Gold** (GAME_DESIGN §5.2). On other players' turns you have no mana, so it's paid with Gold there. **Once each turn** (MTG: once in each turn, yours or an opponent's), at instant speed (it goes on the Chain).
+- All 10 are implemented in the engine (`Assets/Rules/Cards/PrototypeCards.TavernDwellers.cs`).
 
 **Token:** *Spawn*, a 2/2 Creature: Spawn (made by The Rotmother).
 
@@ -10,7 +11,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ revised in the final pass
 
 ---
 
-| # | Pair | Patron | Passive | Power | Status |
+| # | Pair | Tavern Dweller | Passive | Power | Status |
 |---|---|---|---|---|---|
 | 1 | Wizards + Goobers | **Grizzle Coinflick**, goblin pyromancer-for-hire | Whenever you cast a spell that costs **5 or more**, create a 1/1 Goober. | (2) Deal 1 damage to any target. | ✅ |
 | 2 | Wizards + Sensationalists | **Madame Vesper**, the debt collector | Whenever a creature an opponent controls dies, gain 1 Gold. | (3) Draw a card and lose 2 life. | ✅ |

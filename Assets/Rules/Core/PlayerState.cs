@@ -10,7 +10,7 @@ namespace RestartedTavern.Rules
         public int Seat { get; set; }
         /// <summary>Every player gets a team from the start (GAME_DESIGN §13.1). Free-for-all: one team per player.</summary>
         public int TeamId { get; set; }
-        public string PatronId { get; set; }
+        public string TavernDwellerId { get; set; }
 
         public int Life { get; set; }
         public int MaxMana { get; set; }
@@ -32,6 +32,11 @@ namespace RestartedTavern.Rules
         /// <summary>Index 0 is the bottom; the newest card is last.</summary>
         public List<CardInstance> Graveyard { get; set; } = new List<CardInstance>();
         public List<CardInstance> Exile { get; set; } = new List<CardInstance>();
+        /// <summary>The Tavern Dweller (GAME_DESIGN §9.1): public, never leaves in v0.1. Empty when playing without Tavern Dwellers.</summary>
+        public List<CardInstance> TavernDwellerZone { get; set; } = new List<CardInstance>();
+
+        /// <summary>The Tavern Dweller object, or null.</summary>
+        public CardInstance TavernDweller => TavernDwellerZone.Count > 0 ? TavernDwellerZone[0] : null;
 
         public List<CardInstance> GetZone(Zone zone)
         {
@@ -42,6 +47,7 @@ namespace RestartedTavern.Rules
                 case Zone.Battlefield: return Battlefield;
                 case Zone.Graveyard: return Graveyard;
                 case Zone.Exile: return Exile;
+                case Zone.TavernDweller: return TavernDwellerZone;
                 default: throw new ArgumentException("Players have no " + zone + " zone.");
             }
         }
@@ -54,6 +60,7 @@ namespace RestartedTavern.Rules
             p.Battlefield = CloneList(Battlefield);
             p.Graveyard = CloneList(Graveyard);
             p.Exile = CloneList(Exile);
+            p.TavernDwellerZone = CloneList(TavernDwellerZone);
             return p;
         }
 

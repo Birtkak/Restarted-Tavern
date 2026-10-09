@@ -20,13 +20,17 @@ namespace RestartedTavern.Rules
     {
         private readonly GameRunner _runner;
 
-        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets)
+        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0)
         {
             _runner = runner;
             Controller = controller;
             Source = source;
             Targets = targets;
+            X = x;
         }
+
+        /// <summary>The X paid for an activated ability (0 otherwise).</summary>
+        public int X { get; }
 
         public GameState State => _runner.State;
         public CardDatabase Cards => _runner.Db;
@@ -54,6 +58,10 @@ namespace RestartedTavern.Rules
         public void AddCounters(ObjectId creature, int count) => _runner.AddCounters(creature, count);
 
         public void Fight(CardInstance a, CardInstance b) => _runner.Fight(a, b);
+        public void Attach(CardInstance equipment, CardInstance creature) => _runner.Attach(equipment, creature);
+        public CardInstance MoveToHand(CardInstance card) => _runner.MoveCard(card, Zone.Hand);
+        /// <summary>Ask the controller whether to put the top card of their deck on the bottom. Must be the last effect.</summary>
+        public void AskTopOrBottom() => _runner.AskTopOrBottom(Controller);
         public void Destroy(CardInstance permanent) => _runner.MoveCard(permanent, Zone.Graveyard);
 
         public void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants) =>

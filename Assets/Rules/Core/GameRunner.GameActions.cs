@@ -27,6 +27,8 @@ namespace RestartedTavern.Rules
             var from = card.Zone;
             var def = Def(card);
             var lastController = card.Controller;
+            bool dies = from == Zone.Battlefield && to == Zone.Graveyard && def.IsCreature;
+            int lastPower = dies ? Stats(card).Power : 0; // last known information (MTG 608.2h)
 
             // A lord/anthem leaving ends its buffs (§7.3: losing a buff can't kill).
             var buffSnapshot = from == Zone.Battlefield && def.Statics.Count > 0 ? SnapshotRemainingHealth() : null;
@@ -35,8 +37,6 @@ namespace RestartedTavern.Rules
             else if (from != Zone.Chain) S.GetPlayer(card.Owner).GetZone(from).Remove(card);
 
             if (buffSnapshot != null) CapDamageAfterBuffsEnd(buffSnapshot);
-
-            bool dies = from == Zone.Battlefield && to == Zone.Graveyard && def.IsCreature;
 
             CardInstance moved = null;
             if (card.IsToken && to != Zone.Battlefield && to != Zone.Chain)
@@ -73,9 +73,13 @@ namespace RestartedTavern.Rules
             {
                 Emit(new CreatureDiedEvent { Card = card.Id, DefinitionId = def.Id, Controller = lastController });
                 QueueTriggers(def, TriggerEvent.LastBreath, lastController, card.Id);
+                QueueWatcherTriggers(TriggerEvent.CreatureDies, lastController, t => t.MinPower <= 0 || lastPower >= t.MinPower);
             }
             if (to == Zone.Battlefield)
-                QueueTriggers(def, TriggerEvent.Arrival, moved.Controller, moved.Id);
+            {
+                ApplyEntersWithCounters(moved);
+                QueueTriggers(moved, TriggerEvent.Arrival);
+            }
 
             return moved;
         }
@@ -102,8 +106,49 @@ namespace RestartedTavern.Rules
             token.SummoningSick = true;
             S.GetPlayer(controller).Battlefield.Add(token);
             Emit(new TokenCreatedEvent { Controller = controller, Token = token.Id, DefinitionId = definitionId });
-            QueueTriggers(Db.Get(definitionId), TriggerEvent.Arrival, controller, token.Id);
+            ApplyEntersWithCounters(token);
+            QueueTriggers(token, TriggerEvent.Arrival);
             return token;
+        }
+
+        /// <summary>
+        /// "Your creatures with 5 or more Health enter with a +1/+1 counter" (Keeper Z-00). A
+        /// replacement effect (MTG 614.1c): Health is checked as the creature exists on the
+        /// battlefield, so static buffs count (MTG 614.12).
+        /// </summary>
+        private void ApplyEntersWithCounters(CardInstance permanent)
+        {
+            if (!Def(permanent).IsCreature) return;
+            var p = S.GetPlayer(permanent.Controller);
+            int counters = 0;
+            int health = Stats(permanent).MaxHealth;
+            foreach (var list in new[] { p.TavernDwellerZone, p.Battlefield })
+                foreach (var source in list)
+                    foreach (var st in Def(source).Statics)
+                        if (st is EntersWithCountersAbility e && health >= e.MinHealth) counters += e.Counters;
+            permanent.PlusOneCounters += counters;
+        }
+
+        /// <summary>
+        /// Attach an Equipment to a creature (Equip, MTG 701.3). Nothing happens if either is gone,
+        /// isn't the right type, or it's already attached there. Moving it away from another
+        /// creature ends that creature's bonus, which can't kill it (§7.3).
+        /// </summary>
+        internal void Attach(CardInstance equipment, CardInstance creature)
+        {
+            if (equipment == null || creature == null) return;
+            if (S.FindOnBattlefield(equipment.Id) == null || S.FindOnBattlefield(creature.Id) == null) return;
+            if (Def(equipment).Type != CardType.Equipment || !Def(creature).IsCreature) return;
+            if (equipment.AttachedToObject == creature.Id) return;
+
+            var old = equipment.AttachedToObject;
+            var snapshot = old.IsNone ? null : SnapshotRemainingHealth();
+            equipment.AttachedToObject = creature.Id;
+            if (snapshot != null) CapDamageAfterBuffsEnd(snapshot);
+
+            Emit(new AttachedEvent { Equipment = equipment.Id, EquipmentDefinitionId = equipment.DefinitionId, AttachedTo = creature.Id });
+            if (!old.IsNone) QueueWatcherTriggers(TriggerEvent.EquipmentUnattached, equipment.Controller);
+            QueueTriggers(creature, TriggerEvent.EquipmentAttachedToThis);
         }
 
         /// <summary>
@@ -118,6 +163,8 @@ namespace RestartedTavern.Rules
                 if (S.GetPlayer(target.Player).HasLost) return;
                 Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 ChangeLife(target.Player, -amount);
+                var dealer = isCombat ? S.FindOnBattlefield(source) : null;
+                if (dealer != null) QueueTriggers(dealer, TriggerEvent.DealsCombatDamageToPlayer);
             }
             else
             {

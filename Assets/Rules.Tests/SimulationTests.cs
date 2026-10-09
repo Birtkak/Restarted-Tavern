@@ -13,13 +13,18 @@ namespace RestartedTavern.Rules.Tests
     {
         private const int MaxActionsPerGame = 20000;
 
-        private static List<string> RandomDeck(CardDatabase db, DeterministicRng rng)
+        /// <summary>A random Tavern Dweller and a random legal deck from its two factions plus Neutral.</summary>
+        private static PlayerSetup RandomDeck(CardDatabase db, DeterministicRng rng)
         {
-            var pool = db.All.Where(c => !c.IsToken).Select(c => c.Id).OrderBy(id => id).ToList();
+            var tavernDwellers = db.All.Where(c => c.IsTavernDweller).OrderBy(c => c.Id).ToList();
+            var tavernDweller = tavernDwellers[rng.Next(tavernDwellers.Count)];
+            var pool = db.All.Where(c => !c.IsToken && !c.IsTavernDweller
+                                         && (c.Faction == "neutral" || tavernDweller.TavernDwellerFactions.Contains(c.Faction)))
+                .Select(c => c.Id).OrderBy(id => id).ToList();
             rng.Shuffle(pool);
             var deck = new List<string>();
             foreach (var id in pool.Take(15)) deck.AddRange(Enumerable.Repeat(id, 4));
-            return deck; // 15 × 4 = 60, a legal Standard deck
+            return new PlayerSetup { Deck = deck, TavernDwellerId = tavernDweller.Id }; // 15 × 4 = 60, a legal Standard deck
         }
 
         /// <summary>Plays one full game with random bots. Returns the final fingerprint.</summary>
@@ -32,8 +37,8 @@ namespace RestartedTavern.Rules.Tests
             var botRng = new DeterministicRng(seed * 7919 + 1);
             var setups = new[]
             {
-                new PlayerSetup { Deck = RandomDeck(db, botRng) },
-                new PlayerSetup { Deck = RandomDeck(db, botRng) },
+                RandomDeck(db, botRng),
+                RandomDeck(db, botRng),
             };
             var state = engine.CreateGame(FormatConfig.Standard(), setups, seed);
 
@@ -77,7 +82,22 @@ namespace RestartedTavern.Rules.Tests
                     Assert.AreEqual(Zone.Battlefield, c.Zone);
                     Assert.AreEqual(p.Id, c.Controller);
                 }
+
+                // §9.1: the Tavern Dweller never leaves the Tavern Dweller zone.
+                Assert.AreEqual(1, p.TavernDwellerZone.Count, "one Tavern Dweller");
+                Assert.AreEqual(p.TavernDwellerId, p.TavernDwellerZone[0].DefinitionId);
+                Assert.AreEqual(Zone.TavernDweller, p.TavernDwellerZone[0].Zone);
             }
+
+            // Equipment is only ever attached to a creature on the battlefield (or to nothing) once SBAs ran.
+            if (s.PriorityPlayer.HasValue && !s.IsGameOver)
+                foreach (var c in s.AllPermanents())
+                    if (db.Get(c.DefinitionId).Type == CardType.Equipment && !c.AttachedToObject.IsNone)
+                    {
+                        var host = s.FindOnBattlefield(c.AttachedToObject);
+                        Assert.IsNotNull(host, "Equipment attached to something that's gone");
+                        Assert.IsTrue(db.Get(host.DefinitionId).IsCreature);
+                    }
 
             // When someone holds priority, state-based actions have been applied.
             if (s.PriorityPlayer.HasValue && !s.IsGameOver)
@@ -124,7 +144,7 @@ namespace RestartedTavern.Rules.Tests
             var engine = new GameEngine(db);
             var rng = new DeterministicRng(5);
             var state = engine.CreateGame(FormatConfig.Standard(),
-                new[] { new PlayerSetup { Deck = RandomDeck(db, rng) }, new PlayerSetup { Deck = RandomDeck(db, rng) } }, 5);
+                new[] { RandomDeck(db, rng), RandomDeck(db, rng) }, 5);
             var before = state.Fingerprint();
             var copy = state.Clone();
 

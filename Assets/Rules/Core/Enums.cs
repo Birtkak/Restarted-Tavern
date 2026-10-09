@@ -11,6 +11,8 @@ namespace RestartedTavern.Rules
         Graveyard,
         Exile,
         Chain,
+        /// <summary>Public zone holding each player's Tavern Dweller (GAME_DESIGN §4, §9.1). Tavern Dwellers never leave it in v0.1.</summary>
+        TavernDweller,
     }
 
     /// <summary>GAME_DESIGN §10.</summary>
@@ -22,6 +24,8 @@ namespace RestartedTavern.Rules
         Equipment,
         Relic,
         Curse,
+        /// <summary>The player's face (GAME_DESIGN §9). Lives in the Tavern Dweller zone, is never cast and never a permanent.</summary>
+        TavernDweller,
     }
 
     /// <summary>CARD_DESIGN rarities. Legendary cards also follow the Legendary rule.</summary>

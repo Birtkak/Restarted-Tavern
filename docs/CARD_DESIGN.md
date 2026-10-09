@@ -58,10 +58,10 @@ Starting values for the budget, to be tuned in playtesting.
 |---|---|---|
 | Each faction (×5) | 20 | 9 / 6 / 4 / 1 |
 | Neutral | 10 | 5 / 3 / 2 / 0 |
-| Patrons | 10 | (one per pair, see GAME_DESIGN §9.3) |
+| Tavern Dwellers | 10 | (one per pair, see GAME_DESIGN §9.3) |
 | **Total** | **120** | |
 
-🔒 **Set v0.2 (approved 2026-10-09):** +10 cards per faction (5 C / 3 U / 2 R) and +20 Neutral (10 C / 6 U / 4 R), so 30 per faction, 30 Neutral and 10 Patrons (190 total). The goal is depth for the mechanics already in place, not new keywords. The cards are in each card list under "Set v0.2 additions".
+🔒 **Set v0.2 (approved 2026-10-09):** +10 cards per faction (5 C / 3 U / 2 R) and +20 Neutral (10 C / 6 U / 4 R), so 30 per faction, 30 Neutral and 10 Tavern Dwellers (190 total). The goal is depth for the mechanics already in place, not new keywords. The cards are in each card list under "Set v0.2 additions".
 
 🟡 Mana curve for each faction's 20 cards: about 3 one-drops, 4 two-drops, 4 three-drops, 3 four-drops, 3 five-drops, 2 six-drops, and 1 card at 7–10. Plus about 6 non-creature cards spread across the curve.
 
@@ -128,4 +128,4 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
 | **Tavern Bouncer** | 3 | Creature: Human (C) | 2/5 | — |
-| **Barkeep's Tonic** | 1 | Instant (C) | — | Heal 3 from a creature or your Patron. Invest 1: Draw a card. |
+| **Barkeep's Tonic** | 1 | Instant (C) | — | Heal 3 from a creature or your Tavern Dweller. Invest 1: Draw a card. |

@@ -30,11 +30,16 @@ namespace RestartedTavern.Client
         private const int MaxLog = 400;
 
         private static readonly string[] DeckNames =
-            { "Goober Mob", "Jungle Stampede", "Zoo Patrol", "Vesper's Ledger", "Sparkwrench Scrappers" };
+            { "Goober Mob", "Jungle Stampede", "Zoo Patrol", "Vesper's Ledger", "Sparkwrench Scrappers", "Auditor's Arsenal" };
         private static readonly Func<List<string>>[] Decks =
         {
             PrototypeCards.GooberMobDeck, PrototypeCards.JungleStampedeDeck, PrototypeCards.ZooPatrolDeck,
-            PrototypeCards.VespersLedgerDeck, PrototypeCards.SparkwrenchScrappersDeck,
+            PrototypeCards.VespersLedgerDeck, PrototypeCards.SparkwrenchScrappersDeck, PrototypeCards.AuditorsArsenalDeck,
+        };
+        private static readonly string[] TavernDwellers =
+        {
+            PrototypeCards.GooberMobTavernDweller, PrototypeCards.JungleStampedeTavernDweller, PrototypeCards.ZooPatrolTavernDweller,
+            PrototypeCards.VespersLedgerTavernDweller, PrototypeCards.SparkwrenchScrappersTavernDweller, PrototypeCards.AuditorsArsenalTavernDweller,
         };
 
         /// <summary>Deck choice per seat (index into <see cref="Decks"/>). Applies from the next new game.</summary>
@@ -104,8 +109,8 @@ namespace RestartedTavern.Client
             var events = new List<GameEvent>();
             _state = _engine.CreateGame(FormatConfig.Standard(), new[]
             {
-                new PlayerSetup { Deck = Decks[_deckChoice[0]]() },
-                new PlayerSetup { Deck = Decks[_deckChoice[1]]() },
+                new PlayerSetup { Deck = Decks[_deckChoice[0]](), TavernDwellerId = TavernDwellers[_deckChoice[0]] },
+                new PlayerSetup { Deck = Decks[_deckChoice[1]](), TavernDwellerId = TavernDwellers[_deckChoice[1]] },
             }, seed, events);
             _text.Remember(_state, events);
             AddToLog(events);
@@ -290,6 +295,8 @@ namespace RestartedTavern.Client
             GUILayout.Box(header + (waiting == p.Id ? "    <- to act" : ""), _headerStyle, GUILayout.ExpandWidth(true));
             GUI.contentColor = old;
 
+            GUILayout.Label("Tavern Dweller", _labelStyle);
+            DrawCardRow(p.TavernDwellerZone, width, true, CardWidth * 2.4f);
             GUILayout.Label("Battlefield", _labelStyle);
             DrawCardRow(p.Battlefield, width, true);
 
@@ -306,14 +313,14 @@ namespace RestartedTavern.Client
             GUILayout.Space(10);
         }
 
-        private void DrawCardRow(List<CardInstance> cards, float width, bool clickable)
+        private void DrawCardRow(List<CardInstance> cards, float width, bool clickable, float cardWidth = CardWidth)
         {
             if (cards.Count == 0)
             {
                 GUILayout.Label("  (empty)", _labelStyle);
                 return;
             }
-            int perRow = Mathf.Max(1, Mathf.FloorToInt(width / (CardWidth + 6)));
+            int perRow = Mathf.Max(1, Mathf.FloorToInt(width / (cardWidth + 6)));
             var actable = ActableObjects();
             for (int start = 0; start < cards.Count; start += perRow)
             {
@@ -323,7 +330,7 @@ namespace RestartedTavern.Client
                     var c = cards[i];
                     var old = GUI.backgroundColor;
                     GUI.backgroundColor = CardColor(c, actable.Contains(c.Id));
-                    if (GUILayout.Button(_text.Describe(_state, c), _cardStyle, GUILayout.Width(CardWidth), GUILayout.Height(CardHeight)) && clickable)
+                    if (GUILayout.Button(_text.Describe(_state, c), _cardStyle, GUILayout.Width(cardWidth), GUILayout.Height(CardHeight)) && clickable)
                         _focus = _focus == c.Id ? ObjectId.None : c.Id;
                     GUI.backgroundColor = old;
                 }
@@ -386,10 +393,13 @@ namespace RestartedTavern.Client
                 for (int i = _state.Chain.Count - 1; i >= 0; i--)
                 {
                     var item = _state.Chain[i];
-                    string kind = item.Kind == ChainItemKind.Spell ? "Spell" : "Ability";
-                    string target = item.Targets.Count > 0 ? " -> " + _text.Name(_state, item.Targets[0]) : "";
+                    string kind = item.Kind == ChainItemKind.Spell ? "Spell"
+                        : item.IsTavernDwellerPower ? "Tavern Dweller Power"
+                        : item.Kind == ChainItemKind.ActivatedAbility ? "Ability" : "Trigger";
+                    string target = item.Targets.Count > 0 ? " -> " + string.Join(", ", item.Targets.Select(t => _text.Name(_state, t))) : "";
+                    string text = item.Text.Length > 0 ? " [" + item.Text + "]" : "";
                     GUILayout.Label("   " + (i == _state.Chain.Count - 1 ? "TOP  " : "     ") + kind + ": "
-                                    + _text.Name(item.SourceDefinitionId) + " (" + item.Controller + ")" + target, _labelStyle);
+                                    + _text.Name(item.SourceDefinitionId) + " (" + item.Controller + ")" + target + text, _labelStyle);
                 }
             }
             GUILayout.EndVertical();
@@ -406,6 +416,7 @@ namespace RestartedTavern.Client
                 case DecisionKind.DeclareBlockers: return "declare blockers (one at a time), then Done";
                 case DecisionKind.ChooseTriggerTarget: return "choose a target for " + _text.Name(d.Trigger.SourceDefinitionId);
                 case DecisionKind.DiscardToHandSize: return "discard " + d.Count + " card(s) down to 7";
+                case DecisionKind.TopOrBottom: return "top card of your deck is " + _text.Name(_state, d.Card) + ": leave it or put it on the bottom";
                 default: return d.Kind.ToString();
             }
         }

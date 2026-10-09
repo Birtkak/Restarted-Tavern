@@ -60,11 +60,13 @@ namespace RestartedTavern.Rules
             var def = Def(card);
 
             // §5.2: mana first, then Gold (not for permanents); Invest is paid only with Gold.
-            int goldForCost = Payment.GoldNeeded(p, def);
-            int manaPaid = def.Cost - goldForCost;
+            // Cost modifiers (Tavern Dwellers, Archon Lumen...) are applied first.
+            int cost = Costs.SpellCost(S, Db, a.Player, def);
+            int goldForCost = Payment.GoldNeeded(p, cost, Payment.GoldAllowed(def));
+            int manaPaid = cost - goldForCost;
             p.Mana -= manaPaid;
             if (manaPaid > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
-            int goldPaid = goldForCost + (a.Invest ? def.InvestCost.Value : 0);
+            int goldPaid = goldForCost + (a.Invest ? Costs.InvestCost(S, Db, a.Player, def) : 0);
             if (goldPaid > 0) ChangeGold(p.Id, -goldPaid);
 
             var onChain = MoveCard(card, Zone.Chain, a.Player);
@@ -91,6 +93,7 @@ namespace RestartedTavern.Rules
                 Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Targets = a.Targets,
                 ManaPaid = manaPaid, GoldPaid = goldPaid, Invested = a.Invest,
             });
+            QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player, t => def.Cost >= t.MinCost);
 
             // MTG 117.3c: the player who cast a spell receives priority afterwards.
             GivePriority(a.Player);
@@ -108,7 +111,7 @@ namespace RestartedTavern.Rules
             var excluded = item.TargetsExcludeSource ? item.SourceId : ObjectId.None;
             for (int i = 0; i < item.Targets.Count; i++)
             {
-                bool legal = IsLegalTarget(item.Controller, item.TargetSlots[i].Spec, item.Targets[i], excluded);
+                bool legal = IsLegalTarget(item.Controller, item.TargetSlots[i], item.Targets[i], excluded);
                 targets.Add(legal ? item.Targets[i] : (Target?)null);
                 anyLegal |= legal;
             }
@@ -142,16 +145,16 @@ namespace RestartedTavern.Rules
             }
             else
             {
-                RunEffects(item.Effects, item.Controller, item.SourceId, targets);
+                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X);
             }
 
             Emit(new ChainItemResolvedEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
         }
 
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
-        private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets)
+        private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0)
         {
-            var ctx = new EffectContext(this, controller, source, targets);
+            var ctx = new EffectContext(this, controller, source, targets, x);
             foreach (var e in effects)
             {
                 if (S.IsGameOver) return;
@@ -161,25 +164,81 @@ namespace RestartedTavern.Rules
 
         // ------------------------------------------------------------------ triggers (MTG 603)
 
+        /// <summary>Queue the triggers of a card definition (used for objects that just left the battlefield).</summary>
         private void QueueTriggers(CardDefinition def, TriggerEvent when, PlayerId controller, ObjectId source)
         {
             foreach (var ability in def.Triggers)
+                if (ability.When == when) QueueTrigger(ability, controller, source, def.Id, null);
+        }
+
+        /// <summary>
+        /// Queue the triggers of an object, including abilities granted to it by other permanents
+        /// ("equipped creature has 'Whenever this creature attacks, ...'").
+        /// </summary>
+        private void QueueTriggers(CardInstance obj, TriggerEvent when)
+        {
+            var def = Def(obj);
+            foreach (var ability in def.Triggers)
+                if (ability.When == when) QueueTrigger(ability, obj.Controller, obj.Id, def.Id, obj);
+            if (obj.Zone != Zone.Battlefield) return;
+            foreach (var granted in GrantedTriggers(obj))
+                if (granted.When == when) QueueTrigger(granted, obj.Controller, obj.Id, def.Id, obj);
+        }
+
+        /// <summary>
+        /// "Whenever ..." triggers that watch other objects, from every living player's Tavern Dweller and
+        /// permanents. <paramref name="subject"/> is the player the event is about (see TriggerEvent).
+        /// </summary>
+        private void QueueWatcherTriggers(TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition = null)
+        {
+            foreach (var p in S.Players)
             {
+                if (p.HasLost) continue;
+                foreach (var source in p.TavernDwellerZone) QueueWatcher(source, when, subject, condition);
+                foreach (var source in new List<CardInstance>(p.Battlefield)) QueueWatcher(source, when, subject, condition);
+            }
+        }
+
+        private void QueueWatcher(CardInstance source, TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition)
+        {
+            var def = Def(source);
+            for (int i = 0; i < def.Triggers.Count; i++)
+            {
+                var ability = def.Triggers[i];
                 if (ability.When != when) continue;
+                if (ability.Subject == TriggerSubject.You && subject != source.Controller) continue;
+                if (ability.Subject == TriggerSubject.Opponents && !S.AreOpponents(source.Controller, subject)) continue;
+                if (condition != null && !condition(ability)) continue;
+                if (ability.MaxPerTurn > 0)
+                {
+                    string key = "trigger:" + source.Id.Value + ":" + i;
+                    S.UsesThisTurn.TryGetValue(key, out int used);
+                    if (used >= ability.MaxPerTurn) continue;
+                    S.UsesThisTurn[key] = used + 1;
+                }
+                QueueTrigger(ability, source.Controller, source.Id, def.Id, source);
+            }
+        }
+
+        private void QueueTrigger(TriggeredAbility ability, PlayerId controller, ObjectId sourceId, string sourceDefinitionId, CardInstance source)
+        {
+            int times = ability.RepeatCount != null && source != null ? ability.RepeatCount(S, Db, source) : 1;
+            for (int n = 0; n < times; n++)
+            {
                 S.PendingTriggers.Add(new PendingTrigger
                 {
                     Ability = ability,
                     Controller = controller,
-                    SourceId = source,
-                    SourceDefinitionId = def.Id,
+                    SourceId = sourceId,
+                    SourceDefinitionId = sourceDefinitionId,
                 });
             }
         }
 
         private void QueueTurnTriggers(TriggerEvent when)
         {
-            foreach (var c in new List<CardInstance>(S.ActivePlayerState.Battlefield))
-                QueueTriggers(Def(c), when, c.Controller, c.Id);
+            foreach (var c in new List<CardInstance>(S.ActivePlayerState.TavernDwellerZone)) QueueTriggers(c, when);
+            foreach (var c in new List<CardInstance>(S.ActivePlayerState.Battlefield)) QueueTriggers(c, when);
         }
 
         /// <summary>
@@ -188,7 +247,7 @@ namespace RestartedTavern.Rules
         /// </summary>
         private bool PutPendingTriggersOnChain()
         {
-            while (S.PendingTriggers.Count > 0)
+            while (S.PendingTriggers.Count > 0 && S.Pending == null)
             {
                 int pick = 0;
                 int bestDistance = int.MaxValue;
@@ -207,7 +266,7 @@ namespace RestartedTavern.Rules
                     var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Target,
                         trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None);
                     if (targets.Count == 0) continue; // MTG 603.3d: no legal target → removed
-                    if (targets.Count > 1)
+                    if (targets.Count > 1 || trigger.Ability.TargetOptional)
                     {
                         S.Pending = new PendingDecision
                         {
@@ -226,11 +285,12 @@ namespace RestartedTavern.Rules
             return true;
         }
 
-        private void ChooseTriggerTarget(Target target)
+        /// <summary>Null: an optional trigger ("you may") was declined, so it does nothing.</summary>
+        private void ChooseTriggerTarget(Target? target)
         {
             var trigger = S.Pending.Trigger;
             S.Pending = null;
-            PushTrigger(trigger, target);
+            if (target.HasValue) PushTrigger(trigger, target);
             GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
@@ -265,10 +325,28 @@ namespace RestartedTavern.Rules
         // ------------------------------------------------------------------ targeting
 
         /// <summary>Every legal choice for one target slot. <paramref name="exclude"/>: an object that can't be chosen ("another creature").</summary>
-        internal List<Target> EnumerateTargets(PlayerId controller, TargetSpec spec, ObjectId exclude = default)
+        internal List<Target> EnumerateTargets(PlayerId controller, TargetSpec spec, ObjectId exclude = default) =>
+            EnumerateTargets(controller, TargetSlot.Of(spec), exclude);
+
+        internal List<Target> EnumerateTargets(PlayerId controller, TargetSlot slot, ObjectId exclude = default)
         {
             var result = new List<Target>();
+            var spec = slot.Spec;
             if (spec == TargetSpec.None) return result;
+
+            if (spec == TargetSpec.CreatureCardInYourGraveyard)
+            {
+                foreach (var c in S.GetPlayer(controller).Graveyard)
+                    if (Def(c).IsCreature && c.Id != exclude) result.Add(Target.ForObject(c.Id));
+                return result;
+            }
+
+            if (spec == TargetSpec.EquipmentYouControl)
+            {
+                foreach (var c in S.GetPlayer(controller).Battlefield)
+                    if (Def(c).Type == CardType.Equipment && c.Id != exclude) result.Add(Target.ForObject(c.Id));
+                return result;
+            }
 
             foreach (var p in S.LivingPlayersFrom(controller))
             {
@@ -293,7 +371,9 @@ namespace RestartedTavern.Rules
             {
                 foreach (var c in p.Battlefield)
                 {
-                    if (!Def(c).IsCreature || c.Id == exclude) continue;
+                    var def = Def(c);
+                    if (!def.IsCreature || c.Id == exclude) continue;
+                    if (slot.Subtype != null && !def.HasSubtype(slot.Subtype)) continue;
                     bool ok;
                     switch (spec)
                     {
@@ -307,6 +387,8 @@ namespace RestartedTavern.Rules
                             ok = c.Controller != controller; break;
                         case TargetSpec.EnemyCreatureOrOpponent:
                             ok = S.AreOpponents(controller, c.Controller); break;
+                        case TargetSpec.ConstructOrEquippedCreature:
+                            ok = def.HasSubtype("Construct") || CharacteristicsCalculator.IsEquipped(S, Db, c); break;
                         default:
                             ok = false; break;
                     }
@@ -316,20 +398,20 @@ namespace RestartedTavern.Rules
             return result;
         }
 
-        private bool IsLegalTarget(PlayerId controller, TargetSpec spec, Target target, ObjectId exclude = default) =>
-            EnumerateTargets(controller, spec, exclude).Contains(target);
+        private bool IsLegalTarget(PlayerId controller, TargetSlot slot, Target target, ObjectId exclude = default) =>
+            EnumerateTargets(controller, slot, exclude).Contains(target);
 
         /// <summary>
         /// Every way to fill a spell's target slots (distinct targets; optional slots may stay empty).
         /// Slots with the same spec are filled in enumeration order, so {A,B} and {B,A} aren't both listed.
         /// No slots: one empty choice. A required slot without candidates: no choices.
         /// </summary>
-        internal List<Target[]> EnumerateTargetChoices(PlayerId controller, List<TargetSlot> slots)
+        internal List<Target[]> EnumerateTargetChoices(PlayerId controller, List<TargetSlot> slots, ObjectId exclude = default)
         {
             var result = new List<Target[]>();
             var chosen = new List<Target>();
             var candidates = new List<List<Target>>();
-            foreach (var slot in slots) candidates.Add(EnumerateTargets(controller, slot.Spec));
+            foreach (var slot in slots) candidates.Add(EnumerateTargets(controller, slot, exclude));
             Fill(0, -1);
             return result;
 
@@ -341,7 +423,7 @@ namespace RestartedTavern.Rules
                     return;
                 }
                 if (slots[slot].Optional) result.Add(chosen.ToArray()); // stop here: later optional slots stay empty
-                bool sameAsPrevious = slot > 0 && slots[slot].Spec == slots[slot - 1].Spec;
+                bool sameAsPrevious = slot > 0 && slots[slot].Spec == slots[slot - 1].Spec && slots[slot].Subtype == slots[slot - 1].Subtype;
                 var options = candidates[slot];
                 for (int i = sameAsPrevious ? previousIndex + 1 : 0; i < options.Count; i++)
                 {

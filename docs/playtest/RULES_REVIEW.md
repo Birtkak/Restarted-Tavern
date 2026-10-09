@@ -11,8 +11,8 @@ Severity: 🔴 fundamental (affects every game), 🟠 significant (affects a cor
 | Issue | Decision |
 |---|---|
 | 1. Going first | **MTG default**: the first player skips their turn-1 draw, no other compensation. Judge it in human playtests (bots race more than people). ⚠ This is the variant with the biggest first-player edge in the bot runs: Greedy-bot mirrors at 500 games give Goober 79%, Jungle 70%, Zoo 68%, Sparkwrench 62% and Vesper 58%. If playtests confirm the edge, the best variant measured was "everyone draws + 2nd player +1 mana and 1 Gold" (Goober 66%, Jungle 53%). |
-| 2. Gold sits unused | **Patron Powers** are the universal Gold sink. Implement them next, then re-measure the Gold cap. |
-| 3. Long, stalled games | **No new rule.** Add late-game sinks and finishers through cards, re-measure, and decide later. |
+| 2. Gold sits unused | **Tavern Dweller Powers** are the universal Gold sink. *Implemented and re-measured (PLAYTEST.md, "Findings: Tavern Dwellers and abilities"): always-useful Powers (Keeper Z-00, Skabba) cut wasted mana by half or more; situational ones (Mukk, Sparkwrench, Auditor Prime) don't. The cap now changes waste but still not outcomes.* |
+| 3. Long, stalled games | **No new rule.** Add late-game sinks and finishers through cards, re-measure, and decide later. *Re-measured: the Zoo mirror's long games dropped from 34% to 13% with Keeper Z-00. Some remaining stalls are the bot never alpha-striking (PLAYTEST.md).* |
 | 4. Chip damage outside ping decks | Card-pool work: every faction needs some chip damage and some payoff for it (v0.2 already adds some). |
 | 7. Gain life | **Capped at starting life** (GAME_DESIGN §11.1). |
 
@@ -43,8 +43,8 @@ Severity: 🔴 fundamental (affects every game), 🟠 significant (affects a cor
 
 - In every non-aggro mirror, **43–84% of unspent mana is wasted**. Gold reaches the cap around turn 6 and stays there.
 - Changing the cap changes nothing about who wins or how long games last.
-- **Why:** Gold can only buy Instants, Sorceries and abilities, and creature decks run few of those. The pool has no activated abilities and no Patron Powers yet.
-- This threatens Vision point 2 ("unused mana is not wasted"). It's probably fixed by **Patron Powers**, since every deck has one: a universal Gold sink. Re-measure after they exist before changing the rule itself.
+- **Why:** Gold can only buy Instants, Sorceries and abilities, and creature decks run few of those. The pool has no activated abilities and no Tavern Dweller Powers yet.
+- This threatens Vision point 2 ("unused mana is not wasted"). It's probably fixed by **Tavern Dweller Powers**, since every deck has one: a universal Gold sink. Re-measure after they exist before changing the rule itself.
 
 ## 🟠 3. Game length varies a lot, and slow games stall
 
@@ -60,7 +60,7 @@ Severity: 🔴 fundamental (affects every game), 🟠 significant (affects a cor
 - The long games are the ones with **lots of wasted mana** (70–84%) and **lots of healing** (Vesper: 28 per game). Players have nothing left to spend on, and the board is stuck.
 - Permanent damage makes the slow mirrors longer (Zoo 19 → 23 turns), because attacking into blockers leaves wounds that never go away, so players attack less.
 - **Why:** nothing in the rules pushes a stalled game to an end. Mana stops at 10, Gold stops at 5, and healing undoes progress.
-- Options: universal late-game sinks (Patron Powers again), late-game finishers in every faction, or a rule that forces games to end (see the questions).
+- Options: universal late-game sinks (Tavern Dweller Powers again), late-game finishers in every faction, or a rule that forces games to end (see the questions).
 
 ## 🟠 4. Chip damage only matters in ping decks
 
@@ -89,7 +89,7 @@ Mana is spent first automatically (§5.2). If you cast a 3-mana Sorcery before a
 
 ## 🟡 7. Is "gain life" capped?
 
-Healing your Patron stops at starting life (§11.1). Lifelink "heals". The engine currently treats "you gain N life" (drains, The Grand Ledger) the same way, so it's capped at 30. MTG has no cap. This shapes the Sensationalist drain identity and should be decided on purpose.
+Healing your Tavern Dweller stops at starting life (§11.1). Lifelink "heals". The engine currently treats "you gain N life" (drains, The Grand Ledger) the same way, so it's capped at 30. MTG has no cap. This shapes the Sensationalist drain identity and should be decided on purpose.
 
 ---
 

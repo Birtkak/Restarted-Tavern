@@ -35,6 +35,12 @@ namespace RestartedTavern.Rules
         public List<Effect> Effects { get; set; } = new List<Effect>();
 
         public bool Invested { get; set; }
+        /// <summary>Activated abilities: the X paid.</summary>
+        public int X { get; set; }
+        /// <summary>Abilities: the ability's rules text (for UIs and logs).</summary>
+        public string Text { get; set; } = "";
+        /// <summary>A Tavern Dweller Power (GAME_DESIGN §9.1).</summary>
+        public bool IsTavernDwellerPower { get; set; }
 
         public ChainItem Clone()
         {

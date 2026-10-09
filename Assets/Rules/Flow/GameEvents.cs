@@ -67,6 +67,30 @@ namespace RestartedTavern.Rules
         public override string ToString() => Player + " casts " + DefinitionId + Card + (Targets?.Length > 0 ? " @" + string.Join(",", Targets) : "");
     }
 
+    /// <summary>An activated ability or a Tavern Dweller Power was put on the Chain, with its costs paid.</summary>
+    public sealed class AbilityActivatedEvent : GameEvent
+    {
+        public PlayerId Player;
+        public ObjectId Source;
+        public string SourceDefinitionId;
+        public string Text;
+        public bool IsTavernDwellerPower;
+        public Target[] Targets;
+        public int X;
+        public int ManaPaid;
+        public int GoldPaid;
+        public override string ToString() => Player + " activates " + SourceDefinitionId + Source + (IsTavernDwellerPower ? " (Tavern Dweller Power)" : "");
+    }
+
+    /// <summary>An Equipment became attached to a creature (Equip, or an effect that attaches it).</summary>
+    public sealed class AttachedEvent : GameEvent
+    {
+        public ObjectId Equipment;
+        public string EquipmentDefinitionId;
+        public ObjectId AttachedTo;
+        public override string ToString() => EquipmentDefinitionId + Equipment + " attached to " + AttachedTo;
+    }
+
     public sealed class AbilityTriggeredEvent : GameEvent
     {
         public PlayerId Controller;

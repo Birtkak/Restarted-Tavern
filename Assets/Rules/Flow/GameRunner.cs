@@ -40,10 +40,13 @@ namespace RestartedTavern.Rules
                     Id = new PlayerId(i + 1),
                     Seat = i,
                     TeamId = setup.TeamId ?? 1000 + i,
-                    PatronId = setup.PatronId,
+                    TavernDwellerId = setup.TavernDwellerId,
                     Life = S.Format.StartingLife,
                 };
                 S.Players.Add(p);
+                // §9.1: the Tavern Dweller starts in the Tavern Dweller zone and stays there.
+                if (setup.TavernDwellerId != null && S.Format.TavernDwellersEnabled)
+                    p.TavernDwellerZone.Add(NewObject(setup.TavernDwellerId, p.Id, Zone.TavernDweller));
                 foreach (var cardId in setup.Deck)
                     p.Deck.Add(NewObject(cardId, p.Id, Zone.Deck));
                 S.Rng.Shuffle(p.Deck);
@@ -119,8 +122,10 @@ namespace RestartedTavern.Rules
                 case ActionKind.FinishAttacks: FinishAttacks(); break;
                 case ActionKind.DeclareBlocker: DeclareBlocker(a.Card, a.BlockedAttacker); break;
                 case ActionKind.FinishBlocks: FinishBlocks(a.Player); break;
-                case ActionKind.ChooseTarget: ChooseTriggerTarget(a.Target.Value); break;
+                case ActionKind.ChooseTarget: ChooseTriggerTarget(a.Target); break;
                 case ActionKind.Discard: DiscardToHandSize(a.Player, a.Card); break;
+                case ActionKind.ActivateAbility: Activate(a); break;
+                case ActionKind.ChooseOption: AnswerOption(a); break;
                 default: throw new ArgumentOutOfRangeException(nameof(a), a.Kind, null);
             }
         }
@@ -146,6 +151,7 @@ namespace RestartedTavern.Rules
         {
             S.ActiveIndex = index;
             S.TurnNumber++;
+            S.UsesThisTurn.Clear(); // "once each turn" (MTG) resets every turn, yours or not
             Emit(new TurnStartedEvent { Player = S.ActivePlayer, Turn = S.TurnNumber });
             EnterStep(Step.Start);
         }

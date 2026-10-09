@@ -34,6 +34,12 @@ namespace RestartedTavern.Rules
         /// </summary>
         public bool DamageWearsOff { get; set; }
 
+        /// <summary>
+        /// Experiment switch, not a real rule: when false, games are played without Tavern Dwellers (no
+        /// Tavern Dweller zone, no passives, no Powers). Used to measure what Tavern Dweller Powers change.
+        /// </summary>
+        public bool TavernDwellersEnabled { get; set; } = true;
+
         /// <summary>Set to false in tests or tools that build decks freely.</summary>
         public bool EnforceDeckRules { get; set; } = true;
 

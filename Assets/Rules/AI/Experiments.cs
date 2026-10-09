@@ -25,17 +25,19 @@ namespace RestartedTavern.Rules.AI
         {
             public string Name;
             public List<string> Cards;
+            public string TavernDweller;
         }
 
         public static List<Section> Build(int games)
         {
             var decks = new[]
             {
-                new Deck { Name = "Goober Mob", Cards = PrototypeCards.GooberMobDeck() },
-                new Deck { Name = "Jungle Stampede", Cards = PrototypeCards.JungleStampedeDeck() },
-                new Deck { Name = "Zoo Patrol", Cards = PrototypeCards.ZooPatrolDeck() },
-                new Deck { Name = "Vesper's Ledger", Cards = PrototypeCards.VespersLedgerDeck() },
-                new Deck { Name = "Sparkwrench Scrappers", Cards = PrototypeCards.SparkwrenchScrappersDeck() },
+                new Deck { Name = "Goober Mob", Cards = PrototypeCards.GooberMobDeck(), TavernDweller = PrototypeCards.GooberMobTavernDweller },
+                new Deck { Name = "Jungle Stampede", Cards = PrototypeCards.JungleStampedeDeck(), TavernDweller = PrototypeCards.JungleStampedeTavernDweller },
+                new Deck { Name = "Zoo Patrol", Cards = PrototypeCards.ZooPatrolDeck(), TavernDweller = PrototypeCards.ZooPatrolTavernDweller },
+                new Deck { Name = "Vesper's Ledger", Cards = PrototypeCards.VespersLedgerDeck(), TavernDweller = PrototypeCards.VespersLedgerTavernDweller },
+                new Deck { Name = "Sparkwrench Scrappers", Cards = PrototypeCards.SparkwrenchScrappersDeck(), TavernDweller = PrototypeCards.SparkwrenchScrappersTavernDweller },
+                new Deck { Name = "Auditor's Arsenal", Cards = PrototypeCards.AuditorsArsenalDeck(), TavernDweller = PrototypeCards.AuditorsArsenalTavernDweller },
             };
             var sections = new List<Section>();
 
@@ -46,8 +48,8 @@ namespace RestartedTavern.Rules.AI
                 return new MatchConfig
                 {
                     Name = name, Format = f, Games = games,
-                    DeckAName = a.Name, DeckA = a.Cards, StyleA = styleA ?? BotStyle.Greedy(),
-                    DeckBName = b.Name, DeckB = b.Cards, StyleB = styleB ?? BotStyle.Greedy(),
+                    DeckAName = a.Name, DeckA = a.Cards, TavernDwellerA = a.TavernDweller, StyleA = styleA ?? BotStyle.Greedy(),
+                    DeckBName = b.Name, DeckB = b.Cards, TavernDwellerB = b.TavernDweller, StyleB = styleB ?? BotStyle.Greedy(),
                 };
             }
 
@@ -109,12 +111,25 @@ namespace RestartedTavern.Rules.AI
             }
             sections.Add(second);
 
+            var tavernDwellers = new Section
+            {
+                Title = "Tavern Dwellers (GAME_DESIGN §9)",
+                Question = "What do Tavern Dwellers (passives and Powers, the universal Gold sink) change? Each mirror with and without Tavern Dwellers. "
+                           + "Watch Wasted (mana lost to the Gold cap), Gold spent and game length.",
+            };
+            foreach (var d in decks)
+            {
+                tavernDwellers.Configs.Add(M(d.Name + " mirror, with Tavern Dwellers", d, d));
+                tavernDwellers.Configs.Add(M(d.Name + " mirror, no Tavern Dwellers", d, d, f => f.TavernDwellersEnabled = false));
+            }
+            sections.Add(tavernDwellers);
+
             var cap = new Section
             {
                 Title = "Gold cap (GAME_DESIGN §5.2)",
-                Question = "Does the cap matter in the decks with the most Gold use?",
+                Question = "Does the cap matter now that Tavern Dweller Powers and Equip spend Gold?",
             };
-            foreach (var d in new[] { decks[3], decks[4] })
+            foreach (var d in new[] { decks[2], decks[3], decks[4], decks[5] })
                 foreach (int c in new[] { 3, 5, 8 })
                     cap.Configs.Add(M(d.Name + " mirror, Gold cap " + c, d, d, f => f.GoldCap = c));
             sections.Add(cap);
@@ -143,6 +158,7 @@ namespace RestartedTavern.Rules.AI
                           + "**Dmg→death** = share of all damage dealt to creatures that was still on a creature when it died (includes killing blows) · "
                           + "**Chip→death** = share of *chip damage* (damage a creature carried into a later turn) that was still on it when it died; the rest was healed away or sat on survivors, so it **never decided anything** · "
                           + "**Wounded** = share of creatures carrying damage at the start of a turn · **Deaths** / **Heal** / **Gold spent** are per game · "
+                          + "**Powers** = Tavern Dweller Powers used per game (in brackets: share used on an opponent's turn) · **Abil.** = other activated abilities per game (Equip, Tap abilities...) · "
                           + "**Wasted** = share of unspent mana lost to the Gold cap.");
             foreach (var s in sections)
             {
@@ -151,8 +167,8 @@ namespace RestartedTavern.Rules.AI
                 sb.AppendLine();
                 sb.AppendLine("*" + s.Question + "*");
                 sb.AppendLine();
-                sb.AppendLine("| Matchup | A win% | 1st win% | Turns | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Wasted | Draws |");
-                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
+                sb.AppendLine("| Matchup | A win% | 1st win% | Turns | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Powers | Abil. | Wasted | Draws |");
+                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
                 foreach (var r in s.Results)
                 {
                     sb.Append("| ").Append(r.Config.Name)
@@ -167,6 +183,9 @@ namespace RestartedTavern.Rules.AI
                       .Append(" | ").Append(F(r.PerGame(r.CreatureDeaths)))
                       .Append(" | ").Append(F(r.PerGame(r.HealingDone)))
                       .Append(" | ").Append(F(r.PerGame(r.GoldSpent)))
+                      .Append(" | ").Append(F(r.PerGame(r.PowersUsed)))
+                      .Append(r.PowersUsed > 0 ? " (" + Pct((double)r.PowersOnOpponentsTurn / r.PowersUsed) + ")" : "")
+                      .Append(" | ").Append(F(r.PerGame(r.AbilitiesActivated)))
                       .Append(" | ").Append(Pct(r.GoldWastedShare))
                       .Append(" | ").Append(r.Draws)
                       .AppendLine(" |");

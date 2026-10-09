@@ -75,6 +75,6 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 27 | **Silent Partner** | 4 | Creature: Wizard | U | 2/5 | You may pay Invest costs with mana as well as Gold. | Opens Invest to big main-phase turns, the Wizards' 'big impressive spells'. Tough body, no attack | payment rule | ✅ |
 | 28 | **Compound Interest** | 4 | Sorcery | C | — | Draw two cards. If you have 5 or more Gold, draw three instead. | Pays off sitting at the cap, the opposite tension to Interest Broker | conditional draw | ✅ |
 | 29 | **Hostile Takeover** | 6 | Sorcery | R | — | Gain control of target creature. Its controller gains Gold equal to its cost and draws a card. | A permanent steal with a shady deal. The victim gets resources back (capped by their Gold cap) | control change | ✅ |
-| 30 | **Bribe the Referee** | 4 | Instant | R | — | Counter target spell or ability. Its controller gains 3 Gold and draws a card. | A hard counter, but you pay the other player off. Can also stop a Patron Power or a Last Breath trigger | counter | ✅ |
+| 30 | **Bribe the Referee** | 4 | Instant | R | — | Counter target spell or ability. Its controller gains 3 Gold and draws a card. | A hard counter, but you pay the other player off. Can also stop a Tavern Dweller Power or a Last Breath trigger | counter | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2

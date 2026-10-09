@@ -1,4 +1,4 @@
-# Handoff: Activated Abilities and Patron Powers
+# Handoff: Activated Abilities and Tavern Dweller Powers
 
 A ready-to-paste prompt for the next Claude Code session. It's written to be self-contained.
 
@@ -8,26 +8,26 @@ A ready-to-paste prompt for the next Claude Code session. It's written to be sel
 You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-card game.
 Repo: C:\Users\Birre\Desktop\Claude shizzle\Restarted-Tavern (GitHub: Birtkak/Restarted-Tavern, main).
 
-GOAL OF THIS SESSION: implement activated abilities, Equip, and Patrons (Patron zone, Patron Powers,
-Patron passives) in the rules engine, then make them usable by the bot, the debug table and the
+GOAL OF THIS SESSION: implement activated abilities, Equip, and Tavern Dwellers (Tavern Dweller zone, Tavern Dweller Powers,
+Tavern Dweller passives) in the rules engine, then make them usable by the bot, the debug table and the
 simulations.
 
 READ FIRST
 - docs/GAME_DESIGN.md: the rules. MTG Comprehensive Rules are the backbone (§1.1): anything not
   covered there works like MTG. Key sections: §5.2 Gold, §7.4 summoning sickness for Tap abilities,
-  §8 the Chain, §9 Patrons, §10 card types (Equipment), and the Decision Log at the bottom.
+  §8 the Chain, §9 Tavern Dwellers, §10 card types (Equipment), and the Decision Log at the bottom.
 - docs/DEVELOPMENT.md §7: what the engine does today, plus the "Not yet implemented" list.
-- docs/cards/patrons.md: the 10 approved Patrons. It is the source of truth; the table copied into
+- docs/cards/tavern_dwellers.md: the 10 approved Tavern Dwellers. It is the source of truth; the table copied into
   GAME_DESIGN §9.3 is older.
 - docs/cards/*.md: card lists. Set v0.1 and the "Set v0.2 additions" (approved 2026-10-09) are
   all ✅. Each v0.2 card has an "Engine" column naming the features it still needs; implement
-  the v0.2 cards that become possible with abilities and Patrons.
+  the v0.2 cards that become possible with abilities and Tavern Dwellers.
 - docs/playtest/PLAYTEST.md: simulation findings so far.
 
 RULES THAT MATTER FOR THIS WORK (all locked unless marked)
 - Payment (GAME_DESIGN §5.2, see the table there): casting any PERMANENT (creature, Equipment,
   Relic, Curse) uses mana only. Instants, Sorceries and ACTIVATED ABILITIES (including Equip and
-  Patron Powers) can use Gold. Payment is automatic: MANA IS ALWAYS SPENT FIRST, Gold covers the
+  Tavern Dweller Powers) can use Gold. Payment is automatic: MANA IS ALWAYS SPENT FIRST, Gold covers the
   rest; there's no choosing a split (Core/Payment.cs implements this for spells; reuse it for
   abilities). INVEST (formerly "Overcharge") is the only cost paid only with Gold.
   On other players' turns you have no mana, only Gold.
@@ -37,10 +37,10 @@ RULES THAT MATTER FOR THIS WORK (all locked unless marked)
 - Equip: MTG rules. Sorcery speed only, targets a creature you control. When the creature leaves,
   the Equipment stays on the battlefield unattached (the state-based action already exists).
   Equipment grants its bonuses through continuous effects (CharacteristicsCalculator).
-- Patrons (§9.1): the Patron is the player's face, sits in the public Patron zone, never attacks or
-  blocks, and can't be removed in v0.1. Each Patron has a passive and a Power. The Power can be used
+- Tavern Dwellers (§9.1): the Tavern Dweller is the player's face, sits in the public Tavern Dweller zone, never attacks or
+  blocks, and can't be removed in v0.1. Each Tavern Dweller has a passive and a Power. The Power can be used
   once per turn at instant speed (so also on opponents' turns), goes on the Chain, and is paid with
-  mana and/or Gold. A deck's Patron sets its two factions (deck validation should check that every
+  mana and/or Gold. A deck's Tavern Dweller sets its two factions (deck validation should check that every
   card is from those factions or Neutral).
 - Card text says "an opponent" / "each opponent", never "your opponent" (multiplayer-ready).
 
@@ -54,7 +54,7 @@ WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules with noEngineReference
   (TargetSlot), and the 37 prototype cards plus 3 decks are in Cards/PrototypeCards.cs.
 - PlayerAction is plain data. Legal actions are fully enumerated, including every Gold/mana split
   and every target combination, and Apply only accepts listed actions. Add new ActionKinds
-  (e.g. ActivateAbility, PatronPower) the same way.
+  (e.g. ActivateAbility, TavernDwellerPower) the same way.
 - AI/GreedyBot.cs (rule-based bot with BotStyle: Greedy or Control), AI/MatchRunner.cs +
   AI/Experiments.cs (bot-vs-bot experiments over 5 decks, report in
   docs/playtest/SIMULATION_REPORT.md, findings in docs/playtest/PLAYTEST.md).
@@ -68,16 +68,16 @@ SUGGESTED PLAN
 2. Equip as an activated ability on Equipment, plus Equipment static bonuses ("equipped creature
    gets +X/+Y and has ...", including granted triggered abilities). Tests: equip, re-equip, the
    creature dies and the Equipment stays.
-3. Patrons: PatronDefinition (factions, passive, Power), PlayerState.PatronId is already there.
-   Add a Patron zone/view, Patron Power activation (once per turn, instant speed, mana+Gold) and
-   passives (static, triggered and cost-reduction kinds: see patrons.md). Implement all 10 Patrons
-   and validate decks against the Patron's factions.
+3. Tavern Dwellers: TavernDwellerDefinition (factions, passive, Power), PlayerState.TavernDwellerId is already there.
+   Add a Tavern Dweller zone/view, Tavern Dweller Power activation (once per turn, instant speed, mana+Gold) and
+   passives (static, triggered and cost-reduction kinds: see tavern_dwellers.md). Implement all 10 Tavern Dwellers
+   and validate decks against the Tavern Dweller's factions.
 4. Implement the approved v0.1 cards that were blocked on these features: Snik, Grove Elder,
    Mercenary Contract, Back-Street Mechanic, and the Glitterworld Equipment (Neon Shiv, Pulse Blade,
    Overclock Rig, Rail Cannon, Megacorp Exosuit) and Equipment-related creatures, as far as their
-   other needs allow. Give the prototype decks Patrons (e.g. Zoo Patrol -> Keeper Z-00).
-5. GreedyBot: value abilities and Patron Powers (spend Gold when it's useful; keep Gold for
-   instant-speed Powers on the opponent's turn). Debug table: show the Patron, list abilities and
+   other needs allow. Give the prototype decks Tavern Dwellers (e.g. Zoo Patrol -> Keeper Z-00).
+5. GreedyBot: value abilities and Tavern Dweller Powers (spend Gold when it's useful; keep Gold for
+   instant-speed Powers on the opponent's turn). Debug table: show the Tavern Dweller, list abilities and
    Powers as actions.
 6. Rerun the simulations (Restarted Tavern > Run Simulation Report). The Gold-cap experiment
    (GAME_DESIGN §5.2, cap 5) is the one to watch: until now the cap changed nothing because Gold
@@ -91,7 +91,7 @@ HOW TO WORK WITH THIS USER
 - Ask before pushing to GitHub. (gh is logged in as Birtkak; the repo has a local git identity.)
 - Settled on 2026-10-09: Overcharge is renamed **Invest** and stays Gold-only. Going first follows
   the MTG default (the first player skips their turn-1 draw, no other compensation). Life gain is
-  capped at starting life. Patron Powers are expected to be THE universal Gold sink: after
+  capped at starting life. Tavern Dweller Powers are expected to be THE universal Gold sink: after
   implementing them, rerun the "Gold cap" and "Round robin" sections and report whether wasted
   mana and long games went down (docs/playtest/RULES_REVIEW.md, issues 2 and 3).
 

@@ -32,6 +32,13 @@ namespace RestartedTavern.Rules
 
         public CombatState Combat { get; set; }
         public List<TemporaryModifier> UntilEndOfTurn { get; set; } = new List<TemporaryModifier>();
+        /// <summary>
+        /// How often something was used this turn, for "once each turn" abilities, Tavern Dweller Powers and
+        /// "triggers at most N times each turn". Keys are made by GameRunner; cleared when a turn starts.
+        /// </summary>
+        public Dictionary<string, int> UsesThisTurn { get; set; } = new Dictionary<string, int>();
+        /// <summary>Bumped by every GameEngine.Apply, so cached legal actions know when they're stale.</summary>
+        public long Version { get; set; }
 
         public DeterministicRng Rng { get; set; }
         public int NextObjectId { get; set; } = 1;
@@ -94,6 +101,7 @@ namespace RestartedTavern.Rules
                 foreach (var c in p.Graveyard) if (c.Id == id) return c;
                 foreach (var c in p.Exile) if (c.Id == id) return c;
                 foreach (var c in p.Deck) if (c.Id == id) return c;
+                foreach (var c in p.TavernDwellerZone) if (c.Id == id) return c;
             }
             foreach (var item in Chain)
                 if (item.Card != null && item.Card.Id == id) return item.Card;
@@ -131,6 +139,7 @@ namespace RestartedTavern.Rules
             s.Combat = Combat?.Clone();
             s.UntilEndOfTurn = new List<TemporaryModifier>(UntilEndOfTurn.Count);
             foreach (var m in UntilEndOfTurn) s.UntilEndOfTurn.Add(m.Clone());
+            s.UsesThisTurn = new Dictionary<string, int>(UsesThisTurn);
             s.Rng = Rng?.Clone();
             s.Winners = new List<PlayerId>(Winners);
             return s;
@@ -175,6 +184,7 @@ namespace RestartedTavern.Rules
                 AppendZone(sb, "bf", p.Battlefield);
                 AppendZone(sb, "gy", p.Graveyard);
                 AppendZone(sb, "ex", p.Exile);
+                AppendZone(sb, "dweller", p.TavernDwellerZone);
             }
             foreach (var item in Chain) sb.Append("chain ").Append(item).Append('\n');
             return sb.ToString();
@@ -189,6 +199,7 @@ namespace RestartedTavern.Rules
                 if (c.Damage != 0) sb.Append('d').Append(c.Damage);
                 if (c.Tapped) sb.Append('T');
                 if (c.PlusOneCounters != 0) sb.Append('+').Append(c.PlusOneCounters);
+                if (!c.AttachedToObject.IsNone) sb.Append('@').Append(c.AttachedToObject.Value);
             }
             sb.Append('\n');
         }

@@ -37,7 +37,7 @@ namespace RestartedTavern.Rules
             attacker.Tapped = true; // no Vigilance yet
             S.Combat.Attacks.Add(new AttackDeclaration { Attacker = attackerId, Defender = defender });
             Emit(new AttackerDeclaredEvent { Attacker = attackerId, Defender = defender });
-            QueueTriggers(Def(attacker), TriggerEvent.Attacks, player, attackerId);
+            QueueTriggers(attacker, TriggerEvent.Attacks);
         }
 
         private void FinishAttacks()
