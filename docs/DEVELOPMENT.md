@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. Sets v0.1 and v0.2 are designed and every card runs in the rules engine (199 passing EditMode tests). A hot-seat **debug table** in Unity can play it, against itself or the GreedyBot (§7).
+**Status:** engine prototype. Sets v0.1 and v0.2 are designed and every card runs in the rules engine (203 passing EditMode tests). A hot-seat **debug table** in Unity can play it, against itself or the GreedyBot (§7).
 
 ---
 
@@ -169,7 +169,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - **Player choices instead of automatic ones** (2026-10-09): the Legendary rule, dividing combat damage, ordering your own triggers (see above). GreedyBot answers all three.
 - `GameEngine.CacheLegalActions` (opt-in, used by `MatchRunner`): the bot's legal-action list is reused by `Apply`'s validation, so it isn't enumerated twice.
 
-**Tests** (`Assets/Rules.Tests`, 199 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 203 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
@@ -185,7 +185,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
   Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
   ```
   This writes `Builds/DebugTable/RestartedTavern.exe` (git-ignored). Command-line flags: `-seed N`, `-bot1`, `-bot2`, `-deck1 N`, `-deck2 N`, `-autoplay N` (the bots play N actions at startup), and `-autoshot file.png` (take a screenshot, then quit), for automated checks.
-- The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
+- The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. It plans each attack as a whole: candidate attacks are scored against the defender's likely blocks and the crack-back next turn, so it alpha-strikes through blockers and holds back when the swing back would kill. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
 **Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))

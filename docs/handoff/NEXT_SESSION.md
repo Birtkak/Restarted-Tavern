@@ -10,7 +10,8 @@ State at the end of the previous session (2026-10-09): every v0.1 and v0.2 card 
 choices the engine used to make automatically are now player choices: which Legendary to keep, how to divide
 combat damage among several creatures, and the order of your own simultaneous triggers. Then a housekeeping
 pass: PrototypeCards* was renamed to CardPool*, GreedyBot was split into partial files, the docs were refreshed.
-199 EditMode tests, all green.
+199 EditMode tests, all green. Later the same day: GreedyBot got a whole-attack planner
+(GreedyBot.Combat.cs: ChooseAttack / ScoreAttack), 203 tests.
 
 GOAL OF THIS SESSION: ask the user which of the next steps below to do (AskUserQuestion, multiple
 choice, recommended option first), then build it with tests.
@@ -71,20 +72,19 @@ WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
 - 199 EditMode tests, all green. Every card in docs/cards is implemented (CardPool*.cs).
 
 CANDIDATE NEXT STEPS (offer these; the user picks)
-1. Smarter bot attacks (recommended first). The bot only goes all-in when the defender has no
-   untapped blockers, so big-creature mirrors stall (seed 12 of the Jungle mirror: both at 4 life
-   with full boards from turn 30 until deck-out at turn 86). Add alpha strikes / multi-creature attack
-   evaluation. Game-length numbers can't be trusted until this is fixed.
-2. Re-run the simulation report with the new deck lists (ONLY if the user asks for it): the old
-   numbers in PLAYTEST.md come from the pre-v0.2 lists. Best after step 1.
+1. Re-run the simulation report (ONLY if the user asks): the attack planner is new (alpha strikes,
+   crack-back checks) and the deck lists changed, so every number in PLAYTEST.md is stale. Check
+   whether seed 12 of the Jungle mirror (an 86-turn board stall) still stalls.
+2. Payment order warning (RULES_REVIEW #6): mana is spent first, so casting a Sorcery before a creature can
+   strand the creature. The UI should warn or order plays.
 3. The weak Tavern Dwellers: Mukk, Sparkwrench and Auditor Prime barely used their Powers in sims.
    Sparkwrench Scrappers now has some Equipment (deck pass), but nothing is measured yet. Option A:
    decks built around them. Option B: Power changes — design question for the user, show options.
-4. Visual client (DEVELOPMENT §5 roadmap step 4): a real Unity hot-seat table for human playtests.
+4. Visual client (DEVELOPMENT §5 roadmap step 4, recommended): a real Unity hot-seat table for human playtests.
 5. Engine gaps (DEVELOPMENT §7 "Not yet implemented"): Snik copying by target with last known information,
    replacement effects, loading card data from JSON instead of C#.
 (Done 2026-10-09: every v0.1 and v0.2 card is in the engine; player choices for the Legendary rule, combat
-damage division and trigger order; 199 tests.)
+damage division and trigger order; GreedyBot plans whole attacks (alpha strikes, crack-back); 203 tests.)
 
 HOW TO WORK WITH THIS USER
 - The user has the vision and wants Claude to propose details. For design questions, use
