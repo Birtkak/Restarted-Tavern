@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. The first card set (v0.1) is designed, the Unity project is set up, and the rules engine skeleton runs with 39 passing EditMode tests (§7).
+**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 42 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
 
 ---
 
@@ -30,7 +30,8 @@ Restarted-Tavern/
 │  │   └─ Cards/                  PrototypeCards.cs: the ~20 prototype cards, in C# until the data format is settled
 │  ├─ Rules.Tests/                RestartedTavern.Rules.Tests.asmdef (EditMode, NUnit)
 │  ├─ Cards/          (later)     card data (JSON) + rare custom card scripts
-│  └─ Client/         (later)     Unity presentation: scenes, UI, animations (refers to Rules)
+│  ├─ Client/                     RestartedTavern.Client.asmdef: DebugTable.cs (IMGUI debug table); Editor/ builds the scene and the exe
+│  └─ Scenes/                     DebugTable.unity
 └─ Server/  (later)               a .NET host that compiles the same Assets/Rules source files
 ```
 - `noEngineReferences: true` on the Rules assembly **enforces** at compile time that rules code can't touch `UnityEngine`. This keeps it portable to a server and fast to test.
@@ -120,7 +121,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 
 ## 5. Roadmap (draft)
 1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons.
-2. 🚧 **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards. *Engine skeleton and tests done (§7); the debug UI is next.*
+2. ✅ **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards (§7).
 3. **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage.
 4. **Minimal visual client** in Unity (Windows build): hot-seat 1v1.
 5. Implement the full first set (120 cards) and a basic AI.
@@ -153,10 +154,23 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - New object ids on every zone change. Tokens stop existing when they leave the battlefield.
 - 22 prototype cards (Goobers, Evergrowing Wild, Neutral) in `Assets/Rules/Cards/PrototypeCards.cs`.
 
-**Tests** (`Assets/Rules.Tests`, 39 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 42 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
+
+**Debug table** (`Assets/Client/DebugTable.cs`, scene `Assets/Scenes/DebugTable.unity`). This is a hot-seat IMGUI table for 1v1 with the two prototype decks, *Goober Mob* and *Jungle Stampede* (`PrototypeCards`). Both are legal 60-card decks.
+- Waiting on someone: the top bar names them and their header turns green.
+- Your options: their legal actions are listed as buttons. Cards they can act with are tinted green, and clicking a card filters the list to the actions that involve it.
+- What's on the table: the board shows Power/Health, damage, keywords, and tapped/sick/attacking/blocking states, plus the Chain (top first) and the current combat.
+- Hidden information: a hand is shown only while its owner is the one to act (or with *Show all hands*). In hot-seat the log doesn't name drawn cards.
+- Controls: *Undo* (last 200 states), *New game* (with a seed), *Auto-pass*, and either player can be handed to a random bot.
+- Build: menu **Restarted Tavern → Build Windows Debug Table**, or headless:
+  ```
+  Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
+  ```
+  This writes `Builds/DebugTable/RestartedTavern.exe` (git-ignored). Command-line flags: `-seed N`, `-bot1`, `-bot2`, `-autoplay N` (the bots play N actions at startup), and `-autoshot file.png` (take a screenshot, then quit), for automated checks.
+- `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
 **Not yet implemented** (next steps)
 - Activated abilities (Tap: …, Pay X Gold: …) and **Patron powers and passives**.
@@ -165,4 +179,4 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - Divided or multiple targets ("deal 3 damage divided as you choose"), X costs, "may" choices, and rummaging.
 - Replacement effects, control-changing effects, and filtering events by hidden information.
 - Loading card data from JSON (see §0.1).
-- The minimal Unity debug UI (roadmap step 2).
+

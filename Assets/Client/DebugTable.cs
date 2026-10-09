@@ -1,0 +1,451 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using RestartedTavern.Rules;
+using RestartedTavern.Rules.Cards;
+using UnityEngine;
+
+namespace RestartedTavern.Client
+{
+    /// <summary>
+    /// Hot-seat debug table (DEVELOPMENT §5, roadmap step 2): plays the rules engine through
+    /// IMGUI, so the rules can be tested by hand before any real client exists.
+    ///
+    /// Click a card to show only the actions that involve it; click an action to do it.
+    /// Either player can be handed to a random bot. Undo keeps the last 200 states.
+    ///
+    /// Command line (for automated checks): -seed N, -bot1, -bot2, -autoplay N (bots play N
+    /// actions at startup), -autoshot path.png (take a screenshot, then quit).
+    /// </summary>
+    public sealed class DebugTable : MonoBehaviour
+    {
+        private const float VirtualHeight = 900f;
+        private const float CardWidth = 150f;
+        private const float CardHeight = 96f;
+        private const int MaxUndo = 200;
+        private const int MaxLog = 400;
+
+        private static readonly string[] DeckNames = { "Goober Mob", "Jungle Stampede" };
+
+        private GameEngine _engine;
+        private GameState _state;
+        private GameText _text;
+        private readonly List<GameState> _undo = new List<GameState>();
+        private readonly List<string> _log = new List<string>();
+
+        private ulong _seed = 1;
+        private string _seedText = "1";
+        private bool _showAllHands;
+        private readonly bool[] _bot = new bool[2];
+        private DeterministicRng _botRng;
+        private float _nextBotTime;
+        private ObjectId _focus = ObjectId.None;
+
+        private Vector2 _boardScroll, _actionsScroll, _logScroll;
+        private GUIStyle _cardStyle, _buttonStyle, _headerStyle, _labelStyle, _bigStyle;
+
+        private int _autoplay;
+        private string _autoshot;
+        private int _shotFrame = -1;
+
+        private void Start()
+        {
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                string next = i + 1 < args.Length ? args[i + 1] : null;
+                switch (args[i])
+                {
+                    case "-seed": ulong.TryParse(next, out _seed); break;
+                    case "-bot1": _bot[0] = true; break;
+                    case "-bot2": _bot[1] = true; break;
+                    case "-autoplay": int.TryParse(next, out _autoplay); break;
+                    case "-autoshot": _autoshot = next; break;
+                }
+            }
+            if (_seed == 0) _seed = 1;
+            NewGame(_seed);
+            if (_autoshot != null) _shotFrame = 0;
+        }
+
+        // ------------------------------------------------------------------ game control
+
+        private void NewGame(ulong seed)
+        {
+            _seed = seed;
+            _seedText = seed.ToString(CultureInfo.InvariantCulture);
+            var db = PrototypeCards.CreateDatabase();
+            _engine = new GameEngine(db);
+            _text = new GameText(db);
+            _botRng = new DeterministicRng(seed ^ 0xB07B07UL);
+            _undo.Clear();
+            _log.Clear();
+            _focus = ObjectId.None;
+
+            var events = new List<GameEvent>();
+            _state = _engine.CreateGame(FormatConfig.Standard(), new[]
+            {
+                new PlayerSetup { Deck = PrototypeCards.GooberMobDeck() },
+                new PlayerSetup { Deck = PrototypeCards.JungleStampedeDeck() },
+            }, seed, events);
+            _text.Remember(_state, events);
+            AddToLog(events);
+        }
+
+        private void Do(PlayerAction action)
+        {
+            string description = _text.Describe(_state, action);
+            _undo.Add(_state.Clone());
+            if (_undo.Count > MaxUndo) _undo.RemoveAt(0);
+
+            _text.Remember(_state);
+            var events = _engine.Apply(_state, action);
+            _text.Remember(_state, events);
+
+            _log.Add("> " + action.Player + ": " + description);
+            AddToLog(events);
+            _focus = ObjectId.None;
+        }
+
+        private void Undo()
+        {
+            if (_undo.Count == 0) return;
+            _state = _undo[_undo.Count - 1];
+            _undo.RemoveAt(_undo.Count - 1);
+            _log.Add("(undo)");
+            _focus = ObjectId.None;
+        }
+
+        private void AddToLog(List<GameEvent> events)
+        {
+            foreach (var e in events)
+            {
+                var line = _text.Describe(_state, e, HandViewer());
+                if (line != null) _log.Add(line);
+            }
+            if (_log.Count > MaxLog) _log.RemoveRange(0, _log.Count - MaxLog);
+            _logScroll.y = float.MaxValue;
+        }
+
+        /// <summary>
+        /// Whose draws the log may name. Everyone's with "show all hands"; with one human, only theirs.
+        /// In hot-seat (several humans sharing a screen) nobody's: each hand shows only on its owner's turn to act.
+        /// </summary>
+        private PlayerId? HandViewer()
+        {
+            if (_showAllHands) return null;
+            var humans = _state.Players.Where(p => !_bot[p.Seat]).ToList();
+            return humans.Count == 1 ? humans[0].Id : NoViewer;
+        }
+
+        private static readonly PlayerId NoViewer = new PlayerId(0);
+
+        private bool IsBot(PlayerId p) => _bot[_state.GetPlayer(p).Seat];
+
+        private void Update()
+        {
+            if (_state == null) return;
+
+            if (_autoplay > 0)
+            {
+                while (_autoplay > 0 && !_state.IsGameOver)
+                {
+                    BotStep(_engine.WaitingOn(_state).Value);
+                    _autoplay--;
+                }
+                _autoplay = 0;
+            }
+
+            if (_shotFrame >= 0)
+            {
+                _shotFrame++;
+                if (_shotFrame == 3) ScreenCapture.CaptureScreenshot(_autoshot);
+                if (_shotFrame == 10) Application.Quit();
+                return;
+            }
+
+            var who = _engine.WaitingOn(_state);
+            if (who.HasValue && IsBot(who.Value) && Time.unscaledTime >= _nextBotTime)
+            {
+                BotStep(who.Value);
+                _nextBotTime = Time.unscaledTime + 0.35f;
+            }
+        }
+
+        /// <summary>A random bot that prefers doing something over passing, and always keeps its hand.</summary>
+        private void BotStep(PlayerId who)
+        {
+            var legal = _engine.GetLegalActions(_state, who);
+            PlayerAction choice;
+            if (legal[0].Kind == ActionKind.Keep) choice = legal[0];
+            else if (legal.Count > 1 && _botRng.Next(4) != 0) choice = legal[1 + _botRng.Next(legal.Count - 1)];
+            else choice = legal[_botRng.Next(legal.Count)];
+            Do(choice);
+        }
+
+        // ------------------------------------------------------------------ drawing
+
+        private void OnGUI()
+        {
+            if (_state == null) return;
+            EnsureStyles();
+
+            float scale = Screen.height / VirtualHeight;
+            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
+            float w = Screen.width / scale;
+            float h = VirtualHeight;
+            float rightW = Mathf.Clamp(w * 0.3f, 320f, 520f);
+
+            DrawTopBar(new Rect(4, 4, w - 8, 30));
+            DrawBoard(new Rect(4, 40, w - rightW - 12, h - 44));
+            DrawActions(new Rect(w - rightW - 4, 40, rightW, h * 0.48f - 40));
+            DrawLog(new Rect(w - rightW - 4, h * 0.48f + 4, rightW, h * 0.52f - 8));
+        }
+
+        private void EnsureStyles()
+        {
+            if (_cardStyle != null) return;
+            _cardStyle = new GUIStyle(GUI.skin.button) { wordWrap = true, alignment = TextAnchor.UpperLeft, fontSize = 12, padding = new RectOffset(6, 6, 4, 4) };
+            _buttonStyle = new GUIStyle(GUI.skin.button) { wordWrap = true, alignment = TextAnchor.MiddleLeft, fontSize = 13, padding = new RectOffset(8, 8, 4, 4) };
+            _labelStyle = new GUIStyle(GUI.skin.label) { wordWrap = true, fontSize = 13 };
+            _headerStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleLeft, fontSize = 14, fontStyle = FontStyle.Bold, padding = new RectOffset(8, 8, 4, 4) };
+            _bigStyle = new GUIStyle(GUI.skin.label) { fontSize = 22, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+            _headerStyle.normal.textColor = Color.white;
+        }
+
+        private void DrawTopBar(Rect r)
+        {
+            GUILayout.BeginArea(r);
+            GUILayout.BeginHorizontal();
+
+            string status = _state.IsGameOver
+                ? "GAME OVER. Winner: " + string.Join(", ", _state.Winners)
+                : "Turn " + _state.TurnNumber + "  |  " + _state.ActivePlayer + "'s turn  |  " + _state.Step
+                  + "  |  waiting on " + _engine.WaitingOn(_state);
+            GUILayout.Label(status, _labelStyle, GUILayout.Width(430));
+
+            if (GUILayout.Button("New game", GUILayout.Width(90))) NewGame(NextSeed());
+            GUILayout.Label("seed", GUILayout.Width(32));
+            _seedText = GUILayout.TextField(_seedText, GUILayout.Width(70));
+            GUI.enabled = _undo.Count > 0;
+            if (GUILayout.Button("Undo (" + _undo.Count + ")", GUILayout.Width(90))) Undo();
+            GUI.enabled = true;
+            _state.AutoPass = GUILayout.Toggle(_state.AutoPass, " Auto-pass", GUILayout.Width(95));
+            _showAllHands = GUILayout.Toggle(_showAllHands, " Show all hands", GUILayout.Width(125));
+            _bot[0] = GUILayout.Toggle(_bot[0], " P1 bot", GUILayout.Width(70));
+            _bot[1] = GUILayout.Toggle(_bot[1], " P2 bot", GUILayout.Width(70));
+
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
+        /// <summary>The seed typed in the box if it was changed, otherwise the next seed.</summary>
+        private ulong NextSeed()
+        {
+            ulong typed = ParseSeed();
+            return typed == _seed ? _seed + 1 : typed;
+        }
+
+        private ulong ParseSeed() =>
+            ulong.TryParse(_seedText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var s) && s > 0 ? s : 1;
+
+        private void DrawBoard(Rect r)
+        {
+            GUILayout.BeginArea(r);
+            _boardScroll = GUILayout.BeginScrollView(_boardScroll);
+            float width = r.width - 24;
+
+            // Opponents on top, P1 at the bottom, the Chain and combat in between.
+            for (int i = _state.Players.Count - 1; i >= 1; i--) DrawPlayer(_state.Players[i], width);
+            DrawCenter();
+            DrawPlayer(_state.Players[0], width);
+
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        private void DrawPlayer(PlayerState p, float width)
+        {
+            var waiting = _engine.WaitingOn(_state);
+            string marker = p.Id == _state.ActivePlayer ? ">> " : "";
+            string header = marker + p.Id + " " + DeckNames[p.Seat] + (_bot[p.Seat] ? " (bot)" : "")
+                            + "    Life " + p.Life + "    Mana " + p.Mana + "/" + p.MaxMana + "    Gold " + p.Gold
+                            + "    Deck " + p.Deck.Count + "    Hand " + p.Hand.Count + "    Graveyard " + p.Graveyard.Count
+                            + (p.HasLost ? "    LOST" : "");
+            var old = GUI.contentColor;
+            GUI.contentColor = waiting == p.Id ? new Color(0.45f, 1f, 0.55f) : p.HasLost ? new Color(1f, 0.4f, 0.4f) : Color.white;
+            GUILayout.Box(header + (waiting == p.Id ? "    <- to act" : ""), _headerStyle, GUILayout.ExpandWidth(true));
+            GUI.contentColor = old;
+
+            GUILayout.Label("Battlefield", _labelStyle);
+            DrawCardRow(p.Battlefield, width, true);
+
+            bool showHand = _showAllHands || (waiting == p.Id && !_bot[p.Seat]) || HandViewer() == p.Id;
+            GUILayout.Label("Hand" + (showHand ? "" : " (hidden)"), _labelStyle);
+            if (showHand) DrawCardRow(p.Hand, width, true);
+            else GUILayout.Label(new string('#', p.Hand.Count), _labelStyle);
+
+            if (p.Graveyard.Count > 0)
+            {
+                var names = p.Graveyard.Skip(Math.Max(0, p.Graveyard.Count - 8)).Reverse().Select(c => _text.Name(c.DefinitionId));
+                GUILayout.Label("Graveyard (newest first): " + string.Join(", ", names), _labelStyle);
+            }
+            GUILayout.Space(10);
+        }
+
+        private void DrawCardRow(List<CardInstance> cards, float width, bool clickable)
+        {
+            if (cards.Count == 0)
+            {
+                GUILayout.Label("  (empty)", _labelStyle);
+                return;
+            }
+            int perRow = Mathf.Max(1, Mathf.FloorToInt(width / (CardWidth + 6)));
+            var actable = ActableObjects();
+            for (int start = 0; start < cards.Count; start += perRow)
+            {
+                GUILayout.BeginHorizontal();
+                for (int i = start; i < Mathf.Min(cards.Count, start + perRow); i++)
+                {
+                    var c = cards[i];
+                    var old = GUI.backgroundColor;
+                    GUI.backgroundColor = CardColor(c, actable.Contains(c.Id));
+                    if (GUILayout.Button(_text.Describe(_state, c), _cardStyle, GUILayout.Width(CardWidth), GUILayout.Height(CardHeight)) && clickable)
+                        _focus = _focus == c.Id ? ObjectId.None : c.Id;
+                    GUI.backgroundColor = old;
+                }
+                GUILayout.EndHorizontal();
+            }
+        }
+
+        private Color CardColor(CardInstance c, bool actable)
+        {
+            if (c.Id == _focus) return new Color(1f, 0.9f, 0.2f);
+            if (_state.Combat != null && (_state.Combat.IsAttacking(c.Id) || _state.Combat.IsBlocking(c.Id))) return new Color(1f, 0.55f, 0.2f);
+            if (c.Tapped) return new Color(0.45f, 0.45f, 0.45f);
+            if (actable) return new Color(0.5f, 1f, 0.6f);
+            if (c.Damage > 0) return new Color(1f, 0.6f, 0.6f);
+            return Color.white;
+        }
+
+        /// <summary>Objects that appear in the waiting player's legal actions (highlighted green).</summary>
+        private HashSet<ObjectId> ActableObjects()
+        {
+            var set = new HashSet<ObjectId>();
+            var who = _engine.WaitingOn(_state);
+            if (!who.HasValue || IsBot(who.Value)) return set;
+            foreach (var a in _engine.GetLegalActions(_state, who.Value))
+            {
+                if (!a.Card.IsNone) set.Add(a.Card);
+                if (a.Target.HasValue && !a.Target.Value.IsPlayer) set.Add(a.Target.Value.Object);
+            }
+            return set;
+        }
+
+        private void DrawCenter()
+        {
+            GUILayout.BeginVertical(GUI.skin.box);
+            if (_state.IsGameOver)
+                GUILayout.Label("GAME OVER. Winner: " + string.Join(", ", _state.Winners), _bigStyle);
+
+            if (_state.Pending != null)
+                GUILayout.Label("Waiting on " + _state.Pending.Player + ": " + DecisionText(_state.Pending), _labelStyle);
+
+            if (_state.Combat != null && _state.Combat.Attacks.Count > 0)
+            {
+                foreach (var attack in _state.Combat.Attacks)
+                {
+                    var blockers = _state.Combat.Blocks.Where(b => b.Attacker == attack.Attacker)
+                        .Select(b => _text.Name(_state, b.Blocker)).ToList();
+                    GUILayout.Label("Combat: " + _text.Name(_state, attack.Attacker) + " -> " + attack.Defender
+                                    + (blockers.Count > 0 ? "   blocked by " + string.Join(", ", blockers) : attack.Blocked ? "   (blocked)" : ""),
+                        _labelStyle);
+                }
+            }
+
+            if (_state.Chain.Count == 0)
+            {
+                GUILayout.Label("Chain: empty", _labelStyle);
+            }
+            else
+            {
+                GUILayout.Label("Chain (top resolves first):", _labelStyle);
+                for (int i = _state.Chain.Count - 1; i >= 0; i--)
+                {
+                    var item = _state.Chain[i];
+                    string kind = item.Kind == ChainItemKind.Spell ? "Spell" : "Ability";
+                    string target = item.Targets.Count > 0 ? " -> " + _text.Name(_state, item.Targets[0]) : "";
+                    GUILayout.Label("   " + (i == _state.Chain.Count - 1 ? "TOP  " : "     ") + kind + ": "
+                                    + _text.Name(item.SourceDefinitionId) + " (" + item.Controller + ")" + target, _labelStyle);
+                }
+            }
+            GUILayout.EndVertical();
+            GUILayout.Space(10);
+        }
+
+        private string DecisionText(PendingDecision d)
+        {
+            switch (d.Kind)
+            {
+                case DecisionKind.Mulligan: return "keep or mulligan (London)";
+                case DecisionKind.BottomCards: return "put " + d.Count + " card(s) on the bottom of the deck";
+                case DecisionKind.DeclareAttackers: return "declare attackers (one at a time), then Done";
+                case DecisionKind.DeclareBlockers: return "declare blockers (one at a time), then Done";
+                case DecisionKind.ChooseTriggerTarget: return "choose a target for " + _text.Name(d.Trigger.SourceDefinitionId);
+                case DecisionKind.DiscardToHandSize: return "discard " + d.Count + " card(s) down to 7";
+                default: return d.Kind.ToString();
+            }
+        }
+
+        private void DrawActions(Rect r)
+        {
+            GUILayout.BeginArea(r, GUI.skin.box);
+            var who = _engine.WaitingOn(_state);
+            if (!who.HasValue)
+            {
+                GUILayout.Label("No actions: the game is over.", _labelStyle);
+                GUILayout.EndArea();
+                return;
+            }
+
+            GUILayout.Label("Actions for " + who.Value + (IsBot(who.Value) ? " (bot)" : ""), _headerStyle);
+            var legal = _engine.GetLegalActions(_state, who.Value);
+            var shown = _focus.IsNone
+                ? legal
+                : legal.Where(a => a.Card == _focus || a.BlockedAttacker == _focus
+                                   || a.Target.HasValue && !a.Target.Value.IsPlayer && a.Target.Value.Object == _focus).ToList();
+
+            if (!_focus.IsNone)
+            {
+                if (GUILayout.Button("Showing actions for " + _text.Name(_state, _focus) + " (click to show all)", _buttonStyle))
+                    _focus = ObjectId.None;
+                if (shown.Count == 0) GUILayout.Label("Nothing to do with that card right now.", _labelStyle);
+            }
+
+            _actionsScroll = GUILayout.BeginScrollView(_actionsScroll);
+            GUI.enabled = !IsBot(who.Value);
+            foreach (var a in shown)
+            {
+                if (GUILayout.Button(_text.Describe(_state, a), _buttonStyle))
+                {
+                    Do(a);
+                    break; // the list is stale after acting
+                }
+            }
+            GUI.enabled = true;
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        private void DrawLog(Rect r)
+        {
+            GUILayout.BeginArea(r, GUI.skin.box);
+            GUILayout.Label("Log", _headerStyle);
+            _logScroll = GUILayout.BeginScrollView(_logScroll);
+            foreach (var line in _log) GUILayout.Label(line, _labelStyle);
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+    }
+}

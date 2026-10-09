@@ -1,0 +1,19 @@
+{
+    "name": "RestartedTavern.Client.Editor",
+    "rootNamespace": "RestartedTavern.Client.Editor",
+    "references": [
+        "RestartedTavern.Rules",
+        "RestartedTavern.Client"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

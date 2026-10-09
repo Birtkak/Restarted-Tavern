@@ -116,15 +116,16 @@ namespace RestartedTavern.Rules
             if (target.IsPlayer)
             {
                 if (S.GetPlayer(target.Player).HasLost) return;
+                Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 ChangeLife(target.Player, -amount);
             }
             else
             {
                 var creature = S.FindOnBattlefield(target.Object);
                 if (creature == null || !Def(creature).IsCreature) return;
+                Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 creature.Damage += amount;
             }
-            Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
 
             var src = S.FindOnBattlefield(source);
             if (src != null && Stats(src).Has(Keyword.Lifelink))

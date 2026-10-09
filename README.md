@@ -2,6 +2,9 @@
 
 A trading-card-style dueling game. MTG is the rules backbone, with automatic mana growth, **Gold** (unused mana you can bank) and **permanent damage** on creatures.
 
+## Play the prototype
+Open the project in Unity 6000.6.4f1, then open `Assets/Scenes/DebugTable.unity` and press Play. Or build a Windows exe through **Restarted Tavern → Build Windows Debug Table**. It's a hot-seat debug table with two prototype decks; see [Development §7](docs/DEVELOPMENT.md).
+
 ## Docs
 - [Game Design](docs/GAME_DESIGN.md): the rules, and the Decision Log
 - [Card Design Guide](docs/CARD_DESIGN.md): stat budget, rarity, faction pie

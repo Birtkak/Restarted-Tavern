@@ -13,6 +13,26 @@ namespace RestartedTavern.Rules.Cards
 
         public static CardDatabase CreateDatabase() => new CardDatabase(All());
 
+        /// <summary>Legal Standard deck (60, max 4): all prototype Goobers plus Neutral filler.</summary>
+        public static List<string> GooberMobDeck() => FourOfEach(
+            "goober_rascal", "spark_snot", "fuse_goober", "gob_gang", "brawling_runt", "goober_warchief",
+            "hog_rider", "mob_rush", "barrel_bomber", "pit_fighter", "overrun_the_gates", "pit_champion",
+            "hired_sellsword", "tavern_bouncer", "barkeeps_tonic");
+
+        /// <summary>Legal Standard deck: Evergrowing Wild + big Goobers (the Mukk the Grub King pair) + Neutral.</summary>
+        public static List<string> JungleStampedeDeck() => FourOfEach(
+            "jungle_remedy", "vine_spider", "razorhide_boar", "ironbark_grizzly", "thornback_ravager",
+            "tusked_mammoth", "hog_rider", "pit_fighter", "pit_champion", "spark_snot",
+            "barkeeps_tonic", "hired_sellsword", "tavern_bouncer", "wandering_adventurer", "brawling_runt");
+
+        private static List<string> FourOfEach(params string[] ids)
+        {
+            var deck = new List<string>();
+            foreach (var id in ids)
+                for (int i = 0; i < 4; i++) deck.Add(id);
+            return deck;
+        }
+
         public static IEnumerable<CardDefinition> All()
         {
             // ---------------------------------------------------------------- Goobers

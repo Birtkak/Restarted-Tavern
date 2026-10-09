@@ -1,0 +1,16 @@
+{
+    "name": "RestartedTavern.Client",
+    "rootNamespace": "RestartedTavern.Client",
+    "references": [
+        "RestartedTavern.Rules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
