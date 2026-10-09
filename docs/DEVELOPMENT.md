@@ -186,6 +186,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
   ```
   This writes `Builds/DebugTable/RestartedTavern.exe` (git-ignored). Command-line flags: `-seed N`, `-bot1`, `-bot2`, `-deck1 N`, `-deck2 N`, `-autoplay N` (the bots play N actions at startup), and `-autoshot file.png` (take a screenshot, then quit), for automated checks.
 - The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. It plans each attack as a whole: candidate attacks are scored against the defender's likely blocks and the crack-back next turn, so it alpha-strikes through blockers and holds back when the swing back would kill. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
+- **Simulations outside Unity**: `Tools/SimRunner` (a .NET 8 console app built with the SDK in Unity's `Editor/Data/DotNetSdk`) compiles the `Assets/Rules` sources and runs the simulation report in ~15 s instead of ~9 min in Unity (Mono's GC keeps the parallel games from scaling). See [playtest/PLAYTEST.md](playtest/PLAYTEST.md) "How to run".
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
 **Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))

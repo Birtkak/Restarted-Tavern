@@ -68,7 +68,11 @@ namespace RestartedTavern.Rules
         {
             var p = S.GetPlayer(player);
             foreach (var source in p.TavernDwellerZone) AddAbilitiesOf(p, source, sorcerySpeed, result);
-            foreach (var source in p.Battlefield) AddAbilitiesOf(p, source, sorcerySpeed, result);
+            foreach (var source in p.Battlefield)
+            {
+                if (result.Count >= _stopAfter) return;
+                AddAbilitiesOf(p, source, sorcerySpeed, result);
+            }
         }
 
         private void AddAbilitiesOf(PlayerState p, CardInstance source, bool sorcerySpeed, List<PlayerAction> result)

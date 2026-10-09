@@ -41,3 +41,7 @@ TestResults*.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# SimRunner (.NET build output)
+Tools/**/bin/
+Tools/**/obj/

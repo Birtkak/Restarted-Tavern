@@ -246,16 +246,48 @@ namespace RestartedTavern.Rules.AI
         }
 
         /// <summary>Runs several matchups in order, reporting each as it finishes.</summary>
+        /// <summary>
+        /// Every game of every matchup goes into one parallel pool, so cores don't sit idle while a matchup's
+        /// last long games finish. Results are still merged per matchup in game order (deterministic).
+        /// <paramref name="progress"/> is called as each matchup finishes, possibly from a worker thread.
+        /// </summary>
         public static List<MatchResult> RunAll(IEnumerable<MatchConfig> configs, CardDatabase db, Action<MatchResult> progress = null)
         {
-            var results = new List<MatchResult>();
-            foreach (var cfg in configs)
+            var cfgs = configs.ToList();
+            var perGame = cfgs.Select(c => new MatchResult[c.Games]).ToArray();
+            var left = cfgs.Select(c => c.Games).ToArray();
+            var jobs = new List<(int cfg, int game)>();
+            for (int c = 0; c < cfgs.Count; c++)
+                for (int g = 0; g < cfgs[c].Games; g++) jobs.Add((c, g));
+
+            MatchResult Merge(int c)
             {
-                var r = Run(cfg, db);
-                results.Add(r);
-                progress?.Invoke(r);
+                var r = new MatchResult { Config = cfgs[c] };
+                foreach (var game in perGame[c]) r.Add(game);
+                return r;
             }
-            return results;
+
+            void Play(GameEngine engine, int j)
+            {
+                var (c, g) = jobs[j];
+                perGame[c][g] = PlayGame(cfgs[c], db, engine, g);
+                if (System.Threading.Interlocked.Decrement(ref left[c]) == 0) progress?.Invoke(Merge(c));
+            }
+
+            if (Parallel)
+            {
+                System.Threading.Tasks.Parallel.For(0, jobs.Count,
+                    new System.Threading.Tasks.ParallelOptions(),
+                    () => new GameEngine(db) { CacheLegalActions = true },
+                    (j, _, engine) => { Play(engine, j); return engine; },
+                    _ => { });
+            }
+            else
+            {
+                var engine = new GameEngine(db) { CacheLegalActions = true };
+                for (int j = 0; j < jobs.Count; j++) Play(engine, j);
+            }
+            return Enumerable.Range(0, cfgs.Count).Select(Merge).ToList();
         }
     }
 }

@@ -115,7 +115,22 @@ namespace RestartedTavern.Rules.AI
         // ------------------------------------------------------------------ helpers
 
         private CardDefinition Def(GameState s, ObjectId id) => Db.Get(s.FindObject(id).DefinitionId);
-        private Characteristics Stats(GameState s, CardInstance c) => _engine.GetCharacteristics(s, c);
+        // The bot never changes the state while deciding, so stats are cached per state and version.
+        private readonly Dictionary<ObjectId, Characteristics> _stats = new Dictionary<ObjectId, Characteristics>();
+        private GameState _statsState;
+        private long _statsVersion;
+
+        private Characteristics Stats(GameState s, CardInstance c)
+        {
+            if (!ReferenceEquals(s, _statsState) || s.Version != _statsVersion)
+            {
+                _stats.Clear();
+                _statsState = s;
+                _statsVersion = s.Version;
+            }
+            if (!_stats.TryGetValue(c.Id, out var st)) _stats[c.Id] = st = _engine.GetCharacteristics(s, c);
+            return st;
+        }
 
         /// <summary>Keep a hand with 2–5 early plays (cost 3 or less); mulligan at most once.</summary>
         private PlayerAction KeepOrMulligan(GameState s, PlayerId me, List<PlayerAction> legal)

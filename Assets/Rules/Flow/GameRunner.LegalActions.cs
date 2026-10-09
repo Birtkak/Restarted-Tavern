@@ -6,6 +6,17 @@ namespace RestartedTavern.Rules
     /// <summary>Everything a player may do right now. Apply() only accepts actions from this list.</summary>
     internal sealed partial class GameRunner
     {
+        /// <summary>Enumeration stops once the list has this many actions (auto-pass only asks "more than pass?").</summary>
+        private int _stopAfter = int.MaxValue;
+
+        /// <summary>Does the player have anything to do besides passing? Stops enumerating at the second action.</summary>
+        internal bool HasMoreThanPass(PlayerId player)
+        {
+            _stopAfter = 2;
+            try { return LegalActions(player).Count > 1; }
+            finally { _stopAfter = int.MaxValue; }
+        }
+
         internal List<PlayerAction> LegalActions(PlayerId player)
         {
             var result = new List<PlayerAction>();
@@ -23,7 +34,7 @@ namespace RestartedTavern.Rules
                 && (S.Step == Step.Main1 || S.Step == Step.Main2)
                 && S.Chain.Count == 0;
             AddPlayableCards(player, result, sorcerySpeed);
-            AddActivatableAbilities(player, result, sorcerySpeed);
+            if (result.Count < _stopAfter) AddActivatableAbilities(player, result, sorcerySpeed);
             return result;
         }
 
@@ -170,6 +181,7 @@ namespace RestartedTavern.Rules
 
             foreach (var card in p.Hand)
             {
+                if (result.Count >= _stopAfter) return;
                 var def = Def(card);
                 bool instant = def.Type == CardType.Instant || def.Flash;
                 if (!instant && !sorcerySpeed) continue;

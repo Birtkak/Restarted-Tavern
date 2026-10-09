@@ -138,8 +138,14 @@ namespace RestartedTavern.Rules.AI
 
         public static void Run(List<Section> sections, CardDatabase db, Action<MatchResult> progress = null)
         {
+            // One pool for all sections: see MatchRunner.RunAll.
+            var all = MatchRunner.RunAll(sections.SelectMany(s => s.Configs), db, progress);
+            int next = 0;
             foreach (var s in sections)
-                s.Results = MatchRunner.RunAll(s.Configs, db, progress);
+            {
+                s.Results = all.GetRange(next, s.Configs.Count);
+                next += s.Configs.Count;
+            }
         }
 
         public static string ToMarkdown(List<Section> sections, int games, TimeSpan duration)

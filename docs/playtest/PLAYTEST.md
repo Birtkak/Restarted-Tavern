@@ -10,15 +10,27 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
 ## How to run
 
 - **Debug table**: open `Assets/Scenes/DebugTable.unity` → Play, or run the built exe (**Restarted Tavern → Build Windows Debug Table**). Tick *P2 bot* to play solo against the GreedyBot. The *P1/P2 deck* buttons pick the decks for the next *New game*.
-- **Simulation report**: **Restarted Tavern → Run Simulation Report**, or headless:
+- **Simulation report** (fast way): `Tools/SimRunner`, a small .NET 8 console app that compiles the same `Assets/Rules` source files. Build it with the .NET SDK that ships with Unity, then run it from the repo:
   ```
-  Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.SimulationMenu.RunReport -simGames 1000
+  "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build Tools/SimRunner -c Release
+  Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-simGames 500] [-simSections "round,second"] [-out file.md]
   ```
-  It rewrites `docs/playtest/SIMULATION_REPORT.md`. Games run in parallel; the full suite (84 matchups) takes about **6 minutes at the default 500 games per row**. Add `-simSections "round,second"` to run only the sections whose title contains those words. Experiments live in `Assets/Rules/AI/Experiments.cs`; experiment-only rule switches are on `FormatConfig` (`DamageWearsOff`, `SecondPlayerExtraCards`, `SecondPlayerStartingGold`).
+  The full suite (84 matchups, 42,000 games) takes about **15 seconds** on 12 cores. Unity's Mono runtime barely uses more than one core for this (measured: 1.15× on 12 cores), so the same report inside Unity takes about 9 minutes. Results are identical either way (checked matchup by matchup).
+- **Simulation report** (inside Unity): **Restarted Tavern → Run Simulation Report**, or headless `Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.SimulationMenu.RunReport`. Same arguments.
+- Both rewrite `docs/playtest/SIMULATION_REPORT.md` by default. Add `-simSections "round,second"` to run only the sections whose title contains those words. Experiments live in `Assets/Rules/AI/Experiments.cs`; experiment-only rule switches are on `FormatConfig` (`DamageWearsOff`, `SecondPlayerExtraCards`, `SecondPlayerStartingGold`).
 
 ---
 
-> **Deck lists changed on 2026-10-09** (after these findings): each prototype deck swapped 4 cards for set v0.2 cards, and Sparkwrench Scrappers now has Equipment. The numbers below come from the old lists, so re-run the report before comparing.
+## Findings: new deck lists and the attack planner (2026-10-09, 500 games per row)
+
+First full report with the v0.2 deck lists and the GreedyBot attack planner (alpha strikes, crack-back check). Full tables: [SIMULATION_REPORT.md](SIMULATION_REPORT.md). Hints, not balance.
+
+1. **The board stalls are gone.** Jungle Stampede mirror: 25.4 ± 15.9 turns with 24.6% of games over 25 turns before, now **17.2 ± 3.2 and 1.4%**. Control vs Control: 33.3 ± 18.2 (56% long) → 21.7 ± 4.6 (16% long). No game in the whole suite hit the 120-turn draw limit. Game length now differs by deck, not by bot luck: Goober ~12 turns, Jungle ~17, Zoo/Vesper ~23.
+2. **Going first matters even more** now that the bot attacks properly. First-player win rate in mirrors: Jungle **83%** (was 69%), Goober 77%, Auditor 76%, Zoo 68%, Sparkwrench 58%, Vesper 57%. The best variant measured ("everyone draws + the second player gets +1 mana and 1 Gold") brings Goober to 62% but Jungle only to 75%. This is the strongest open rules question (RULES_REVIEW #1).
+3. **Deck power is very uneven** (expected, decks aren't tuned): Goober Mob beats every deck (59% vs Jungle Stampede, 81-98% vs the rest); Auditor's Arsenal loses to every deck (2-31%) and its Tavern Dweller Power is used 0.0 times per game; Vesper's Ledger loses 18% to Sparkwrench Scrappers.
+4. **The Gold cap still changes waste, not outcomes** (cap 3/5/8 rows are within noise); permanent damage vs MTG-style damage only changes the Zoo mirror (22.8 vs 19.3 turns).
+
+> **Deck lists changed on 2026-10-09** (before the findings above, after the ones below): each prototype deck swapped 4 cards for set v0.2 cards, and Sparkwrench Scrappers now has Equipment. The numbers below come from the old lists and the old attack logic.
 
 ## Findings: Tavern Dwellers and abilities (2026-10-09, 500 games per row)
 

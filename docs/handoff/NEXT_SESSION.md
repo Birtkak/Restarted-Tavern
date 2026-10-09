@@ -72,9 +72,9 @@ WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
 - 199 EditMode tests, all green. Every card in docs/cards is implemented (CardPool*.cs).
 
 CANDIDATE NEXT STEPS (offer these; the user picks)
-1. Re-run the simulation report (ONLY if the user asks): the attack planner is new (alpha strikes,
-   crack-back checks) and the deck lists changed, so every number in PLAYTEST.md is stale. Check
-   whether seed 12 of the Jungle mirror (an 86-turn board stall) still stalls.
+1. Going first (RULES_REVIEW #1), now the strongest open rules question: with the attack planner the
+   first player wins 83% of Jungle mirrors and 77% of Goober mirrors (PLAYTEST.md, latest findings).
+   Design question for the user: show the MTG default next to the measured alternatives.
 2. Payment order warning (RULES_REVIEW #6): mana is spent first, so casting a Sorcery before a creature can
    strand the creature. The UI should warn or order plays.
 3. The weak Tavern Dwellers: Mukk, Sparkwrench and Auditor Prime barely used their Powers in sims.
@@ -104,8 +104,11 @@ PRACTICAL NOTES
 - Build the debug table: -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
   (output Builds/DebugTable/RestartedTavern.exe). Check the UI with
   -bot1 -bot2 -deck1 N -deck2 N -autoplay N -autoshot <png> and look at the screenshot.
-- Simulation report (only when asked): -executeMethod RestartedTavern.Client.Editor.SimulationMenu.RunReport
-  [-simGames 500] [-simSections "round,cap"]. The full suite (84 matchups) takes about 6 minutes.
+- Simulation report (only when asked): build Tools/SimRunner with Unity's bundled SDK
+  ("C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build Tools/SimRunner -c Release),
+  then run Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-simGames 500] [-simSections "round,cap"].
+  The full suite takes ~15 s (inside Unity ~9 min: Mono barely scales across cores). Same results.
+  The same SDK could also run the unit tests outside Unity later (not set up).
 - Multi-line edits: a quoted Bash heredoc (python - <<'EOF') works, apostrophes included; or write the script
   to the scratchpad and run it with python. Open files with newline='' when writing: otherwise Windows writes
   CRLF, and the repo's .gitattributes keeps .cs/.md files as LF.
