@@ -92,7 +92,7 @@ namespace RestartedTavern.Rules.Tests
             var format = FormatConfig.Standard();
             format.SecondPlayerExtraCards = 1;
             format.SecondPlayerFirstTurnBonusMana = 1;
-            format.SecondPlayerStartingGold = 0;
+            format.FirstPlayerSkipsDraw = false;
             var deck = PrototypeCards.GooberMobDeck();
             var s = engine.CreateGame(format, new[] { new PlayerSetup { Deck = deck }, new PlayerSetup { Deck = deck } }, 3);
             s.AutoPass = false;

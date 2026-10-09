@@ -30,9 +30,10 @@ This game only **deviates** from MTG in these areas:
 | **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per turn up to 10, refilled each turn (§5.1). No lands |
 | **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for Instants, Sorceries and activated abilities (mana is used first), and Invest is paid only with Gold. Permanents are mana only (§5.2) |
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
+| **Life gain** | Uncapped | Gaining life (Lifelink, drains) can't take you above your starting life (§11.1) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
 | *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Power paid like any activated ability (§9). It works like a commander that never enters the battlefield |
-| *Going second* | The first player skips their draw | Nobody skips their draw. In 1v1 the second player has **+1 mana on their first turn** instead |
+| *Going second* | The first player skips their draw | Same as MTG (no other compensation) |
 
 Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
 
@@ -64,7 +65,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Maximum hand size | 7 (discard down to 7 at the end of your turn) | 🔒 |
 | Mulligan | **London mulligan**: shuffle and draw 7, then put 1 card on the bottom for each mulligan taken | 🔒 |
 | Who goes first | Random | 🟡 |
-| Going-second compensation | **The first player draws on turn 1 like everyone else** (no draw skip, since 2026-10-09). The second player has **+1 mana on their first turn** (2 instead of 1; unspent, it becomes Gold as usual); the first player gets no bonus mana. This replaced "starts with 1 Gold" on 2026-10-09 after bot simulations (playtest/PLAYTEST.md): Gold can't pay for creatures, so it barely helped | 🔒 |
+| Going-second compensation | **MTG default: the first player skips their turn-1 draw.** No bonus mana or Gold for the second player. Chosen on 2026-10-09 after trying "1 starting Gold" and "+1 first-turn mana" in simulations. Bots showed a first-player edge (playtest/RULES_REVIEW.md §1), but bots race more than people do, so human playtests will judge it | 🔒 |
 
 ---
 
@@ -131,7 +132,7 @@ Unused mana is not lost.
 ## 6. Turn Structure 🔒
 
 1. **Start phase**: raise max mana by 1 (to a max of 10), refill mana, untap your permanents, trigger "at start of turn" effects.
-2. **Draw phase**: draw 1 card. Every player draws, including the first player on turn 1 (§3).
+2. **Draw phase**: draw 1 card (in 1v1 the first player skips their draw on turn 1, §3).
 3. **Main phase 1**: play creatures, sorceries and permanents; activate abilities.
 4. **Combat phase**: declare attackers, then declare blockers, then deal damage (see §7).
 5. **Main phase 2**: the same as main phase 1. Lets you react to the result of combat (for example, finish off wounded creatures).
@@ -269,6 +270,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ### 11.1 Rules terms 🔒 (MTG, except Heal)
 - **Fight**: two creatures each deal damage equal to their Power to the other, at the same time. This is not combat, so Trample doesn't apply. The damage is permanent, like all damage.
 - **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Patron restores life, up to the starting life total.
+- **Gain life** 🔒: works exactly like healing your Patron, so life can't go above the starting life total (30 in Standard). This covers Lifelink, drains ("you gain 1 life") and any other life gain. Deviation from MTG, where life gain is uncapped (decided 2026-10-09).
 - **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
 - **Damaged** 🔒: a creature with damage on it (Health remaining below its max). This is plain card text, not a keyword: Bloodied, Wound and Pristine stay rejected as keywords (§11). "Health remaining" is max Health minus damage.
 - **Can't be healed** 🔒: Heal effects remove no damage from it. It can still get bigger (+1/+1 counters, buffs).
@@ -286,7 +288,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## 13. Multiplayer (3–4 players) 🔒 (future format)
 - **Seating and turns**: turn order goes clockwise. Priority on the Chain also goes clockwise, starting from the active player.
 - **Starting life: 40.**
-- **Turn order compensation: none.** Every player draws on their first turn, as in 1v1, and nobody gets bonus mana (the 1v1 second-player +1 mana doesn't apply).
+- **Turn order compensation: none.** Every player draws on their first turn, including the first player (unlike 1v1).
 - **Attacking**: free-for-all. **Each attacking creature chooses any opponent** to attack. Each defending player only declares blockers against attackers that are attacking *them*.
 - **Elimination** 🟡: when a player loses, they leave the game. All cards they **own** leave with them, any of their spells or abilities on the Chain are removed, and control of anything of theirs that someone else controls ends. Effects that player controlled stop ("until end of turn" effects end immediately).
 - 🟡 Card wording for multiplayer: "each opponent", "target opponent", "the player to your left/right". Effects like "each player" include you.
@@ -301,6 +303,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **Rules review** (playtest/RULES_REVIEW.md). Going first: back to the **MTG default** (the first player skips their turn-1 draw, no other compensation); human playtests will judge it. Gold sinks: **Patron Powers** are the fix, so implement them next and then re-measure the Gold cap. Game-length stalls: **no new rule**; add late-game sinks and finishers in cards first. **Life gain is capped at starting life** (§11.1). |
 | 2026-10-09 | **Set v0.2 approved**: all 70 additions (10 per faction, 20 Neutral) confirmed. The rules terms they use are now locked: **bank**, per-player Gold cap, **damaged**, **can't be healed** (§5.2, §11.1). |
 | 2026-10-09 | **No draw skip**: the first player now draws on turn 1. The second player keeps +1 mana on their first turn; the first player gets no bonus mana (§3). |
 | 2026-10-09 | **Payment rules** (§5.2): casting any permanent (creature, Equipment, Relic, Curse) uses mana only. Instants, Sorceries, activated abilities, Equip and Patron Powers can use Gold, **mana is always spent first automatically**. **Overcharge is renamed Invest** and is the only cost paid only with Gold. Set v0.2 card drafts added: 10 per faction plus 20 Neutral. |

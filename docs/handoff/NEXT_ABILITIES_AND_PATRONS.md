@@ -89,8 +89,11 @@ HOW TO WORK WITH THIS USER
   AskUserQuestion with multiple-choice options, recommended option first, and always show the MTG
   default next to alternatives. Record every decision in the docs and the Decision Log.
 - Ask before pushing to GitHub. (gh is logged in as Birtkak; the repo has a local git identity.)
-- Settled on 2026-10-09: Overcharge is renamed **Invest** and stays Gold-only. Everyone draws on
-  turn 1 (no draw skip); the second player gets +1 mana on their first turn.
+- Settled on 2026-10-09: Overcharge is renamed **Invest** and stays Gold-only. Going first follows
+  the MTG default (the first player skips their turn-1 draw, no other compensation). Life gain is
+  capped at starting life. Patron Powers are expected to be THE universal Gold sink: after
+  implementing them, rerun the "Gold cap" and "Round robin" sections and report whether wasted
+  mana and long games went down (docs/playtest/RULES_REVIEW.md, issues 2 and 3).
 
 PRACTICAL NOTES
 - Run tests headless (about 40 s; results XML gives the totals):

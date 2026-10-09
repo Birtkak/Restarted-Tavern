@@ -6,6 +6,16 @@ Bots are careful beginners. They race more than people do, so tempo effects are 
 
 Severity: 🔴 fundamental (affects every game), 🟠 significant (affects a core promise of the game), 🟡 watch (an interaction to keep an eye on).
 
+## Decisions (2026-10-09)
+
+| Issue | Decision |
+|---|---|
+| 1. Going first | **MTG default**: the first player skips their turn-1 draw, no other compensation. Judge it in human playtests (bots race more than people). ⚠ This is the variant with the biggest first-player edge in the bot runs: Greedy-bot mirrors at 500 games give Goober 79%, Jungle 70%, Zoo 68%, Sparkwrench 62% and Vesper 58%. If playtests confirm the edge, the best variant measured was "everyone draws + 2nd player +1 mana and 1 Gold" (Goober 66%, Jungle 53%). |
+| 2. Gold sits unused | **Patron Powers** are the universal Gold sink. Implement them next, then re-measure the Gold cap. |
+| 3. Long, stalled games | **No new rule.** Add late-game sinks and finishers through cards, re-measure, and decide later. |
+| 4. Chip damage outside ping decks | Card-pool work: every faction needs some chip damage and some payoff for it (v0.2 already adds some). |
+| 7. Gain life | **Capped at starting life** (GAME_DESIGN §11.1). |
+
 ---
 
 ## 🔴 1. Going first is a big advantage

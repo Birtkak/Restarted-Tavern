@@ -14,8 +14,8 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             Assert.AreEqual(30, g.P(g.Active).Life);
             Assert.AreEqual(30, g.P(g.Other).Life);
-            Assert.AreEqual(8, g.P(g.Active).Hand.Count, "§3: the first player draws on turn 1 too");
-            Assert.AreEqual(1, g.P(g.Active).Mana, "no bonus mana for the first player");
+            Assert.AreEqual(7, g.P(g.Active).Hand.Count, "§3 (MTG): the first player skips the turn-1 draw");
+            Assert.AreEqual(1, g.P(g.Active).Mana);
             Assert.AreEqual(7, g.P(g.Other).Hand.Count);
             Assert.AreEqual(0, g.P(g.Active).Gold);
             Assert.AreEqual(0, g.P(g.Other).Gold, "no starting Gold since 2026-10-09");
@@ -45,18 +45,15 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void SecondPlayer_GetsOneExtraMana_OnTheirFirstTurnOnly()
+        public void SecondPlayer_GetsNoCompensation_BesidesTheDraw()
         {
             var g = TestGame.AtFirstMainPhase();
-            var first = g.Active;
             var second = g.Other;
             g.PassToStep(Step.Main1, second);
             Assert.AreEqual(1, g.P(second).MaxMana);
-            Assert.AreEqual(2, g.P(second).Mana, "§3: +1 mana on the first turn");
-            g.PassToStep(Step.Main1, first);
-            g.PassToStep(Step.Main1, second);
-            Assert.AreEqual(2, g.P(second).MaxMana);
-            Assert.AreEqual(2, g.P(second).Mana, "no bonus after the first turn");
+            Assert.AreEqual(1, g.P(second).Mana, "§3: no bonus mana (MTG default)");
+            Assert.AreEqual(0, g.P(second).Gold);
+            Assert.AreEqual(8, g.P(second).Hand.Count, "7 + the turn-2 draw");
         }
 
         [Test]
@@ -188,7 +185,7 @@ namespace RestartedTavern.Rules.Tests
             var first = g.Active;
             g.AddToHand(first, "spark_snot");
             g.AddToHand(first, "spark_snot");
-            int excess = g.P(first).Hand.Count - 7; // 8 after the turn-1 draw, +2 added
+            int excess = g.P(first).Hand.Count - 7; // 7 (no turn-1 draw) + 2 added
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.DiscardToHandSize);
             Assert.AreEqual(excess, g.State.Pending.Count);
             for (int i = 0; i < excess; i++) g.Do(PlayerAction.Discard(first, g.P(first).Hand[0].Id));

@@ -176,7 +176,7 @@ namespace RestartedTavern.Rules
                     break;
 
                 case Step.Draw:
-                    // §3: everyone draws (the MTG-style first-turn skip is only an experiment switch now).
+                    // §3 (MTG): the first player skips the turn-1 draw in 1v1.
                     if (!(S.TurnNumber == 1 && S.Format.FirstPlayerSkipsDraw)) Draw(ap.Id, 1);
                     GivePriority(ap.Id);
                     break;

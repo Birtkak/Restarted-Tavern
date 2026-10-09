@@ -97,13 +97,15 @@ namespace RestartedTavern.Rules.AI
             var second = new Section
             {
                 Title = "Going second (GAME_DESIGN §3)",
-                Question = "First-player win rate in mirrors (50% is fair). Current rule: everyone draws on turn 1; the second player has +1 mana on their first turn.",
+                Question = "First-player win rate in mirrors (50% is fair). Current rule (MTG default): the first player skips their turn-1 draw, no other compensation.",
             };
             foreach (var d in new[] { decks[0], decks[1], decks[3] })
             {
-                second.Configs.Add(M(d.Name + " mirror, current rule", d, d));
-                second.Configs.Add(M(d.Name + " mirror, old rule (first player skips draw)", d, d, f => f.FirstPlayerSkipsDraw = true));
-                second.Configs.Add(M(d.Name + " mirror, current rule + 1 starting Gold", d, d, f => f.SecondPlayerStartingGold = 1));
+                second.Configs.Add(M(d.Name + " mirror, current rule (MTG)", d, d));
+                second.Configs.Add(M(d.Name + " mirror, everyone draws + 2nd player +1 mana on turn 1", d, d,
+                    f => { f.FirstPlayerSkipsDraw = false; f.SecondPlayerFirstTurnBonusMana = 1; }));
+                second.Configs.Add(M(d.Name + " mirror, everyone draws + 2nd player +1 mana and 1 Gold", d, d,
+                    f => { f.FirstPlayerSkipsDraw = false; f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerStartingGold = 1; }));
             }
             sections.Add(second);
 

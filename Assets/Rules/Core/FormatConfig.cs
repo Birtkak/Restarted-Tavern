@@ -16,11 +16,8 @@ namespace RestartedTavern.Rules
         public int ManaCap { get; set; } = 10;
         public int GoldCap { get; set; } = 5;
 
-        /// <summary>
-        /// Experiment switch: the first player skips their turn-1 draw (the MTG rule). Off since
-        /// 2026-10-09: everyone draws (§3, §13).
-        /// </summary>
-        public bool FirstPlayerSkipsDraw { get; set; }
+        /// <summary>1v1 (§3, MTG default): the first player skips their turn-1 draw. Multiplayer: everyone draws (§13).</summary>
+        public bool FirstPlayerSkipsDraw { get; set; } = true;
 
         /// <summary>Gold the second player starts with. 0 since 2026-10-09 (replaced by the first-turn mana bonus); kept for experiments.</summary>
         public int SecondPlayerStartingGold { get; set; }
@@ -28,11 +25,8 @@ namespace RestartedTavern.Rules
         /// <summary>Experiment switch (going-second compensation): extra cards the second player draws before the first turn.</summary>
         public int SecondPlayerExtraCards { get; set; }
 
-        /// <summary>
-        /// 1v1 (§3): the second player has +1 mana on their first turn only (like Hearthstone's Coin).
-        /// Unspent, it becomes Gold as usual. Multiplayer: no compensation (§13).
-        /// </summary>
-        public int SecondPlayerFirstTurnBonusMana { get; set; } = 1;
+        /// <summary>Experiment switch: extra mana for the second player's first turn only (a Hearthstone-style Coin). 0 in the rules (§3).</summary>
+        public int SecondPlayerFirstTurnBonusMana { get; set; }
 
         /// <summary>
         /// Experiment switch, not a real rule: when true, damage on creatures is removed in the
@@ -51,7 +45,7 @@ namespace RestartedTavern.Rules
             MinPlayers = 3,
             MaxPlayers = 4,
             StartingLife = 40,
-            SecondPlayerFirstTurnBonusMana = 0,
+            FirstPlayerSkipsDraw = false,
         };
 
         public FormatConfig Clone() => (FormatConfig)MemberwiseClone();
