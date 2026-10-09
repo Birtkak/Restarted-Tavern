@@ -230,7 +230,16 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | **Overcharge X: …** | Optional extra cost, paid only with Gold, for a bonus effect | 🔒 |
 | **Arrival** | Triggers when this creature enters the battlefield | 🟡 |
 | **Last Breath** | Triggers when this creature dies | 🟡 |
+| **Reach** | Can block creatures with Flying | 🟡 |
 | **Equip X** | (Glitterworld) Pay X: attach this Equipment to a creature you control. Main phase only | 🟡 |
+
+---
+
+### 11.1 Rules terms 🟡
+- **Fight**: two creatures each deal damage equal to their Power to the other, at the same time. This is not combat, so Trample doesn't apply. The damage is permanent, like all damage.
+- **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Patron restores life, up to the starting life total.
+- **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
+- **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
 
 ---
 
