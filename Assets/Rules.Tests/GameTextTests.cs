@@ -32,6 +32,22 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
+        public void SameNameCopies_AreNumbered()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var first = g.AddToBattlefield(g.Other, CardPool.GooberToken);
+            var second = g.AddToBattlefield(g.Other, CardPool.GooberToken);
+            var lone = g.AddToBattlefield(g.Active, "hired_sellsword");
+            var text = new GameText(g.Engine.Cards);
+            Assert.AreEqual("Goober #1", text.Name(g.State, first.Id));
+            Assert.AreEqual("Goober #2", text.Name(g.State, second.Id));
+            Assert.AreEqual("Hired Sellsword", text.Name(g.State, lone.Id), "a single copy has no number");
+            Assert.AreEqual("Block Hired Sellsword with Goober #2",
+                text.Describe(g.State, PlayerAction.Block(g.Other, second.Id, lone.Id)));
+            StringAssert.StartsWith("Goober #1\n", text.Describe(g.State, first)); // test-made cards aren't flagged as tokens
+        }
+
+        [Test]
         public void EveryCard_HasDetails_InEveryZone()
         {
             var db = CardPool.CreateDatabase();

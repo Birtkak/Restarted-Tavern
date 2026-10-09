@@ -59,10 +59,29 @@ namespace RestartedTavern.Rules
         public string Name(GameState state, ObjectId id)
         {
             var obj = state.FindObject(id);
-            if (obj?.DefinitionId != null) return Name(obj.DefinitionId);
+            if (obj?.DefinitionId != null) return Name(obj.DefinitionId) + CopyTag(state, obj);
             var item = state.FindOnChain(id);
             if (item != null) return Name(item.SourceDefinitionId) + (item.IsTavernDwellerPower ? " (Power)" : " (ability)");
             return _known.TryGetValue(id, out var def) ? Name(def) : id.ToString();
+        }
+
+        /// <summary>
+        /// " #2" when two or more permanents on the battlefield share this one's name (two Goober tokens),
+        /// numbered in board order (players in seat order), so the copies can be told apart. Otherwise "".
+        /// </summary>
+        public string CopyTag(GameState state, CardInstance card)
+        {
+            if (card?.DefinitionId == null || card.Zone != Zone.Battlefield) return "";
+            string name = Name(card.DefinitionId);
+            int index = 0, count = 0;
+            foreach (var p in state.Players)
+                foreach (var c in p.Battlefield)
+                {
+                    if (c.DefinitionId == null || Name(c.DefinitionId) != name) continue;
+                    count++;
+                    if (c.Id == card.Id) index = count;
+                }
+            return count >= 2 && index > 0 ? " #" + index : "";
         }
 
         public string Name(GameState state, Target target) =>
@@ -77,6 +96,7 @@ namespace RestartedTavern.Rules
             string sep = multiline ? "\n" : "  ";
             sb.Append(def.Name);
             if (card.IsToken) sb.Append(" (token)");
+            sb.Append(CopyTag(state, card));
 
             if (def.IsTavernDweller)
             {
@@ -124,6 +144,7 @@ namespace RestartedTavern.Rules
             var sb = new StringBuilder();
             sb.Append(def.Name);
             if (card.IsToken) sb.Append(" (token)");
+            sb.Append(CopyTag(state, card));
             sb.Append('\n');
 
             if (def.IsTavernDweller)
@@ -211,7 +232,7 @@ namespace RestartedTavern.Rules
             var card = state.FindOnBattlefield(id);
             if (card == null || !_db.Get(card.DefinitionId).IsCreature) return Name(state, id);
             var ch = CharacteristicsCalculator.Compute(state, _db, card);
-            return Name(card.DefinitionId) + " (" + ch.RemainingHealth + " Health left"
+            return Name(state, id) + " (" + ch.RemainingHealth + " Health left"
                    + (CharacteristicsCalculator.IsEquipped(state, _db, card) ? ", equipped" : "") + ")";
         }
 

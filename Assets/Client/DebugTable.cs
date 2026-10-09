@@ -61,6 +61,8 @@ namespace RestartedTavern.Client
         private bool _showAllHands;
         private readonly bool[] _bot = { false, true };
         private ObjectId _hover = ObjectId.None;
+        /// <summary>Cards involved in the action button under the mouse (drawn highlighted on the board; one frame late).</summary>
+        private HashSet<ObjectId> _actionCards = new HashSet<ObjectId>(), _actionCardsNext = new HashSet<ObjectId>();
         private bool _showRules;
         private string _savedPath;
         private bool _savedThisGame;
@@ -263,6 +265,12 @@ namespace RestartedTavern.Client
             DrawInspector(new Rect(w - rightW - 4, 40, rightW, h * 0.27f));
             DrawActions(new Rect(w - rightW - 4, 40 + h * 0.27f + 4, rightW, h * 0.36f - 4));
             DrawLog(new Rect(w - rightW - 4, 40 + h * 0.63f + 4, rightW, h * 0.37f - 52));
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                (_actionCards, _actionCardsNext) = (_actionCardsNext, _actionCards);
+                _actionCardsNext.Clear();
+            }
         }
 
         private void EnsureStyles()
@@ -394,6 +402,7 @@ namespace RestartedTavern.Client
         private Color CardColor(CardInstance c, bool actable)
         {
             if (c.Id == _focus) return new Color(1f, 0.9f, 0.2f);
+            if (_actionCards.Contains(c.Id)) return new Color(0.35f, 0.85f, 1f);
             if (_state.Combat != null && (_state.Combat.IsAttacking(c.Id) || _state.Combat.IsBlocking(c.Id))) return new Color(1f, 0.55f, 0.2f);
             if (c.Tapped) return new Color(0.45f, 0.45f, 0.45f);
             if (actable) return new Color(0.5f, 1f, 0.6f);
@@ -589,10 +598,29 @@ namespace RestartedTavern.Client
                     Do(a);
                     break; // the list is stale after acting
                 }
+                if (Event.current.type == EventType.Repaint && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+                    AddActionCards(a, _actionCardsNext);
             }
             GUI.enabled = true;
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        /// <summary>The objects an action is about: the card, the attacker it blocks, its targets, what it sacrifices, damage recipients.</summary>
+        private void AddActionCards(PlayerAction a, HashSet<ObjectId> into)
+        {
+            if (!a.Card.IsNone) into.Add(a.Card);
+            if (!a.BlockedAttacker.IsNone) into.Add(a.BlockedAttacker);
+            if (!a.Sacrifice.IsNone) into.Add(a.Sacrifice);
+            foreach (var t in a.Targets)
+                if (!t.IsPlayer) into.Add(t.Object);
+            if (a.Kind == ActionKind.AssignCombatDamage && _state.Pending?.Choices != null)
+            {
+                into.Add(_state.Pending.Card);
+                for (int i = 0; i < a.Division.Length && i < _state.Pending.Choices.Count; i++)
+                    if (a.Division[i] > 0) into.Add(_state.Pending.Choices[i]);
+            }
+            if (_state.Pending?.Kind == DecisionKind.KeepLegendary && a.Target.HasValue) into.Add(a.Target.Value.Object);
         }
 
         private void DrawLog(Rect r)
