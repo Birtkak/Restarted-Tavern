@@ -208,11 +208,10 @@ There are **5 factions**. Every card belongs to one faction or is **Neutral** (p
 - **Wizards** avoid combat and win through value and spells.
 - 🟡 Healing (cards only) is spread out: Wild (creatures that endure), Sensationalists (drain/lifelink), Glitterworld (repair *machines*).
 
-### 9.3 Patron drafts (one per pair) 🟡
-These are first flavor drafts, with numbers to be tuned in playtesting. "Power (N)" means it costs N Gold.
+### 9.3 Patron list
+The 10 Patrons (one per faction pair) are in [cards/patrons.md](cards/patrons.md).
 
-| Pair | Patron | Passive | Power |
-|---|---|---|---|
+---|---|---|---|
 | Wizards + Goobers | **Grizzle Coinflick**, goblin pyromancer-for-hire | Whenever you cast a spell that costs 6+, create a 1/1 Goober | (2) Deal 1 damage to any target |
 | Wizards + Sensationalists | **Madame Vesper**, the debt collector | Whenever a creature an opponent controls dies, gain 1 Gold | (3) Draw a card and lose 2 life |
 | Wizards + Wild | **Old Mossbank**, the druid banker | Your creatures with 6+ Power cost 1 less | (2) Give a creature +2/+2 until end of turn |
