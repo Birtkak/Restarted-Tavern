@@ -26,7 +26,8 @@ The game is designed for 1v1 first, with every rule written so that it also work
 |---|---|---|---|---|---|
 | **Standard** | exactly 60 | max 4 of each card | 2 | 30 | 🔒 |
 | Singleton / big deck | ❓ (100?) | 1 of each | 2–4 | ❓ | future |
-| Multiplayer Standard | 60 | 4 | 3–4 | ❓ | future |
+| Multiplayer Standard | 60 | 4 | 3–4 | 40 🔒 | future |
+| Teams (2v2) | 60 | 4 | 4 | ❓ | future (the engine supports teams from the start) |
 
 🟡 Rule-writing principle: card text never says "your opponent". It says "an opponent", "each opponent" or "target opponent", so every card works in multiplayer without needing errata.
 
@@ -232,13 +233,30 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## 12. Win / Loss
 - A player at 0 or less life loses.
 - A player who has to draw from an empty deck loses. 🔒
-- Multiplayer: last player standing. ❓ What happens to the permanents of a player who has been eliminated?
+- Multiplayer: last player standing (see §13).
+
+---
+
+## 13. Multiplayer (3–4 players) 🔒 (future format)
+- **Seating and turns**: turn order goes clockwise. Priority on the Chain also goes clockwise, starting from the active player.
+- **Starting life: 40.**
+- **Turn order compensation: none.** Every player draws on their first turn, including the first player (unlike 1v1).
+- **Attacking**: free-for-all. **Each attacking creature chooses any opponent** to attack. Each defending player only declares blockers against attackers that are attacking *them*.
+- **Elimination** 🟡: when a player loses, they leave the game. All cards they **own** leave with them, any of their spells or abilities on the Chain are removed, and control of anything of theirs that someone else controls ends. Effects that player controlled stop ("until end of turn" effects end immediately).
+- 🟡 Card wording for multiplayer: "each opponent", "target opponent", "the player to your left/right". Effects like "each player" include you.
+- 🟡 Politics are allowed (deals, threats), but deals are not binding in the rules.
+
+### 13.1 Teams (2v2) ❓ future
+- The engine gives every player a `teamId` from the start.
+- 🟡 Draft idea: teammates sit across from each other, so turns alternate between teams. Life, Gold and hands are separate. You can't attack or target your teammate with "opponent" effects.
 
 ---
 
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | Faction pie locked (CARD_DESIGN §4). Multiplayer: free-for-all attacks, 40 life, no turn-order compensation, teams (2v2) planned for later. |
+| 2026-10-09 | Rarities: Common/Uncommon/Rare/Legendary (Legendary rule: only one with a given name on the battlefield). Vanilla stats = 2×cost+1. First set ~120 cards. See CARD_DESIGN.md. |
 | 2026-10-09 | Two main phases. Chain uses full back-and-forth priority. Permanent types: Equipment, Relics, Curses (no Locations). London mulligan. |
 | 2026-10-09 | Reserve renamed **Gold**. Shadow Money Wizards do money through *shady deals*. Patrons don't fight. The Patron drafts are a good direction. |
 | 2026-10-09 | Five factions: Shadow Money Wizards, Goobers, Sensationalists, Evergrowing Wild, Glitterworld. The Patron is the player's face. Trample is the only damage-related core keyword. The second player starts with 1 Gold. |

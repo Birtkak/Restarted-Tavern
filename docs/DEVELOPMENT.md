@@ -32,7 +32,7 @@ FormatConfig   { deckSize, copyLimit, minPlayers, maxPlayers, startingLife,
 GameState      { players[], activePlayer, priorityPlayer, passesInRow,
                  turnNumber, phase, chain[], rngState, nextObjectId }
 
-PlayerState    { id, patronId, life, maxMana, mana, gold, attachedCurses[],
+PlayerState    { id, teamId, seat, eliminated, patronId, life, maxMana, mana, gold, attachedCurses[],
                  zones: { deck, hand, battlefield, graveyard, exile } }
 
 CardDefinition { id, name, type, cost, power?, health?, keywords[],
