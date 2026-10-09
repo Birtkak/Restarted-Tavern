@@ -45,3 +45,4 @@ Thumbs.db
 # SimRunner (.NET build output)
 Tools/**/bin/
 Tools/**/obj/
+!Tools/**/*.csproj

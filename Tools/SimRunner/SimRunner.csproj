@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the simulation report outside Unity on .NET 8 (DEVELOPMENT §7). It compiles the same rules source files
+    as the RestartedTavern.Rules assembly. Unity's Mono runtime barely uses more than one core for this; .NET's
+    server GC does. Build and run it with the .NET SDK that ships with Unity (see DEVELOPMENT §7):
+      Editor/Data/DotNetSdk/dotnet.exe run, in Release, on this project.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/Rules/**/*.cs" />
+  </ItemGroup>
+
+</Project>
