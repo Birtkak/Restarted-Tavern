@@ -124,6 +124,7 @@ namespace RestartedTavern.Rules
                 case ActionKind.FinishBlocks: FinishBlocks(a.Player); break;
                 case ActionKind.ChooseTarget:
                     if (S.Pending.Kind == DecisionKind.ChooseObject) AnswerChoice(a.Target);
+                    else if (S.Pending.Kind == DecisionKind.KeepLegendary) KeepLegendary(a.Target.Value.Object);
                     else ChooseTriggerTarget(a.Target);
                     break;
                 case ActionKind.Discard:
@@ -132,6 +133,7 @@ namespace RestartedTavern.Rules
                     break;
                 case ActionKind.ActivateAbility: Activate(a); break;
                 case ActionKind.ChooseOption: AnswerOption(a); break;
+                case ActionKind.AssignCombatDamage: AnswerDamageAssignment(a); break;
                 default: throw new ArgumentOutOfRangeException(nameof(a), a.Kind, null);
             }
         }
@@ -206,8 +208,7 @@ namespace RestartedTavern.Rules
                     break;
 
                 case Step.CombatDamage:
-                    DealCombatDamage();
-                    GivePriority(ap.Id);
+                    AskNextDamageAssignment(); // then deals the damage and gives priority
                     break;
 
                 case Step.Main2:

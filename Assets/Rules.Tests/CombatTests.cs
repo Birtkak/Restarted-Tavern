@@ -142,7 +142,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void MultipleBlockers_AttackerAssignsLethalInOrder()
+        public void MultipleBlockers_AttackerDividesTheDamage()
         {
             var g = TestGame.AtFirstMainPhase();
             var fighter = g.AddToBattlefield(g.Active, "pit_fighter"); // 4/4 Trample
@@ -156,6 +156,9 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Block(g.Other, b.Id, fighter.Id));
             g.Do(PlayerAction.Block(g.Other, c.Id, fighter.Id));
             g.Do(PlayerAction.FinishBlocks(g.Other));
+            g.PassUntil(s => s.Pending?.Kind == DecisionKind.AssignCombatDamage);
+            Assert.AreEqual(g.Active, g.State.Pending.Player, "4 damage can't kill both (6 Health): the attacker divides it");
+            g.Do(PlayerAction.AssignDamage(g.Active, new[] { 3, 1 }));
             g.PassUntil(s => s.Step == Step.Main2);
 
             Assert.IsNull(g.State.FindOnBattlefield(b.Id), "first blocker got lethal (3)");

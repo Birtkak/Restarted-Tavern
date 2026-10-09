@@ -79,6 +79,13 @@ namespace RestartedTavern.Rules.AI
                 case DecisionKind.PayTax:
                     // Pay the tax when we can: the spell was worth casting.
                     return legal.OrderByDescending(a => a.Option).First();
+                case DecisionKind.KeepLegendary:
+                    // Keep the healthiest, best-equipped copy.
+                    return legal.OrderByDescending(a => KeepValue(s, s.FindOnBattlefield(a.Target.Value.Object))).First();
+                case DecisionKind.AssignCombatDamage: return ChooseDamageSplit(s, legal);
+                case DecisionKind.OrderTriggers:
+                    // The order rarely matters for these cards: keep the order the triggers happened in.
+                    return legal[0];
                 case DecisionKind.TopOrBottom:
                 {
                     // Keep it if it can be cast soon; bottom expensive cards.
@@ -697,6 +704,35 @@ namespace RestartedTavern.Rules.AI
         }
 
         // ------------------------------------------------------------------ combat
+
+        private double KeepValue(GameState s, CardInstance c)
+        {
+            if (c == null) return 0;
+            double equipment = s.AllPermanents().Count(e => e.AttachedToObject == c.Id);
+            return Def(s, c.Id).IsCreature ? Stats(s, c).RemainingHealth + 2 * equipment : equipment;
+        }
+
+        /// <summary>
+        /// Divide combat damage among enemy creatures (§7.2.6): kill the most valuable ones it can, and put
+        /// what's left on the others (damage stays, §7.3).
+        /// </summary>
+        private PlayerAction ChooseDamageSplit(GameState s, List<PlayerAction> legal)
+        {
+            var recipients = s.Pending.Choices.Select(id => s.FindOnBattlefield(id)).ToList();
+            double Score(PlayerAction a)
+            {
+                double score = 0;
+                for (int i = 0; i < recipients.Count; i++)
+                {
+                    var c = recipients[i];
+                    if (c == null) continue;
+                    int left = Math.Max(1, Stats(s, c).RemainingHealth);
+                    score += a.Division[i] >= left ? Worth(s, c) : 0.3 * Worth(s, c) * a.Division[i] / left;
+                }
+                return score;
+            }
+            return legal.OrderByDescending(Score).First();
+        }
 
         private PlayerAction ChooseAttack(GameState s, PlayerId me, List<PlayerAction> legal)
         {

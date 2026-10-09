@@ -21,6 +21,8 @@ namespace RestartedTavern.Rules
         ActivateAbility,
         /// <summary>Answer a yes/no or pick-one choice made while something resolves (PendingDecision.Options).</summary>
         ChooseOption,
+        /// <summary>Divide a creature's combat damage among several creatures (§7.2.6): <see cref="PlayerAction.Division"/>.</summary>
+        AssignCombatDamage,
     }
 
     /// <summary>
@@ -52,7 +54,10 @@ namespace RestartedTavern.Rules
         public ObjectId Sacrifice { get; set; }
         /// <summary>ChooseOption: the option picked.</summary>
         public int Option { get; set; }
-        /// <summary>PlayCard with divided damage: the damage for each target, in target order (MTG 601.2d).</summary>
+        /// <summary>
+        /// PlayCard with divided damage: the damage for each target, in target order (MTG 601.2d).
+        /// AssignCombatDamage: the damage for each recipient, in the order of PendingDecision.Choices.
+        /// </summary>
         public int[] Division { get; set; } = Array.Empty<int>();
 
         public static PlayerAction Pass(PlayerId p) => new PlayerAction { Kind = ActionKind.PassPriority, Player = p };
@@ -65,6 +70,9 @@ namespace RestartedTavern.Rules
         public static PlayerAction ChooseTarget(PlayerId p, Target t) => new PlayerAction { Kind = ActionKind.ChooseTarget, Player = p, Targets = new[] { t } };
 
         public static PlayerAction ChooseOption(PlayerId p, int option) => new PlayerAction { Kind = ActionKind.ChooseOption, Player = p, Option = option };
+
+        public static PlayerAction AssignDamage(PlayerId p, int[] division) =>
+            new PlayerAction { Kind = ActionKind.AssignCombatDamage, Player = p, Division = division };
 
         public static PlayerAction Activate(PlayerId p, ObjectId source, int abilityIndex, Target[] targets = null, int x = 0,
             ObjectId sacrifice = default) =>

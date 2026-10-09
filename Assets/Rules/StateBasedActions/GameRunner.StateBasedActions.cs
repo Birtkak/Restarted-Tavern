@@ -11,8 +11,49 @@ namespace RestartedTavern.Rules
         private void CheckStateBasedActionsAndTriggers()
         {
             while (!S.IsGameOver && ApplyStateBasedActionsOnce()) { }
-            if (S.IsGameOver) return;
+            if (S.IsGameOver || AskLegendaryRule()) return;
             PutPendingTriggersOnChain();
+        }
+
+        /// <summary>
+        /// 704.5j Legendary rule (decided 2026-10-09: MTG): a player who controls two or more Legendary permanents
+        /// with the same name chooses one to keep; the rest go to the graveyard. Checked once the other
+        /// state-based actions are done, in turn order from the active player. Returns true while waiting on that choice.
+        /// </summary>
+        private bool AskLegendaryRule()
+        {
+            if (S.Pending != null) return false;
+            foreach (var p in S.LivingPlayersFrom(S.ActivePlayer))
+            {
+                var byName = new Dictionary<string, List<ObjectId>>();
+                foreach (var c in p.Battlefield)
+                {
+                    var def = Def(c);
+                    if (!def.IsLegendary) continue;
+                    if (!byName.TryGetValue(def.Name, out var same)) byName[def.Name] = same = new List<ObjectId>();
+                    same.Add(c.Id);
+                }
+                foreach (var same in byName.Values)
+                {
+                    if (same.Count < 2) continue;
+                    S.Pending = new PendingDecision { Kind = DecisionKind.KeepLegendary, Player = p.Id, Choices = same };
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void KeepLegendary(ObjectId kept)
+        {
+            var d = S.Pending;
+            S.Pending = null;
+            foreach (var id in d.Choices)
+            {
+                if (id == kept) continue;
+                var c = S.FindOnBattlefield(id);
+                if (c != null) MoveCard(c, Zone.Graveyard);
+            }
+            GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
         /// <summary>Performs every applicable state-based action at once. Returns true if any happened.</summary>
@@ -43,26 +84,6 @@ namespace RestartedTavern.Rules
                     else if (def.Type == CardType.Equipment && !c.AttachedToObject.IsNone
                              && S.FindOnBattlefield(c.AttachedToObject) == null)
                         toUnattach.Add(c);
-                }
-            }
-
-            // 704.5j Legendary rule: one per name per controller.
-            // TODO: the controller should choose which to keep; for now the newest stays.
-            foreach (var p in S.Players)
-            {
-                var newestByName = new Dictionary<string, CardInstance>();
-                foreach (var c in p.Battlefield)
-                {
-                    var def = Def(c);
-                    if (!def.IsLegendary || toGraveyard.Contains(c)) continue;
-                    if (!newestByName.TryGetValue(def.Name, out var kept))
-                    {
-                        newestByName[def.Name] = c;
-                        continue;
-                    }
-                    bool cIsNewer = c.Timestamp > kept.Timestamp;
-                    toGraveyard.Add(cIsNewer ? kept : c);
-                    if (cIsNewer) newestByName[def.Name] = c;
                 }
             }
 

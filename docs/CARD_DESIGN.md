@@ -12,7 +12,7 @@ Status tags: 🔒 locked, 🟡 proposed, ❓ open.
 | **Common** | The backbone: simple, efficient, one idea per card |
 | **Uncommon** | Synergy and faction mechanics; a little more text |
 | **Rare** | Build-around cards, strong effects, flashy spells |
-| **Legendary** | Unique characters and artifacts. **Legendary rule**: you may control only **one** permanent with a given Legendary name at a time. If you'd have two, you keep one and the other goes to the graveyard. The deck copy limit stays 4 |
+| **Legendary** | Unique characters and artifacts. **Legendary rule**: you may control only **one** permanent with a given Legendary name at a time. If you'd have two, you choose one to keep and the other goes to the graveyard (MTG 704.5j; other players can have their own copy). The deck copy limit stays 4 |
 
 ---
 

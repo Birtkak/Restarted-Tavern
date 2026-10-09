@@ -34,7 +34,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void LegendaryRule_KeepsOnlyOneWithTheSameName()
+        public void LegendaryRule_ControllerChoosesWhichToKeep()
         {
             var legend = new CardDefinition
             {
@@ -42,14 +42,22 @@ namespace RestartedTavern.Rules.Tests
                 Rarity = Rarity.Legendary,
             };
             var g = TestGame.AtFirstMainPhase(extraCards: new[] { legend });
-            g.AddToBattlefield(g.Active, "test_legend");
+            var older = g.AddToBattlefield(g.Active, "test_legend");
             var newer = g.AddToBattlefield(g.Active, "test_legend");
             g.AddToBattlefield(g.Other, "test_legend"); // other controllers don't count
-            g.PassRound(); // moving to the next step checks state-based actions
+            g.PassRound(); // moving to the next step gives priority, which checks state-based actions
 
+            Assert.AreEqual(DecisionKind.KeepLegendary, g.State.Pending.Kind);
+            Assert.AreEqual(g.Active, g.State.Pending.Player);
+            Assert.AreEqual(2, g.Legal(g.Active).Count);
+            g.Do(PlayerAction.ChooseTarget(g.Active, Target.ForObject(older.Id)));
+
+            Assert.AreEqual(older.Id, g.OnBattlefield(g.Active, "test_legend").Id, "the older copy was kept");
             Assert.AreEqual(1, g.P(g.Active).Battlefield.Count(c => c.DefinitionId == "test_legend"));
-            Assert.AreEqual(newer.Id, g.OnBattlefield(g.Active, "test_legend").Id);
+            Assert.AreEqual(1, g.P(g.Active).Graveyard.Count(c => c.DefinitionId == "test_legend"));
             Assert.AreEqual(1, g.P(g.Other).Battlefield.Count(c => c.DefinitionId == "test_legend"));
+            Assert.IsNull(g.State.Pending);
+            Assert.IsNull(g.State.FindOnBattlefield(newer.Id));
         }
 
         [Test]

@@ -137,7 +137,10 @@ namespace RestartedTavern.Rules.Tests
                             continue;
                         case DecisionKind.TopOrBottom: Do(PlayerAction.ChooseOption(State.Pending.Player, 0)); continue;
                         case DecisionKind.YesNo: Do(PlayerAction.ChooseOption(State.Pending.Player, 0)); continue;
-                        case DecisionKind.ChooseObject: Do(Legal(State.Pending.Player)[0]); continue;
+                        case DecisionKind.ChooseObject:
+                        case DecisionKind.OrderTriggers:
+                        case DecisionKind.KeepLegendary:
+                            Do(Legal(State.Pending.Player)[0]); continue;
                         default: Assert.Fail("PassUntil hit a decision: " + State.Pending); return;
                     }
                 }

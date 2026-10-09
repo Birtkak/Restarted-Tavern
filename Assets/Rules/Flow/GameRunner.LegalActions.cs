@@ -83,6 +83,19 @@ namespace RestartedTavern.Rules
                     if (Payment.GoldNeeded(p, S.Pending.Count, true) >= 0) result.Add(PlayerAction.ChooseOption(player, 1));
                     break;
 
+                case DecisionKind.KeepLegendary:
+                    foreach (var id in S.Pending.Choices) result.Add(PlayerAction.ChooseTarget(player, Target.ForObject(id)));
+                    break;
+
+                case DecisionKind.AssignCombatDamage:
+                    foreach (var division in CombatDivisions(S.Pending.Count, S.Pending.Choices.Count))
+                        result.Add(PlayerAction.AssignDamage(player, division));
+                    break;
+
+                case DecisionKind.OrderTriggers:
+                    foreach (int i in TriggerOrderOptions(player)) result.Add(PlayerAction.ChooseOption(player, i));
+                    break;
+
                 case DecisionKind.DeclareAttackers:
                     foreach (var c in p.Battlefield)
                     {

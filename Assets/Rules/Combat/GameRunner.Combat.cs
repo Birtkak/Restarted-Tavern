@@ -106,11 +106,162 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
-        /// All combat damage is dealt at the same time (§7.2.5).
-        /// Several blockers: the attacker assigns lethal damage to each blocker in block order
-        /// (lethal = its <b>remaining</b> Health, so earlier wounds count); what's left goes to the
-        /// defending player with Trample, otherwise onto the first blocker.
-        /// TODO: §7.2.6 says the attacker's controller divides the damage freely — make that a choice.
+        /// Start of the combat damage step (MTG 510.1): every creature that deals damage to several creatures
+        /// (an attacker with several blockers, a blocker blocking several attackers) has its damage divided by
+        /// its controller, the attacking player first, then the defenders in turn order. §7.2.6: any division
+        /// is allowed. The game only asks when the creature can't give each of them lethal damage; otherwise
+        /// <see cref="AutoSplit"/> does (that kills them all, and Trample sends the rest to the player).
+        /// When every choice is made, all combat damage is dealt.
+        /// </summary>
+        private void AskNextDamageAssignment()
+        {
+            foreach (var (dealer, recipients) in DamageSplits())
+            {
+                if (S.Combat.Assignments.Exists(x => x.Dealer == dealer.Id)) continue;
+                int power = Stats(dealer).Power;
+                if (power <= 0 || power >= TotalLethal(recipients)) continue;
+                S.Pending = new PendingDecision
+                {
+                    Kind = DecisionKind.AssignCombatDamage, Player = dealer.Controller, Card = dealer.Id, Count = power,
+                    Choices = recipients.ConvertAll(r => r.Id),
+                };
+                return;
+            }
+            S.Pending = null;
+            DealCombatDamage();
+            GivePriority(S.ActivePlayer);
+        }
+
+        private void AnswerDamageAssignment(PlayerAction a)
+        {
+            S.Combat.Assignments.Add(new DamageAssignment
+            {
+                Dealer = S.Pending.Card, Recipients = new List<ObjectId>(S.Pending.Choices), Amounts = (int[])a.Division.Clone(),
+            });
+            AskNextDamageAssignment();
+        }
+
+        /// <summary>
+        /// Creatures that deal combat damage to two or more creatures, with those creatures in block order:
+        /// attackers first, then blockers grouped by defending player in turn order.
+        /// </summary>
+        private List<(CardInstance dealer, List<CardInstance> recipients)> DamageSplits()
+        {
+            var result = new List<(CardInstance, List<CardInstance>)>();
+            foreach (var attack in S.Combat.Attacks)
+            {
+                var attacker = S.FindOnBattlefield(attack.Attacker);
+                if (attacker == null) continue;
+                var blockers = BlockersOf(attacker.Id);
+                if (blockers.Count >= 2) result.Add((attacker, blockers));
+            }
+            foreach (var defender in S.LivingPlayersFrom(S.ActivePlayer))
+            {
+                var done = new HashSet<ObjectId>();
+                foreach (var block in S.Combat.Blocks)
+                {
+                    var blocker = S.FindOnBattlefield(block.Blocker);
+                    if (blocker == null || blocker.Controller != defender.Id || !done.Add(blocker.Id)) continue;
+                    var attackers = AttackersBlockedBy(blocker.Id);
+                    if (attackers.Count >= 2) result.Add((blocker, attackers));
+                }
+            }
+            return result;
+        }
+
+        private List<CardInstance> BlockersOf(ObjectId attacker)
+        {
+            var result = new List<CardInstance>();
+            foreach (var block in S.Combat.Blocks)
+            {
+                if (block.Attacker != attacker) continue;
+                var b = S.FindOnBattlefield(block.Blocker);
+                if (b != null) result.Add(b);
+            }
+            return result;
+        }
+
+        private List<CardInstance> AttackersBlockedBy(ObjectId blocker)
+        {
+            var result = new List<CardInstance>();
+            foreach (var block in S.Combat.Blocks)
+            {
+                if (block.Blocker != blocker) continue;
+                var a = S.FindOnBattlefield(block.Attacker);
+                if (a != null) result.Add(a);
+            }
+            return result;
+        }
+
+        /// <summary>Lethal damage = remaining Health, so earlier wounds count (§7.3). Prevention is ignored (MTG 702.19c).</summary>
+        private int Lethal(CardInstance c) => System.Math.Max(0, Stats(c).RemainingHealth);
+
+        private int TotalLethal(List<CardInstance> creatures)
+        {
+            int total = 0;
+            foreach (var c in creatures) total += Lethal(c);
+            return total;
+        }
+
+        /// <summary>
+        /// The division nobody has to choose: lethal damage to each recipient in order, then the rest to
+        /// <paramref name="trampleTo"/> (Trample) or onto the first recipient.
+        /// </summary>
+        private void AutoSplit(ObjectId dealer, int power, List<CardInstance> recipients, Target? trampleTo,
+            List<(ObjectId source, Target target, int amount)> hits)
+        {
+            int left = power;
+            foreach (var r in recipients)
+            {
+                int dmg = System.Math.Min(Lethal(r), left);
+                if (dmg > 0) hits.Add((dealer, Target.ForObject(r.Id), dmg));
+                left -= dmg;
+            }
+            if (left <= 0) return;
+            if (trampleTo.HasValue) hits.Add((dealer, trampleTo.Value, left));
+            else hits.Add((dealer, Target.ForObject(recipients[0].Id), left));
+        }
+
+        /// <summary>Use the division the controller chose, if there was a choice. Returns false if there wasn't.</summary>
+        private bool UseChosenSplit(ObjectId dealer, List<(ObjectId source, Target target, int amount)> hits)
+        {
+            var chosen = S.Combat.Assignments.Find(x => x.Dealer == dealer);
+            if (chosen == null) return false;
+            for (int i = 0; i < chosen.Recipients.Count; i++)
+                if (chosen.Amounts[i] > 0 && S.FindOnBattlefield(chosen.Recipients[i]) != null)
+                    hits.Add((dealer, Target.ForObject(chosen.Recipients[i]), chosen.Amounts[i]));
+            return true;
+        }
+
+        /// <summary>
+        /// Every way to divide <paramref name="total"/> combat damage among <paramref name="recipients"/>
+        /// creatures, 0 allowed (§7.2.6: "however they like").
+        /// </summary>
+        private static List<int[]> CombatDivisions(int total, int recipients)
+        {
+            var result = new List<int[]>();
+            var parts = new int[recipients];
+            Split(0, total);
+            return result;
+
+            void Split(int index, int left)
+            {
+                if (index == recipients - 1)
+                {
+                    parts[index] = left;
+                    result.Add((int[])parts.Clone());
+                    return;
+                }
+                for (int n = left; n >= 0; n--)
+                {
+                    parts[index] = n;
+                    Split(index + 1, left - n);
+                }
+            }
+        }
+
+        /// <summary>
+        /// All combat damage is dealt at the same time (§7.2.5), as divided in <see cref="AskNextDamageAssignment"/>.
         /// </summary>
         private void DealCombatDamage()
         {
@@ -131,61 +282,29 @@ namespace RestartedTavern.Rules
                     continue;
                 }
 
-                var blockers = new List<CardInstance>();
-                foreach (var block in S.Combat.Blocks)
-                {
-                    if (block.Attacker != attacker.Id) continue;
-                    var b = S.FindOnBattlefield(block.Blocker);
-                    if (b != null) blockers.Add(b);
-                }
-
+                var blockers = BlockersOf(attacker.Id);
                 if (blockers.Count == 0)
                 {
                     // MTG 509.1h / 702.19e: blocked, but all blockers are gone.
                     if (stats.Has(Keyword.Trample)) hits.Add((attacker.Id, defenderTarget, power));
                     continue;
                 }
-
-                int left = power;
-                foreach (var b in blockers)
-                {
-                    int lethal = System.Math.Max(0, Stats(b).RemainingHealth);
-                    int dmg = System.Math.Min(lethal, left);
-                    if (dmg > 0) hits.Add((attacker.Id, Target.ForObject(b.Id), dmg));
-                    left -= dmg;
-                }
-                if (left > 0)
-                {
-                    if (stats.Has(Keyword.Trample)) hits.Add((attacker.Id, defenderTarget, left));
-                    else hits.Add((attacker.Id, Target.ForObject(blockers[0].Id), left));
-                }
+                if (!UseChosenSplit(attacker.Id, hits))
+                    AutoSplit(attacker.Id, power, blockers, stats.Has(Keyword.Trample) ? defenderTarget : (Target?)null, hits);
             }
 
-            // A blocker that blocks several attackers (Retired Champion) splits its damage like an attacker:
-            // lethal to each in block order, the rest onto the first one.
+            // A blocker that blocks several attackers (Retired Champion) divides its damage like an attacker.
             var blockersDone = new HashSet<ObjectId>();
             foreach (var block in S.Combat.Blocks)
             {
                 if (!blockersDone.Add(block.Blocker)) continue;
                 var blocker = S.FindOnBattlefield(block.Blocker);
                 if (blocker == null) continue;
-                int left = Stats(blocker).Power;
-                if (left <= 0) continue;
-                var blocked = new List<CardInstance>();
-                foreach (var b in S.Combat.Blocks)
-                {
-                    if (b.Blocker != blocker.Id) continue;
-                    var attacker = S.FindOnBattlefield(b.Attacker);
-                    if (attacker != null) blocked.Add(attacker);
-                }
+                int power = Stats(blocker).Power;
+                if (power <= 0) continue;
+                var blocked = AttackersBlockedBy(blocker.Id);
                 if (blocked.Count == 0) continue;
-                for (int i = 0; i < blocked.Count && left > 0; i++)
-                {
-                    int dmg = i == blocked.Count - 1 ? left : System.Math.Min(left, System.Math.Max(0, Stats(blocked[i]).RemainingHealth));
-                    if (dmg > 0) hits.Add((blocker.Id, Target.ForObject(blocked[i].Id), dmg));
-                    left -= dmg;
-                }
-                if (left > 0) hits.Add((blocker.Id, Target.ForObject(blocked[0].Id), left));
+                if (!UseChosenSplit(blocker.Id, hits)) AutoSplit(blocker.Id, power, blocked, null, hits);
             }
 
             var damagedBy = new List<(ObjectId source, ObjectId creature)>();

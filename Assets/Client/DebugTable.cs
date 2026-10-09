@@ -426,6 +426,12 @@ namespace RestartedTavern.Client
                     return d.Prompt + " (" + _text.Name(d.SourceDefinitionId) + ")";
                 case DecisionKind.PayTax: return "pay " + d.Count + " or " + _text.Name(_state, d.Card) + " is countered";
                 case DecisionKind.TopOrBottom: return "top card of your deck is " + _text.Name(_state, d.Card) + ": leave it or put it on the bottom";
+                case DecisionKind.KeepLegendary:
+                    return "Legendary rule: keep one " + _text.Name(_state, d.Choices[0]) + ", the others go to the graveyard";
+                case DecisionKind.AssignCombatDamage:
+                    return "divide " + _text.Name(_state, d.Card) + "'s " + d.Count + " combat damage";
+                case DecisionKind.OrderTriggers:
+                    return "order your triggers: pick the one to put on the Chain next (the last one put on resolves first)";
                 default: return d.Kind.ToString();
             }
         }

@@ -44,6 +44,24 @@ namespace RestartedTavern.Rules
         ChooseObject,
         /// <summary>"You may ..." / "may give you 2 Gold" during resolution: ChooseOption 1 = yes, 0 = no.</summary>
         YesNo,
+        /// <summary>
+        /// Legendary rule (MTG 704.5j, decided 2026-10-09): the player controls two or more Legendary permanents
+        /// with the same name and keeps one of <see cref="PendingDecision.Choices"/>; the rest go to the graveyard.
+        /// Answered with ChooseTarget.
+        /// </summary>
+        KeepLegendary,
+        /// <summary>
+        /// Combat damage (§7.2.6): <see cref="PendingDecision.Card"/> deals <see cref="PendingDecision.Count"/> damage
+        /// and divides it among <see cref="PendingDecision.Choices"/> (its blockers, or the attackers it blocks) however
+        /// its controller likes. Only asked when it can't kill them all. Answered with AssignCombatDamage.
+        /// </summary>
+        AssignCombatDamage,
+        /// <summary>
+        /// The player has two or more different triggers waiting to go on the Chain at the same time and picks
+        /// which goes on next (MTG 603.3b; the last one put on resolves first). ChooseOption = an index into
+        /// GameState.PendingTriggers. Triggers of the same ability of the same card are offered once.
+        /// </summary>
+        OrderTriggers,
     }
 
     /// <summary>
@@ -54,18 +72,18 @@ namespace RestartedTavern.Rules
     {
         public DecisionKind Kind { get; set; }
         public PlayerId Player { get; set; }
-        /// <summary>BottomCards / DiscardToHandSize / DiscardCards: how many cards are still to go.</summary>
+        /// <summary>BottomCards / DiscardToHandSize / DiscardCards: how many cards are still to go. AssignCombatDamage: the damage to divide.</summary>
         public int Count { get; set; }
         /// <summary>ChooseTriggerTarget: the trigger being put on the Chain.</summary>
         public PendingTrigger Trigger { get; set; }
-        /// <summary>TopOrBottom: the card looked at. PayTax: the Chain object that is countered if they don't pay.</summary>
+        /// <summary>TopOrBottom: the card looked at. PayTax: the Chain object that is countered if they don't pay. AssignCombatDamage: the creature dealing the damage.</summary>
         public ObjectId Card { get; set; }
         /// <summary>PayTax: who gets <see cref="RewardGold"/> if the tax is paid ("If they pay, you gain 2 Gold").</summary>
         public PlayerId Beneficiary { get; set; }
         public int RewardGold { get; set; }
         /// <summary>ChooseFromTop: the other cards go to the bottom of the deck instead of the graveyard (Pocket Change).</summary>
         public bool RestToBottom { get; set; }
-        /// <summary>ChooseObject: the objects that can be chosen.</summary>
+        /// <summary>ChooseObject / KeepLegendary: the objects that can be chosen. AssignCombatDamage: the recipients, in order.</summary>
         public List<ObjectId> Choices { get; set; }
         /// <summary>ChooseObject: choosing nothing is allowed ("you may").</summary>
         public bool Optional { get; set; }

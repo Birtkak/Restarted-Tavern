@@ -117,6 +117,9 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Block(g.Other, champ.Id, b.Id));
             Assert.IsFalse(g.Legal(g.Other).Any(x => x.Kind == ActionKind.DeclareBlocker), "only one extra");
             g.Do(PlayerAction.FinishBlocks(g.Other));
+            g.PassUntil(s => s.Pending?.Kind == DecisionKind.AssignCombatDamage);
+            Assert.AreEqual(g.Other, g.State.Pending.Player, "5 damage can't kill both (6 Health): the defender divides it");
+            g.Do(PlayerAction.AssignDamage(g.Other, new[] { 3, 2 }));
             g.PassUntil(s => s.Step == Step.Main2);
             Assert.IsNull(g.State.FindOnBattlefield(a.Id), "3 lethal to the first");
             Assert.AreEqual(2, b.Damage, "the rest (2) to the second");

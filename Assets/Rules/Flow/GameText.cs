@@ -111,6 +111,16 @@ namespace RestartedTavern.Rules
             return sb.ToString();
         }
 
+        /// <summary>"Hog-Rider (2 Health left, equipped)": a creature on the battlefield, for choices between copies.</summary>
+        private string DescribeOneLine(GameState state, ObjectId id)
+        {
+            var card = state.FindOnBattlefield(id);
+            if (card == null || !_db.Get(card.DefinitionId).IsCreature) return Name(state, id);
+            var ch = CharacteristicsCalculator.Compute(state, _db, card);
+            return Name(card.DefinitionId) + " (" + ch.RemainingHealth + " Health left"
+                   + (CharacteristicsCalculator.IsEquipped(state, _db, card) ? ", equipped" : "") + ")";
+        }
+
         private static bool PowerUsedThisTurn(GameState state, CardInstance tavernDweller) =>
             state.UsesThisTurn.ContainsKey("ability:" + tavernDweller.Id.Value + ":0");
 
@@ -139,6 +149,8 @@ namespace RestartedTavern.Rules
                 case ActionKind.ChooseTarget:
                     if (state.Pending?.Kind == DecisionKind.ChooseObject)
                         return a.Target.HasValue ? state.Pending.Prompt + ": " + Name(state, a.Target.Value) : "Choose nothing";
+                    if (state.Pending?.Kind == DecisionKind.KeepLegendary)
+                        return "Keep " + DescribeOneLine(state, a.Target.Value.Object) + " (the other copies go to the graveyard)";
                     return a.Target.HasValue ? "Target: " + Name(state, a.Target.Value) : "No target (decline)";
                 case ActionKind.ChooseOption:
                     if (state.Pending?.Kind == DecisionKind.TopOrBottom)
@@ -149,11 +161,26 @@ namespace RestartedTavern.Rules
                         return "Take " + (a.Option < deck.Count ? Name(state, deck[a.Option].Id) : "?") + " (the rest go to the graveyard)";
                     }
                     if (state.Pending?.Kind == DecisionKind.PayAnyGold) return "Pay " + a.Option + " Gold";
+                    if (state.Pending?.Kind == DecisionKind.OrderTriggers)
+                    {
+                        var t = a.Option < state.PendingTriggers.Count ? state.PendingTriggers[a.Option] : null;
+                        return "Put on the Chain next (resolves after the ones you put later): "
+                               + (t == null ? "?" : Name(t.SourceDefinitionId) + " trigger" + (string.IsNullOrEmpty(t.Ability.Text) ? "" : " [" + t.Ability.Text + "]"));
+                    }
                     if (state.Pending?.Kind == DecisionKind.YesNo) return (a.Option == 1 ? "Yes: " : "No: ") + state.Pending.Prompt;
                     if (state.Pending?.Kind == DecisionKind.PayTax)
                         return a.Option == 1 ? "Pay " + state.Pending.Count : "Don't pay (" + Name(state, state.Pending.Card) + " is countered)";
                     return "Option " + a.Option;
                 case ActionKind.ActivateAbility: return DescribeActivation(state, a);
+                case ActionKind.AssignCombatDamage:
+                {
+                    var d = state.Pending;
+                    if (d == null || d.Choices == null) return a.ToString();
+                    var parts = new List<string>();
+                    for (int i = 0; i < d.Choices.Count && i < a.Division.Length; i++)
+                        parts.Add(a.Division[i] + " to " + DescribeOneLine(state, d.Choices[i]));
+                    return "Damage from " + Name(state, d.Card) + ": " + string.Join(", ", parts);
+                }
                 case ActionKind.DeclareAttacker: return "Attack " + a.Defender + " with " + Name(state, a.Card);
                 case ActionKind.DeclareBlocker: return "Block " + Name(state, a.BlockedAttacker) + " with " + Name(state, a.Card);
                 case ActionKind.PlayCard:

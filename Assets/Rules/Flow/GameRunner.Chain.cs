@@ -336,7 +336,8 @@ namespace RestartedTavern.Rules
 
         /// <summary>
         /// Puts waiting triggers on the Chain in APNAP order (MTG 603.3b): the active player's go
-        /// on first, so they resolve last. Returns false if it has to wait for a target choice.
+        /// on first, so they resolve last. A player with two or more different triggers waiting picks
+        /// the order (decided 2026-10-09). Returns false if it has to wait for a choice.
         /// </summary>
         private bool PutPendingTriggersOnChain()
         {
@@ -349,32 +350,74 @@ namespace RestartedTavern.Rules
                     int d = TurnOrderDistance(S.ActivePlayer, S.PendingTriggers[i].Controller);
                     if (d < bestDistance) { bestDistance = d; pick = i; }
                 }
-                var trigger = S.PendingTriggers[pick];
-                S.PendingTriggers.RemoveAt(pick);
-
-                if (S.GetPlayer(trigger.Controller).HasLost) continue;
-
-                if (trigger.Ability.Target != TargetSpec.None)
+                var controller = S.PendingTriggers[pick].Controller;
+                if (!S.GetPlayer(controller).HasLost && TriggerOrderOptions(controller).Count > 1)
                 {
-                    var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Slot,
-                        trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None);
-                    if (targets.Count == 0) continue; // MTG 603.3d: no legal target → removed
-                    if (targets.Count > 1 || trigger.Ability.TargetOptional)
-                    {
-                        S.Pending = new PendingDecision
-                        {
-                            Kind = DecisionKind.ChooseTriggerTarget,
-                            Player = trigger.Controller,
-                            Trigger = trigger,
-                        };
-                        return false;
-                    }
-                    PushTrigger(trigger, targets[0]);
-                    continue;
+                    S.Pending = new PendingDecision { Kind = DecisionKind.OrderTriggers, Player = controller };
+                    return false;
                 }
-
-                PushTrigger(trigger, null);
+                if (!PutTriggerOnChain(pick)) return false;
             }
+            return true;
+        }
+
+        /// <summary>
+        /// The triggers <paramref name="controller"/> can put on the Chain next, as indexes into
+        /// GameState.PendingTriggers. Triggers of the same ability of the same card are listed once (like MTG Arena),
+        /// even if they're about different events (Skabba: three Goobers died).
+        /// </summary>
+        internal List<int> TriggerOrderOptions(PlayerId controller)
+        {
+            var result = new List<int>();
+            for (int i = 0; i < S.PendingTriggers.Count; i++)
+            {
+                var t = S.PendingTriggers[i];
+                if (t.Controller != controller) continue;
+                bool seen = false;
+                foreach (int j in result)
+                    if (SameTrigger(S.PendingTriggers[j], t)) { seen = true; break; }
+                if (!seen) result.Add(i);
+            }
+            return result;
+        }
+
+        private static bool SameTrigger(PendingTrigger a, PendingTrigger b) =>
+            ReferenceEquals(a.Ability, b.Ability) && a.SourceDefinitionId == b.SourceDefinitionId;
+
+        private void AnswerTriggerOrder(int index)
+        {
+            S.Pending = null;
+            if (PutTriggerOnChain(index)) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
+        }
+
+        /// <summary>Puts one waiting trigger on the Chain. Returns false if it has to wait for a target choice.</summary>
+        private bool PutTriggerOnChain(int index)
+        {
+            var trigger = S.PendingTriggers[index];
+            S.PendingTriggers.RemoveAt(index);
+
+            if (S.GetPlayer(trigger.Controller).HasLost) return true;
+
+            if (trigger.Ability.Target != TargetSpec.None)
+            {
+                var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Slot,
+                    trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None);
+                if (targets.Count == 0) return true; // MTG 603.3d: no legal target → removed
+                if (targets.Count > 1 || trigger.Ability.TargetOptional)
+                {
+                    S.Pending = new PendingDecision
+                    {
+                        Kind = DecisionKind.ChooseTriggerTarget,
+                        Player = trigger.Controller,
+                        Trigger = trigger,
+                    };
+                    return false;
+                }
+                PushTrigger(trigger, targets[0]);
+                return true;
+            }
+
+            PushTrigger(trigger, null);
             return true;
         }
 

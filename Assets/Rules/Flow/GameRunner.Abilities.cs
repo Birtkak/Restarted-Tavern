@@ -393,6 +393,11 @@ namespace RestartedTavern.Rules
 
         private void AnswerOption(PlayerAction a)
         {
+            if (S.Pending.Kind == DecisionKind.OrderTriggers)
+            {
+                AnswerTriggerOrder(a.Option);
+                return;
+            }
             if (S.Pending.Kind == DecisionKind.PayAnyGold)
             {
                 AnswerBid(a);
