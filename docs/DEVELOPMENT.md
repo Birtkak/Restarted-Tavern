@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 62 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
+**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 64 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
 
 ---
 
@@ -144,7 +144,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 **Implemented**
 - Setup: a random first player, 7-card hands, the **London mulligan**, the first player skips the turn-1 draw, and the second player gets 1 Gold. `FormatConfig.MultiplayerStandard()` uses 40 life and no compensation.
 - Turn structure (§6): Start, Draw, Main 1, the combat steps, Main 2, End, and Cleanup (discard down to 7, then unspent mana becomes Gold capped at 5, then "until end of turn" effects end).
-- Mana and Gold (§5): mana is only available on your own turn. Instants can be paid with any mix of mana and Gold. Overcharge is paid with Gold only.
+- Mana and Gold (§5): mana is only available on your own turn. Everything except creatures can be paid with any mix of mana and Gold (creatures: mana only). Overcharge is paid with Gold only.
 - **The Chain** (§8): LIFO; the caster keeps priority; it resolves when every living player passes in a row; spells fizzle when their target is illegal; the fixed priority windows; auto-pass for players who have no other option (`GameState.AutoPass`).
 - **Multiple targets** (MTG 115, 608.2b): a spell has a list of target slots (optional slots for "up to N"). Targets are distinct, and illegal targets are skipped at resolution; the spell only fizzles when every target is gone. **Fight** (§11.1).
 - Triggers: Arrival, Last Breath, Attacks, Start/End of your turn. They use APNAP order and a target choice when they're put on the Chain. A trigger with no legal target is removed.
@@ -155,7 +155,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - New object ids on every zone change. Tokens stop existing when they leave the battlefield.
 - 37 prototype cards (Goobers, Evergrowing Wild, Glitterworld without Equipment, Neutral) and three legal 60-card decks (Goober Mob, Jungle Stampede, Zoo Patrol) in `Assets/Rules/Cards/PrototypeCards.cs`.
 
-**Tests** (`Assets/Rules.Tests`, 62 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 64 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
@@ -174,8 +174,9 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
-**Not yet implemented** (next steps)
+**Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_ABILITIES_AND_PATRONS.md](handoff/NEXT_ABILITIES_AND_PATRONS.md))
 - Activated abilities (Tap: …, Pay X Gold: …) and **Patron powers and passives**.
+- Rules terms introduced by the v0.2 drafts: **bank** triggers (in the cleanup step), per-player Gold caps, "can't be healed", "damaged" target filters, spend-Gold triggers.
 - Equip, and casting Curses/Relics with real cards (the rules support exists, but no cards use it yet).
 - Player choices that are currently automatic: how an attacker splits damage among several blockers (§7.2), which Legendary to keep, and ordering your own simultaneous triggers.
 - Divided damage ("deal 3 damage divided as you choose"), X costs, "may" choices, rummaging, and "whenever this is dealt damage" triggers (Worldroot Hydra).

@@ -28,7 +28,7 @@ This game only **deviates** from MTG in these areas:
 | Area | MTG | Restarted Tavern |
 |---|---|---|
 | **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per turn up to 10, refilled each turn (§5.1). No lands |
-| **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for Instants, abilities, Overcharge and Patron Powers (§5.2) |
+| **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for everything except creatures (§5.2) |
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
 | *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Gold-paid Power (§9). It works like a commander that never enters the battlefield |
@@ -94,16 +94,16 @@ Unused mana is not lost.
 
 - At the end of your turn, each point of unspent mana becomes **1 Gold** (a separate counter).
 - Gold is **capped at 5** 🔒. Mana over the cap is lost. This allows big save-up turns, so Overcharge costs must be balanced with a 5-Gold burst in mind.
-- Gold **can be spent on**:
-  - **Instants** (cards played on any player's turn; normal mana works too),
-  - **activated abilities** on permanents,
-  - **Overcharge X** bonuses (see §11), which can **only** be paid with Gold, and
-  - 🟡 your **Patron's power** (see §9).
-- Gold **cannot** pay for creatures, sorceries or other main-phase permanents, so it can't be used to ramp out big threats early.
-- 🟡 When paying for an Instant, the player chooses how to split the cost between mana and Gold.
+- 🔒 **Everything except creatures can be paid with any mix of mana and Gold**: Instants, Sorceries, Equipment, Relics, Curses, all activated abilities (including **Equip**) and **Patron Powers**. The player chooses the split.
+  - Timing doesn't change: a Sorcery or Relic is still cast in your own main phase. On other players' turns you only have Gold, so only Instants, abilities and Patron Powers can be used there.
+  - So a typical turn can be "creature with mana, Equipment or spell with Gold".
+- 🔒 **Creatures can only be paid with mana**, so Gold can't be used to ramp out big threats early.
+- **Overcharge X** bonuses (see §11) can **only** be paid with Gold 🔒.
 - 🔒 **Clarification**: your mana pool is only filled during your own turn. On other players' turns you have **no mana, only Gold**, so Gold is how you cast Instants on opponents' turns.
 - 🔒 **Taxes** ("unless they pay N") can be paid with any mix of mana and Gold.
 - 🔒 Gold gained above the cap of 5 is lost.
+- 🟡 **Bank** (rules term, introduced with the v0.2 drafts): when unspent mana becomes Gold at the end of your turn, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
+- 🟡 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap.
 
 **Why this works**
 - It removes the bad feeling of "I held up mana for a trick and the opponent didn't attack". The mana is banked instead of wasted.
@@ -186,7 +186,7 @@ Every deck is led by a **Patron**, a tavern regular you play *as*. The Patron is
 
 - The Patron **is the player**: your 30 life is the Patron's life, and "attack a player" means attacking their Patron.
 - The Patron sits in the **Patron zone** (public). In v0.1 it can't be removed from the game.
-- **Patron Power**: each Patron has a unique activated power, **paid with Gold**. 🟡 It can be used once per turn, at instant speed (so it can also be used on opponents' turns, through the Chain).
+- **Patron Power**: each Patron has a unique activated power, paid with **any mix of mana and Gold** 🔒 (§5.2). 🟡 It can be used once per turn, at instant speed (so it can also be used on opponents' turns, through the Chain).
 - **Passive**: 🟡 each Patron has one always-on ability.
 - 🔒 The Patron **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
 - Future singleton format: the Patron becomes the commander-style deck leader.
@@ -262,6 +262,8 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Fight**: two creatures each deal damage equal to their Power to the other, at the same time. This is not combat, so Trample doesn't apply. The damage is permanent, like all damage.
 - **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Patron restores life, up to the starting life total.
 - **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
+- **Damaged** 🟡: a creature with damage on it (Health remaining below its max). This is plain card text, not a keyword: Bloodied, Wound and Pristine stay rejected as keywords (§11). "Health remaining" is max Health minus damage.
+- **Can't be healed** 🟡: Heal effects remove no damage from it. It can still get bigger (+1/+1 counters, buffs).
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
 
 ---
@@ -291,6 +293,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **Gold pays for everything except creatures** (§5.2): Instants, Sorceries, Equipment, Relics, Curses, activated abilities (incl. Equip) and Patron Powers take any mix of mana and Gold. Creatures are mana only. Overcharge stays Gold only. Set v0.2 card drafts added: 10 per faction plus 20 Neutral. |
 | 2026-10-09 | **Going second**: the 1 starting Gold is replaced by **+1 mana on the second player's first turn** (§3). In bot mirrors the first-player win rate dropped from 73–67% to 66–60%. Next card work: more Glitterworld and Wild cards (pings, fights), so permanent damage shows up in tests. |
 | 2026-10-09 | **Losing a buff can't kill** (§7.3): when a Health buff ends, damage is capped so the creature keeps 1 Health. This deviates from MTG. |
 | 2026-10-09 | Tech: Unity 6000.6.4f1 + C#, PC (Windows) first, local first with online later. The rules engine is a Unity assembly with no engine references (DEVELOPMENT §0). |

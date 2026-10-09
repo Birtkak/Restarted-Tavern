@@ -54,7 +54,9 @@ With pings and fights in the pool (Zoo Patrol), the effect is large. Zoo Patrol 
 - In the creature-only decks (Goober Mob, Jungle Stampede) it barely matters (2–11% wounded). Big bodies trade and removal kills, so pings and fights are what make the mechanic show up. Every faction needs some chip damage, or players won't feel the rule.
 
 ### 3. The Gold cap can't be tuned yet
-Gold spent per game is identical for caps 3, 5, 7 and 10. Only the wasted mana changes. The prototype pool has nothing to spend Gold on except a few cheap instants. In long games most unspent mana is lost: **70% in the Zoo mirror**, because Gold sits at the cap. Gold sinks (activated abilities, Patron Powers, Gold-paid relics) are needed before the cap means anything.
+Gold spent per game is identical for caps 3, 5, 7 and 10. Only the wasted mana changes. In long games most unspent mana is lost: **69% in the Zoo mirror**, because Gold sits at the cap.
+- Since 2026-10-09, Gold pays for everything except creatures (GAME_DESIGN §5.2). Gold spent went up (Zoo mirror: 3.2 → 4.6 per game), but outcomes barely moved: the bot prefers mana on its own turn, and these decks are mostly creatures.
+- The cap becomes a real knob once Gold sinks exist: activated abilities, Patron Powers, and the v0.2 Gold cards (Tip Jar, Settle the Tab, Offshore Account…). Rerun this experiment after those land.
 
 ### 4. Matchups and pace
 - Jungle Stampede beats Goober Mob about **69–31**. Zoo Patrol beats Jungle Stampede **55–45**, and Goober Mob beats Zoo Patrol **56–44**. That's a rough rock-paper-scissors.

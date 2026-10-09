@@ -48,6 +48,7 @@ Starting values for the budget, to be tuned in playtesting.
 - **Healing** cards should be efficient. Healing is card-only, so an overcosted heal is never played.
 - **Top-end exception**: Legendary creatures costing 7+ may go about 3 points over budget. They are the payoff for surviving to 10 mana.
 - **Gold is worth less than mana**: it has a cap and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold.
+- **Non-creature cards are effectively cheaper**: everything except creatures can be paid with banked Gold next to a creature paid with mana (GAME_DESIGN §5.2). That's up to 5 extra "mana" for spells, Equipment, Relics and Curses on a burst turn. Price non-creature cards with that in mind, and watch Equipment most: its cost + Equip should match a creature of the same total, not undercut it.
 
 ---
 
@@ -60,6 +61,8 @@ Starting values for the budget, to be tuned in playtesting.
 | Patrons | 10 | (one per pair, see GAME_DESIGN §9.3) |
 | **Total** | **120** | |
 
+🟡 **Set v0.2 (drafting since 2026-10-09):** +10 cards per faction (5 C / 3 U / 2 R) and +20 Neutral (10 C / 6 U / 4 R), so 30 per faction, 30 Neutral and 10 Patrons (190 total). The goal is depth for the mechanics already in place, not new keywords. Drafts are in each card list under "Set v0.2 additions".
+
 🟡 Mana curve for each faction's 20 cards: about 3 one-drops, 4 two-drops, 4 three-drops, 3 four-drops, 3 five-drops, 2 six-drops, and 1 card at 7–10. Plus about 6 non-creature cards spread across the curve.
 
 ---
@@ -71,7 +74,7 @@ What each faction **does best** (primary), **can do** (secondary), and **never d
 |---|---|---|---|---|---|
 | **Removal style** | Bounce, bribe (steal for a turn), counter | Burn (direct damage) | Destroy, sacrifice, -X/-X | **Fight** (a creature deals its Power to another) | **Pings** (lots of 1s) |
 | **Card draw** | ★ primary | rummage (discard, then draw) | pay life to draw | draw when big creatures arrive | — |
-| **Gold** | ★ primary (shady deals) | steal Gold | — | — | Equipment costs paid with Gold |
+| **Gold** | ★ primary (shady deals) | steal Gold | — | — | Equipment and Equip paid with Gold (any deck can, Glitterworld leans on it most) |
 | **Healing** | — | — | drain / Lifelink | ★ heal creatures | repair *machines* |
 | **Big creatures** | — | — | a few, with drawbacks | ★ primary | via Equipment |
 | **Go wide (many small creatures)** | — | ★ primary | spawn tokens from deaths | critter swarms | — |

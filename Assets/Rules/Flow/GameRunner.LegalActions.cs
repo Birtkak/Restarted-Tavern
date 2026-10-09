@@ -80,9 +80,9 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
-        /// GAME_DESIGN §10 timing + §5.2 payment. Creatures, Sorceries and other permanents:
-        /// own main phase, empty Chain, mana only. Instants: any time you have priority,
-        /// paid with any mix of mana and Gold (one action per possible split).
+        /// GAME_DESIGN §10 timing + §5.2 payment. Timing: Instants whenever you have priority,
+        /// everything else in your own main phase with an empty Chain. Payment: creatures mana
+        /// only; everything else any mix of mana and Gold (one action per possible split).
         /// </summary>
         private void AddPlayableCards(PlayerId player, List<PlayerAction> result)
         {
@@ -96,11 +96,13 @@ namespace RestartedTavern.Rules
                 var def = Def(card);
                 bool instant = def.Type == CardType.Instant;
                 if (!instant && !sorcerySpeed) continue;
+                // §5.2: everything except creatures can be paid with any mix of mana and Gold.
+                bool goldAllowed = !def.IsCreature;
 
                 var targetChoices = EnumerateTargetChoices(player, def.SpellTargets);
                 if (targetChoices.Count == 0) continue;
 
-                int maxGold = instant ? Math.Min(p.Gold, def.Cost) : 0;
+                int maxGold = goldAllowed ? Math.Min(p.Gold, def.Cost) : 0;
                 for (int gold = 0; gold <= maxGold; gold++)
                 {
                     if (def.Cost - gold > p.Mana) continue;

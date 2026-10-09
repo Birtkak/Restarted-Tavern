@@ -54,3 +54,27 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 2 · 5: 3 · 6: 2 · 7+: 2 · Creatures: 10 · Spells/Relics: 10
 
 ✅ **Faction complete (v0.1)**
+
+---
+
+## Set v0.2 additions (draft, 2026-10-09)
+
+Goal: **more depth for the mechanics already in place**: Gold (banking, spending, the cap), permanent damage and healing, Overcharge, the Chain, Arrival and Last Breath. Target per faction: +10 cards, 5 Common / 3 Uncommon / 2 Rare. Review by number, as with v0.1.
+
+**Engine** column: ✓ = the engine can run it today; otherwise it names what's missing (see DEVELOPMENT §7).
+New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1 (**damaged**, **can't be healed**).
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Engine | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 21 | **Interest Broker** | 2 | Creature: Wizard | U | 1/3 | Whenever you bank 2 or more Gold, draw a card. | Rewards holding mana up. The cap fights it: at 5 Gold you bank nothing, so you have to spend Gold to keep drawing | bank trigger | 🟡 |
+| 22 | **Offshore Account** | 2 | Relic | U | — | Your Gold cap is 8. | Simulations: up to 70% of unspent mana is lost to the cap in long games. This is the Wizards' answer, and it makes Overcharge bursts bigger | Gold-cap modifier | 🟡 |
+| 23 | **Fee Collector** | 2 | Creature: Wizard | C | 2/2 | Whenever an opponent spends Gold, you gain 1 Gold. | Taxes the opponent's instant-speed play. Every Gold they spend helps you a bit | spend-Gold trigger | 🟡 |
+| 24 | **Retainer Mage** | 3 | Creature: Wizard | C | 2/3 | Flying. You may cast this whenever you could cast an Instant. If you do, you may pay for it with Gold. | An ambush creature: Gold creates a body on the opponent's turn. The only creature in the faction that Gold can pay for | alt timing + Gold payment | 🟡 |
+| 25 | **Bounced Check** | 2 | Instant | C | — | Return target creature with cost 3 or less to its owner's hand. Its controller gains 1 Gold. | Cheap bounce with the faction's 'shady' drawback. Bounce also wipes the creature's damage, so use it on an enemy that is healthy | bounce | 🟡 |
+| 26 | **Golden Parachute** | 3 | Instant | C | — | Return target creature you control to your hand. Gain Gold equal to its cost. | Permanent-damage depth: rescue a wounded creature (it comes back fresh) and bank its value. A response on the Chain to removal | bounce | 🟡 |
+| 27 | **Silent Partner** | 4 | Creature: Wizard | U | 2/5 | You may pay Overcharge costs with mana as well as Gold. | Opens Overcharge to big main-phase turns, the Wizards' 'big impressive spells'. Tough body, no attack | payment rule | 🟡 |
+| 28 | **Compound Interest** | 4 | Sorcery | C | — | Draw two cards. If you have 5 or more Gold, draw three instead. | Pays off sitting at the cap, the opposite tension to Interest Broker | conditional draw | 🟡 |
+| 29 | **Hostile Takeover** | 6 | Sorcery | R | — | Gain control of target creature. Its controller gains Gold equal to its cost and draws a card. | A permanent steal with a shady deal. The victim gets resources back (capped by their Gold cap) | control change | 🟡 |
+| 30 | **Bribe the Referee** | 4 | Instant | R | — | Counter target spell or ability. Its controller gains 3 Gold and draws a card. | A hard counter, but you pay the other player off. Can also stop a Patron Power or a Last Breath trigger | counter | 🟡 |
+
+**v0.2 progress:** 10 drafted · C 5 · U 3 · R 2

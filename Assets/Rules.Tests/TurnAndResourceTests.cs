@@ -108,6 +108,19 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
+        public void Gold_PaysForSorceries_ButStillAtSorcerySpeed()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var gang = g.AddToHand(g.Active, "gob_gang"); // Sorcery, cost 2
+            g.SetMana(g.Active, 0);
+            g.P(g.Active).Gold = 2;
+            Assert.IsTrue(g.Legal(g.Active).Any(a => a.Card == gang.Id && a.GoldPaid == 2));
+
+            g.PassRound(); // beginning of combat: no more sorcery speed
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Card == gang.Id));
+        }
+
+        [Test]
         public void Gold_PaysForInstants_InAnyMix()
         {
             var g = TestGame.AtFirstMainPhase();
@@ -117,6 +130,28 @@ namespace RestartedTavern.Rules.Tests
             g.P(g.Active).Gold = 1;
             var plays = g.Legal(g.Active).Where(a => a.Card == snot.Id && a.Target == Target.ForObject(target.Id)).ToList();
             CollectionAssert.AreEquivalent(new[] { 0, 1 }, plays.Select(a => a.GoldPaid));
+        }
+
+        [Test]
+        public void Gold_PaysForNonCreatures_SoACreatureAndAnEquipmentFitInOneTurn()
+        {
+            var shiv = new CardDefinition { Id = "test_shiv", Name = "Test Shiv", Type = CardType.Equipment, Cost = 2 };
+            var g = TestGame.AtFirstMainPhase(extraCards: new[] { shiv });
+            var sword = g.AddToHand(g.Active, "hired_sellsword");
+            var equipment = g.AddToHand(g.Active, "test_shiv");
+            g.SetMana(g.Active, 2);
+            g.P(g.Active).Gold = 2;
+
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Card == sword.Id && a.GoldPaid > 0), "creatures: mana only");
+            g.Do(PlayerAction.Play(g.Active, sword.Id));
+            g.PassRound();
+            g.Do(PlayerAction.Play(g.Active, equipment.Id, goldPaid: 2));
+            g.PassRound();
+
+            Assert.AreEqual(0, g.P(g.Active).Mana);
+            Assert.AreEqual(0, g.P(g.Active).Gold);
+            Assert.IsNotNull(g.OnBattlefield(g.Active, "test_shiv"));
+            Assert.IsNotNull(g.OnBattlefield(g.Active, "hired_sellsword"));
         }
 
         [Test]

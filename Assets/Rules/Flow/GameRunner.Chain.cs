@@ -59,7 +59,7 @@ namespace RestartedTavern.Rules
             var card = p.Hand.Find(c => c.Id == a.Card);
             var def = Def(card);
 
-            // §5.2: Gold can pay for Instants (any mix), Overcharge is Gold only.
+            // §5.2: Gold can pay for everything except creatures (any mix); Overcharge is Gold only.
             int manaPaid = def.Cost - a.GoldPaid;
             p.Mana -= manaPaid;
             if (manaPaid > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });

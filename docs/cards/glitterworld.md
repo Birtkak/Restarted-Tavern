@@ -1,7 +1,7 @@
 # Glitterworld — Card List
 
 **Identity:** a huge, high-tech city that houses every kind of creature in the game: robots, drones, aliens, citizens of every species. A bit of everything, focused on **pings** and **buffing with Equipment**.
-**Faction pie:** Equipment buffs ★, removal through **pings** (lots of 1-damage effects, which stick because damage is permanent), healing only for **machines** (Constructs and equipped creatures), big threats built with Equipment. Keyword: Flying (drones). Gold: Equip is an activated ability, so **Equip costs can be paid with Gold**. No graveyard play, no fight.
+**Faction pie:** Equipment buffs ★, removal through **pings** (lots of 1-damage effects, which stick because damage is permanent), healing only for **machines** (Constructs and equipped creatures), big threats built with Equipment. Keyword: Flying (drones). Gold: like everything except creatures, **Equipment cards and Equip costs can be paid with mana and/or Gold** (GAME_DESIGN §5.2), so a Glitterworld turn is often "creature with mana, Equipment with Gold". No graveyard play, no fight.
 **Role with permanent damage:** Glitterworld **spreads** damage with pings, then finishes the wounded creatures off.
 
 **Token:** *Drone*, a 1/1 Creature: Construct with Flying.
@@ -40,3 +40,27 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 3 · 5: 3 · 6: 2 · 7+: 1 · Creatures: 11 · Equipment: 5 · Spells/Relics: 4
 
 ✅ **Faction complete (v0.1)**
+
+---
+
+## Set v0.2 additions (draft, 2026-10-09)
+
+Goal: **more depth for the mechanics already in place**: Gold (banking, spending, the cap), permanent damage and healing, Overcharge, the Chain, Arrival and Last Breath. Target per faction: +10 cards, 5 Common / 3 Uncommon / 2 Rare. Review by number, as with v0.1.
+
+**Engine** column: ✓ = the engine can run it today; otherwise it names what's missing (see DEVELOPMENT §7).
+New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1 (**damaged**, **can't be healed**).
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Engine | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 21 | **Gilded Knuckles** | 1 | Equipment | C | — | Equipped creature gets +2/+0. Equip 1. | Cheap enough to cast and equip with banked Gold next to a creature paid with mana | Equip | 🟡 |
+| 22 | **Patch-Up Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Heal 2 from target Construct or equipped creature. | Machine repair on a drone | target filter (Construct/equipped) | 🟡 |
+| 23 | **Scrap Collector** | 2 | Creature: Construct | C | 2/2 | Whenever an Equipment you control becomes unattached, gain 1 Gold. | When an equipped creature dies, you get Gold back to re-equip | unattach trigger | 🟡 |
+| 24 | **Finisher Protocol** | 2 | Instant | C | — | Destroy target creature with 2 or less Health remaining. | The ping plan's closer: spread damage, then delete | remaining-Health target filter | 🟡 |
+| 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to a creature." Equip 1. | Ping engine on any attacker | Equip + granted trigger | 🟡 |
+| 26 | **Smart Rounds** | 3 | Sorcery | U | — | Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage. | Chains across a wounded board, and rewards having pinged before | conditional each-damaged | 🟡 |
+| 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | filtered heal | 🟡 |
+| 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | Equip + granted trigger | 🟡 |
+| 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | Equip + damage prevention | 🟡 |
+| 30 | **Neon Executioner** | 6 | Creature: Construct | R | 4/6 | Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | damage-dealt trigger | 🟡 |
+
+**v0.2 progress:** 10 drafted · C 5 · U 3 · R 2

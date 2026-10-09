@@ -39,3 +39,27 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 3 · 5: 3 · 6: 2 · 7+: 1 · Creatures: 15 · Spells: 5
 
 ✅ **Faction complete (v0.1)**
+
+---
+
+## Set v0.2 additions (draft, 2026-10-09)
+
+Goal: **more depth for the mechanics already in place**: Gold (banking, spending, the cap), permanent damage and healing, Overcharge, the Chain, Arrival and Last Breath. Target per faction: +10 cards, 5 Common / 3 Uncommon / 2 Rare. Review by number, as with v0.1.
+
+**Engine** column: ✓ = the engine can run it today; otherwise it names what's missing (see DEVELOPMENT §7).
+New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1 (**damaged**, **can't be healed**).
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Engine | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 21 | **Bark Skin** | 1 | Instant | C | — | Target creature gets +0/+3 until end of turn. Put a +1/+1 counter on it. | A combat trick that leaves something behind. Losing the +0/+3 can't kill it (§7.3) | ✓ | 🟡 |
+| 22 | **Overflowing Spring** | 2 | Instant | U | — | Heal 4 from target creature. If it had no damage, put two +1/+1 counters on it instead. | Never a dead card: it heals when it's needed, and grows the creature when it's not | conditional heal/counters | 🟡 |
+| 23 | **Sap Mender** | 2 | Creature: Plant | U | 1/3 | Whenever you heal a creature, put a +1/+1 counter on it. | A healing payoff. Every heal also grows the creature | heal trigger | 🟡 |
+| 24 | **Critter Burrow** | 3 | Sorcery | C | — | Create three 1/1 Critters. | Critter swarm (the faction's Critter token) | ✓ (Critter token) | 🟡 |
+| 25 | **Ambush Predator** | 3 | Creature: Cat | C | 3/2 | Arrival: This fights up to one target damaged creature you don't control. | Fight removal that only works once something is wounded. Pairs well with Glitterworld pings | damaged-target filter | 🟡 |
+| 26 | **Regrowth Rain** | 3 | Instant | C | — | Heal 3 from each creature you control. | Mass repair at instant speed: heal after blocks | ✓ | 🟡 |
+| 27 | **Herd Matriarch** | 4 | Creature: Beast | U | 3/5 | Whenever another creature with 5 or more Power enters the battlefield under your control, put two +1/+1 counters on it. | Makes the big creatures bigger, which also lifts their max Health above chip-damage range | other-arrives trigger | 🟡 |
+| 28 | **Mudwallow Hippo** | 5 | Creature: Beast | C | 3/7 | At the end of your turn, heal 2 from this. | A wall that recovers. Chip damage doesn't stick to it | ✓ | 🟡 |
+| 29 | **Stampede of the Deep** | 6 | Sorcery | R | — | Creatures you control get +2/+2 and Trample until end of turn. Heal them fully. | A Wild finisher: the whole army attacks fresh. Losing the buff can't kill them afterwards | ✓ | 🟡 |
+| 30 | **Titanback Colossus** | 8 | Creature: Beast | R | 8/8 | Trample. Whenever this attacks, heal it fully. | Chip damage never adds up on it while it keeps attacking | ✓ | 🟡 |
+
+**v0.2 progress:** 10 drafted · C 5 · U 3 · R 2
