@@ -276,7 +276,9 @@ namespace RestartedTavern.Rules
             ap.Mana = 0; // mana is only filled during your own turn (§5.2)
             Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });
 
+            var beforeBuffsEnd = SnapshotRemainingHealth();
             S.UntilEndOfTurn.Clear();
+            CapDamageAfterBuffsEnd(beforeBuffsEnd);
             S.Combat = null;
 
             var next = NextLivingPlayer(ap.Id);

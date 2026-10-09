@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace RestartedTavern.Rules
 {
@@ -27,8 +28,13 @@ namespace RestartedTavern.Rules
             var def = Def(card);
             var lastController = card.Controller;
 
+            // A lord/anthem leaving ends its buffs (§7.3: losing a buff can't kill).
+            var buffSnapshot = from == Zone.Battlefield && def.Statics.Count > 0 ? SnapshotRemainingHealth() : null;
+
             if (from == Zone.Battlefield) S.GetPlayer(card.Controller).Battlefield.Remove(card);
             else if (from != Zone.Chain) S.GetPlayer(card.Owner).GetZone(from).Remove(card);
+
+            if (buffSnapshot != null) CapDamageAfterBuffsEnd(buffSnapshot);
 
             bool dies = from == Zone.Battlefield && to == Zone.Graveyard && def.IsCreature;
 
@@ -171,6 +177,30 @@ namespace RestartedTavern.Rules
         {
             var c = S.FindOnBattlefield(creature);
             if (c != null) c.PlusOneCounters += count;
+        }
+
+        /// <summary>Remaining Health of every creature on the battlefield, before buffs change.</summary>
+        private Dictionary<ObjectId, int> SnapshotRemainingHealth()
+        {
+            var snapshot = new Dictionary<ObjectId, int>();
+            foreach (var c in S.AllPermanents())
+                if (Def(c).IsCreature) snapshot[c.Id] = Stats(c).RemainingHealth;
+            return snapshot;
+        }
+
+        /// <summary>
+        /// GAME_DESIGN §7.3 (deviation from MTG): when a Health buff ends, a creature that was
+        /// alive keeps at least 1 Health. Its damage is lowered instead of the buff killing it.
+        /// </summary>
+        private void CapDamageAfterBuffsEnd(Dictionary<ObjectId, int> before)
+        {
+            foreach (var c in S.AllPermanents())
+            {
+                if (!before.TryGetValue(c.Id, out int had) || had <= 0) continue;
+                var now = Stats(c);
+                if (now.RemainingHealth > 0) continue;
+                c.Damage = Math.Max(0, now.MaxHealth - 1);
+            }
         }
 
         internal void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants)

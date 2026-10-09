@@ -29,7 +29,7 @@ This game only **deviates** from MTG in these areas:
 |---|---|---|
 | **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per turn up to 10, refilled each turn (§5.1). No lands |
 | **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for Instants, abilities, Overcharge and Patron Powers (§5.2) |
-| **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action |
+| **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
 | *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Gold-paid Power (§9). It works like a commander that never enters the battlefield |
 | *Going second* | Only the first player skips their draw | Also, in 1v1 the second player starts with 1 Gold (this is part of the mana system) |
@@ -151,6 +151,8 @@ Creatures have **Power / Health**. Damage is tracked as **Health remaining**, no
 
 ### 7.3 Permanent damage 🔒
 Damage stays on a creature until it is healed or the creature dies. Health can't go above its max unless an effect says so.
+
+🔒 **Losing a buff can't kill.** When a Health bonus ends (an "until end of turn" effect wears off, or the lord or anthem giving it leaves the battlefield), a creature that was alive keeps at least 1 Health: its damage is lowered to max Health − 1. Real damage and real Health penalties still kill. For example, a 2/3 with 2 damage gets +0/+2, then takes 2 more (a 2/5 with 4 damage). When the buff ends, it becomes a 2/3 with 2 damage, at 1 Health left. In MTG it would die.
 
 Design consequences:
 - Chip damage builds up, so big creatures are worn down over time instead of being a wall you have to "answer or lose to".
@@ -289,6 +291,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **Losing a buff can't kill** (§7.3): when a Health buff ends, damage is capped so the creature keeps 1 Health. This deviates from MTG. |
 | 2026-10-09 | Tech: Unity 6000.6.4f1 + C#, PC (Windows) first, local first with online later. The rules engine is a Unity assembly with no engine references (DEVELOPMENT §0). |
 | 2026-10-09 | **First set v0.1 complete**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons (docs/cards/). |
 | 2026-10-09 | **MTG rules are the default foundation**: everything outside mana and damage follows the MTG Comprehensive Rules (§1.1). |

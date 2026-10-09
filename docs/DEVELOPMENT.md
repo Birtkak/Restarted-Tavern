@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. The first card set (v0.1) is designed, the Unity project is set up, and the rules engine skeleton runs with 36 passing EditMode tests (§7).
+**Status:** engine prototype. The first card set (v0.1) is designed, the Unity project is set up, and the rules engine skeleton runs with 39 passing EditMode tests (§7).
 
 ---
 
@@ -81,7 +81,7 @@ CardInstance   { objectId, definitionId, owner, controller,
                  currentHealth, tapped, summoningSick, counters{}, attachments[] }
 ```
 
-- 🟡 Implemented as `CardInstance.Damage`: damage that **never wears off** (no "damage marked this turn"). Remaining Health is computed as max Health − Damage. This matches MTG's damage counters except for the cleanup reset, so buffs and debuffs work naturally. For example, a +0/+2 that wears off can kill a wounded creature, as in MTG. See the open question in §6.
+- 🟡 Implemented as `CardInstance.Damage`: damage that **never wears off** (no "damage marked this turn"). Remaining Health is computed as max Health − Damage. This matches MTG's damage counters except for the cleanup reset. 🔒 Exception (GAME_DESIGN §7.3): when a Health buff ends, damage is capped at max Health − 1, so losing a buff can't kill.
 - `chain` is a LIFO list of pending spells/abilities. When every player has passed in a row (`passesInRow == players.length`), the top item resolves. The engine auto-passes for players who have no legal response.
 - Curses can attach to a creature *or* a player, so attachments target `ObjectId | PlayerId`.
 - `objectId` is new every time a card changes zone (as in MTG), so "that creature" effects stop applying once it leaves.
@@ -133,7 +133,6 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - AI approach for vs.-AI play (rule-based first? Monte Carlo search, which works because the engine is deterministic?).
 - CI: running Unity tests on GitHub Actions needs a Unity license setup (GameCI). Decide when the prototype has tests worth guarding.
 - Online (later): hosting, and how matchmaking works.
-- Damage and buffs: when a temporary Health buff ends, should a wounded creature be able to die from it (MTG behavior, current implementation), or should the damage be capped so the buff ending can't kill?
 
 ---
 
@@ -148,13 +147,13 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - **The Chain** (§8): LIFO; the caster keeps priority; it resolves when every living player passes in a row; spells fizzle when their target is illegal; the fixed priority windows; auto-pass for players who have no other option (`GameState.AutoPass`).
 - Triggers: Arrival, Last Breath, Attacks, Start/End of your turn. They use APNAP order and a target choice when they're put on the Chain. A trigger with no legal target is removed.
 - Combat (§7): attackers and blockers are declared one creature at a time, and every attacker picks which opponent it attacks. Also implemented: summoning sickness and Haste, Flying/Reach, Can't block, Trample, Lifelink, and multiple blockers.
-- **Permanent damage**, and Heal capped at max Health or at starting life.
+- **Permanent damage**, with Heal capped at max Health or starting life. Losing a buff can't kill (§7.3).
 - State-based actions (MTG 704): 0 life, drawing from an empty deck, lethal damage, the Legendary rule, illegal Curses, unattaching Equipment, and the game ending when one team is left.
 - Continuous effects: static anthems/lords, +1/+1 counters and until-end-of-turn modifiers, applied in MTG layer order.
 - New object ids on every zone change. Tokens stop existing when they leave the battlefield.
 - 22 prototype cards (Goobers, Evergrowing Wild, Neutral) in `Assets/Rules/Cards/PrototypeCards.cs`.
 
-**Tests** (`Assets/Rules.Tests`, 36 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 39 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
