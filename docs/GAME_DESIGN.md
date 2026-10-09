@@ -38,6 +38,8 @@ Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arriv
 
 When a rule here and the MTG rules conflict, **this document wins**. When this document is silent, look up the MTG Comprehensive Rules.
 
+**MTG is the backbone, not a cage.** When a new idea comes up, present options: the MTG default next to alternatives, so we can choose what works best for this game. Any change away from MTG gets added to the table above and to the Decision Log.
+
 ---
 
 ## 2. Formats
