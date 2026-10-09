@@ -139,6 +139,7 @@ Design consequences:
 
 ### 7.4 Summoning sickness 🟡
 Creatures can't attack the turn they enter the battlefield (unless they have **Haste**). They *can* block right away.
+🟡 The same rule applies to **Tap abilities** (abilities whose cost includes tapping the creature): they can't be used the turn the creature arrives, unless it has Haste.
 
 ---
 
