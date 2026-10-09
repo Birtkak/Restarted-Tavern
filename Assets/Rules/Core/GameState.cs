@@ -15,6 +15,10 @@ namespace RestartedTavern.Rules
 
         public int ActiveIndex { get; set; }
         public int StartingPlayerIndex { get; set; }
+        /// <summary>Seat of the player who starts the current round (FormatConfig.RotateRoundLeader moves it each round).</summary>
+        public int RoundLeaderSeat { get; set; }
+        /// <summary>Turns already finished in the current round.</summary>
+        public int TurnsThisRound { get; set; }
         public int TurnNumber { get; set; }
         public Step Step { get; set; } = Step.Mulligan;
 

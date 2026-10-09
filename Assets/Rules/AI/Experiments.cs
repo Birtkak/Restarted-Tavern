@@ -111,6 +111,27 @@ namespace RestartedTavern.Rules.AI
             }
             sections.Add(second);
 
+            var mana = new Section
+            {
+                Title = "Mana model: round pool (GAME_DESIGN §5)",
+                Question = "Does the round pool (everyone refills when a round starts, mana usable on any turn of the round, unspent mana "
+                           + "banked at the end of the round) take away the first player's edge? Watch 1st win% (50% is fair).",
+            };
+            foreach (var d in decks)
+            {
+                mana.Configs.Add(M(d.Name + " mirror, mana per turn (current)", d, d));
+                mana.Configs.Add(M(d.Name + " mirror, round pool", d, d, f => f.ManaPerRound = true));
+                mana.Configs.Add(M(d.Name + " mirror, round pool + Gold first off-turn", d, d,
+                    f => { f.ManaPerRound = true; f.GoldFirstOffTurn = true; }));
+                mana.Configs.Add(M(d.Name + " mirror, rotating first player", d, d, f => f.RotateRoundLeader = true));
+                mana.Configs.Add(M(d.Name + " mirror, rotating first player + round pool + Gold first", d, d,
+                    f => { f.RotateRoundLeader = true; f.ManaPerRound = true; f.GoldFirstOffTurn = true; }));
+                mana.Configs.Add(M(d.Name + " mirror, 1st player skips first mana", d, d, f => f.FirstPlayerSkipsFirstMana = true));
+                mana.Configs.Add(M(d.Name + " mirror, 1st player skips first mana + round pool + Gold first", d, d,
+                    f => { f.FirstPlayerSkipsFirstMana = true; f.ManaPerRound = true; f.GoldFirstOffTurn = true; }));
+            }
+            sections.Add(mana);
+
             var tavernDwellers = new Section
             {
                 Title = "Tavern Dwellers (GAME_DESIGN §9)",

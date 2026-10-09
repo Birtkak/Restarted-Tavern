@@ -14,6 +14,8 @@ namespace RestartedTavern.Rules
 
         public int Life { get; set; }
         public int MaxMana { get; set; }
+        /// <summary>FormatConfig.GoldFirstOffTurn: set by the engine at each turn start for everyone but the active player.</summary>
+        public bool PaysGoldFirst { get; set; }
         /// <summary>Only filled during this player's own turn (GAME_DESIGN §5.2).</summary>
         public int Mana { get; set; }
         public int Gold { get; set; }

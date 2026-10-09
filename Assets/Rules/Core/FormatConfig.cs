@@ -29,6 +29,30 @@ namespace RestartedTavern.Rules
         public int SecondPlayerFirstTurnBonusMana { get; set; }
 
         /// <summary>
+        /// Mana model under test (2026-10-09). false: today's rule, mana refills at the start of your own turn and
+        /// is banked as Gold at the end of it. true: the <b>round pool</b>: at the start of each round every player
+        /// gains +1 max mana and refills, mana can be spent on any turn of that round (permanents still only on
+        /// your own turn), and at the end of the round everyone's unspent mana is banked as Gold.
+        /// </summary>
+        public bool ManaPerRound { get; set; }
+
+        /// <summary>
+        /// Payment order under test (2026-10-09): on your own turn you pay mana first, then Gold (§5.2); on other
+        /// players' turns you pay Gold first, then mana, so answering on their turn doesn't eat the mana you need
+        /// for your own turn later in the round.
+        /// </summary>
+        public bool GoldFirstOffTurn { get; set; }
+
+        /// <summary>
+        /// Turn order under test (2026-10-09): each round starts with the next player in seat order, so in 1v1 the
+        /// order is A B | B A | A B ... (each player gets two turns in a row at a round boundary). false: A B A B.
+        /// </summary>
+        public bool RotateRoundLeader { get; set; }
+
+        /// <summary>Going-first experiment: the first player gets no max mana on their first turn, so they stay one step behind.</summary>
+        public bool FirstPlayerSkipsFirstMana { get; set; }
+
+        /// <summary>
         /// Experiment switch, not a real rule: when true, damage on creatures is removed in the
         /// cleanup step like in MTG. Used to measure what permanent damage (§7.3) changes.
         /// </summary>

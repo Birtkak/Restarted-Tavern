@@ -34,12 +34,20 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
-        /// Gold needed for a cost after mana is used up, or -1 if it can't be paid.
+        /// Gold needed for a cost after mana is used up (or Gold first, see PlayerState.PaysGoldFirst), or -1 if it can't be paid.
         /// <paramref name="generic"/> is paid with mana first, then Gold if <paramref name="goldAllowed"/>;
         /// <paramref name="goldOnly"/> is paid only with Gold.
         /// </summary>
         public static int GoldNeeded(PlayerState p, int generic, bool goldAllowed, int goldOnly = 0)
         {
+            if (p.PaysGoldFirst && goldAllowed)
+            {
+                // Gold first, then mana (FormatConfig.GoldFirstOffTurn).
+                int spare = p.Gold - goldOnly;
+                if (spare < 0) return -1;
+                int fromGold = Math.Min(spare, Math.Max(0, generic));
+                return generic - fromGold <= p.Mana ? fromGold + goldOnly : -1;
+            }
             int rest = Math.Max(0, generic - p.Mana);
             if (rest > 0 && !goldAllowed) return -1;
             int gold = rest + goldOnly;

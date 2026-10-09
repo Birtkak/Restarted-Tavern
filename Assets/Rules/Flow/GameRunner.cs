@@ -55,6 +55,7 @@ namespace RestartedTavern.Rules
             // GAME_DESIGN §3: who goes first is random.
             S.StartingPlayerIndex = S.Rng.Next(S.Players.Count);
             S.ActiveIndex = S.StartingPlayerIndex;
+            S.RoundLeaderSeat = S.StartingPlayerIndex;
             Emit(new GameStartedEvent { StartingPlayer = S.ActivePlayer });
 
             foreach (var p in S.Players) Draw(p.Id, S.Format.StartingHand);
@@ -160,6 +161,7 @@ namespace RestartedTavern.Rules
             S.ActiveIndex = index;
             S.TurnNumber++;
             S.UsesThisTurn.Clear(); // "once each turn" (MTG) resets every turn, yours or not
+            foreach (var p in S.Players) p.PaysGoldFirst = S.Format.GoldFirstOffTurn && p.Id != S.ActivePlayer;
             Emit(new TurnStartedEvent { Player = S.ActivePlayer, Turn = S.TurnNumber });
             EnterStep(Step.Start);
         }
@@ -175,11 +177,18 @@ namespace RestartedTavern.Rules
             switch (step)
             {
                 case Step.Start:
-                    // §5.1: +1 max mana (cap 10), refill. MTG 502: untap. §7.4: summoning sickness ends.
-                    ap.MaxMana = Math.Min(S.Format.ManaCap, ap.MaxMana + 1);
-                    ap.Mana = ap.MaxMana;
-                    if (S.TurnNumber == 2) ap.Mana += S.Format.SecondPlayerFirstTurnBonusMana;
-                    Emit(new ManaChangedEvent { Player = ap.Id, Mana = ap.Mana, MaxMana = ap.MaxMana });
+                    // §5.1: +1 max mana (cap 10), refill: your own turn, or with the round pool every player when a round starts.
+                    // MTG 502: untap. §7.4: summoning sickness ends.
+                    if (!S.Format.ManaPerRound)
+                    {
+                        RefillMana(ap);
+                        if (S.TurnNumber == 2) ap.Mana += S.Format.SecondPlayerFirstTurnBonusMana;
+                    }
+                    else if (S.TurnsThisRound == 0)
+                    {
+                        foreach (var p in S.Players)
+                            if (!p.HasLost) RefillMana(p);
+                    }
                     foreach (var c in ap.Battlefield)
                     {
                         c.Tapped = false;
@@ -288,18 +297,10 @@ namespace RestartedTavern.Rules
         {
             S.Pending = null;
             var ap = S.ActivePlayerState;
-            if (ap.Mana > 0)
-            {
-                int banked = Math.Max(0, Math.Min(ap.Mana, GoldRules.Cap(S, Db, ap.Id) - ap.Gold));
-                Emit(new GoldBankedEvent { Player = ap.Id, UnspentMana = ap.Mana, Banked = banked });
-                if (banked > 0)
-                {
-                    ChangeGold(ap.Id, banked);
-                    QueueWatcherTriggers(TriggerEvent.GoldBanked, ap.Id, (t, _) => banked >= t.MinAmount, banked);
-                }
-                ap.Mana = 0; // mana is only filled during your own turn (§5.2)
-                Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });
-            }
+            bool endOfRound = S.TurnsThisRound + 1 >= S.LivingPlayerCount;
+            if (!S.Format.ManaPerRound) BankMana(ap); // mana is only filled during your own turn (§5.2)
+            else if (endOfRound)
+                foreach (var p in S.LivingPlayersFrom(ap.Id)) BankMana(p); // the round pool empties at the end of the round
 
             EndTemporaryControl();
             var beforeBuffsEnd = SnapshotRemainingHealth();
@@ -320,9 +321,51 @@ namespace RestartedTavern.Rules
             }
 
             S.Combat = null;
-            var next = NextLivingPlayer(ap.Id);
-            BeginTurn(next.Seat);
+            BeginTurn(NextTurnSeat(ap));
         }
+
+        /// <summary>
+        /// Who's next: the next living player, unless the round is over and RotateRoundLeader passes the start of the
+        /// round to the next seat (A B | B A | A B in 1v1).
+        /// </summary>
+        private int NextTurnSeat(PlayerState ap)
+        {
+            if (S.TurnsThisRound + 1 < S.LivingPlayerCount)
+            {
+                S.TurnsThisRound++;
+                return NextLivingPlayer(ap.Id).Seat;
+            }
+            S.TurnsThisRound = 0;
+            if (S.Format.RotateRoundLeader) S.RoundLeaderSeat = NextLivingPlayer(S.Players[S.RoundLeaderSeat].Id).Seat;
+            else S.RoundLeaderSeat = NextLivingPlayer(ap.Id).Seat;
+            return RoundLeader().Seat;
+        }
+
+        private void RefillMana(PlayerState p)
+        {
+            bool skip = S.Format.FirstPlayerSkipsFirstMana && S.TurnNumber == 1 && p.Seat == S.StartingPlayerIndex;
+            if (!skip) p.MaxMana = Math.Min(S.Format.ManaCap, p.MaxMana + 1);
+            p.Mana = p.MaxMana;
+            Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
+        }
+
+        /// <summary>Unspent mana becomes Gold up to the cap (§5.2); the rest is lost.</summary>
+        private void BankMana(PlayerState p)
+        {
+            if (p.Mana <= 0) return;
+            int banked = Math.Max(0, Math.Min(p.Mana, GoldRules.Cap(S, Db, p.Id) - p.Gold));
+            Emit(new GoldBankedEvent { Player = p.Id, UnspentMana = p.Mana, Banked = banked });
+            if (banked > 0)
+            {
+                ChangeGold(p.Id, banked);
+                QueueWatcherTriggers(TriggerEvent.GoldBanked, p.Id, (t, _) => banked >= t.MinAmount, banked);
+            }
+            p.Mana = 0;
+            Emit(new ManaChangedEvent { Player = p.Id, Mana = 0, MaxMana = p.MaxMana });
+        }
+
+        /// <summary>The player who starts each round: the first player, or the next one still in the game.</summary>
+        private PlayerState RoundLeader() => S.LivingPlayersFrom(S.Players[S.RoundLeaderSeat].Id)[0];
 
         private void DiscardToHandSize(PlayerId player, ObjectId card)
         {
