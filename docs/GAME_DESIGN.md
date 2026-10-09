@@ -79,6 +79,9 @@ Unused mana is not lost.
   - 🟡 your **Patron's power** (see §9).
 - Gold **cannot** pay for creatures, sorceries or other main-phase permanents, so it can't be used to ramp out big threats early.
 - 🟡 When paying for an Instant, the player chooses how to split the cost between mana and Gold.
+- 🔒 **Clarification**: your mana pool is only filled during your own turn. On other players' turns you have **no mana, only Gold**, so Gold is how you cast Instants on opponents' turns.
+- 🔒 **Taxes** ("unless they pay N") can be paid with any mix of mana and Gold.
+- 🔒 Gold gained above the cap of 5 is lost.
 
 **Why this works**
 - It removes the bad feeling of "I held up mana for a trick and the opponent didn't attack". The mana is banked instead of wasted.
