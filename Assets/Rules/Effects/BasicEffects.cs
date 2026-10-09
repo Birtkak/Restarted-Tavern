@@ -12,6 +12,8 @@ namespace RestartedTavern.Rules
         public int? AmountIfDamaged { get; set; }
         /// <summary>"Deal damage equal to its Power": the creature sacrificed as an extra cost (Fling the Runt).</summary>
         public bool AmountIsSacrificedPower { get; set; }
+        /// <summary>"X is 2 plus the number of Goobers you control" (Scrapheap Inferno): add one per creature you control with this subtype.</summary>
+        public string PlusOnePerYourCreatureOfSubtype { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
@@ -28,6 +30,16 @@ namespace RestartedTavern.Rules
         public int AmountFor(EffectContext ctx, Target t)
         {
             if (AmountIsSacrificedPower) return ctx.SacrificedPower;
+            if (PlusOnePerYourCreatureOfSubtype != null)
+            {
+                int n = 0;
+                foreach (var c in ctx.State.GetPlayer(ctx.Controller).Battlefield)
+                {
+                    var def = ctx.Cards.Get(c.DefinitionId);
+                    if (def.IsCreature && def.HasSubtype(PlusOnePerYourCreatureOfSubtype)) n++;
+                }
+                return Amount + n;
+            }
             if (AmountIfDamaged.HasValue && !t.IsPlayer)
             {
                 var c = ctx.State.FindOnBattlefield(t.Object);
@@ -153,6 +165,25 @@ namespace RestartedTavern.Rules
     public sealed class TapTargetEffect : Effect
     {
         public override void Resolve(EffectContext ctx) => ctx.Tap(ctx.CreatureAt(TargetIndex));
+    }
+
+    /// <summary>"Each player draws N cards." (Round on the House)</summary>
+    public sealed class EachPlayerDrawsEffect : Effect
+    {
+        public int Count { get; set; } = 1;
+
+        public override void Resolve(EffectContext ctx)
+        {
+            foreach (var p in ctx.State.LivingPlayersFrom(ctx.Controller)) ctx.Draw(p.Id, Count);
+        }
+    }
+
+    /// <summary>"Put N +1/+1 counters on this" (Sproutling, Ghoulish Onlooker, Worldroot Hydra).</summary>
+    public sealed class AddCountersToSourceEffect : Effect
+    {
+        public int Count { get; set; } = 1;
+
+        public override void Resolve(EffectContext ctx) => ctx.AddCounters(ctx.Source, Count);
     }
 
     /// <summary>"Gain N Gold." (the controller), or "Each opponent gains N Gold." (shady deals)</summary>

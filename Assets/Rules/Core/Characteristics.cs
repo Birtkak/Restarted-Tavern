@@ -34,7 +34,7 @@ namespace RestartedTavern.Rules
             Keyword keywords, ref int power, ref int health) { }
 
         /// <summary>Layer 6: triggered abilities this gives <paramref name="affected"/> ("equipped creature has ...").</summary>
-        public virtual List<TriggeredAbility> GrantedTriggers(GameState state, CardInstance source, CardInstance affected) => null;
+        public virtual List<TriggeredAbility> GrantedTriggers(GameState state, CardDatabase db, CardInstance source, CardInstance affected) => null;
 
         /// <summary>Layer 6: activated abilities this gives <paramref name="affected"/>.</summary>
         public virtual List<ActivatedAbility> GrantedAbilities(GameState state, CardInstance source, CardInstance affected) => null;
@@ -114,7 +114,7 @@ namespace RestartedTavern.Rules
             health += Health;
         }
 
-        public override List<TriggeredAbility> GrantedTriggers(GameState state, CardInstance source, CardInstance affected) =>
+        public override List<TriggeredAbility> GrantedTriggers(GameState state, CardDatabase db, CardInstance source, CardInstance affected) =>
             Triggers.Count > 0 && Affects(source, affected) ? Triggers : null;
 
         public override List<ActivatedAbility> GrantedAbilities(GameState state, CardInstance source, CardInstance affected) =>
@@ -139,6 +139,19 @@ namespace RestartedTavern.Rules
             int n = Count(state, db, source);
             power += PowerPer * n;
             health += HealthPer * n;
+        }
+    }
+
+    /// <summary>"Your other creatures have '[trigger]'" (Grove Warden).</summary>
+    public sealed class GrantTriggerToYourCreaturesAbility : StaticAbility
+    {
+        public bool OthersOnly { get; set; }
+        public List<TriggeredAbility> Triggers { get; set; } = new List<TriggeredAbility>();
+
+        public override List<TriggeredAbility> GrantedTriggers(GameState state, CardDatabase db, CardInstance source, CardInstance affected)
+        {
+            if (affected.Controller != source.Controller || (OthersOnly && affected.Id == source.Id)) return null;
+            return db.Get(affected.DefinitionId).IsCreature ? Triggers : null;
         }
     }
 

@@ -108,7 +108,12 @@ namespace RestartedTavern.Rules
                 Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Targets = a.Targets,
                 ManaPaid = manaPaid, GoldPaid = goldPaid, Invested = a.Invest, X = item.X,
             });
-            QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player, (t, _) => def.Cost >= t.MinCost);
+            string spellsKey = "spells:" + a.Player.Value;
+            S.UsesThisTurn.TryGetValue(spellsKey, out int spellsCast);
+            S.UsesThisTurn[spellsKey] = ++spellsCast;
+            QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player,
+                (t, _) => def.Cost >= t.MinCost && (t.NthSpellThisTurn == 0 || t.NthSpellThisTurn == spellsCast),
+                eventObject: onChain.Id, eventPlayer: a.Player);
             if (goldPaid > 0) GoldSpent(a.Player, goldPaid);
             if (def.IsCreature && goldForCost > 0) QueueWatcherTriggers(TriggerEvent.GoldPaidForCreatureSpell, a.Player);
 
@@ -157,11 +162,11 @@ namespace RestartedTavern.Rules
                 else
                 {
                     RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, sacrificedPower: item.SacrificedPower,
-                        sourceDefinitionId: item.SourceDefinitionId);
+                        sourceDefinitionId: item.SourceDefinitionId, invested: item.Invested);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
-            else
+            else if (item.Condition == null || item.Condition(S, Db, item.Controller, item.SourceId)) // MTG 603.4
             {
                 RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount, item.EventObject, item.EventPlayer,
                     sourceDefinitionId: item.SourceDefinitionId);
@@ -173,10 +178,10 @@ namespace RestartedTavern.Rules
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
         private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0,
             int eventAmount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0,
-            string sourceDefinitionId = null)
+            string sourceDefinitionId = null, bool invested = false)
         {
             var ctx = new EffectContext(this, controller, source, targets, x, eventAmount, eventObject, eventPlayer, sacrificedPower,
-                sourceDefinitionId);
+                sourceDefinitionId, invested);
             foreach (var e in effects)
             {
                 if (S.IsGameOver) return;
@@ -257,6 +262,7 @@ namespace RestartedTavern.Rules
         private void QueueTrigger(TriggeredAbility ability, PlayerId controller, ObjectId sourceId, string sourceDefinitionId, CardInstance source,
             int amount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null)
         {
+            if (ability.Condition != null && !ability.Condition(S, Db, controller, sourceId)) return; // intervening "if" (MTG 603.4)
             int times = ability.RepeatCount != null && source != null ? ability.RepeatCount(S, Db, source) : 1;
             for (int n = 0; n < times; n++)
             {
@@ -291,18 +297,29 @@ namespace RestartedTavern.Rules
             }
             if (when != TriggerEvent.StartOfYourTurn) return;
 
-            // "At the start of that player's turn" on Curses attached to the active player (Curse of Rot).
+            // "At the start of that player's turn" on Curses attached to the active player (Curse of Rot), and
+            // "at the start of its controller's turn" on Curses attached to the active player's creatures (Hex of Withering).
             var active = S.ActivePlayer;
             foreach (var p in S.Players)
             {
                 if (p.HasLost) continue;
                 foreach (var c in new List<CardInstance>(p.Battlefield))
                 {
-                    if (c.AttachedToPlayer != active) continue;
                     var def = Def(c);
-                    foreach (var ability in def.Triggers)
-                        if (ability.When == TriggerEvent.StartOfEnchantedPlayersTurn)
-                            QueueTrigger(ability, c.Controller, c.Id, def.Id, c, eventPlayer: active);
+                    if (c.AttachedToPlayer == active)
+                    {
+                        foreach (var ability in def.Triggers)
+                            if (ability.When == TriggerEvent.StartOfEnchantedPlayersTurn)
+                                QueueTrigger(ability, c.Controller, c.Id, def.Id, c, eventPlayer: active);
+                    }
+                    else if (def.Type == CardType.Curse && !c.AttachedToObject.IsNone)
+                    {
+                        var enchanted = S.FindOnBattlefield(c.AttachedToObject);
+                        if (enchanted == null || enchanted.Controller != active) continue;
+                        foreach (var ability in def.Triggers)
+                            if (ability.When == TriggerEvent.StartOfEnchantedCreatureControllersTurn)
+                                QueueTrigger(ability, c.Controller, c.Id, def.Id, c, eventObject: enchanted.Id, eventPlayer: active);
+                    }
                 }
             }
         }
@@ -375,6 +392,7 @@ namespace RestartedTavern.Rules
                 EventAmount = t.Amount,
                 EventObject = t.EventObject,
                 EventPlayer = t.EventPlayer,
+                Condition = t.Ability.Condition,
             };
             if (t.Ability.Target != TargetSpec.None) item.TargetSlots.Add(t.Ability.Slot);
             if (target.HasValue) item.Targets.Add(target.Value);
@@ -404,18 +422,27 @@ namespace RestartedTavern.Rules
             var spec = slot.Spec;
             if (spec == TargetSpec.None) return result;
 
-            if (spec == TargetSpec.CreatureCardInYourGraveyard)
+            if (spec == TargetSpec.CreatureCardInYourGraveyard || spec == TargetSpec.CreatureCardInAGraveyard)
             {
-                foreach (var c in S.GetPlayer(controller).Graveyard)
-                    if (Def(c).IsCreature && c.Id != exclude) result.Add(Target.ForObject(c.Id));
+                foreach (var p in S.LivingPlayersFrom(controller))
+                {
+                    if (spec == TargetSpec.CreatureCardInYourGraveyard && p.Id != controller) continue;
+                    foreach (var c in p.Graveyard)
+                        if (Def(c).IsCreature && c.Id != exclude && (!slot.MaxCost.HasValue || Def(c).Cost <= slot.MaxCost.Value))
+                            result.Add(Target.ForObject(c.Id));
+                }
                 return result;
             }
 
-            if (spec == TargetSpec.CreatureCardInAGraveyard)
+            if (spec == TargetSpec.EquipmentRelicOrCurse)
             {
                 foreach (var p in S.LivingPlayersFrom(controller))
-                    foreach (var c in p.Graveyard)
-                        if (Def(c).IsCreature && c.Id != exclude) result.Add(Target.ForObject(c.Id));
+                    foreach (var c in p.Battlefield)
+                    {
+                        var type = Def(c).Type;
+                        if (c.Id != exclude && (type == CardType.Equipment || type == CardType.Relic || type == CardType.Curse))
+                            result.Add(Target.ForObject(c.Id));
+                    }
                 return result;
             }
 

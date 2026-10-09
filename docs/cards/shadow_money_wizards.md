@@ -23,7 +23,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 4 | **Ledger Imp** | 1 | Creature: Imp | C | 1/2 | Arrival: You may lose 2 life. If you do, gain 1 Gold. | A 1-drop shady deal: early Gold for life. Enables a turn-2 trick | ✅ |
 | 5 | **Hush Money** | 2 | Instant | U | — | Counter target spell unless its controller pays 3. If they pay, you gain 2 Gold. | You profit either way. It is the faction's counterspell, and it's weak late in the game on purpose | ✅ |
 | 6 | **Crooked Accountant** | 3 | Creature: Wizard | C | 2/3 | Whenever you cast a spell that costs 5 or more, draw a card. | Engine for the big-spell plan | ✅ |
-| 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of your turn, if you have 5 Gold, draw a card. | Rewards banking up to the cap | ✅ |
+| 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of your turn, if you have 5 or more Gold, draw a card. | Rewards banking up to the cap | ✅ |
 | 8 | **Golden Handshake** | 5 | Sorcery | U | — | Return target creature to its owner's hand. Its controller gains Gold equal to its cost. | "Clean" removal of a big creature, but the opponent gets up to 5 Gold to spend on tricks. Damage is wiped when the creature returns to hand | ✅ |
 
 ## Legendary

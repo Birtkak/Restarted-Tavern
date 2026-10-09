@@ -50,6 +50,8 @@ namespace RestartedTavern.Rules
         public PlayerId? EventPlayer { get; set; }
         /// <summary>Spells with "sacrifice a creature" as an extra cost: its last known Power.</summary>
         public int SacrificedPower { get; set; }
+        /// <summary>Triggered abilities: the intervening "if", checked again on resolution (MTG 603.4).</summary>
+        public System.Func<GameState, CardDatabase, PlayerId, ObjectId, bool> Condition { get; set; }
         /// <summary>Abilities: the ability's rules text (for UIs and logs).</summary>
         public string Text { get; set; } = "";
         /// <summary>A Tavern Dweller Power (GAME_DESIGN §9.1).</summary>

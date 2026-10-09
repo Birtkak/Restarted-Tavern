@@ -55,6 +55,8 @@ namespace RestartedTavern.Rules
         /// <summary>PayTax: who gets <see cref="RewardGold"/> if the tax is paid ("If they pay, you gain 2 Gold").</summary>
         public PlayerId Beneficiary { get; set; }
         public int RewardGold { get; set; }
+        /// <summary>ChooseFromTop: the other cards go to the bottom of the deck instead of the graveyard (Pocket Change).</summary>
+        public bool RestToBottom { get; set; }
         /// <summary>PayAnyGold: who has chosen so far, and how much each paid (same order).</summary>
         public List<PlayerId> Bidders { get; set; }
         public List<int> Bids { get; set; }

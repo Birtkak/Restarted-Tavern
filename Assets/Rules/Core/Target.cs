@@ -25,6 +25,8 @@ namespace RestartedTavern.Rules
         CreatureCardInYourGraveyard,
         /// <summary>"a creature card from a graveyard", any player's (Body Snatcher).</summary>
         CreatureCardInAGraveyard,
+        /// <summary>"target Equipment, Relic or Curse", anyone's (Last Call).</summary>
+        EquipmentRelicOrCurse,
         /// <summary>"target spell" on the Chain (Hush Money, Counterfeit Coin). Chosen by its ChainItem.ObjectId.</summary>
         SpellOnChain,
         /// <summary>"target spell or ability" on the Chain, triggered abilities and Tavern Dweller Powers included (Bribe the Referee).</summary>

@@ -16,6 +16,14 @@ namespace RestartedTavern.Rules
         private bool CanBlock(CardInstance c) =>
             Def(c).IsCreature && !c.Tapped && !Stats(c).Has(Keyword.CantBlock);
 
+        /// <summary>Can this creature block one more attacker? One, plus "can block an additional creature" (Retired Champion).</summary>
+        private bool HasBlockLeft(CardInstance c)
+        {
+            int blocks = 0;
+            foreach (var b in S.Combat.Blocks) if (b.Blocker == c.Id) blocks++;
+            return blocks < 1 + Def(c).ExtraBlocks;
+        }
+
         /// <summary>Flying can only be blocked by Flying or Reach (§11).</summary>
         private bool CanBlockAttacker(CardInstance blocker, CardInstance attacker)
         {
@@ -37,7 +45,7 @@ namespace RestartedTavern.Rules
             attacker.Tapped = true; // no Vigilance yet
             S.Combat.Attacks.Add(new AttackDeclaration { Attacker = attackerId, Defender = defender });
             Emit(new AttackerDeclaredEvent { Attacker = attackerId, Defender = defender });
-            QueueTriggers(attacker, TriggerEvent.Attacks);
+            QueueTriggers(attacker, TriggerEvent.Attacks, defender); // "the defending player" (Grubby Pickpocket)
         }
 
         private void FinishAttacks()
@@ -153,13 +161,31 @@ namespace RestartedTavern.Rules
                 }
             }
 
+            // A blocker that blocks several attackers (Retired Champion) splits its damage like an attacker:
+            // lethal to each in block order, the rest onto the first one.
+            var blockersDone = new HashSet<ObjectId>();
             foreach (var block in S.Combat.Blocks)
             {
+                if (!blockersDone.Add(block.Blocker)) continue;
                 var blocker = S.FindOnBattlefield(block.Blocker);
-                var attacker = S.FindOnBattlefield(block.Attacker);
-                if (blocker == null || attacker == null) continue;
-                int power = Stats(blocker).Power;
-                if (power > 0) hits.Add((blocker.Id, Target.ForObject(attacker.Id), power));
+                if (blocker == null) continue;
+                int left = Stats(blocker).Power;
+                if (left <= 0) continue;
+                var blocked = new List<CardInstance>();
+                foreach (var b in S.Combat.Blocks)
+                {
+                    if (b.Blocker != blocker.Id) continue;
+                    var attacker = S.FindOnBattlefield(b.Attacker);
+                    if (attacker != null) blocked.Add(attacker);
+                }
+                if (blocked.Count == 0) continue;
+                for (int i = 0; i < blocked.Count && left > 0; i++)
+                {
+                    int dmg = i == blocked.Count - 1 ? left : System.Math.Min(left, System.Math.Max(0, Stats(blocked[i]).RemainingHealth));
+                    if (dmg > 0) hits.Add((blocker.Id, Target.ForObject(blocked[i].Id), dmg));
+                    left -= dmg;
+                }
+                if (left > 0) hits.Add((blocker.Id, Target.ForObject(blocked[0].Id), left));
             }
 
             var damagedBy = new List<(ObjectId source, ObjectId creature)>();

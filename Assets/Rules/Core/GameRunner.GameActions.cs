@@ -73,7 +73,12 @@ namespace RestartedTavern.Rules
             {
                 Emit(new CreatureDiedEvent { Card = card.Id, DefinitionId = def.Id, Controller = lastController });
                 QueueTriggers(def, TriggerEvent.LastBreath, lastController, card.Id);
-                QueueWatcherTriggers(TriggerEvent.CreatureDies, lastController, (t, _) => t.MinPower <= 0 || lastPower >= t.MinPower);
+                QueueWatcherTriggers(TriggerEvent.CreatureDies, lastController,
+                    (t, watcher) => (t.MinPower <= 0 || lastPower >= t.MinPower)
+                                    && (t.SubjectSubtype == null || def.HasSubtype(t.SubjectSubtype))
+                                    && (!t.OthersOnly || watcher.Id != card.Id)
+                                    && (!t.OnlyEnchantedPlayer || watcher.AttachedToPlayer == lastController),
+                    eventObject: card.Id, eventPlayer: lastController);
             }
             if (from == Zone.Battlefield && to == Zone.Graveyard && def.Type == CardType.Curse)
                 QueueWatcherTriggers(TriggerEvent.CurseToGraveyard, lastController);
@@ -207,6 +212,8 @@ namespace RestartedTavern.Rules
                 int remaining = Stats(creature).RemainingHealth;
                 QueueWatcherTriggers(TriggerEvent.CreatureDealtDamage, creature.Controller,
                     (t, watcher) => (!t.OnlyAttachedCreature || watcher.AttachedToObject == creature.Id)
+                                    && (!t.OnlySelf || watcher.Id == creature.Id)
+                                    && (!t.OnlyIfSurvives || remaining > 0)
                                     && (!t.MaxRemainingHealth.HasValue || remaining <= t.MaxRemainingHealth.Value),
                     amount, creature.Id, creature.Controller);
             }
@@ -373,6 +380,27 @@ namespace RestartedTavern.Rules
             {
                 Ability = ability, Controller = controller, SourceId = source, SourceDefinitionId = sourceDefinitionId, EventObject = obj,
             });
+
+        /// <summary>
+        /// "Create a 1/1 Goober that's tapped and attacking" (Grakka). It attacks the player the controller's
+        /// first attacker attacks (or the next opponent). It was never declared, so "whenever this attacks" doesn't trigger (MTG 508.4).
+        /// </summary>
+        internal void CreateAttackingToken(PlayerId controller, string tokenId)
+        {
+            var token = CreateToken(controller, tokenId);
+            if (S.Combat == null || S.ActivePlayer != controller) return;
+            token.Tapped = true;
+            PlayerId? defender = null;
+            foreach (var attack in S.Combat.Attacks)
+            {
+                var attacker = S.FindOnBattlefield(attack.Attacker);
+                if (attacker != null && attacker.Controller == controller) { defender = attack.Defender; break; }
+            }
+            if (defender == null)
+                foreach (var p in S.LivingPlayersFrom(controller))
+                    if (S.AreOpponents(controller, p.Id)) { defender = p.Id; break; }
+            if (defender.HasValue) S.Combat.Attacks.Add(new AttackDeclaration { Attacker = token.Id, Defender = defender.Value });
+        }
 
         internal void Untap(CardInstance permanent)
         {

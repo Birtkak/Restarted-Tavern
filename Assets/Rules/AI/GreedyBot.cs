@@ -279,9 +279,9 @@ namespace RestartedTavern.Rules.AI
                 switch (e)
                 {
                     case DealDamageEffect d when d.EachTarget:
-                        foreach (var t in targets) v += DamageValue(s, me, DamageAmount(s, d, t, x), t);
+                        foreach (var t in targets) v += DamageValue(s, me, DamageAmount(s, me, d, t, x), t);
                         break;
-                    case DealDamageEffect d: v += DamageValue(s, me, DamageAmount(s, d, target, x), target); break;
+                    case DealDamageEffect d: v += DamageValue(s, me, DamageAmount(s, me, d, target, x), target); break;
                     case DealDamageToEachCreatureEffect d:
                         foreach (var p in s.Players)
                             foreach (var c in p.Battlefield)
@@ -378,6 +378,17 @@ namespace RestartedTavern.Rules.AI
                         break;
                     }
                     case LookAtTopPutOneInHandEffect _: v += 2.3; break;
+                    case LookAtTopPutOneInHandRestOnBottomEffect _: v += 2.2; break;
+                    case RevealUntilCreatureEffect _: v += 8; break;
+                    case EachPlayerDrawsEffect _: break; // everyone gets the same
+                    case AllCreaturesGetEffect all:
+                        foreach (var p in s.Players)
+                            foreach (var c in p.Battlefield)
+                            {
+                                if (!Db.Get(c.DefinitionId).IsCreature || -all.Health < Stats(s, c).RemainingHealth) continue;
+                                v += c.Controller == me ? -Worth(s, c) : Worth(s, c) + all.GainLifePerDeath * 0.4;
+                            }
+                        break;
                     case DiceGameEffect _: v += 1.5; break;
                     case ReanimateEffect _:
                     {
@@ -526,9 +537,12 @@ namespace RestartedTavern.Rules.AI
         }
 
         /// <summary>A DealDamageEffect's amount for this target (Kick 'Em: more if damaged; Fling the Runt: the sacrificed Power).</summary>
-        private static int DamageAmount(GameState s, DealDamageEffect d, Target? target, int x)
+        private int DamageAmount(GameState s, PlayerId me, DealDamageEffect d, Target? target, int x)
         {
             if (d.AmountIsSacrificedPower) return x;
+            if (d.PlusOnePerYourCreatureOfSubtype != null)
+                return d.Amount + s.GetPlayer(me).Battlefield.Count(c =>
+                    Db.Get(c.DefinitionId).IsCreature && Db.Get(c.DefinitionId).HasSubtype(d.PlusOnePerYourCreatureOfSubtype));
             if (d.AmountIfDamaged.HasValue && target.HasValue && !target.Value.IsPlayer)
             {
                 var c = s.FindOnBattlefield(target.Value.Object);

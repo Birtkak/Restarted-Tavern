@@ -87,10 +87,11 @@ namespace RestartedTavern.Rules
                 case DecisionKind.DeclareBlockers:
                     foreach (var c in p.Battlefield)
                     {
-                        if (!CanBlock(c) || S.Combat.IsBlocking(c.Id)) continue;
+                        if (!CanBlock(c) || !HasBlockLeft(c)) continue;
                         foreach (var attack in S.Combat.Attacks)
                         {
                             if (attack.Defender != player) continue;
+                            if (S.Combat.Blocks.Exists(b => b.Blocker == c.Id && b.Attacker == attack.Attacker)) continue;
                             var attacker = S.FindOnBattlefield(attack.Attacker);
                             if (attacker != null && CanBlockAttacker(c, attacker))
                                 result.Add(PlayerAction.Block(player, c.Id, attacker.Id));

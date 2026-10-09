@@ -94,6 +94,14 @@ namespace RestartedTavern.Rules
         }
     }
 
+    /// <summary>"Create a 1/1 [token] that's tapped and attacking" (Grakka, Queen of the Rabble).</summary>
+    public sealed class CreateAttackingTokenEffect : Effect
+    {
+        public string TokenId { get; set; }
+
+        public override void Resolve(EffectContext ctx) => ctx.CreateAttackingToken(TokenId);
+    }
+
     /// <summary>"[This creature] gets +P/+H [and Keyword] until end of turn" (Hired Muscle).</summary>
     public sealed class PumpSourceEffect : Effect
     {

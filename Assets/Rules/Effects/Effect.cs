@@ -21,8 +21,10 @@ namespace RestartedTavern.Rules
         private readonly GameRunner _runner;
 
         internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0, int eventAmount = 0,
-            ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0, string sourceDefinitionId = null)
+            ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0, string sourceDefinitionId = null,
+            bool invested = false)
         {
+            Invested = invested;
             SourceDefinitionId = sourceDefinitionId;
             EventObject = eventObject;
             EventPlayer = eventPlayer;
@@ -53,6 +55,8 @@ namespace RestartedTavern.Rules
         public ObjectId Source { get; }
         /// <summary>The card the spell or ability comes from.</summary>
         public string SourceDefinitionId { get; }
+        /// <summary>The spell was cast with its Invest cost paid (for effects that change with Invest, Pocket Change).</summary>
+        public bool Invested { get; }
         /// <summary>Chosen targets in slot order; null where a target became illegal (MTG 608.2b).</summary>
         public IReadOnlyList<Target?> Targets { get; }
         public Target? Target => TargetAt(0);
@@ -88,10 +92,13 @@ namespace RestartedTavern.Rules
         public void AskTax(ChainItem item, int amount, int rewardGold) => _runner.AskTax(item, amount, Controller, rewardGold);
         public void GainControl(CardInstance permanent, bool untilEndOfTurn) => _runner.GainControl(permanent, Controller, untilEndOfTurn);
         public CardInstance MoveTo(CardInstance card, Zone zone) => _runner.MoveCard(card, zone);
+        public CardInstance MoveToBottom(CardInstance card) => _runner.MoveCard(card, Zone.Deck, toBottom: true);
         /// <summary>Put a card onto the battlefield under the controller's control.</summary>
         public CardInstance PutOntoBattlefield(CardInstance card) => _runner.MoveCard(card, Zone.Battlefield, Controller);
         /// <summary>"Look at the top N cards. Put one into your hand and the rest into your graveyard." Must be the last effect.</summary>
-        public void AskChooseFromTop(int count) => _runner.AskChooseFromTop(Controller, count);
+        public void AskChooseFromTop(int count, bool restToBottom = false) => _runner.AskChooseFromTop(Controller, count, restToBottom);
+        /// <summary>"Create a 1/1 Goober that's tapped and attacking" (Grakka).</summary>
+        public void CreateAttackingToken(string tokenId) => _runner.CreateAttackingToken(Controller, tokenId);
         /// <summary>Dice Game's Gold auction. Must be the last effect.</summary>
         public void StartGoldAuction() => _runner.StartGoldAuction();
         /// <summary>"At the end of your turn, [ability]" about <paramref name="obj"/> (MTG 603.7).</summary>

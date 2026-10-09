@@ -41,6 +41,51 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
+    /// "Each opponent loses up to N Gold. You gain that much Gold." (Debt Collector), or "that player loses up
+    /// to N Gold and you gain that much" with <see cref="FromEventPlayer"/> (Gold-Snatcher Crew). Only what they
+    /// actually lost is gained (and your Gold cap still applies).
+    /// </summary>
+    public sealed class StealGoldEffect : Effect
+    {
+        public int Amount { get; set; }
+        public bool FromEventPlayer { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            var victims = new List<PlayerState>();
+            if (FromEventPlayer)
+            {
+                if (ctx.EventPlayer.HasValue) victims.Add(ctx.State.GetPlayer(ctx.EventPlayer.Value));
+            }
+            else
+            {
+                victims.AddRange(ctx.Opponents());
+            }
+            int taken = 0;
+            foreach (var p in victims)
+            {
+                if (p.HasLost) continue;
+                int n = System.Math.Min(Amount, p.Gold);
+                ctx.GainGold(p.Id, -n);
+                taken += n;
+            }
+            if (taken > 0) ctx.GainGold(ctx.Controller, taken);
+        }
+    }
+
+    /// <summary>"Whenever an opponent casts a spell, they lose 1 Gold. If they couldn't, you gain 1 Gold." (Tax Office)</summary>
+    public sealed class TaxOfficeEffect : Effect
+    {
+        public override void Resolve(EffectContext ctx)
+        {
+            if (!ctx.EventPlayer.HasValue) return;
+            var caster = ctx.State.GetPlayer(ctx.EventPlayer.Value);
+            if (!caster.HasLost && caster.Gold > 0) ctx.GainGold(caster.Id, -1);
+            else ctx.GainGold(ctx.Controller, 1);
+        }
+    }
+
+    /// <summary>
     /// "Each player may pay any amount of Gold. The player who paid the most draws two cards. If players tie
     /// for the most, each of them draws one card." (Dice Game). Must be the last effect.
     /// </summary>

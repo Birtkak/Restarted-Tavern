@@ -49,6 +49,9 @@ namespace RestartedTavern.Rules
         /// </summary>
         public bool XGoldExtraCost { get; set; }
 
+        /// <summary>"Can block an additional creature each combat" (Retired Champion): how many extra.</summary>
+        public int ExtraBlocks { get; set; }
+
         /// <summary>"You may cast this whenever you could cast an Instant" (Retainer Mage; MTG Flash).</summary>
         public bool Flash { get; set; }
         /// <summary>"You may pay for it with Gold": a permanent that Gold can help pay for, mana first (Retainer Mage).</summary>
@@ -148,6 +151,8 @@ namespace RestartedTavern.Rules
         CurseToGraveyard,
         /// <summary>A player paid Gold for a creature spell's cost (Shady Moneylender's "whenever you do"). Subject = the caster.</summary>
         GoldPaidForCreatureSpell,
+        /// <summary>At the start of the turn of the controller of the creature this Curse is attached to (Hex of Withering). EventObject = that creature.</summary>
+        StartOfEnchantedCreatureControllersTurn,
     }
 
     /// <summary>Whose objects or actions a "whenever ..." trigger watches.</summary>
@@ -169,9 +174,17 @@ namespace RestartedTavern.Rules
         public bool TargetOptional { get; set; }
         /// <summary>"target damaged creature" (Ambush Predator).</summary>
         public bool TargetDamaged { get; set; }
+        /// <summary>"with cost 2 or less" on the target (Bone Medium). Null = any.</summary>
+        public int? TargetMaxCost { get; set; }
 
         /// <summary>The target slot, with its filters. Legality is checked again on resolution.</summary>
-        public TargetSlot Slot => new TargetSlot { Spec = Target, Damaged = TargetDamaged };
+        public TargetSlot Slot => new TargetSlot { Spec = Target, Damaged = TargetDamaged, MaxCost = TargetMaxCost };
+
+        /// <summary>
+        /// An intervening "if" (MTG 603.4): "At the end of your turn, if you have 5 or more Gold, ...". Checked
+        /// when it would trigger and again when it resolves. Gets the state, the cards, the controller and the source id.
+        /// </summary>
+        public Func<GameState, CardDatabase, PlayerId, ObjectId, bool> Condition { get; set; }
         public List<Effect> Effects { get; set; } = new List<Effect>();
         public string Text { get; set; } = "";
 
@@ -189,6 +202,14 @@ namespace RestartedTavern.Rules
         public string SubjectSubtype { get; set; }
         /// <summary>CreatureDealtDamage: only the creature this Curse or Equipment is attached to (Hex of Festering).</summary>
         public bool OnlyAttachedCreature { get; set; }
+        /// <summary>CreatureDealtDamage: "whenever this is dealt damage" (Worldroot Hydra).</summary>
+        public bool OnlySelf { get; set; }
+        /// <summary>CreatureDealtDamage: "... and survives": it still has Health left after the damage.</summary>
+        public bool OnlyIfSurvives { get; set; }
+        /// <summary>CreatureDies: only creatures controlled by the player this Curse is attached to (Curse of the Spotlight).</summary>
+        public bool OnlyEnchantedPlayer { get; set; }
+        /// <summary>SpellCast: "your second spell each turn" (Card Shark). 0 = every spell.</summary>
+        public int NthSpellThisTurn { get; set; }
         /// <summary>
         /// CreatureDealtDamage: "if it has N or less Health remaining" (Neon Executioner). An intervening
         /// "if" (MTG 603.4): checked when it triggers; the effect checks again when it resolves.

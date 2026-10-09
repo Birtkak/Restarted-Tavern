@@ -66,6 +66,42 @@ namespace RestartedTavern.Rules
         }
     }
 
+    /// <summary>"Deal N damage to it": the creature the trigger is about (Hex of Withering).</summary>
+    public sealed class DealDamageToEventCreatureEffect : Effect
+    {
+        public int Amount { get; set; } = 1;
+
+        public override void Resolve(EffectContext ctx)
+        {
+            if (ctx.State.FindOnBattlefield(ctx.EventObject) != null) ctx.DealDamage(Target.ForObject(ctx.EventObject), Amount);
+        }
+    }
+
+    /// <summary>
+    /// "All creatures get +P/+H until end of turn. You gain 1 life for each creature that dies this way." (Mass
+    /// Hysteria). "Dies this way" = it's left with no Health, so state-based actions will destroy it after the spell.
+    /// </summary>
+    public sealed class AllCreaturesGetEffect : Effect
+    {
+        public int Power { get; set; }
+        public int Health { get; set; }
+        public int GainLifePerDeath { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            var creatures = new List<CardInstance>();
+            foreach (var p in ctx.State.Players)
+                foreach (var c in p.Battlefield)
+                    if (ctx.Cards.Get(c.DefinitionId).IsCreature) creatures.Add(c);
+            foreach (var c in creatures) ctx.ModifyUntilEndOfTurn(c.Id, Power, Health, Keyword.None);
+            if (GainLifePerDeath <= 0) return;
+            int dying = 0;
+            foreach (var c in creatures)
+                if (ctx.GetCharacteristics(c).RemainingHealth <= 0) dying++;
+            ctx.Heal(Target.ForPlayer(ctx.Controller), dying * GainLifePerDeath);
+        }
+    }
+
     /// <summary>"Its controller loses N life" / "that player loses N life": the player the trigger is about (Hex of Festering).</summary>
     public sealed class EventPlayerLosesLifeEffect : Effect
     {

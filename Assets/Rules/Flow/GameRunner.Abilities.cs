@@ -48,7 +48,7 @@ namespace RestartedTavern.Rules
                 {
                     foreach (var st in Def(source).Statics)
                     {
-                        var granted = st.GrantedTriggers(S, source, obj);
+                        var granted = st.GrantedTriggers(S, Db, source, obj);
                         if (granted == null) continue;
                         if (all == null) all = new List<TriggeredAbility>();
                         all.AddRange(granted);
@@ -262,7 +262,7 @@ namespace RestartedTavern.Rules
         /// "Look at the top N cards of your deck. Put one into your hand and the rest into your graveyard."
         /// (Grave Gossip). With one card there's nothing to choose. Must be the last effect.
         /// </summary>
-        internal void AskChooseFromTop(PlayerId player, int count)
+        internal void AskChooseFromTop(PlayerId player, int count, bool restToBottom = false)
         {
             var deck = S.GetPlayer(player).Deck;
             int n = System.Math.Min(count, deck.Count);
@@ -272,7 +272,7 @@ namespace RestartedTavern.Rules
                 MoveCard(deck[0], Zone.Hand);
                 return;
             }
-            S.Pending = new PendingDecision { Kind = DecisionKind.ChooseFromTop, Player = player, Count = n };
+            S.Pending = new PendingDecision { Kind = DecisionKind.ChooseFromTop, Player = player, Count = n, RestToBottom = restToBottom };
         }
 
         private void AnswerChooseFromTop(PlayerAction a, PendingDecision decision)
@@ -280,7 +280,11 @@ namespace RestartedTavern.Rules
             var deck = S.GetPlayer(a.Player).Deck;
             var top = deck.GetRange(0, System.Math.Min(decision.Count, deck.Count));
             for (int i = 0; i < top.Count; i++)
-                MoveCard(top[i], i == a.Option ? Zone.Hand : Zone.Graveyard);
+            {
+                if (i == a.Option) MoveCard(top[i], Zone.Hand);
+                else if (decision.RestToBottom) MoveCard(top[i], Zone.Deck, toBottom: true);
+                else MoveCard(top[i], Zone.Graveyard);
+            }
         }
 
         /// <summary>
