@@ -28,8 +28,9 @@ namespace RestartedTavern.SimRunner
             bool runeterra = Arg("-rules", "runeterra") != "classic";
             int games = int.Parse(Arg("-simGames", "500"));
 
-            if (args.Contains("-trace")) return Trace(Arg("-decks", "0,1"), ulong.Parse(Arg("-seed", "1")), runeterra, Arg("-out"));
+            if (args.Contains("-trace")) return Trace(Arg("-decks", "0,1"), ulong.Parse(Arg("-seed", "1")), runeterra, Arg("-out"), Arg("-pass", "0,0"));
             if (args.Contains("-h2h")) return HeadToHead(games, runeterra, Arg("-off"));
+            if (args.Contains("-decktest")) return args.Contains("-singles") ? SwapTest(games, runeterra) : DeckTest(games, runeterra);
             return Report(games, Arg("-simSections")?.ToLowerInvariant().Split(','), Arg("-out"));
         }
 
@@ -83,11 +84,98 @@ namespace RestartedTavern.SimRunner
             return 0;
         }
 
+        /// <summary>Candidate deck lists: each deck swaps whole cards (all four copies) for others. Used by -decktest.</summary>
+        private static readonly Dictionary<string, (string[] Out, string[] In)> DeckPass = new Dictionary<string, (string[], string[])>
+        {
+            // Revised after the single-swap test: only swaps that held their own (about 50% or better against the old list).
+            ["Goober Mob"] = (new[] { "overrun_the_gates" }, new[] { "goober_avalanche" }),
+            ["Jungle Stampede"] = (new[] { "titanback_colossus", "brawling_runt", "kick_em_while_theyre_down" },
+                                   new[] { "rampaging_titan", "mossgut_grower", "gift_of_the_grove" }),
+            ["Zoo Patrol"] = (new[] { "primal_clash", "chain_zap" }, new[] { "arc_cascade", "overclocked_analyst" }),
+            ["Vesper's Ledger"] = (new[] { "apprentice_forger", "compound_interest" }, new[] { "final_broadcast", "seance_hotline" }),
+            ["Sparkwrench Scrappers"] = (new[] { "goober_rascal", "chain_zap", "scrap_collector" },
+                                         new[] { "market_data_feed", "orbital_laser", "goober_bookie" }),
+            ["Auditor's Arsenal"] = (new[] { "hardlight_aegis" }, new[] { "eviction_notice" }),
+        };
+
+        private static List<string> Swap(List<string> deck, (string[] Out, string[] In) pass)
+        {
+            var result = deck.Where(id => !pass.Out.Contains(id)).ToList();
+            foreach (var id in pass.In) result.AddRange(Enumerable.Repeat(id, 4));
+            if (result.Count != 60) throw new InvalidOperationException("Deck pass leaves " + result.Count + " cards");
+            return result;
+        }
+
+        /// <summary>
+        /// The candidate deck pass: each new list's mirror next to the old one (mana left unspent per turn, game length,
+        /// plays on the opponent's turn, first-player win%), and the new list against the old one.
+        /// </summary>
+        private static int DeckTest(int games, bool runeterra)
+        {
+            var db = CardPool.CreateDatabase();
+            var configs = new List<MatchConfig>();
+            foreach (var d in Experiments.PrototypeDecks())
+            {
+                var nu = Swap(d.Cards, DeckPass[d.Name]);
+                DeckValidator.Validate(db, FormatConfig.Standard(), nu, d.TavernDweller);
+                MatchConfig M(string name, List<string> a, List<string> b) => new MatchConfig
+                {
+                    Name = name, Format = Rules(runeterra), Games = games,
+                    DeckAName = d.Name, DeckA = a, TavernDwellerA = d.TavernDweller, DeckBName = d.Name, DeckB = b, TavernDwellerB = d.TavernDweller,
+                };
+                configs.Add(M(d.Name + " | old mirror", d.Cards, d.Cards));
+                configs.Add(M(d.Name + " | new mirror", nu, nu));
+                configs.Add(M(d.Name + " | new vs old", nu, d.Cards));
+            }
+            var watch = Stopwatch.StartNew();
+            var results = MatchRunner.RunAll(configs, db);
+            Console.WriteLine($"Deck pass test, {(runeterra ? "Runeterra" : "classic")} rules, {games} games per row ({watch.Elapsed.TotalSeconds:0}s).");
+            Console.WriteLine("  unspent = mana left at the end of a turn or round, per turn; wasted = share of it lost to the Gold cap");
+            foreach (var r in results)
+            {
+                double unspent = r.GameLengths.Sum() == 0 ? 0 : (double)r.UnspentMana / r.GameLengths.Sum();
+                Console.WriteLine($"  {r.Config.Name,-36} A {r.WinRateA,6:P1}  1st {r.FirstPlayerWinRate,6:P1}  {r.AvgTurns,5:0.0} turns  unspent {unspent,4:0.00}/turn  wasted {r.GoldWastedShare,6:P1}  off-turn {r.PerGame(r.InstantsOnOpponentsTurn + r.AbilitiesOnOpponentsTurn),4:0.0}  Gold spent {r.PerGame(r.GoldSpent),4:0.0}");
+            }
+            return 0;
+        }
+
+        /// <summary>Each swap of the deck pass on its own (one card out, one in) against the old list: which new card pulls its weight?</summary>
+        private static int SwapTest(int games, bool runeterra)
+        {
+            var db = CardPool.CreateDatabase();
+            var configs = new List<MatchConfig>();
+            foreach (var d in Experiments.PrototypeDecks())
+            {
+                var pass = DeckPass[d.Name];
+                for (int i = 0; i < pass.Out.Length; i++)
+                {
+                    var nu = Swap(d.Cards, (new[] { pass.Out[i] }, new[] { pass.In[i] }));
+                    configs.Add(new MatchConfig
+                    {
+                        Name = d.Name + ": " + pass.Out[i] + " -> " + pass.In[i], Format = Rules(runeterra), Games = games,
+                        DeckAName = d.Name, DeckA = nu, TavernDwellerA = d.TavernDweller, DeckBName = d.Name, DeckB = d.Cards, TavernDwellerB = d.TavernDweller,
+                    });
+                }
+            }
+            var results = MatchRunner.RunAll(configs, db);
+            Console.WriteLine($"Single swaps against the old list, {games} games each (A = with the swap; 50% = as good as the card it replaces).");
+            foreach (var r in results) Console.WriteLine($"  {r.Config.Name,-70} {r.WinRateA,6:P1}");
+            return 0;
+        }
+
         /// <summary>One game between two GreedyBots, written out turn by turn with the board at each turn start.</summary>
-        private static int Trace(string deckArg, ulong seed, bool runeterra, string output)
+        private static int Trace(string deckArg, ulong seed, bool runeterra, string output, string passArg)
         {
             var decks = Experiments.PrototypeDecks();
             var pick = deckArg.Split(',').Select(int.Parse).ToArray();
+            // -pass 1,0: P1 plays the deck-pass version of its list.
+            var pass = passArg.Split(',').Select(v => v == "1").ToArray();
+            for (int i = 0; i < 2; i++)
+                if (pass[i]) decks[pick[i]] = new Experiments.Deck
+                {
+                    Name = decks[pick[i]].Name + " (new)", Cards = Swap(decks[pick[i]].Cards, DeckPass[decks[pick[i]].Name]),
+                    TavernDweller = decks[pick[i]].TavernDweller,
+                };
             var db = CardPool.CreateDatabase();
             var engine = new GameEngine(db);
             var text = new GameText(db);
