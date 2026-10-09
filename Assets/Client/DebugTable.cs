@@ -61,6 +61,21 @@ namespace RestartedTavern.Client
         private bool _showAllHands;
         private readonly bool[] _bot = { false, true };
         private ObjectId _hover = ObjectId.None;
+
+        /// <summary>Rules for the next New game: 0 = Runeterra-style mana (default for playtests), 1 = Runeterra without summoning sickness, 2 = today's rules.</summary>
+        private int _rulesChoice;
+        private int _rulesInPlay;
+        private static readonly string[] RulesNames = { "Runeterra mana", "Runeterra, no sickness", "Classic mana" };
+
+        private static FormatConfig Format(int rules)
+        {
+            if (rules == 2) return FormatConfig.Standard();
+            var f = FormatConfig.Runeterra(3);
+            f.NoSummoningSickness = rules == 1;
+            return f;
+        }
+
+        private bool Runeterra => _state.Format.ManaPerRound;
         /// <summary>Cards involved in the action button under the mouse (drawn highlighted on the board; one frame late).</summary>
         private HashSet<ObjectId> _actionCards = new HashSet<ObjectId>(), _actionCardsNext = new HashSet<ObjectId>();
         private bool _showRules;
@@ -89,6 +104,7 @@ namespace RestartedTavern.Client
                     case "-bot1": _bot[0] = true; break;
                     case "-bot2": _bot[1] = true; break;
                     case "-hotseat": _bot[0] = _bot[1] = false; break;
+                    case "-rules": int.TryParse(next, out _rulesChoice); break;
                     case "-deck1": int.TryParse(next, out _deckChoice[0]); break;
                     case "-deck2": int.TryParse(next, out _deckChoice[1]); break;
                     case "-autoplay": int.TryParse(next, out _autoplay); break;
@@ -118,9 +134,10 @@ namespace RestartedTavern.Client
             _savedThisGame = false;
             _deckInPlay[0] = _deckChoice[0];
             _deckInPlay[1] = _deckChoice[1];
+            _rulesInPlay = _rulesChoice;
 
             var events = new List<GameEvent>();
-            _state = _engine.CreateGame(FormatConfig.Standard(), new[]
+            _state = _engine.CreateGame(Format(_rulesInPlay), new[]
             {
                 new PlayerSetup { Deck = Decks[_deckChoice[0]](), TavernDwellerId = TavernDwellers[_deckChoice[0]] },
                 new PlayerSetup { Deck = Decks[_deckChoice[1]](), TavernDwellerId = TavernDwellers[_deckChoice[1]] },
@@ -167,6 +184,7 @@ namespace RestartedTavern.Client
                     "Restarted Tavern playtest log",
                     "Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
                     "Seed: " + _seed,
+                    "Rules: " + RulesNames[_rulesInPlay],
                 };
                 for (int seat = 0; seat < 2; seat++)
                     lines.Add("P" + (seat + 1) + ": " + DeckNames[_deckInPlay[seat]] + " (" + _text.Name(TavernDwellers[_deckInPlay[seat]]) + ")"
@@ -291,24 +309,26 @@ namespace RestartedTavern.Client
 
             string status = _state.IsGameOver
                 ? "GAME OVER. Winner: " + string.Join(", ", _state.Winners)
-                : "Turn " + _state.TurnNumber + "  |  " + _state.ActivePlayer + "'s turn  |  " + GameText.StepName(_state.Step)
-                  + "  |  waiting on " + _engine.WaitingOn(_state);
-            GUILayout.Label(status, _labelStyle, GUILayout.Width(330));
-            if (GUILayout.Button(_showRules ? "Back to table" : "Rules", GUILayout.Width(95))) _showRules = !_showRules;
-            if (GUILayout.Button("Save log", GUILayout.Width(80))) SaveLog();
+                : (Runeterra ? "Round " + _state.RoundNumber + " (attack: " + RoundLeaderId() + ")" : "Turn " + _state.TurnNumber)
+                  + "  |  " + _state.ActivePlayer + "'s turn  |  " + GameText.StepName(_state.Step);
+            GUILayout.Label(status, _labelStyle, GUILayout.Width(310));
+            if (GUILayout.Button(_showRules ? "Back to table" : "Rules", GUILayout.Width(80))) _showRules = !_showRules;
+            if (GUILayout.Button("Save log", GUILayout.Width(70))) SaveLog();
 
-            if (GUILayout.Button("New game", GUILayout.Width(90))) NewGame(NextSeed());
+            if (GUILayout.Button("New game", GUILayout.Width(80))) NewGame(NextSeed());
             GUILayout.Label("seed", GUILayout.Width(32));
             _seedText = GUILayout.TextField(_seedText, GUILayout.Width(70));
             GUI.enabled = _undo.Count > 0;
             if (GUILayout.Button("Undo (" + _undo.Count + ")", GUILayout.Width(90))) Undo();
             GUI.enabled = true;
-            _state.AutoPass = GUILayout.Toggle(_state.AutoPass, " Auto-pass", GUILayout.Width(95));
-            _showAllHands = GUILayout.Toggle(_showAllHands, " Show all hands", GUILayout.Width(125));
-            _bot[0] = GUILayout.Toggle(_bot[0], " P1 bot", GUILayout.Width(70));
-            _bot[1] = GUILayout.Toggle(_bot[1], " P2 bot", GUILayout.Width(70));
+            _state.AutoPass = GUILayout.Toggle(_state.AutoPass, " Auto-pass", GUILayout.Width(88));
+            _showAllHands = GUILayout.Toggle(_showAllHands, " All hands", GUILayout.Width(85));
+            _bot[0] = GUILayout.Toggle(_bot[0], " P1 bot", GUILayout.Width(64));
+            _bot[1] = GUILayout.Toggle(_bot[1], " P2 bot", GUILayout.Width(64));
+            if (GUILayout.Button(RulesNames[_rulesChoice], GUILayout.Width(145)))
+                _rulesChoice = (_rulesChoice + 1) % RulesNames.Length; // used by the next New game
             for (int seat = 0; seat < 2; seat++)
-                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(170)))
+                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(140)))
                     _deckChoice[seat] = (_deckChoice[seat] + 1) % Decks.Length; // used by the next New game
 
             GUILayout.EndHorizontal();
@@ -345,7 +365,8 @@ namespace RestartedTavern.Client
             var waiting = _engine.WaitingOn(_state);
             string marker = p.Id == _state.ActivePlayer ? ">> " : "";
             string header = marker + p.Id + " " + DeckNames[_deckInPlay[p.Seat]] + (_bot[p.Seat] ? " (bot)" : "")
-                            + "    Life " + p.Life + "    Mana " + p.Mana + "/" + p.MaxMana + "    Gold " + p.Gold
+                            + (Runeterra && p.Id == RoundLeaderId() ? "    [ATTACK TOKEN]" : "")
+                            + "    Life " + p.Life + "    Mana " + p.Mana + "/" + p.MaxMana + "    Gold " + p.Gold + "/" + GoldRules.Cap(_state, _engine.Cards, p.Id)
                             + "    Deck " + p.Deck.Count + "    Hand " + p.Hand.Count + "    Graveyard " + p.Graveyard.Count
                             + (p.HasLost ? "    LOST" : "");
             var old = GUI.contentColor;
@@ -527,10 +548,43 @@ namespace RestartedTavern.Client
             GUILayout.BeginArea(r, GUI.skin.box);
             _rulesScroll = GUILayout.BeginScrollView(_rulesScroll);
             GUILayout.Label("Quick rules (full rules: docs/GAME_DESIGN.md)", _bigStyle);
-            GUILayout.Label(RulesText, _labelStyle);
+            GUILayout.Label(Runeterra ? RuneterraRulesText : RulesText, _labelStyle);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
+
+        /// <summary>The player who started this round (holds the attack token with Runeterra mana).</summary>
+        private PlayerId RoundLeaderId() =>
+            _state.LivingPlayersFrom(_state.Players[_state.RoundLeaderSeat].Id)[0].Id;
+
+        private string RuneterraRulesText =>
+            "RUNETERRA-STYLE MANA (experiment, " + RulesNames[_rulesInPlay] + ")\n\n" +
+            "GOAL\n" +
+            "Bring the opponent from 30 life to 0. You also lose if you must draw from an empty deck.\n\n" +
+            "ROUNDS AND THE ATTACK TOKEN\n" +
+            "• A round is one turn for each player. The player with the ATTACK TOKEN takes the first turn of the round, " +
+            "and only they can attack this round.\n" +
+            "• The token passes every round, so the order goes A B | B A | A B: the second player of a round also starts the next one " +
+            "(two turns in a row: one to build, one to attack).\n" +
+            "• On your turn without the token you can still play cards, use abilities and block on the opponent's attack turn.\n" +
+            (_state.Format.NoSummoningSickness
+                ? "• Creatures can attack the turn they arrive.\n\n"
+                : "• Creatures can't attack the turn they arrive (summoning sickness), unless they have Haste.\n\n") +
+            "MANA\n" +
+            "• At the start of each round BOTH players get +1 max mana (up to 10) and refill.\n" +
+            "• That mana lasts the whole round: spend it on your turn, or keep it for Instants and abilities on the opponent's turn.\n" +
+            "• Creatures and other permanents: mana only, on your own turn.\n\n" +
+            "GOLD = SPELL MANA\n" +
+            "• At the end of the round, unspent mana becomes Gold (up to 3).\n" +
+            "• Gold pays for Instants, Sorceries, abilities, Tavern Dweller Powers and Invest, and it is spent FIRST, before mana.\n" +
+            "• Gold never pays for creatures.\n\n" +
+            "COMBAT, DAMAGE, TAVERN DWELLER, THE CHAIN\n" +
+            "As in the classic rules: blocking doesn't tap, damage stays on creatures, your Tavern Dweller's Power works once each turn, " +
+            "and the last thing added to the Chain resolves first.\n\n" +
+            "USING THIS TABLE\n" +
+            "• The status bar shows the round and who may attack; that player's header says [ATTACK TOKEN].\n" +
+            "• Hover over cards to read them, and over an action to highlight the cards it involves.\n" +
+            "• The rules button in the top bar picks the rules for the next New game.";
 
         private const string RulesText =
             "GOAL\n" +

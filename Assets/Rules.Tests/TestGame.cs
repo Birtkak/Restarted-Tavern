@@ -30,11 +30,11 @@ namespace RestartedTavern.Rules.Tests
         /// Decks are 20 Hired Sellswords unless given. Extra test-only cards can be added.
         /// </summary>
         public static TestGame AtFirstMainPhase(ulong seed = 1, IEnumerable<CardDefinition> extraCards = null,
-            string deckCard = "hired_sellsword", int deckSize = 20)
+            string deckCard = "hired_sellsword", int deckSize = 20, FormatConfig format = null)
         {
             var db = new CardDatabase(CardPool.All().Concat(extraCards ?? Enumerable.Empty<CardDefinition>()));
             var engine = new GameEngine(db);
-            var format = FormatConfig.Standard();
+            format = format ?? FormatConfig.Standard();
             format.EnforceDeckRules = false;
             var deck = Enumerable.Repeat(deckCard, deckSize).ToList();
             var events = new List<GameEvent>();

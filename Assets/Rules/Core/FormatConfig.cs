@@ -52,6 +52,34 @@ namespace RestartedTavern.Rules
         /// <summary>Going-first experiment: the first player gets no max mana on their first turn, so they stay one step behind.</summary>
         public bool FirstPlayerSkipsFirstMana { get; set; }
 
+        // Runeterra-style mana (2026-10-09 experiment): round pool + RotateRoundLeader + the switches below.
+
+        /// <summary>
+        /// Attack token (Legends of Runeterra): only the player who starts the round may attack in it. Use with
+        /// RotateRoundLeader, so the token alternates between rounds.
+        /// </summary>
+        public bool AttackToken { get; set; }
+
+        /// <summary>Creatures can attack and use Tap abilities the turn they arrive (Runeterra units attack the round they're played).</summary>
+        public bool NoSummoningSickness { get; set; }
+
+        /// <summary>Spells and abilities always pay Gold first, then mana (Runeterra spends spell mana first). Permanents still use mana only.</summary>
+        public bool GoldFirstAlways { get; set; }
+
+        /// <summary>The Runeterra-style package: round pool, rotating first player with the attack token, Gold first, no summoning sickness.</summary>
+        public static FormatConfig Runeterra(int goldCap = 3)
+        {
+            var f = Standard();
+            f.Name = "Runeterra-style";
+            f.ManaPerRound = true;
+            f.RotateRoundLeader = true;
+            f.AttackToken = true;
+            f.NoSummoningSickness = true;
+            f.GoldFirstAlways = true;
+            f.GoldCap = goldCap;
+            return f;
+        }
+
         /// <summary>
         /// Experiment switch, not a real rule: when true, damage on creatures is removed in the
         /// cleanup step like in MTG. Used to measure what permanent damage (§7.3) changes.

@@ -132,6 +132,25 @@ namespace RestartedTavern.Rules.AI
             }
             sections.Add(mana);
 
+            var lor = new Section
+            {
+                Title = "Runeterra-style mana",
+                Question = "Legends of Runeterra's mana in full turns: everyone refills when a round starts, unspent mana becomes Gold "
+                           + "(spell mana) at the end of the round, spells and abilities spend Gold first, the round leader alternates "
+                           + "and only they may attack (attack token), creatures can attack the turn they arrive. Watch Turns, Off-turn and 1st win%.",
+            };
+            foreach (var d in decks)
+            {
+                lor.Configs.Add(M(d.Name + " mirror, today's rules", d, d));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra (Gold cap 3)", d, d, f => Copy(FormatConfig.Runeterra(3), f)));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra (Gold cap 5)", d, d, f => Copy(FormatConfig.Runeterra(5), f)));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra with summoning sickness", d, d,
+                    f => { Copy(FormatConfig.Runeterra(3), f); f.NoSummoningSickness = false; }));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra without the attack token", d, d,
+                    f => { Copy(FormatConfig.Runeterra(3), f); f.AttackToken = false; f.NoSummoningSickness = false; }));
+            }
+            sections.Add(lor);
+
             var tavernDwellers = new Section
             {
                 Title = "Tavern Dwellers (GAME_DESIGN §9)",
@@ -155,6 +174,13 @@ namespace RestartedTavern.Rules.AI
                     cap.Configs.Add(M(d.Name + " mirror, Gold cap " + c, d, d, f => f.GoldCap = c));
             sections.Add(cap);
             return sections;
+        }
+
+        /// <summary>Copies every format setting from <paramref name="from"/> onto <paramref name="to"/>.</summary>
+        private static void Copy(FormatConfig from, FormatConfig to)
+        {
+            foreach (var prop in typeof(FormatConfig).GetProperties())
+                if (prop.CanWrite) prop.SetValue(to, prop.GetValue(from));
         }
 
         public static void Run(List<Section> sections, CardDatabase db, Action<MatchResult> progress = null)
@@ -185,7 +211,7 @@ namespace RestartedTavern.Rules.AI
                           + "**Dmg→death** = share of all damage dealt to creatures that was still on a creature when it died (includes killing blows) · "
                           + "**Chip→death** = share of *chip damage* (damage a creature carried into a later turn) that was still on it when it died; the rest was healed away or sat on survivors, so it **never decided anything** · "
                           + "**Wounded** = share of creatures carrying damage at the start of a turn · **Deaths** / **Heal** / **Gold spent** are per game · "
-                          + "**Powers** = Tavern Dweller Powers used per game (in brackets: share used on an opponent's turn) · **Abil.** = other activated abilities per game (Equip, Tap abilities...) · "
+                          + "**Powers** = Tavern Dweller Powers used per game (in brackets: share used on an opponent's turn) · **Abil.** = other activated abilities per game (Equip, Tap abilities...) · **Off-turn** = spells cast and abilities/Powers used on an opponent's turn, per game · "
                           + "**Wasted** = share of unspent mana lost to the Gold cap.");
             foreach (var s in sections)
             {
@@ -194,8 +220,8 @@ namespace RestartedTavern.Rules.AI
                 sb.AppendLine();
                 sb.AppendLine("*" + s.Question + "*");
                 sb.AppendLine();
-                sb.AppendLine("| Matchup | A win% | 1st win% | Turns | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Powers | Abil. | Wasted | Draws |");
-                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
+                sb.AppendLine("| Matchup | A win% | 1st win% | Turns | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Powers | Abil. | Off-turn | Wasted | Draws |");
+                sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
                 foreach (var r in s.Results)
                 {
                     sb.Append("| ").Append(r.Config.Name)
@@ -213,6 +239,7 @@ namespace RestartedTavern.Rules.AI
                       .Append(" | ").Append(F(r.PerGame(r.PowersUsed)))
                       .Append(r.PowersUsed > 0 ? " (" + Pct((double)r.PowersOnOpponentsTurn / r.PowersUsed) + ")" : "")
                       .Append(" | ").Append(F(r.PerGame(r.AbilitiesActivated)))
+                      .Append(" | ").Append(F(r.PerGame(r.InstantsOnOpponentsTurn + r.AbilitiesOnOpponentsTurn)))
                       .Append(" | ").Append(Pct(r.GoldWastedShare))
                       .Append(" | ").Append(r.Draws)
                       .AppendLine(" |");

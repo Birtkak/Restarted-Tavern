@@ -19,6 +19,8 @@ namespace RestartedTavern.Rules
         public int RoundLeaderSeat { get; set; }
         /// <summary>Turns already finished in the current round.</summary>
         public int TurnsThisRound { get; set; }
+        /// <summary>The current round (1 = every player's first turn).</summary>
+        public int RoundNumber { get; set; } = 1;
         public int TurnNumber { get; set; }
         public Step Step { get; set; } = Step.Mulligan;
 

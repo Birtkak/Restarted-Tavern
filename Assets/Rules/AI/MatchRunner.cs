@@ -36,7 +36,7 @@ namespace RestartedTavern.Rules.AI
         public List<int> GameLengths = new List<int>();
         /// <summary>Unspent mana at end of turn, how much of it became Gold, and Gold spent.</summary>
         public long UnspentMana, GoldBanked, GoldSpent;
-        public long InstantsOnOpponentsTurn;
+        public long InstantsOnOpponentsTurn, AbilitiesOnOpponentsTurn;
         /// <summary>Tavern Dweller Powers used, how many of them on an opponent's turn, other activated abilities, and Gold paid for both.</summary>
         public long PowersUsed, PowersOnOpponentsTurn, AbilitiesActivated, GoldOnAbilities;
         public long CreatureDeaths, HealingDone, DamageToCreatures, DamageToPlayers;
@@ -81,6 +81,7 @@ namespace RestartedTavern.Rules.AI
             GameLengths.AddRange(o.GameLengths);
             UnspentMana += o.UnspentMana; GoldBanked += o.GoldBanked; GoldSpent += o.GoldSpent;
             InstantsOnOpponentsTurn += o.InstantsOnOpponentsTurn;
+            AbilitiesOnOpponentsTurn += o.AbilitiesOnOpponentsTurn;
             PowersUsed += o.PowersUsed; PowersOnOpponentsTurn += o.PowersOnOpponentsTurn;
             AbilitiesActivated += o.AbilitiesActivated; GoldOnAbilities += o.GoldOnAbilities;
             CreatureDeaths += o.CreatureDeaths; HealingDone += o.HealingDone;
@@ -190,6 +191,7 @@ namespace RestartedTavern.Rules.AI
                         r.InstantsOnOpponentsTurn++;
                         break;
                     case AbilityActivatedEvent a:
+                        if (a.Player != s.ActivePlayer) r.AbilitiesOnOpponentsTurn++;
                         if (a.IsTavernDwellerPower)
                         {
                             r.PowersUsed++;

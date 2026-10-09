@@ -161,7 +161,8 @@ namespace RestartedTavern.Rules
             S.ActiveIndex = index;
             S.TurnNumber++;
             S.UsesThisTurn.Clear(); // "once each turn" (MTG) resets every turn, yours or not
-            foreach (var p in S.Players) p.PaysGoldFirst = S.Format.GoldFirstOffTurn && p.Id != S.ActivePlayer;
+            foreach (var p in S.Players)
+                p.PaysGoldFirst = S.Format.GoldFirstAlways || (S.Format.GoldFirstOffTurn && p.Id != S.ActivePlayer);
             Emit(new TurnStartedEvent { Player = S.ActivePlayer, Turn = S.TurnNumber });
             EnterStep(Step.Start);
         }
@@ -206,7 +207,7 @@ namespace RestartedTavern.Rules
 
                 case Step.DeclareAttackers:
                     S.Combat = new CombatState();
-                    if (HasPossibleAttacker(ap))
+                    if (HasPossibleAttacker(ap) && HasAttackToken(ap))
                         S.Pending = new PendingDecision { Kind = DecisionKind.DeclareAttackers, Player = ap.Id };
                     else
                         GivePriority(ap.Id);
@@ -336,6 +337,7 @@ namespace RestartedTavern.Rules
                 return NextLivingPlayer(ap.Id).Seat;
             }
             S.TurnsThisRound = 0;
+            S.RoundNumber++;
             if (S.Format.RotateRoundLeader) S.RoundLeaderSeat = NextLivingPlayer(S.Players[S.RoundLeaderSeat].Id).Seat;
             else S.RoundLeaderSeat = NextLivingPlayer(ap.Id).Seat;
             return RoundLeader().Seat;

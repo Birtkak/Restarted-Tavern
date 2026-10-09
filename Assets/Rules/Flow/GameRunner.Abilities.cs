@@ -128,7 +128,7 @@ namespace RestartedTavern.Rules
         {
             if (source.Zone != Zone.Battlefield || source.Tapped) return false;
             if (!Def(source).IsCreature) return true;
-            return !source.SummoningSick || Stats(source).Has(Keyword.Haste);
+            return !source.SummoningSick || S.Format.NoSummoningSickness || Stats(source).Has(Keyword.Haste);
         }
 
         /// <summary>

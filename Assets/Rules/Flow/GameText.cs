@@ -113,7 +113,7 @@ namespace RestartedTavern.Rules
                 if (kw.Length > 0) sb.Append(sep).Append(kw);
                 var status = new List<string>();
                 if (card.Tapped) status.Add("TAPPED");
-                if (card.SummoningSick && !ch.Has(Keyword.Haste)) status.Add("sick");
+                if (card.SummoningSick && !ch.Has(Keyword.Haste) && !state.Format.NoSummoningSickness) status.Add("sick");
                 if (state.Combat != null && state.Combat.IsAttacking(card.Id)) status.Add("ATTACKING");
                 if (state.Combat != null && state.Combat.IsBlocking(card.Id)) status.Add("BLOCKING");
                 if (CharacteristicsCalculator.IsEquipped(state, _db, card)) status.Add("equipped");
@@ -189,7 +189,8 @@ namespace RestartedTavern.Rules
 
                 var status = new List<string>();
                 if (card.Tapped) status.Add("tapped");
-                if (def.IsCreature && card.SummoningSick && !CharacteristicsCalculator.Compute(state, _db, card).Has(Keyword.Haste))
+                if (def.IsCreature && card.SummoningSick && !state.Format.NoSummoningSickness
+                    && !CharacteristicsCalculator.Compute(state, _db, card).Has(Keyword.Haste))
                     status.Add("summoning sick (can't attack or tap yet)");
                 if (state.Combat != null && state.Combat.IsAttacking(card.Id)) status.Add("attacking");
                 if (state.Combat != null && state.Combat.IsBlocking(card.Id)) status.Add("blocking");

@@ -25,6 +25,26 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
 
 ---
 
+## Experiment: Runeterra-style mana (2026-10-09, playtesting now)
+
+After the first human playtest ("mana could be slower, and there needs to be more interaction") the user asked for Legends of Runeterra's mana system, adapted to full turns. `FormatConfig.Runeterra()`; it's the debug table's default rules for now (the rules button in the top bar switches back to classic mana).
+
+- **Rounds and the attack token**: a round is one turn per player. The round leader takes the first turn and is the only one who may attack; the leader rotates (A B | B A | A B).
+- **Round mana**: at the start of each round both players gain +1 max mana and refill; the mana lasts the whole round (Instants and abilities on the opponent's turn).
+- **Gold = spell mana**: unspent mana becomes Gold at the end of the round (cap 3). Spells, abilities and Powers pay Gold first; creatures never use Gold.
+- **Summoning sickness**: kept by default (variant without it in the rules button).
+
+| Mirror | Today: 1st win% / turns / off-turn plays | Runeterra (summoning sickness) | Runeterra (no summoning sickness) |
+|---|---|---|---|
+| Goober | 77% / 11.9 / 2.0 | 43% / 14.1 / 4.2 | 47% / 12.2 / 3.8 |
+| Jungle | 83% / 17.2 / 2.4 | 47% / 19.0 / 3.0 | 33% / 11.7 / 0.8 |
+| Zoo | 68% / 22.8 / 7.8 | 57% / 26.2 / 10.0 | 50% / 19.9 / 6.7 |
+| Vesper | 57% / 23.9 / 8.9 | 46% / 26.0 / 10.0 | 46% / 18.9 / 6.7 |
+| Sparkwrench | 58% / 20.6 / 6.1 | 42% / 22.4 / 4.7 | 50% / 14.3 / 3.4 |
+| Auditor | 76% / 15.6 / 2.1 | 56% / 17.4 / 1.1 | 47% / 15.3 / 1.0 |
+
+With summoning sickness the games get 10-20% longer and there's more play on the opponent's turn, which matches the playtest feedback; without it games get faster. Gold cap 3 or 5 barely matters. Both fix the first-player edge. Open questions for playtests: does the double turn (build, then attack) feel good? Is Gold cap 3 enough? Cards with Haste or "your turn" timing may need a look.
+
 ## Findings: new deck lists and the attack planner (2026-10-09, 500 games per row)
 
 First full report with the v0.2 deck lists and the GreedyBot attack planner (alpha strikes, crack-back check). Full tables: [SIMULATION_REPORT.md](SIMULATION_REPORT.md). Hints, not balance.

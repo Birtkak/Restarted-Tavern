@@ -9,8 +9,11 @@ namespace RestartedTavern.Rules
         private bool CanAttack(CardInstance c)
         {
             if (!Def(c).IsCreature || c.Tapped) return false;
-            return !c.SummoningSick || Stats(c).Has(Keyword.Haste);
+            return !c.SummoningSick || S.Format.NoSummoningSickness || Stats(c).Has(Keyword.Haste);
         }
+
+        /// <summary>FormatConfig.AttackToken: only the player who started the round may attack in it.</summary>
+        private bool HasAttackToken(PlayerState p) => !S.Format.AttackToken || p.Id == RoundLeader().Id;
 
         /// <summary>Untapped creatures can block, even the turn they arrive (§7.4). Blocking doesn't tap.</summary>
         private bool CanBlock(CardInstance c) =>
