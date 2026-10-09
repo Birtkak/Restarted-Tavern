@@ -22,6 +22,21 @@ namespace RestartedTavern.Rules
         /// <summary>1v1: the second player starts with 1 Gold (§3). Multiplayer: no compensation (§13).</summary>
         public int SecondPlayerStartingGold { get; set; } = 1;
 
+        /// <summary>Experiment switch (going-second compensation): extra cards the second player draws before the first turn.</summary>
+        public int SecondPlayerExtraCards { get; set; }
+
+        /// <summary>
+        /// Experiment switch (going-second compensation, like Hearthstone's Coin): extra mana for the
+        /// second player's first turn only. Unspent, it becomes Gold as usual.
+        /// </summary>
+        public int SecondPlayerFirstTurnBonusMana { get; set; }
+
+        /// <summary>
+        /// Experiment switch, not a real rule: when true, damage on creatures is removed in the
+        /// cleanup step like in MTG. Used to measure what permanent damage (§7.3) changes.
+        /// </summary>
+        public bool DamageWearsOff { get; set; }
+
         /// <summary>Set to false in tests or tools that build decks freely.</summary>
         public bool EnforceDeckRules { get; set; } = true;
 

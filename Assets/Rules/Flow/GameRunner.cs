@@ -98,11 +98,9 @@ namespace RestartedTavern.Rules
 
             S.Pending = null;
             // GAME_DESIGN §3: the second player starts with 1 Gold (1v1 only; 0 in multiplayer formats).
-            if (S.Format.SecondPlayerStartingGold > 0)
-            {
-                var second = S.Players[(S.StartingPlayerIndex + 1) % S.Players.Count];
-                ChangeGold(second.Id, S.Format.SecondPlayerStartingGold);
-            }
+            var second = S.Players[(S.StartingPlayerIndex + 1) % S.Players.Count];
+            if (S.Format.SecondPlayerStartingGold > 0) ChangeGold(second.Id, S.Format.SecondPlayerStartingGold);
+            if (S.Format.SecondPlayerExtraCards > 0) Draw(second.Id, S.Format.SecondPlayerExtraCards);
             BeginTurn(S.StartingPlayerIndex);
         }
 
@@ -166,6 +164,7 @@ namespace RestartedTavern.Rules
                     // §5.1: +1 max mana (cap 10), refill. MTG 502: untap. §7.4: summoning sickness ends.
                     ap.MaxMana = Math.Min(S.Format.ManaCap, ap.MaxMana + 1);
                     ap.Mana = ap.MaxMana;
+                    if (S.TurnNumber == 2) ap.Mana += S.Format.SecondPlayerFirstTurnBonusMana;
                     Emit(new ManaChangedEvent { Player = ap.Id, Mana = ap.Mana, MaxMana = ap.MaxMana });
                     foreach (var c in ap.Battlefield)
                     {
@@ -272,6 +271,7 @@ namespace RestartedTavern.Rules
             S.Pending = null;
             var ap = S.ActivePlayerState;
             int banked = Math.Max(0, Math.Min(ap.Mana, S.Format.GoldCap - ap.Gold));
+            if (ap.Mana > 0) Emit(new GoldBankedEvent { Player = ap.Id, UnspentMana = ap.Mana, Banked = banked });
             if (banked > 0) ChangeGold(ap.Id, banked);
             ap.Mana = 0; // mana is only filled during your own turn (§5.2)
             Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });
@@ -279,6 +279,8 @@ namespace RestartedTavern.Rules
             var beforeBuffsEnd = SnapshotRemainingHealth();
             S.UntilEndOfTurn.Clear();
             CapDamageAfterBuffsEnd(beforeBuffsEnd);
+            if (S.Format.DamageWearsOff)
+                foreach (var c in S.AllPermanents()) c.Damage = 0;
             S.Combat = null;
 
             var next = NextLivingPlayer(ap.Id);

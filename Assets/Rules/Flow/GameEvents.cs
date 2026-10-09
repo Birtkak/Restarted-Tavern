@@ -106,6 +106,15 @@ namespace RestartedTavern.Rules
         public override string ToString() => Player + " gold " + OldGold + " -> " + NewGold;
     }
 
+    /// <summary>End of turn: unspent mana became Gold. Banked &lt; UnspentMana means the cap wasted some.</summary>
+    public sealed class GoldBankedEvent : GameEvent
+    {
+        public PlayerId Player;
+        public int UnspentMana;
+        public int Banked;
+        public override string ToString() => Player + " banks " + Banked + " of " + UnspentMana + " unspent mana";
+    }
+
     public sealed class DamageDealtEvent : GameEvent
     {
         public ObjectId Source;

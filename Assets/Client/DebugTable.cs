@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using RestartedTavern.Rules;
+using RestartedTavern.Rules.AI;
 using RestartedTavern.Rules.Cards;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace RestartedTavern.Client
     /// IMGUI, so the rules can be tested by hand before any real client exists.
     ///
     /// Click a card to show only the actions that involve it; click an action to do it.
-    /// Either player can be handed to a random bot. Undo keeps the last 200 states.
+    /// Either player can be handed to the GreedyBot. Undo keeps the last 200 states.
     ///
     /// Command line (for automated checks): -seed N, -bot1, -bot2, -autoplay N (bots play N
     /// actions at startup), -autoshot path.png (take a screenshot, then quit).
@@ -38,7 +39,7 @@ namespace RestartedTavern.Client
         private string _seedText = "1";
         private bool _showAllHands;
         private readonly bool[] _bot = new bool[2];
-        private DeterministicRng _botRng;
+        private GreedyBot _botPlayer;
         private float _nextBotTime;
         private ObjectId _focus = ObjectId.None;
 
@@ -78,7 +79,7 @@ namespace RestartedTavern.Client
             var db = PrototypeCards.CreateDatabase();
             _engine = new GameEngine(db);
             _text = new GameText(db);
-            _botRng = new DeterministicRng(seed ^ 0xB07B07UL);
+            _botPlayer = new GreedyBot(_engine);
             _undo.Clear();
             _log.Clear();
             _focus = ObjectId.None;
@@ -173,16 +174,7 @@ namespace RestartedTavern.Client
             }
         }
 
-        /// <summary>A random bot that prefers doing something over passing, and always keeps its hand.</summary>
-        private void BotStep(PlayerId who)
-        {
-            var legal = _engine.GetLegalActions(_state, who);
-            PlayerAction choice;
-            if (legal[0].Kind == ActionKind.Keep) choice = legal[0];
-            else if (legal.Count > 1 && _botRng.Next(4) != 0) choice = legal[1 + _botRng.Next(legal.Count - 1)];
-            else choice = legal[_botRng.Next(legal.Count)];
-            Do(choice);
-        }
+        private void BotStep(PlayerId who) => Do(_botPlayer.Choose(_state, who));
 
         // ------------------------------------------------------------------ drawing
 

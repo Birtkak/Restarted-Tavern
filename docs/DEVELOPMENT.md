@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 42 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
+**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 50 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
 
 ---
 
@@ -122,7 +122,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 ## 5. Roadmap (draft)
 1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons.
 2. ✅ **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards (§7).
-3. **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage.
+3. 🚧 **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage. *Bot simulations and the first findings are in [playtest/PLAYTEST.md](playtest/PLAYTEST.md); human playtests are next.*
 4. **Minimal visual client** in Unity (Windows build): hot-seat 1v1.
 5. Implement the full first set (120 cards) and a basic AI.
 6. Later: multiplayer (3–4 players), singleton format, online play.
@@ -154,7 +154,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - New object ids on every zone change. Tokens stop existing when they leave the battlefield.
 - 22 prototype cards (Goobers, Evergrowing Wild, Neutral) in `Assets/Rules/Cards/PrototypeCards.cs`.
 
-**Tests** (`Assets/Rules.Tests`, 42 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 50 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
@@ -170,6 +170,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
   Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
   ```
   This writes `Builds/DebugTable/RestartedTavern.exe` (git-ignored). Command-line flags: `-seed N`, `-bot1`, `-bot2`, `-autoplay N` (the bots play N actions at startup), and `-autoshot file.png` (take a screenshot, then quit), for automated checks.
+- The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
 **Not yet implemented** (next steps)
