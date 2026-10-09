@@ -297,6 +297,7 @@ namespace RestartedTavern.Rules
                 Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });
             }
 
+            EndTemporaryControl();
             var beforeBuffsEnd = SnapshotRemainingHealth();
             S.UntilEndOfTurn.Clear();
             CapDamageAfterBuffsEnd(beforeBuffsEnd);

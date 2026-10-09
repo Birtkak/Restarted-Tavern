@@ -23,6 +23,12 @@ namespace RestartedTavern.Rules
         EquipmentYouControl,
         /// <summary>"a creature card from your graveyard" (The Rotmother).</summary>
         CreatureCardInYourGraveyard,
+        /// <summary>"a creature card from a graveyard", any player's (Body Snatcher).</summary>
+        CreatureCardInAGraveyard,
+        /// <summary>"target spell" on the Chain (Hush Money, Counterfeit Coin). Chosen by its ChainItem.ObjectId.</summary>
+        SpellOnChain,
+        /// <summary>"target spell or ability" on the Chain, triggered abilities and Tavern Dweller Powers included (Bribe the Referee).</summary>
+        SpellOrAbilityOnChain,
     }
 
     /// <summary>
@@ -42,6 +48,8 @@ namespace RestartedTavern.Rules
         public int? MaxRemainingHealth { get; set; }
         /// <summary>"target attacking or blocking creature" (Called Shot).</summary>
         public bool AttackingOrBlocking { get; set; }
+        /// <summary>"with cost 4 or less": the printed cost of a creature or spell (Bounced Check, Counterfeit Coin). Null = any.</summary>
+        public int? MaxCost { get; set; }
 
         public static TargetSlot Of(TargetSpec spec, bool optional = false, string subtype = null) =>
             new TargetSlot { Spec = spec, Optional = optional, Subtype = subtype };
@@ -49,7 +57,8 @@ namespace RestartedTavern.Rules
         /// <summary>Same spec and the same filters (for listing {A,B} but not {B,A}).</summary>
         public bool SameFilterAs(TargetSlot other) =>
             Spec == other.Spec && Subtype == other.Subtype && Damaged == other.Damaged
-            && MaxRemainingHealth == other.MaxRemainingHealth && AttackingOrBlocking == other.AttackingOrBlocking;
+            && MaxRemainingHealth == other.MaxRemainingHealth && AttackingOrBlocking == other.AttackingOrBlocking
+            && MaxCost == other.MaxCost;
     }
 
     /// <summary>A chosen target: either a player or a game object.</summary>

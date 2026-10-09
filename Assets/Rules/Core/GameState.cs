@@ -32,6 +32,8 @@ namespace RestartedTavern.Rules
 
         public CombatState Combat { get; set; }
         public List<TemporaryModifier> UntilEndOfTurn { get; set; } = new List<TemporaryModifier>();
+        /// <summary>"Gain control of target creature until end of turn": who gets it back in the cleanup step.</summary>
+        public List<TemporaryControl> ControlUntilEndOfTurn { get; set; } = new List<TemporaryControl>();
         /// <summary>
         /// How often something was used this turn, for "once each turn" abilities, Tavern Dweller Powers and
         /// "triggers at most N times each turn". Keys are made by GameRunner; cleared when a turn starts.
@@ -90,6 +92,15 @@ namespace RestartedTavern.Rules
 
         public bool AreOpponents(PlayerId a, PlayerId b) => GetPlayer(a).TeamId != GetPlayer(b).TeamId;
 
+        /// <summary>The spell or ability on the Chain with this object id, or null.</summary>
+        public ChainItem FindOnChain(ObjectId id)
+        {
+            if (id.IsNone) return null;
+            foreach (var item in Chain)
+                if (item.ObjectId == id) return item;
+            return null;
+        }
+
         /// <summary>Find a game object in any zone, including spells on the Chain. Null if it no longer exists.</summary>
         public CardInstance FindObject(ObjectId id)
         {
@@ -139,6 +150,8 @@ namespace RestartedTavern.Rules
             s.Combat = Combat?.Clone();
             s.UntilEndOfTurn = new List<TemporaryModifier>(UntilEndOfTurn.Count);
             foreach (var m in UntilEndOfTurn) s.UntilEndOfTurn.Add(m.Clone());
+            s.ControlUntilEndOfTurn = new List<TemporaryControl>(ControlUntilEndOfTurn.Count);
+            foreach (var c in ControlUntilEndOfTurn) s.ControlUntilEndOfTurn.Add(c.Clone());
             s.UsesThisTurn = new Dictionary<string, int>(UsesThisTurn);
             s.Rng = Rng?.Clone();
             s.Winners = new List<PlayerId>(Winners);

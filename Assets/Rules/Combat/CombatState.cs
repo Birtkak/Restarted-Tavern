@@ -34,6 +34,13 @@ namespace RestartedTavern.Rules
         public bool IsBlocking(ObjectId id) => Blocks.Exists(b => b.Blocker == id);
         public AttackDeclaration AttackOf(ObjectId attacker) => Attacks.Find(a => a.Attacker == attacker);
 
+        /// <summary>MTG 506.4: a creature whose controller changes is removed from combat.</summary>
+        public void Remove(ObjectId creature)
+        {
+            Attacks.RemoveAll(a => a.Attacker == creature);
+            Blocks.RemoveAll(b => b.Blocker == creature || b.Attacker == creature);
+        }
+
         public CombatState Clone()
         {
             var c = new CombatState { DoneBlocking = new List<PlayerId>(DoneBlocking) };

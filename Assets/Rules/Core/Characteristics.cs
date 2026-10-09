@@ -319,6 +319,15 @@ namespace RestartedTavern.Rules
         }
     }
 
+    /// <summary>"Gain control of it until end of turn": control goes back to <see cref="ReturnTo"/> in the cleanup step.</summary>
+    public sealed class TemporaryControl
+    {
+        public ObjectId Object { get; set; }
+        public PlayerId ReturnTo { get; set; }
+
+        public TemporaryControl Clone() => (TemporaryControl)MemberwiseClone();
+    }
+
     /// <summary>"... until end of turn" on one object. Removed in the cleanup step.</summary>
     public sealed class TemporaryModifier
     {

@@ -60,6 +60,11 @@ namespace RestartedTavern.Rules
                     result.Add(PlayerAction.ChooseOption(player, 1));
                     break;
 
+                case DecisionKind.PayTax:
+                    result.Add(PlayerAction.ChooseOption(player, 0)); // don't pay: it's countered
+                    if (Payment.GoldNeeded(p, S.Pending.Count, true) >= 0) result.Add(PlayerAction.ChooseOption(player, 1));
+                    break;
+
                 case DecisionKind.DeclareAttackers:
                     foreach (var c in p.Battlefield)
                     {

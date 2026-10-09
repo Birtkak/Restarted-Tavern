@@ -15,6 +15,11 @@ namespace RestartedTavern.Rules
     public sealed class ChainItem
     {
         public int Id { get; set; }
+        /// <summary>
+        /// The object id it can be targeted by ("counter target spell or ability"). For spells this is the
+        /// card's id on the Chain; abilities get a fresh id (MTG: everything on the stack is an object).
+        /// </summary>
+        public ObjectId ObjectId { get; set; }
         public ChainItemKind Kind { get; set; }
         public PlayerId Controller { get; set; }
 

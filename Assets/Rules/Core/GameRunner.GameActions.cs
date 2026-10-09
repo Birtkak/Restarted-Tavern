@@ -306,6 +306,62 @@ namespace RestartedTavern.Rules
             }
         }
 
+        /// <summary>
+        /// Counter a spell or ability (MTG 701.5): it leaves the Chain without resolving, and a countered
+        /// spell goes to its owner's graveyard. A countered Tavern Dweller Power still counts as used this turn.
+        /// </summary>
+        internal void Counter(ChainItem item)
+        {
+            if (!S.Chain.Remove(item)) return;
+            Emit(new CounteredEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId, Controller = item.Controller });
+            if (item.Card != null) MoveCard(item.Card, Zone.Graveyard);
+        }
+
+        /// <summary>
+        /// Gain control of a permanent (MTG 613.1b, layer 2). It's the same object, damage and counters stay.
+        /// It can't attack or use Tap abilities until its new controller's next turn (MTG 302.6), and leaves
+        /// combat (MTG 506.4). "Until end of turn": control goes back in the cleanup step.
+        /// </summary>
+        internal void GainControl(CardInstance permanent, PlayerId to, bool untilEndOfTurn)
+        {
+            if (permanent == null || S.FindOnBattlefield(permanent.Id) == null || S.GetPlayer(to).HasLost) return;
+            var from = permanent.Controller;
+            // A newer control effect wins over an older one (layer 2 timestamps).
+            S.ControlUntilEndOfTurn.RemoveAll(t => t.Object == permanent.Id);
+            if (from == to) return;
+            if (untilEndOfTurn) S.ControlUntilEndOfTurn.Add(new TemporaryControl { Object = permanent.Id, ReturnTo = from });
+            MoveControl(permanent, to);
+        }
+
+        private void MoveControl(CardInstance permanent, PlayerId to)
+        {
+            var from = permanent.Controller;
+            S.GetPlayer(from).Battlefield.Remove(permanent);
+            S.GetPlayer(to).Battlefield.Add(permanent);
+            permanent.Controller = to;
+            permanent.SummoningSick = true;
+            S.Combat?.Remove(permanent.Id);
+            Emit(new ControlChangedEvent { Card = permanent.Id, DefinitionId = permanent.DefinitionId, From = from, To = to });
+        }
+
+        /// <summary>Cleanup step: "gain control until end of turn" effects end (MTG 514.2).</summary>
+        private void EndTemporaryControl()
+        {
+            var ending = new List<TemporaryControl>(S.ControlUntilEndOfTurn);
+            S.ControlUntilEndOfTurn.Clear();
+            foreach (var t in ending)
+            {
+                var permanent = S.FindOnBattlefield(t.Object);
+                if (permanent != null && permanent.Controller != t.ReturnTo && !S.GetPlayer(t.ReturnTo).HasLost)
+                    MoveControl(permanent, t.ReturnTo);
+            }
+        }
+
+        internal void Untap(CardInstance permanent)
+        {
+            if (permanent != null && S.FindOnBattlefield(permanent.Id) != null) permanent.Tapped = false;
+        }
+
         internal void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants)
         {
             if (S.FindOnBattlefield(creature) == null) return;

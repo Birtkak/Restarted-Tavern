@@ -197,6 +197,7 @@ namespace RestartedTavern.Rules
             var item = new ChainItem
             {
                 Id = S.NextChainId++,
+                ObjectId = new ObjectId(S.NextObjectId++),
                 Kind = ChainItemKind.ActivatedAbility,
                 Controller = a.Player,
                 SourceId = source.Id,
@@ -266,7 +267,54 @@ namespace RestartedTavern.Rules
                 var card = S.GetPlayer(a.Player).Deck.Find(c => c.Id == decision.Card);
                 if (card != null) MoveCard(card, Zone.Deck, toBottom: true);
             }
+            if (decision.Kind == DecisionKind.PayTax)
+            {
+                if (a.Option == 1)
+                {
+                    PayGeneric(a.Player, decision.Count);
+                    if (decision.RewardGold > 0) ChangeGold(decision.Beneficiary, decision.RewardGold);
+                }
+                else
+                {
+                    var item = S.FindOnChain(decision.Card);
+                    if (item != null) Counter(item);
+                }
+            }
             GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
+        }
+
+        /// <summary>
+        /// "Counter target spell unless its controller pays N" (Hush Money). A tax is paid with mana first,
+        /// then Gold (§5.2). If they can't pay it's countered right away; otherwise they choose.
+        /// Must be the last effect of its spell.
+        /// </summary>
+        internal void AskTax(ChainItem item, int amount, PlayerId beneficiary, int rewardGold)
+        {
+            if (Payment.GoldNeeded(S.GetPlayer(item.Controller), amount, true) < 0)
+            {
+                Counter(item);
+                return;
+            }
+            S.Pending = new PendingDecision
+            {
+                Kind = DecisionKind.PayTax, Player = item.Controller, Count = amount, Card = item.ObjectId,
+                Beneficiary = beneficiary, RewardGold = rewardGold,
+            };
+        }
+
+        /// <summary>Pay a generic amount: mana first, then Gold (§5.2). Gold paid this way is spent Gold.</summary>
+        private void PayGeneric(PlayerId player, int amount)
+        {
+            var p = S.GetPlayer(player);
+            int gold = Payment.GoldNeeded(p, amount, true);
+            int mana = amount - gold;
+            p.Mana -= mana;
+            if (mana > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
+            if (gold > 0)
+            {
+                ChangeGold(p.Id, -gold);
+                GoldSpent(p.Id, gold);
+            }
         }
     }
 }

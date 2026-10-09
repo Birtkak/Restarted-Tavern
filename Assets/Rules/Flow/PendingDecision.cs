@@ -19,6 +19,11 @@ namespace RestartedTavern.Rules
         TopOrBottom,
         /// <summary>A resolving effect makes a player discard (Settle the Tab: "then discard a card"). Answered with Discard.</summary>
         DiscardCards,
+        /// <summary>
+        /// "Counter target spell unless its controller pays N" (Hush Money): 1 = pay (mana first, then Gold,
+        /// §5.2), 0 = don't. Answered with ChooseOption. Only offered when they can pay.
+        /// </summary>
+        PayTax,
     }
 
     /// <summary>
@@ -33,8 +38,11 @@ namespace RestartedTavern.Rules
         public int Count { get; set; }
         /// <summary>ChooseTriggerTarget: the trigger being put on the Chain.</summary>
         public PendingTrigger Trigger { get; set; }
-        /// <summary>TopOrBottom: the card looked at.</summary>
+        /// <summary>TopOrBottom: the card looked at. PayTax: the Chain object that is countered if they don't pay.</summary>
         public ObjectId Card { get; set; }
+        /// <summary>PayTax: who gets <see cref="RewardGold"/> if the tax is paid ("If they pay, you gain 2 Gold").</summary>
+        public PlayerId Beneficiary { get; set; }
+        public int RewardGold { get; set; }
 
         public PendingDecision Clone()
         {

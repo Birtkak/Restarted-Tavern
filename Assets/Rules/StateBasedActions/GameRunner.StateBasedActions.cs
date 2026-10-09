@@ -109,6 +109,17 @@ namespace RestartedTavern.Rules
 
             if (S.LivingPlayerCount <= 1) return; // the game ends anyway
 
+            // Control of anything of someone else's that they controlled ends (§13): it goes back to its owner.
+            foreach (var c in new List<CardInstance>(player.Battlefield))
+            {
+                var owner = S.GetPlayer(c.Owner);
+                if (c.Owner == player.Id || owner.HasLost) continue;
+                player.Battlefield.Remove(c);
+                c.Controller = c.Owner;
+                owner.Battlefield.Add(c);
+            }
+            S.ControlUntilEndOfTurn.RemoveAll(t => t.ReturnTo == player.Id);
+
             foreach (var p in S.Players)
                 p.Battlefield.RemoveAll(c => c.Owner == player.Id);
             S.Chain.RemoveAll(item => item.Controller == player.Id || (item.Card != null && item.Card.Owner == player.Id));

@@ -60,6 +60,8 @@ namespace RestartedTavern.Rules
         {
             var obj = state.FindObject(id);
             if (obj?.DefinitionId != null) return Name(obj.DefinitionId);
+            var item = state.FindOnChain(id);
+            if (item != null) return Name(item.SourceDefinitionId) + (item.IsTavernDwellerPower ? " (Power)" : " (ability)");
             return _known.TryGetValue(id, out var def) ? Name(def) : id.ToString();
         }
 
@@ -138,6 +140,8 @@ namespace RestartedTavern.Rules
                 case ActionKind.ChooseOption:
                     if (state.Pending?.Kind == DecisionKind.TopOrBottom)
                         return (a.Option == 1 ? "Put on the bottom: " : "Leave on top: ") + Name(state, state.Pending.Card);
+                    if (state.Pending?.Kind == DecisionKind.PayTax)
+                        return a.Option == 1 ? "Pay " + state.Pending.Count : "Don't pay (" + Name(state, state.Pending.Card) + " is countered)";
                     return "Option " + a.Option;
                 case ActionKind.ActivateAbility: return DescribeActivation(state, a);
                 case ActionKind.DeclareAttacker: return "Attack " + a.Defender + " with " + Name(state, a.Card);
@@ -214,6 +218,8 @@ namespace RestartedTavern.Rules
                            + (t.Target.HasValue ? " -> " + Name(state, t.Target.Value) : "");
                 case ChainItemResolvedEvent r: return "Resolved: " + Name(r.SourceDefinitionId);
                 case FizzledEvent f: return Name(f.SourceDefinitionId) + " fizzles (target gone)";
+                case CounteredEvent c: return Name(c.SourceDefinitionId) + " is countered";
+                case ControlChangedEvent cc: return cc.To + " gains control of " + Name(cc.DefinitionId);
                 case DamageDealtEvent d:
                     return Name(state, d.Source) + " deals " + d.Amount + " to " + Name(state, d.Target) + (d.IsCombat ? " (combat)" : "");
                 case HealedEvent h: return Name(state, h.Target) + " is healed for " + h.Amount;

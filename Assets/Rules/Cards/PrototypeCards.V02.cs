@@ -8,6 +8,8 @@ namespace RestartedTavern.Rules.Cards
     /// "pay any amount of Gold") plus the v0.2 cards that only needed existing mechanics.
     /// Batch B: damage and healing ("damaged", Health remaining, can't be healed, damage prevention,
     /// damage to each creature, damage/heal/arrival watchers, extra costs on spells).
+    /// Batch C: the Chain and control (counterspells, bounce, control change, destroy all, graveyard
+    /// targets), including the v0.1 Wizards cards that use them.
     /// </summary>
     public static partial class PrototypeCards
     {
@@ -206,6 +208,105 @@ namespace RestartedTavern.Rules.Cards
             yield return usher;
 
             foreach (var c in V02DamageCards()) yield return c;
+            foreach (var c in V02ChainAndControlCards()) yield return c;
+        }
+
+        /// <summary>Batch C: the Chain and control.</summary>
+        private static IEnumerable<CardDefinition> V02ChainAndControlCards()
+        {
+            const string wizards = "shadow_money_wizards";
+
+            // ---------------------------------------------------------------- counterspells
+            yield return new CardDefinition
+            {
+                Id = "hush_money", Name = "Hush Money", Type = CardType.Instant, Cost = 2, Faction = wizards, Rarity = Rarity.Uncommon,
+                Text = "Counter target spell unless its controller pays 3. If they pay, you gain 2 Gold.",
+                SpellTarget = TargetSpec.SpellOnChain,
+                SpellEffects = { new CounterUnlessPaysEffect { Amount = 3, RewardGoldIfPaid = 2 } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "counterfeit_coin", Name = "Counterfeit Coin", Type = CardType.Instant, Cost = 3, Faction = wizards,
+                Rarity = Rarity.Uncommon, Text = "Counter target spell with cost 4 or less. Its controller gains Gold equal to its cost.",
+                SpellTargets = { new TargetSlot { Spec = TargetSpec.SpellOnChain, MaxCost = 4 } },
+                SpellEffects = { new CounterTargetEffect { ItsControllerGainsGoldEqualToCost = true } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "bribe_the_referee", Name = "Bribe the Referee", Type = CardType.Instant, Cost = 4, Faction = wizards,
+                Rarity = Rarity.Rare, Text = "Counter target spell or ability. Its controller gains 3 Gold and draws a card.",
+                SpellTarget = TargetSpec.SpellOrAbilityOnChain,
+                SpellEffects = { new CounterTargetEffect { ItsControllerGainsGold = 3, ItsControllerDraws = 1 } },
+            };
+
+            // ---------------------------------------------------------------- bounce
+            yield return new CardDefinition
+            {
+                Id = "bounced_check", Name = "Bounced Check", Type = CardType.Instant, Cost = 2, Faction = wizards, Rarity = Rarity.Common,
+                Text = "Return target creature with cost 3 or less to its owner's hand. Its controller gains 1 Gold.",
+                SpellTargets = { new TargetSlot { Spec = TargetSpec.Creature, MaxCost = 3 } },
+                SpellEffects = { new ReturnToHandEffect { ItsControllerGainsGold = 1 } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "golden_parachute", Name = "Golden Parachute", Type = CardType.Instant, Cost = 3, Faction = wizards,
+                Rarity = Rarity.Common, Text = "Return target creature you control to your hand. Gain Gold equal to its cost.",
+                SpellTarget = TargetSpec.CreatureYouControl,
+                SpellEffects = { new ReturnToHandEffect { ItsControllerGainsGoldEqualToCost = true } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "golden_handshake", Name = "Golden Handshake", Type = CardType.Sorcery, Cost = 5, Faction = wizards,
+                Rarity = Rarity.Uncommon, Text = "Return target creature to its owner's hand. Its controller gains Gold equal to its cost.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new ReturnToHandEffect { ItsControllerGainsGoldEqualToCost = true } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "grand_illusion", Name = "Grand Illusion", Type = CardType.Sorcery, Cost = 6, Faction = wizards, Rarity = Rarity.Rare,
+                Text = "Return all creatures to their owners' hands. Draw a card for each creature you owned that was returned.",
+                SpellEffects = { new ReturnAllCreaturesEffect { DrawPerCreatureYouOwned = 1 } },
+            };
+
+            // ---------------------------------------------------------------- control change
+            yield return new CardDefinition
+            {
+                Id = "silver_tongued_deal", Name = "Silver-Tongued Deal", Type = CardType.Instant, Cost = 3, Faction = wizards,
+                Rarity = Rarity.Uncommon,
+                Text = "Gain control of target creature until end of turn. Untap it. It gains Haste. Each opponent gains 2 Gold.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects =
+                {
+                    new GainControlEffect { UntilEndOfTurn = true, Untap = true, GainsHaste = true },
+                    new GainGoldEffect { Amount = 2, EachOpponent = true },
+                },
+            };
+            yield return new CardDefinition
+            {
+                Id = "hostile_takeover", Name = "Hostile Takeover", Type = CardType.Sorcery, Cost = 6, Faction = wizards,
+                Rarity = Rarity.Rare, Text = "Gain control of target creature. Its controller gains Gold equal to its cost and draws a card.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new GainControlEffect { PreviousControllerGainsGoldEqualToCost = true, PreviousControllerDraws = 1 } },
+            };
+
+            // ---------------------------------------------------------------- Sensationalists
+            var snatcher = Creature("body_snatcher", "Body Snatcher", 3, 3, 3, "sensationalists", Rarity.Common, "Horror",
+                Keyword.None, "Arrival: Exile a creature card from a graveyard. If you do, gain 2 life.");
+            snatcher.Triggers.Add(new TriggeredAbility
+            {
+                // Chosen as the trigger goes on the Chain; with no creature card in any graveyard nothing happens.
+                When = TriggerEvent.Arrival, Target = TargetSpec.CreatureCardInAGraveyard,
+                Effects = { new ExileTargetCardEffect(), new GainLifeEffect { Amount = 2 } },
+            });
+            yield return snatcher;
+
+            yield return new CardDefinition
+            {
+                Id = "the_final_act", Name = "The Final Act", Type = CardType.Sorcery, Cost = 7, Faction = "sensationalists",
+                Rarity = Rarity.Rare,
+                Text = "Destroy all creatures. Each opponent loses 1 life and you gain 1 life for each creature that died this way.",
+                SpellEffects = { new DestroyAllCreaturesEffect { DrainPerCreature = 1 } },
+            };
         }
 
         /// <summary>Batch B: damage and healing.</summary>

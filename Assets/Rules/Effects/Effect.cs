@@ -79,6 +79,19 @@ namespace RestartedTavern.Rules
         /// <summary>Ask <paramref name="player"/> to discard <paramref name="count"/> cards. Must be the last effect.</summary>
         public void AskDiscard(PlayerId player, int count) => _runner.AskDiscard(player, count);
         public void Tap(CardInstance permanent) => _runner.Tap(permanent);
+        public void Untap(CardInstance permanent) => _runner.Untap(permanent);
+        public void Counter(ChainItem item) => _runner.Counter(item);
+        /// <summary>"Counter it unless its controller pays N; if they pay, you gain G Gold." Must be the last effect.</summary>
+        public void AskTax(ChainItem item, int amount, int rewardGold) => _runner.AskTax(item, amount, Controller, rewardGold);
+        public void GainControl(CardInstance permanent, bool untilEndOfTurn) => _runner.GainControl(permanent, Controller, untilEndOfTurn);
+        public CardInstance MoveTo(CardInstance card, Zone zone) => _runner.MoveCard(card, zone);
+
+        /// <summary>A spell or ability target that is still on the Chain, or null.</summary>
+        public ChainItem ChainItemAt(int index)
+        {
+            var t = TargetAt(index);
+            return t.HasValue && !t.Value.IsPlayer ? State.FindOnChain(t.Value.Object) : null;
+        }
         public void Destroy(CardInstance permanent) => _runner.MoveCard(permanent, Zone.Graveyard);
 
         public void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants) =>

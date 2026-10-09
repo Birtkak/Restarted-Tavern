@@ -86,6 +86,7 @@ namespace RestartedTavern.Rules
             var item = new ChainItem
             {
                 Id = S.NextChainId++,
+                ObjectId = onChain.Id,
                 Kind = ChainItemKind.Spell,
                 Controller = a.Player,
                 Card = onChain,
@@ -345,6 +346,7 @@ namespace RestartedTavern.Rules
             var item = new ChainItem
             {
                 Id = S.NextChainId++,
+                ObjectId = new ObjectId(S.NextObjectId++),
                 Kind = ChainItemKind.TriggeredAbility,
                 Controller = t.Controller,
                 SourceId = t.SourceId,
@@ -390,6 +392,26 @@ namespace RestartedTavern.Rules
                 return result;
             }
 
+            if (spec == TargetSpec.CreatureCardInAGraveyard)
+            {
+                foreach (var p in S.LivingPlayersFrom(controller))
+                    foreach (var c in p.Graveyard)
+                        if (Def(c).IsCreature && c.Id != exclude) result.Add(Target.ForObject(c.Id));
+                return result;
+            }
+
+            if (spec == TargetSpec.SpellOnChain || spec == TargetSpec.SpellOrAbilityOnChain)
+            {
+                foreach (var item in S.Chain)
+                {
+                    if (item.ObjectId == exclude) continue;
+                    if (item.Kind != ChainItemKind.Spell && spec == TargetSpec.SpellOnChain) continue;
+                    if (slot.MaxCost.HasValue && (item.Card == null || Def(item.Card).Cost > slot.MaxCost.Value)) continue;
+                    result.Add(Target.ForObject(item.ObjectId));
+                }
+                return result;
+            }
+
             if (spec == TargetSpec.EquipmentYouControl)
             {
                 foreach (var c in S.GetPlayer(controller).Battlefield)
@@ -424,6 +446,7 @@ namespace RestartedTavern.Rules
                     if (!def.IsCreature || c.Id == exclude) continue;
                     if (slot.Subtype != null && !def.HasSubtype(slot.Subtype)) continue;
                     if (slot.Damaged && c.Damage <= 0) continue;
+                    if (slot.MaxCost.HasValue && def.Cost > slot.MaxCost.Value) continue;
                     if (slot.MaxRemainingHealth.HasValue && Stats(c).RemainingHealth > slot.MaxRemainingHealth.Value) continue;
                     if (slot.AttackingOrBlocking && (S.Combat == null || !(S.Combat.IsAttacking(c.Id) || S.Combat.IsBlocking(c.Id)))) continue;
                     bool ok;

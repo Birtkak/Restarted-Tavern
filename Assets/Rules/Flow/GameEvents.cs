@@ -110,6 +110,25 @@ namespace RestartedTavern.Rules
         public override string ToString() => "Resolves " + SourceDefinitionId;
     }
 
+    /// <summary>A spell or ability was countered (removed from the Chain without resolving).</summary>
+    public sealed class CounteredEvent : GameEvent
+    {
+        public int ItemId;
+        public string SourceDefinitionId;
+        public PlayerId Controller;
+        public override string ToString() => SourceDefinitionId + " is countered";
+    }
+
+    /// <summary>A permanent changed controller (Silver-Tongued Deal, Hostile Takeover, or control ending).</summary>
+    public sealed class ControlChangedEvent : GameEvent
+    {
+        public ObjectId Card;
+        public string DefinitionId;
+        public PlayerId From;
+        public PlayerId To;
+        public override string ToString() => DefinitionId + Card + " control " + From + " -> " + To;
+    }
+
     public sealed class FizzledEvent : GameEvent
     {
         public int ItemId;

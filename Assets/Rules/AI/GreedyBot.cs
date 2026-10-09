@@ -50,6 +50,9 @@ namespace RestartedTavern.Rules.AI
                     var trigger = s.Pending.Trigger;
                     return legal.OrderByDescending(a => EffectValue(s, me, trigger.Ability.Effects, a.Targets, trigger.SourceId, trigger.Amount)).First();
                 }
+                case DecisionKind.PayTax:
+                    // Pay the tax when we can: the spell was worth casting.
+                    return legal.OrderByDescending(a => a.Option).First();
                 case DecisionKind.TopOrBottom:
                 {
                     // Keep it if it can be cast soon; bottom expensive cards.
@@ -273,6 +276,75 @@ namespace RestartedTavern.Rules.AI
                                 if (Db.Get(c.DefinitionId).IsCreature && c.Damage > 0 && Target.ForObject(c.Id) != target)
                                     v += DamageValue(s, me, d.Amount, Target.ForObject(c.Id));
                         break;
+                    case CounterTargetEffect ct:
+                    {
+                        var item = ChainTarget(s, target);
+                        if (item == null) break;
+                        double worth = ChainItemWorth(item);
+                        int gold = ct.ItsControllerGainsGold + (ct.ItsControllerGainsGoldEqualToCost && item.Card != null
+                            ? Db.Get(item.Card.DefinitionId).Cost : 0);
+                        double payoff = 0.3 * gold + 2.0 * ct.ItsControllerDraws;
+                        v += item.Controller == me ? -worth - payoff : worth - payoff;
+                        break;
+                    }
+                    case CounterUnlessPaysEffect cu:
+                    {
+                        var item = ChainTarget(s, target);
+                        if (item == null) break;
+                        if (item.Controller == me) { v -= ChainItemWorth(item); break; }
+                        bool canPay = Payment.GoldNeeded(s.GetPlayer(item.Controller), cu.Amount, true) >= 0;
+                        v += canPay ? 0.3 * cu.Amount + 0.3 * cu.RewardGoldIfPaid : ChainItemWorth(item);
+                        break;
+                    }
+                    case ReturnToHandEffect rh:
+                    {
+                        var c = Creature(s, target);
+                        if (c == null) break;
+                        int gold = rh.ItsControllerGainsGold + (rh.ItsControllerGainsGoldEqualToCost ? Db.Get(c.DefinitionId).Cost : 0);
+                        if (c.Controller != me) v += 0.7 * Worth(s, c) - 0.3 * gold - (c.IsToken ? -1 : 0.5 * Db.Get(c.DefinitionId).Cost);
+                        else v += 0.6 * c.Damage + 0.4 * gold - 1.5 - (c.IsToken ? Worth(s, c) : 0);
+                        break;
+                    }
+                    case ReturnAllCreaturesEffect ra:
+                        foreach (var p in s.Players)
+                            foreach (var c in p.Battlefield)
+                                if (Db.Get(c.DefinitionId).IsCreature)
+                                {
+                                    v += c.Controller == me ? -0.6 * Worth(s, c) : 0.6 * Worth(s, c);
+                                    if (c.Owner == me) v += 2.0 * ra.DrawPerCreatureYouOwned;
+                                }
+                        break;
+                    case GainControlEffect gc:
+                    {
+                        var c = Creature(s, target);
+                        if (c == null || c.Controller == me) break;
+                        if (gc.UntilEndOfTurn)
+                        {
+                            // Only worth it if it can attack for us now (or to remove a blocker).
+                            bool beforeAttacks = s.ActivePlayer == me && (s.Step == Step.Main1 || s.Step == Step.BeginCombat);
+                            v += beforeAttacks ? 1.0 + 0.8 * Stats(s, c).Power : 0;
+                        }
+                        else
+                        {
+                            v += 2 * Worth(s, c) - (gc.PreviousControllerGainsGoldEqualToCost ? 0.3 * Db.Get(c.DefinitionId).Cost : 0)
+                                 - 2.0 * gc.PreviousControllerDraws;
+                        }
+                        break;
+                    }
+                    case DestroyAllCreaturesEffect da:
+                    {
+                        int count = 0;
+                        foreach (var p in s.Players)
+                            foreach (var c in p.Battlefield)
+                                if (Db.Get(c.DefinitionId).IsCreature)
+                                {
+                                    v += c.Controller == me ? -Worth(s, c) : Worth(s, c);
+                                    count++;
+                                }
+                        v += 0.6 * count * da.DrainPerCreature;
+                        break;
+                    }
+                    case ExileTargetCardEffect _: v += 0.3; break;
                     case HealOrCountersEffect ho:
                     {
                         var c = Creature(s, target);
@@ -427,6 +499,13 @@ namespace RestartedTavern.Rules.AI
 
         private static CardInstance Creature(GameState s, Target? t) =>
             t.HasValue && !t.Value.IsPlayer ? s.FindOnBattlefield(t.Value.Object) : null;
+
+        private static ChainItem ChainTarget(GameState s, Target? t) =>
+            t.HasValue && !t.Value.IsPlayer ? s.FindOnChain(t.Value.Object) : null;
+
+        /// <summary>Roughly what a spell or ability on the Chain is worth to its controller.</summary>
+        private double ChainItemWorth(ChainItem item) =>
+            item.Card != null ? 2 * Db.Get(item.Card.DefinitionId).Cost + 1 : item.IsTavernDwellerPower ? 3 : 2.5;
 
         /// <summary>Value of <paramref name="mine"/> (with a temporary bonus) fighting <paramref name="theirs"/>.</summary>
         private double FightValue(GameState s, PlayerId me, CardInstance mine, CardInstance theirs, int bonusPower, int bonusHealth)
