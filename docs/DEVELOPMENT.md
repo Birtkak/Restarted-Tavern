@@ -23,6 +23,8 @@ How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this
 
 ---
 
+8. **Structure the engine like the MTG Comprehensive Rules.** MTG is the rules foundation (GAME_DESIGN §1.1), so the engine should mirror its architecture: a priority/stack loop (the Chain), **state-based actions** checked whenever a player would receive priority (a creature at 0 Health dies, a player at 0 life loses, the Legendary rule, unattached Curses go to the graveyard), a **layer system** for continuous effects, and replacement effects. Rule code should cite the matching GAME_DESIGN section, or the MTG CR rule number when it implements default MTG behavior.
+
 ## 2. Core Model (draft)
 
 ```

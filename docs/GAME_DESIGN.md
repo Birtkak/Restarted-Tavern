@@ -20,6 +20,26 @@ The game is designed for 1v1 first, with every rule written so that it also work
 
 ---
 
+## 1.1 Rules Foundation: MTG by default 🔒
+**Anything this document does not cover follows the Magic: The Gathering Comprehensive Rules.** That includes the stack and priority, state-based actions, layers for continuous effects, replacement effects, the combat step structure, attachments (Equipment and Auras/Curses), tokens, copies, control-changing effects, the Legendary rule and multiplayer elimination.
+
+This game only **deviates** from MTG in these areas:
+
+| Area | MTG | Restarted Tavern |
+|---|---|---|
+| **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per turn up to 10, refilled each turn (§5.1). No lands |
+| **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for Instants, abilities, Overcharge and Patron Powers (§5.2) |
+| **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action |
+| *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
+| *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Gold-paid Power (§9). It works like a commander that never enters the battlefield |
+| *Going second* | Only the first player skips their draw | Also, in 1v1 the second player starts with 1 Gold (this is part of the mana system) |
+
+Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
+
+When a rule here and the MTG rules conflict, **this document wins**. When this document is silent, look up the MTG Comprehensive Rules.
+
+---
+
 ## 2. Formats
 
 | Format | Deck size | Copy limit | Players | Starting life | Status |
@@ -137,7 +157,7 @@ Design consequences:
 - Design rule 🟡: every faction needs *some* answer to accumulated damage (healing, sacrifice-for-value, or just cheap creatures you don't mind losing), so that no faction is stuck with crippled creatures.
 - Damage needs clear UI support: show current/max health.
 
-### 7.4 Summoning sickness 🟡
+### 7.4 Summoning sickness 🔒 (MTG)
 Creatures can't attack the turn they enter the battlefield (unless they have **Haste**). They *can* block right away.
 🟡 The same rule applies to **Tap abilities** (abilities whose cost includes tapping the creature): they can't be used the turn the creature arrives, unless it has Haste.
 
@@ -235,7 +255,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 
 ---
 
-### 11.1 Rules terms 🟡
+### 11.1 Rules terms 🔒 (MTG, except Heal)
 - **Fight**: two creatures each deal damage equal to their Power to the other, at the same time. This is not combat, so Trample doesn't apply. The damage is permanent, like all damage.
 - **Heal X**: remove up to X damage from a creature. Its Health can't go above its maximum. "Heal fully" removes all of its damage. Healing the Patron restores life, up to the starting life total.
 - **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
@@ -268,6 +288,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **MTG rules are the default foundation**: everything outside mana and damage follows the MTG Comprehensive Rules (§1.1). |
 | 2026-10-09 | Faction pie locked (CARD_DESIGN §4). Multiplayer: free-for-all attacks, 40 life, no turn-order compensation, teams (2v2) planned for later. |
 | 2026-10-09 | Rarities: Common/Uncommon/Rare/Legendary (Legendary rule: only one with a given name on the battlefield). Vanilla stats = 2×cost+1. First set ~120 cards. See CARD_DESIGN.md. |
 | 2026-10-09 | Two main phases. Chain uses full back-and-forth priority. Permanent types: Equipment, Relics, Curses (no Locations). London mulligan. |
