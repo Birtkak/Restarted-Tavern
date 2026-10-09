@@ -25,6 +25,21 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
 
 ---
 
+## Bot iteration under Runeterra-style mana (2026-10-09)
+
+Method: read single bot games (`SimRunner -trace`), fix what looks wrong behind a `BotStyle` switch, then measure head-to-head (`SimRunner -h2h`: the current bot against `BotStyle.Baseline()`, or with `-off Switch` against itself minus one switch), 2,000-3,000 games per mirror, seats swapped.
+
+| Round | Found in traces | Change (BotStyle switch) | Head-to-head |
+|---|---|---|---|
+| 1 | Skabba's "sacrifice: draw" used with a full hand, then discarding at end of turn | `AvoidOverdraw`: cards beyond the free hand space are worth almost nothing | 52.2% (Vesper 61%, Goober 54%) |
+| 2 | Attack turns are rare with the attack token | `AttackTokenUrgency` 1.4: damage on an attack turn is worth 40% more | 51.4% (1.4 beat 2.0 and 3.0) |
+| 2 | — | `CrackBackCountsTheirBuildTurn` (more careful attacks) | 48.9%: **off** |
+| 3 | Spark Drone played into an empty board kills itself with its own Arrival | `ValueArrivalDamage`: Arrival damage counts its best target, or the harm when only own creatures are left | 49.6% Runeterra (noise), 51.1% classic |
+
+**Overall: the current bot beats the original 52.5% under Runeterra rules and 54.7% under classic rules.** Zoo Patrol is the one mirror where it's slightly worse (47%). The report was re-run with the new bot.
+
+**Design signal (not a bot problem):** in long games both players run out of cards while mana keeps growing, so 35-65% of leftover mana in Jungle/Zoo/Vesper/Sparkwrench is lost to the Gold cap of 3 (Goober and Auditor ~2-5%). More card draw or more Gold sinks in the slower decks would use it.
+
 ## Experiment: Runeterra-style mana (2026-10-09, playtesting now)
 
 After the first human playtest ("mana could be slower, and there needs to be more interaction") the user asked for Legends of Runeterra's mana system, adapted to full turns. `FormatConfig.Runeterra()`; it's the debug table's default rules for now (the rules button in the top bar switches back to classic mana).

@@ -70,9 +70,7 @@ namespace RestartedTavern.Client
         private static FormatConfig Format(int rules)
         {
             if (rules == 2) return FormatConfig.Standard();
-            var f = FormatConfig.Runeterra(3);
-            f.NoSummoningSickness = rules == 1;
-            return f;
+            return FormatConfig.Runeterra(3, summoningSickness: rules != 1);
         }
 
         private bool Runeterra => _state.Format.ManaPerRound;

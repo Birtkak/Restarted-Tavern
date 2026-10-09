@@ -135,7 +135,7 @@ namespace RestartedTavern.Rules.AI
                 else score += _style.ChipDamageValue * a.Power;
             }
             if (through >= defender.Life) return 1000 + through;
-            score += through * LifePointValue(defender.Life);
+            score += through * LifePointValue(defender.Life) * (s.Format.AttackToken ? _style.AttackTokenUrgency : 1);
 
             var home = mine.Battlefield.Where(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped && !plan.Contains(c)
                                                    && !fixedIds.Contains(c.Id)).Select(c => ToFighter(s, c)).ToList();
@@ -144,7 +144,10 @@ namespace RestartedTavern.Rules.AI
                 return double.NegativeInfinity;
 
             // Crack-back: next turn everything of theirs that survives can attack into what stayed home.
-            int back = MinDamageThrough(theirs.Where(f => !theirDead.Contains(f)).ToList(), home);
+            var theirNext = theirs.Where(f => !theirDead.Contains(f)).ToList();
+            if (s.Format.AttackToken && _style.CrackBackCountsTheirBuildTurn && defender.Hand.Count > 0)
+                theirNext.Add(new Fighter { Power = Math.Min(s.Format.ManaCap, defender.MaxMana + 1), Health = defender.MaxMana + 2 });
+            int back = MinDamageThrough(theirNext, home);
             if (back >= mine.Life) score -= 500;
             else score -= 0.5 * back * LifePointValue(mine.Life);
             return score;

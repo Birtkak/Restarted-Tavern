@@ -66,15 +66,18 @@ namespace RestartedTavern.Rules
         /// <summary>Spells and abilities always pay Gold first, then mana (Runeterra spends spell mana first). Permanents still use mana only.</summary>
         public bool GoldFirstAlways { get; set; }
 
-        /// <summary>The Runeterra-style package: round pool, rotating first player with the attack token, Gold first, no summoning sickness.</summary>
-        public static FormatConfig Runeterra(int goldCap = 3)
+        /// <summary>
+        /// The Runeterra-style package being playtested: round pool, rotating first player with the attack token, Gold
+        /// first, Gold cap 3. Summoning sickness stays unless <paramref name="summoningSickness"/> is false.
+        /// </summary>
+        public static FormatConfig Runeterra(int goldCap = 3, bool summoningSickness = true)
         {
             var f = Standard();
             f.Name = "Runeterra-style";
             f.ManaPerRound = true;
             f.RotateRoundLeader = true;
             f.AttackToken = true;
-            f.NoSummoningSickness = true;
+            f.NoSummoningSickness = !summoningSickness;
             f.GoldFirstAlways = true;
             f.GoldCap = goldCap;
             return f;

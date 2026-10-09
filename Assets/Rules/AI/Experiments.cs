@@ -21,24 +21,27 @@ namespace RestartedTavern.Rules.AI
             public List<MatchResult> Results = new List<MatchResult>();
         }
 
-        private sealed class Deck
+        public sealed class Deck
         {
             public string Name;
             public List<string> Cards;
             public string TavernDweller;
         }
 
+        /// <summary>The six prototype decks, each with its Tavern Dweller.</summary>
+        public static Deck[] PrototypeDecks() => new[]
+        {
+            new Deck { Name = "Goober Mob", Cards = CardPool.GooberMobDeck(), TavernDweller = CardPool.GooberMobTavernDweller },
+            new Deck { Name = "Jungle Stampede", Cards = CardPool.JungleStampedeDeck(), TavernDweller = CardPool.JungleStampedeTavernDweller },
+            new Deck { Name = "Zoo Patrol", Cards = CardPool.ZooPatrolDeck(), TavernDweller = CardPool.ZooPatrolTavernDweller },
+            new Deck { Name = "Vesper's Ledger", Cards = CardPool.VespersLedgerDeck(), TavernDweller = CardPool.VespersLedgerTavernDweller },
+            new Deck { Name = "Sparkwrench Scrappers", Cards = CardPool.SparkwrenchScrappersDeck(), TavernDweller = CardPool.SparkwrenchScrappersTavernDweller },
+            new Deck { Name = "Auditor's Arsenal", Cards = CardPool.AuditorsArsenalDeck(), TavernDweller = CardPool.AuditorsArsenalTavernDweller },
+        };
+
         public static List<Section> Build(int games)
         {
-            var decks = new[]
-            {
-                new Deck { Name = "Goober Mob", Cards = CardPool.GooberMobDeck(), TavernDweller = CardPool.GooberMobTavernDweller },
-                new Deck { Name = "Jungle Stampede", Cards = CardPool.JungleStampedeDeck(), TavernDweller = CardPool.JungleStampedeTavernDweller },
-                new Deck { Name = "Zoo Patrol", Cards = CardPool.ZooPatrolDeck(), TavernDweller = CardPool.ZooPatrolTavernDweller },
-                new Deck { Name = "Vesper's Ledger", Cards = CardPool.VespersLedgerDeck(), TavernDweller = CardPool.VespersLedgerTavernDweller },
-                new Deck { Name = "Sparkwrench Scrappers", Cards = CardPool.SparkwrenchScrappersDeck(), TavernDweller = CardPool.SparkwrenchScrappersTavernDweller },
-                new Deck { Name = "Auditor's Arsenal", Cards = CardPool.AuditorsArsenalDeck(), TavernDweller = CardPool.AuditorsArsenalTavernDweller },
-            };
+            var decks = PrototypeDecks();
             var sections = new List<Section>();
 
             MatchConfig M(string name, Deck a, Deck b, Action<FormatConfig> tweak = null, BotStyle styleA = null, BotStyle styleB = null)
@@ -142,12 +145,11 @@ namespace RestartedTavern.Rules.AI
             foreach (var d in decks)
             {
                 lor.Configs.Add(M(d.Name + " mirror, today's rules", d, d));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra (Gold cap 3)", d, d, f => Copy(FormatConfig.Runeterra(3), f)));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra (Gold cap 5)", d, d, f => Copy(FormatConfig.Runeterra(5), f)));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra with summoning sickness", d, d,
-                    f => { Copy(FormatConfig.Runeterra(3), f); f.NoSummoningSickness = false; }));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra", d, d, f => Copy(FormatConfig.Runeterra(), f)));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra, Gold cap 5", d, d, f => Copy(FormatConfig.Runeterra(5), f)));
+                lor.Configs.Add(M(d.Name + " mirror, Runeterra, no summoning sickness", d, d, f => Copy(FormatConfig.Runeterra(3, false), f)));
                 lor.Configs.Add(M(d.Name + " mirror, Runeterra without the attack token", d, d,
-                    f => { Copy(FormatConfig.Runeterra(3), f); f.AttackToken = false; f.NoSummoningSickness = false; }));
+                    f => { Copy(FormatConfig.Runeterra(), f); f.AttackToken = false; }));
             }
             sections.Add(lor);
 

@@ -186,8 +186,8 @@ namespace RestartedTavern.Rules.AI
                         pumps.TryGetValue(f.SourceFights ? -1 : f.TargetIndex, out var bonus);
                         v += FightValue(s, me, first, second, bonus.power, bonus.health);
                         break;
-                    case DrawCardsEffect d: v += 2.0 * (d.CountIsX ? x : d.Count); break;
-                    case DrawIfGoldEffect d: v += 2.0 * (s.GetPlayer(me).Gold >= d.GoldAtLeast ? d.CountIfGold : d.Count); break;
+                    case DrawCardsEffect d: v += DrawValue(s, me, d.CountIsX ? x : d.Count); break;
+                    case DrawIfGoldEffect d: v += DrawValue(s, me, s.GetPlayer(me).Gold >= d.GoldAtLeast ? d.CountIfGold : d.Count); break;
                     case DiscardCardsEffect d: v -= 1.2 * d.Count; break;
                     case TapTargetEffect _:
                     {
@@ -337,6 +337,56 @@ namespace RestartedTavern.Rules.AI
             double gain = kills ? Worth(s, theirs) + 1 : _style.ChipDamageValue * myPower;     // wounds stick (§7.3)
             double loss = dies ? Worth(s, mine) : 0.4 * b.Power;
             return gain - loss;
+        }
+
+        /// <summary>
+        /// A card drawn is worth 2. With AvoidOverdraw, cards beyond the free hand space are worth 0.3 (a little
+        /// selection): they'll be discarded at the end of our turn (max hand size).
+        /// </summary>
+        private double DrawValue(GameState s, PlayerId me, int count)
+        {
+            if (!_style.AvoidOverdraw) return 2.0 * count;
+            int room = Math.Max(0, s.Format.MaxHandSize - s.GetPlayer(me).Hand.Count);
+            return 2.0 * Math.Min(count, room) + 0.3 * Math.Max(0, count - room);
+        }
+
+        /// <summary>
+        /// "Arrival: deal N damage to target ...": the value of the best legal target. A mandatory trigger with no enemy
+        /// target hits our own creature, possibly the new one itself (worth its whole card if that kills it).
+        /// </summary>
+        private double ArrivalDamageValue(GameState s, PlayerId me, CardDefinition def)
+        {
+            double total = 0;
+            foreach (var t in def.Triggers)
+            {
+                if (t.When != TriggerEvent.Arrival || t.Target == TargetSpec.None) continue;
+                var dmg = t.Effects.OfType<DealDamageEffect>().FirstOrDefault();
+                if (dmg == null || dmg.EachTarget) continue;
+                int amount = DamageAmount(s, me, dmg, null, 0);
+                var spec = t.Target;
+                bool enemyCreatures = spec == TargetSpec.AnyTarget || spec == TargetSpec.Creature
+                                      || spec == TargetSpec.CreatureYouDontControl || spec == TargetSpec.EnemyCreatureOrOpponent;
+                bool ownCreatures = spec == TargetSpec.AnyTarget || spec == TargetSpec.Creature || spec == TargetSpec.CreatureYouControl;
+                bool opponents = spec == TargetSpec.AnyTarget || spec == TargetSpec.Player || spec == TargetSpec.Opponent
+                                 || spec == TargetSpec.EnemyCreatureOrOpponent;
+                if (!enemyCreatures && !ownCreatures && !opponents) continue; // other target kinds: not judged here
+
+                double best = double.NegativeInfinity;
+                foreach (var p in s.Players)
+                {
+                    if (p.HasLost) continue;
+                    bool mine = p.Id == me;
+                    if (!mine && opponents) best = Math.Max(best, DamageValue(s, me, amount, Target.ForPlayer(p.Id)));
+                    if (mine ? !ownCreatures : !enemyCreatures) continue;
+                    foreach (var c in p.Battlefield)
+                        if (Db.Get(c.DefinitionId).IsCreature) best = Math.Max(best, DamageValue(s, me, amount, Target.ForObject(c.Id)));
+                }
+                if (ownCreatures && !t.TargetNotSelf && def.IsCreature)
+                    best = Math.Max(best, amount >= def.Health ? -(2 * def.Cost + 1) : -_style.ChipDamageValue * amount);
+                if (t.TargetOptional) best = Math.Max(best, 0);
+                if (!double.IsNegativeInfinity(best)) total += best;
+            }
+            return total;
         }
 
         private double Worth(GameState s, CardInstance c) =>

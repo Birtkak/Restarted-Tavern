@@ -37,6 +37,8 @@ namespace RestartedTavern.Rules.AI
         /// <summary>Unspent mana at end of turn, how much of it became Gold, and Gold spent.</summary>
         public long UnspentMana, GoldBanked, GoldSpent;
         public long InstantsOnOpponentsTurn, AbilitiesOnOpponentsTurn;
+        /// <summary>Cards that went from hand to the graveyard (mostly discards to hand size).</summary>
+        public long Discards;
         /// <summary>Tavern Dweller Powers used, how many of them on an opponent's turn, other activated abilities, and Gold paid for both.</summary>
         public long PowersUsed, PowersOnOpponentsTurn, AbilitiesActivated, GoldOnAbilities;
         public long CreatureDeaths, HealingDone, DamageToCreatures, DamageToPlayers;
@@ -82,6 +84,7 @@ namespace RestartedTavern.Rules.AI
             UnspentMana += o.UnspentMana; GoldBanked += o.GoldBanked; GoldSpent += o.GoldSpent;
             InstantsOnOpponentsTurn += o.InstantsOnOpponentsTurn;
             AbilitiesOnOpponentsTurn += o.AbilitiesOnOpponentsTurn;
+            Discards += o.Discards;
             PowersUsed += o.PowersUsed; PowersOnOpponentsTurn += o.PowersOnOpponentsTurn;
             AbilitiesActivated += o.AbilitiesActivated; GoldOnAbilities += o.GoldOnAbilities;
             CreatureDeaths += o.CreatureDeaths; HealingDone += o.HealingDone;
@@ -186,6 +189,9 @@ namespace RestartedTavern.Rules.AI
                         break;
                     case GoldChangedEvent g when g.NewGold < g.OldGold:
                         r.GoldSpent += g.OldGold - g.NewGold;
+                        break;
+                    case ZoneChangedEvent z when z.From == Zone.Hand && z.To == Zone.Graveyard:
+                        r.Discards++;
                         break;
                     case SpellCastEvent c when c.Player != s.ActivePlayer:
                         r.InstantsOnOpponentsTurn++;

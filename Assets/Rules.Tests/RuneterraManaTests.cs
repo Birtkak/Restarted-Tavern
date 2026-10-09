@@ -9,9 +9,7 @@ namespace RestartedTavern.Rules.Tests
     {
         private static TestGame Game(bool summoningSickness = true)
         {
-            var f = FormatConfig.Runeterra(3);
-            f.NoSummoningSickness = !summoningSickness;
-            return TestGame.AtFirstMainPhase(format: f);
+            return TestGame.AtFirstMainPhase(format: FormatConfig.Runeterra(3, summoningSickness));
         }
 
         /// <summary>The seats of the next <paramref name="count"/> turns, starting with the current one.</summary>

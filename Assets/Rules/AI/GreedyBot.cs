@@ -199,6 +199,7 @@ namespace RestartedTavern.Rules.AI
             {
                 // Develop: bigger is better, so the curve gets used.
                 value = 2 * def.Cost + 1;
+                if (_style.ValueArrivalDamage) value += ArrivalDamageValue(s, me, def);
                 if (def.Keywords.HasFlag(Keyword.Haste) && s.Step == Step.Main1) value += 1;
             }
             else if (def.DividedDamage > 0)

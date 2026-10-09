@@ -110,6 +110,8 @@ PRACTICAL NOTES
   then run Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-simGames 500] [-simSections "round,cap"].
   The full suite takes ~15 s (inside Unity ~9 min: Mono barely scales across cores). Same results.
   The same SDK could also run the unit tests outside Unity later (not set up).
+  Bot work: SimRunner.exe -trace -decks 2,2 -seed 4 [-out file] prints one game; -h2h [-off SwitchName] measures the
+  current bot against BotStyle.Baseline() (or against itself minus one switch). New bot ideas go behind a BotStyle switch.
 - Multi-line edits: a quoted Bash heredoc (python - <<'EOF') works, apostrophes included; or write the script
   to the scratchpad and run it with python. Open files with newline='' when writing: otherwise Windows writes
   CRLF, and the repo's .gitattributes keeps .cs/.md files as LF.
