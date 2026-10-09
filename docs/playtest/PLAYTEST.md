@@ -18,6 +18,8 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
 
 ---
 
+> **Deck lists changed on 2026-10-09** (after these findings): each prototype deck swapped 4 cards for set v0.2 cards, and Sparkwrench Scrappers now has Equipment. The numbers below come from the old lists, so re-run the report before comparing.
+
 ## Findings: Tavern Dwellers and abilities (2026-10-09, 500 games per row)
 
 Tavern Dwellers (passives and Powers), activated abilities and Equip are now in the engine. Six decks, each with its Tavern Dweller: Goober Mob (Skabba), Jungle Stampede (Mukk), Zoo Patrol (Keeper Z-00), Vesper's Ledger (Madame Vesper), Sparkwrench Scrappers (Sparkwrench) and the new Equipment deck **Auditor's Arsenal** (Auditor Prime). The "Tavern Dwellers" section of the report plays every mirror with and without them.

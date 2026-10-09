@@ -14,41 +14,47 @@ namespace RestartedTavern.Rules.Cards
 
         public static CardDatabase CreateDatabase() => new CardDatabase(All());
 
-        /// <summary>Legal Standard deck (60, max 4): all prototype Goobers plus Neutral filler.</summary>
+        /// <summary>
+        /// Legal Standard deck (60, max 4): Goobers + Sensationalists (the Skabba pair). Wide boards, deaths
+        /// that feed Skabba, a sacrifice outlet (Fling the Runt) and Gold theft. v0.2 cards added 2026-10-09.
+        /// </summary>
         public static List<string> GooberMobDeck() => FourOfEach(
             "goober_rascal", "spark_snot", "fuse_goober", "gob_gang", "brawling_runt", "goober_warchief",
-            "hog_rider", "mob_rush", "barrel_bomber", "pit_fighter", "overrun_the_gates", "pit_champion",
-            "hired_sellsword", "tavern_bouncer", "barkeeps_tonic");
+            "hog_rider", "mob_rush", "barrel_bomber", "gold_tooth_bruiser", "overrun_the_gates", "pit_champion",
+            "crypt_usher", "pickpocket_boss", "fling_the_runt");
 
-        /// <summary>Legal Standard deck: Evergrowing Wild + big Goobers (the Mukk the Grub King pair) + Neutral.</summary>
+        /// <summary>Legal Standard deck: Evergrowing Wild + big Goobers (the Mukk the Grub King pair). Trample everywhere for Mukk.</summary>
         public static List<string> JungleStampedeDeck() => FourOfEach(
             "jungle_remedy", "vine_spider", "razorhide_boar", "ironbark_grizzly", "thornback_ravager",
             "tusked_mammoth", "hog_rider", "pit_fighter", "pit_champion", "spark_snot",
-            "barkeeps_tonic", "hired_sellsword", "tavern_bouncer", "wandering_adventurer", "brawling_runt");
+            "reckless_charge", "kick_em_while_theyre_down", "gold_tooth_bruiser", "titanback_colossus", "brawling_runt");
 
         /// <summary>Legal Standard deck: Wild + Glitterworld (the Keeper Z-00 pair). Pings, fights and healing, so permanent damage shows up.</summary>
         public static List<string> ZooPatrolDeck() => FourOfEach(
-            "static_shock", "spark_drone", "chain_zap", "sky_patrol_drone", "riot_suppressor", "grid_overload",
-            "hover_tank", "orbital_strike_network",
-            "canopy_critter", "mossback_tortoise", "primal_clash", "growth_spurt", "apex_instinct",
+            "static_shock", "spark_drone", "chain_zap", "ambush_predator", "riot_suppressor", "grid_overload",
+            "neon_executioner", "orbital_strike_network",
+            "finisher_protocol", "mossback_tortoise", "primal_clash", "overflowing_spring", "apex_instinct",
             "sabretooth_prowler", "primeval_behemoth");
 
         /// <summary>Legal Standard deck: Wizards + Sensationalists (the Madame Vesper pair). Lifelink, drains, removal, flyers: a slower deck.</summary>
         public static List<string> VespersLedgerDeck() => FourOfEach(
             "gilded_rat", "candle_cultist", "hex_of_frailty", "apprentice_forger", "candlelit_acolyte",
-            "sticky_fingers", "fatal_rumor", "hungry_shade", "ritual_slaughter", "hired_enforcer",
-            "wraith_swarm", "the_grand_ledger", "barkeeps_tonic", "tavern_bouncer", "wandering_adventurer");
+            "blood_price", "fatal_rumor", "hungry_shade", "ritual_slaughter", "hired_enforcer",
+            "wraith_swarm", "the_grand_ledger", "hush_money", "body_snatcher", "compound_interest");
 
-        /// <summary>Legal Standard deck: Goobers + Glitterworld (the Sparkwrench pair). Burn and pings: damage everywhere.</summary>
+        /// <summary>
+        /// Legal Standard deck: Goobers + Glitterworld (the Sparkwrench pair). Burn and pings, plus cheap
+        /// Equipment for Sparkwrench's discount and Power (added 2026-10-09).
+        /// </summary>
         public static List<string> SparkwrenchScrappersDeck() => FourOfEach(
             "goober_rascal", "spark_snot", "fuse_goober", "brawling_runt", "goober_warchief", "hog_rider",
-            "barrel_bomber", "mob_rush", "static_shock", "spark_drone", "chain_zap", "sky_patrol_drone",
-            "riot_suppressor", "grid_overload", "hover_tank");
+            "barrel_bomber", "marksman_scope", "static_shock", "spark_drone", "chain_zap", "scrap_collector",
+            "riot_suppressor", "gilded_knuckles", "gold_tooth_bruiser");
 
         /// <summary>Legal Standard deck: Wizards + Glitterworld (the Auditor Prime pair). The Equipment deck: Equip costs are a Gold sink.</summary>
         public static List<string> AuditorsArsenalDeck() => FourOfEach(
-            "neon_shiv", "courier_bot", "spark_drone", "pulse_blade", "back_street_mechanic", "alley_tinker",
-            "apprentice_forger", "overclock_rig", "sky_patrol_drone", "arc_welder", "rail_cannon", "hover_tank",
+            "neon_shiv", "courier_bot", "marksman_scope", "pulse_blade", "back_street_mechanic", "alley_tinker",
+            "scrap_collector", "overclock_rig", "retainer_mage", "arc_welder", "rail_cannon", "hardlight_aegis",
             "megacorp_exosuit", "patrol_captain", "titan_frame_guardian");
 
         /// <summary>The Tavern Dweller each prototype deck is built around (GAME_DESIGN §9).</summary>
