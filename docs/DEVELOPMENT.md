@@ -2,7 +2,40 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** pre-production. The engine and tech stack are ❓ not chosen yet. The design ruleset comes first.
+**Status:** pre-production. The first card set (v0.1) is designed. The tech stack is chosen (§0).
+
+---
+
+## 0. Tech Stack 🔒
+
+| Item | Choice |
+|---|---|
+| Engine | **Unity 6000.6.4f1** (Unity 6), already installed. Pin this version in `ProjectSettings/ProjectVersion.txt` |
+| Language | **C#** |
+| First platform | **PC (Windows)**. Android, Mac and WebGL stay possible later because the rules engine has no Unity code |
+| Online | **Local first** (hot-seat and vs. AI). The engine is built online-ready (deterministic, per-player hidden-information views). An authoritative server comes later, reusing the same rules library |
+| Tests | NUnit through the **Unity Test Framework** (EditMode tests). They can run headless from the command line with `-runTests` |
+
+### 0.1 Project layout 🟡
+```
+Restarted-Tavern/
+├─ docs/                          design + development docs, card lists
+├─ Assets/
+│  ├─ Rules/                      RestartedTavern.Rules.asmdef  (noEngineReferences: true)
+│  │   ├─ Core/                   GameState, PlayerState, CardInstance, ids, RNG
+│  │   ├─ Flow/                   turn structure, phases, priority, the Chain
+│  │   ├─ Combat/                 attackers, blockers, damage, Trample
+│  │   ├─ Effects/                effect building blocks (damage, heal, draw, create token...)
+│  │   └─ StateBasedActions/      deaths, life loss, Legendary rule, detached Curses
+│  ├─ Rules.Tests/                RestartedTavern.Rules.Tests.asmdef (EditMode, NUnit)
+│  ├─ Cards/                      card data (JSON) + rare custom card scripts
+│  └─ Client/                     Unity presentation: scenes, UI, animations (refers to Rules)
+└─ Server/  (later)               a .NET host that compiles the same Assets/Rules source files
+```
+- `noEngineReferences: true` on the Rules assembly **enforces** at compile time that rules code can't touch `UnityEngine`. This keeps it portable to a server and fast to test.
+- The Rules assembly targets the C# subset that Unity 6 supports (C# 9), and avoids reflection-heavy libraries, so it can also compile as a plain .NET library later.
+- 🟡 Card data is stored as **JSON** (Unity's built-in parsing works without extra packages). YAML stays possible later.
+
 
 ---
 
@@ -85,16 +118,17 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 ---
 
 ## 5. Roadmap (draft)
-1. **Ruleset v0.1**: finish the ❓ items in GAME_DESIGN.md for 2-player Standard.
-2. **Rules engine prototype**: headless and text/CLI-playable, with about 20 test cards.
-3. **Paper / CLI playtest**: tune the Gold cap, the curve and the impact of permanent damage.
-4. **Choose the client engine**, then build a minimal visual client.
-5. A first set of about 100 cards and a basic AI.
+1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons.
+2. **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards.
+3. **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage.
+4. **Minimal visual client** in Unity (Windows build): hot-seat 1v1.
+5. Implement the full first set (120 cards) and a basic AI.
 6. Later: multiplayer (3–4 players), singleton format, online play.
 
 ---
 
 ## 6. Open Technical Questions ❓
-- Client engine: Unity (C#) / Godot / web (TypeScript)? This decides the language of the rules engine too, unless the rules engine runs on a server.
-- Online multiplayer: authoritative server needed? (Recommended if online play is a goal.)
 - Card art pipeline and card frame rendering.
+- AI approach for vs.-AI play (rule-based first? Monte Carlo search, which works because the engine is deterministic?).
+- CI: running Unity tests on GitHub Actions needs a Unity license setup (GameCI). Decide when the prototype has tests worth guarding.
+- Online (later): hosting, and how matchmaking works.
