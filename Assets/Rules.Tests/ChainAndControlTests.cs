@@ -140,7 +140,7 @@ namespace RestartedTavern.Rules.Tests
             var me = g.Active;
             var hurt = g.AddToBattlefield(g.Other, "hog_rider", damage: 2);
             var big = g.AddToBattlefield(g.Other, "pit_fighter"); // cost 4
-            var token = g.AddToBattlefield(g.Other, PrototypeCards.GooberToken);
+            var token = g.AddToBattlefield(g.Other, CardPool.GooberToken);
             token.IsToken = true;
             var check = g.AddToHand(me, "bounced_check");
             g.SetMana(me, 2);

@@ -200,7 +200,7 @@ namespace RestartedTavern.Rules.Tests
             g.PassRound();
             Assert.AreEqual(0, g.P(g.Other).Gold);
             Assert.AreEqual(5, g.P(me).Gold, "your cap limits the take: gained 4");
-            Assert.AreEqual(4, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.PrototypeCards.GooberToken));
+            Assert.AreEqual(4, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
         }
 
         [Test]

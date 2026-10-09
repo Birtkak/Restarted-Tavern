@@ -197,7 +197,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Play(g.Active, tinker.Id));
             g.PassRound();
             g.PassRound();
-            var plating = g.OnBattlefield(g.Active, PrototypeCards.ScrapPlatingToken);
+            var plating = g.OnBattlefield(g.Active, CardPool.ScrapPlatingToken);
             Assert.IsNotNull(plating);
             Equip(g, plating, sword);
             Assert.AreEqual(3, g.Stats(sword).Power, "Patrol Captain: +1/+1 to equipped creatures");

@@ -72,6 +72,8 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(4, legal.Count, "3 damage over 2 blockers: 3/0, 2/1, 1/2, 0/3");
             Assert.IsTrue(legal.All(a => a.Division.Sum() == 3));
             CollectionAssert.AreEqual(new[] { sellsword.Id, spider.Id }, g.State.Pending.Choices, "block order");
+            Assert.AreEqual("Damage from Hog-Rider: 0 to Hired Sellsword (3 Health left), 3 to Vine Spider (3 Health left)",
+                new GameText(g.Engine.Cards).Describe(g.State, PlayerAction.AssignDamage(g.Active, new[] { 0, 3 })));
             g.Do(PlayerAction.AssignDamage(g.Active, new[] { 0, 3 }));
             g.PassUntil(s => s.Step == Step.Main2);
 
@@ -172,6 +174,7 @@ namespace RestartedTavern.Rules.Tests
             var options = g.Legal(me);
             Assert.AreEqual(2, options.Count);
             var goldFirst = options.Single(a => g.State.PendingTriggers[a.Option].SourceDefinitionId == "test_gold");
+            StringAssert.Contains("test_gold trigger", new GameText(g.Engine.Cards).Describe(g.State, goldFirst));
             g.Do(goldFirst);
 
             Assert.IsNull(g.State.Pending, "the last trigger goes on by itself");

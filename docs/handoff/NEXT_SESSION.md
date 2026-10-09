@@ -6,10 +6,11 @@ Paste everything below the line into a new session.
 
 You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-card game.
 Repo: C:\Users\Birre\Desktop\Claude shizzle\Restarted-Tavern (GitHub: Birtkak/Restarted-Tavern, main).
-Last commit of the previous session: "Deck pass: four v0.2 cards into each prototype deck" (plus this handoff).
-That session implemented all 70 set v0.2 cards in four engine batches (A Gold economy, B damage and
-healing, C the Chain and control, D payment rules / choices / delayed triggers) and swapped 4 v0.2 cards
-into each of the six decks.
+State at the end of the previous session (2026-10-09): every v0.1 and v0.2 card is in the engine, and the
+choices the engine used to make automatically are now player choices: which Legendary to keep, how to divide
+combat damage among several creatures, and the order of your own simultaneous triggers. Then a housekeeping
+pass: PrototypeCards* was renamed to CardPool*, GreedyBot was split into partial files, the docs were refreshed.
+199 EditMode tests, all green.
 
 GOAL OF THIS SESSION: ask the user which of the next steps below to do (AskUserQuestion, multiple
 choice, recommended option first), then build it with tests.
@@ -18,8 +19,7 @@ READ FIRST
 - docs/GAME_DESIGN.md: the rules. MTG Comprehensive Rules are the backbone (§1.1): anything not
   covered there works like MTG. The Decision Log at the bottom is the source of truth.
 - docs/DEVELOPMENT.md §7: what the engine does today and the "Not yet implemented" list.
-- docs/cards/*.md: card lists (v0.1 and the approved v0.2 additions, all ✅). Every v0.2 card's
-  "Engine" column now says "✓ implemented". Some v0.1 cards are still not in the pool.
+- docs/cards/*.md: card lists (v0.1 and the approved v0.2 additions, all ✅). Every card is in the engine.
 - docs/cards/tavern_dwellers.md: the 10 Tavern Dwellers (source of truth).
 - docs/playtest/PLAYTEST.md ("Findings: Tavern Dwellers and abilities") and RULES_REVIEW.md.
 
@@ -38,6 +38,10 @@ RULES DECIDED IN THE LAST SESSIONS (all in the Decision Log)
 - Gold-Tooth Bruiser / Pickpocket Boss: you gain 1 Gold even if they had none. Dice Game: open
   choices in turn order (MTG 101.4). Retainer Mage: Gold can help pay whenever it's cast.
 - Every deck has one Tavern Dweller; every card is from its two factions or Neutral.
+- Player choices (MTG defaults): Legendary rule per controller, you pick which to keep; combat damage among
+  several creatures is divided freely (§7.2.6, Trample needs lethal on every blocker first), asked only when
+  the creature can't kill them all; each player orders their own simultaneous triggers (APNAP between players),
+  except triggers of the same ability of the same card.
 
 WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
 - GameEngine: CreateGame / GetLegalActions / Apply / WaitingOn / GetAbilities. CacheLegalActions is an
@@ -52,16 +56,19 @@ WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
   PlayerAttacks, CurseToGraveyard, GoldPaidForCreatureSpell) with Subject / MinPower / MinCost / MinAmount /
   OthersOnly / SubjectSubtype / OnlyAttachedCreature / MaxRemainingHealth / MaxPerTurn. Triggers carry
   EventAmount / EventObject / EventPlayer. Delayed triggers (GameState.DelayedTriggers).
-- Mid-resolution choices: DecisionKind TopOrBottom, DiscardCards, PayTax, ChooseFromTop, PayAnyGold.
+- Mid-resolution choices: DecisionKind TopOrBottom, DiscardCards, PayTax, ChooseFromTop, PayAnyGold, ChooseObject,
+  YesNo. Rules choices: KeepLegendary (state-based actions), AssignCombatDamage (start of the combat damage
+  step, ActionKind.AssignCombatDamage with PlayerAction.Division), OrderTriggers (PutPendingTriggersOnChain).
 - Chain items have object ids (counterspells target them). Control change (permanent and until end of
   turn), bounce, per-turn damage caps, "can't be healed", extra costs on spells (life, sacrifice, X Gold).
-- Cards: Cards/PrototypeCards.cs (+ .Abilities.cs, .TavernDwellers.cs, .V02.cs). Six decks, each with its
+- Cards: Cards/CardPool.cs (+ .Abilities.cs, .TavernDwellers.cs, .V01.cs, .V02.cs). Six decks, each with its
   Tavern Dweller: Goober Mob (Skabba), Jungle Stampede (Mukk), Zoo Patrol (Keeper Z-00), Vesper's
   Ledger (Madame Vesper), Sparkwrench Scrappers (Sparkwrench), Auditor's Arsenal (Auditor Prime).
-- AI/GreedyBot.cs (values abilities, Equip and Powers; saves Gold for the opponent's end step),
+- AI/GreedyBot*.cs (partial class: decisions, .Abilities, .Effects, .Combat; values abilities, Equip and
+  Powers; saves Gold for the opponent's end step; answers the new choices),
   AI/MatchRunner.cs + AI/Experiments.cs (report in docs/playtest/SIMULATION_REPORT.md).
 - Client/DebugTable.cs: hot-seat IMGUI table with the Tavern Dweller row.
-- 191 EditMode tests, all green. Every card in docs/cards is implemented (PrototypeCards*.cs).
+- 199 EditMode tests, all green. Every card in docs/cards is implemented (CardPool*.cs).
 
 CANDIDATE NEXT STEPS (offer these; the user picks)
 1. Smarter bot attacks (recommended first). The bot only goes all-in when the defender has no
@@ -74,10 +81,10 @@ CANDIDATE NEXT STEPS (offer these; the user picks)
    Sparkwrench Scrappers now has some Equipment (deck pass), but nothing is measured yet. Option A:
    decks built around them. Option B: Power changes — design question for the user, show options.
 4. Visual client (DEVELOPMENT §5 roadmap step 4): a real Unity hot-seat table for human playtests.
-5. Player choices the engine still makes automatically: how an attacker splits damage among
-   several blockers, which Legendary to keep, ordering your own simultaneous triggers. Needed before
-   human playtests.
-(Done 2026-10-09: every v0.1 and v0.2 card is in the engine, 191 tests.)
+5. Engine gaps (DEVELOPMENT §7 "Not yet implemented"): Snik copying by target with last known information,
+   replacement effects, loading card data from JSON instead of C#.
+(Done 2026-10-09: every v0.1 and v0.2 card is in the engine; player choices for the Legendary rule, combat
+damage division and trigger order; 199 tests.)
 
 HOW TO WORK WITH THIS USER
 - The user has the vision and wants Claude to propose details. For design questions, use
@@ -99,7 +106,8 @@ PRACTICAL NOTES
   -bot1 -bot2 -deck1 N -deck2 N -autoplay N -autoshot <png> and look at the screenshot.
 - Simulation report (only when asked): -executeMethod RestartedTavern.Client.Editor.SimulationMenu.RunReport
   [-simGames 500] [-simSections "round,cap"]. The full suite (84 matchups) takes about 6 minutes.
-- On this Windows box, Bash heredocs containing apostrophes break. Write multi-line edit scripts to the
-  scratchpad with the Write tool and run them with python.
+- Multi-line edits: a quoted Bash heredoc (python - <<'EOF') works, apostrophes included; or write the script
+  to the scratchpad and run it with python. Open files with newline='' when writing: otherwise Windows writes
+  CRLF, and the repo's .gitattributes keeps .cs/.md files as LF.
 - No standalone .NET SDK is installed; Unity compiles everything. New .cs files get .meta files on the
   next Unity run: commit them together.

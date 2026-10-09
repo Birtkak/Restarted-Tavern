@@ -14,11 +14,11 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void TavernDweller_StartsInTheTavernDwellerZone()
         {
-            var engine = new GameEngine(PrototypeCards.CreateDatabase());
+            var engine = new GameEngine(CardPool.CreateDatabase());
             var s = engine.CreateGame(FormatConfig.Standard(), new[]
             {
-                new PlayerSetup { Deck = PrototypeCards.ZooPatrolDeck(), TavernDwellerId = PrototypeCards.ZooPatrolTavernDweller },
-                new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
+                new PlayerSetup { Deck = CardPool.ZooPatrolDeck(), TavernDwellerId = CardPool.ZooPatrolTavernDweller },
+                new PlayerSetup { Deck = CardPool.GooberMobDeck(), TavernDwellerId = CardPool.GooberMobTavernDweller },
             }, 1);
             Assert.AreEqual("keeper_z00", s.Players[0].TavernDweller.DefinitionId);
             Assert.AreEqual(Zone.TavernDweller, s.Players[0].TavernDweller.Zone);
@@ -28,14 +28,14 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void DeckValidation_ChecksTheTavernDwellersFactions()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var f = FormatConfig.Standard();
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, f, PrototypeCards.AuditorsArsenalDeck(), PrototypeCards.AuditorsArsenalTavernDweller));
-            Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, PrototypeCards.ZooPatrolDeck()), "needs a Tavern Dweller");
-            Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, PrototypeCards.ZooPatrolDeck(), "skabba"),
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, f, CardPool.AuditorsArsenalDeck(), CardPool.AuditorsArsenalTavernDweller));
+            Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, CardPool.ZooPatrolDeck()), "needs a Tavern Dweller");
+            Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, CardPool.ZooPatrolDeck(), "skabba"),
                 "Wild and Glitterworld cards are outside Goobers + Sensationalists");
-            Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, PrototypeCards.ZooPatrolDeck(), "hired_sellsword"));
-            var withTavernDwellerCard = PrototypeCards.ZooPatrolDeck();
+            Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, CardPool.ZooPatrolDeck(), "hired_sellsword"));
+            var withTavernDwellerCard = CardPool.ZooPatrolDeck();
             withTavernDwellerCard[0] = "keeper_z00";
             Assert.Throws<ArgumentException>(() => DeckValidator.Validate(db, f, withTavernDwellerCard, "keeper_z00"));
         }
@@ -43,16 +43,16 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void EveryPrototypeDeck_IsLegalWithItsTavernDweller()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             Assert.AreEqual(10, db.All.Count(c => c.IsTavernDweller));
             foreach (var (deck, tavernDweller) in new (List<string>, string)[]
                      {
-                         (PrototypeCards.GooberMobDeck(), PrototypeCards.GooberMobTavernDweller),
-                         (PrototypeCards.JungleStampedeDeck(), PrototypeCards.JungleStampedeTavernDweller),
-                         (PrototypeCards.ZooPatrolDeck(), PrototypeCards.ZooPatrolTavernDweller),
-                         (PrototypeCards.VespersLedgerDeck(), PrototypeCards.VespersLedgerTavernDweller),
-                         (PrototypeCards.SparkwrenchScrappersDeck(), PrototypeCards.SparkwrenchScrappersTavernDweller),
-                         (PrototypeCards.AuditorsArsenalDeck(), PrototypeCards.AuditorsArsenalTavernDweller),
+                         (CardPool.GooberMobDeck(), CardPool.GooberMobTavernDweller),
+                         (CardPool.JungleStampedeDeck(), CardPool.JungleStampedeTavernDweller),
+                         (CardPool.ZooPatrolDeck(), CardPool.ZooPatrolTavernDweller),
+                         (CardPool.VespersLedgerDeck(), CardPool.VespersLedgerTavernDweller),
+                         (CardPool.SparkwrenchScrappersDeck(), CardPool.SparkwrenchScrappersTavernDweller),
+                         (CardPool.AuditorsArsenalDeck(), CardPool.AuditorsArsenalTavernDweller),
                      })
                 Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), deck, tavernDweller), tavernDweller);
         }
@@ -121,7 +121,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Play(g.Active, champ.Id));
             Assert.AreEqual(2, g.State.Chain.Count, "the trigger goes on top of the spell");
             g.PassRound();
-            Assert.IsNotNull(g.OnBattlefield(g.Active, PrototypeCards.GooberToken));
+            Assert.IsNotNull(g.OnBattlefield(g.Active, CardPool.GooberToken));
 
             g.PassRound();
             g.Do(g.Activations(g.Active, grizzle).Single(a => a.Target == Target.ForPlayer(g.Other)));
@@ -201,7 +201,7 @@ namespace RestartedTavern.Rules.Tests
         {
             var g = TestGame.AtFirstMainPhase();
             g.SetTavernDweller(g.Other, "skabba");
-            for (int i = 0; i < 4; i++) g.AddToBattlefield(g.Other, PrototypeCards.GooberToken);
+            for (int i = 0; i < 4; i++) g.AddToBattlefield(g.Other, CardPool.GooberToken);
             var overload = g.AddToHand(g.Active, "grid_overload");
             g.SetMana(g.Active, 4);
             g.Do(PlayerAction.Play(g.Active, overload.Id));
@@ -264,7 +264,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Play(g.Other, snot.Id, Target.ForObject(mammoth.Id)));
             g.PassRound();
             g.PassRound();
-            Assert.IsNotNull(g.OnBattlefield(g.Active, PrototypeCards.SpawnToken));
+            Assert.IsNotNull(g.OnBattlefield(g.Active, CardPool.SpawnToken));
 
             var dead = g.P(g.Active).Graveyard.Single(c => c.DefinitionId == "tusked_mammoth");
             g.SetMana(g.Active, 3);

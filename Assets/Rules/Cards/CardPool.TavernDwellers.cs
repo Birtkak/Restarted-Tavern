@@ -7,7 +7,7 @@ namespace RestartedTavern.Rules.Cards
     /// passive (a triggered or static ability) and a Power: an activated ability paid with mana
     /// and/or Gold (mana first), once each turn, at instant speed (GAME_DESIGN §9.1).
     /// </summary>
-    public static partial class PrototypeCards
+    public static partial class CardPool
     {
         public const string Wizards = "shadow_money_wizards";
         public const string Goobers = "goobers";

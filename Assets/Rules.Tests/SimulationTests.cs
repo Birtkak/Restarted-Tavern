@@ -32,7 +32,7 @@ namespace RestartedTavern.Rules.Tests
 
         private static string PlayRandomGame(ulong seed, out int actions, out GameState final)
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var engine = new GameEngine(db);
             var botRng = new DeterministicRng(seed * 7919 + 1);
             var setups = new[]
@@ -140,7 +140,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Clone_IsIndependent()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var engine = new GameEngine(db);
             var rng = new DeterministicRng(5);
             var state = engine.CreateGame(FormatConfig.Standard(),

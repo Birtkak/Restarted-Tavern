@@ -11,11 +11,11 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GreedyBot_FinishesGames_AndIsDeterministic()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var cfg = new MatchConfig
             {
-                Name = "smoke", DeckAName = "G", DeckA = PrototypeCards.GooberMobDeck(), TavernDwellerA = PrototypeCards.GooberMobTavernDweller,
-                DeckBName = "J", DeckB = PrototypeCards.JungleStampedeDeck(), TavernDwellerB = PrototypeCards.JungleStampedeTavernDweller, Games = 20,
+                Name = "smoke", DeckAName = "G", DeckA = CardPool.GooberMobDeck(), TavernDwellerA = CardPool.GooberMobTavernDweller,
+                DeckBName = "J", DeckB = CardPool.JungleStampedeDeck(), TavernDwellerB = CardPool.JungleStampedeTavernDweller, Games = 20,
             };
             var a = MatchRunner.Run(cfg, db);
             var b = MatchRunner.Run(cfg, db);
@@ -29,11 +29,11 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GreedyBot_UsesTavernDwellerPowersAndEquip()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var cfg = new MatchConfig
             {
-                Name = "arsenal", DeckAName = "A", DeckA = PrototypeCards.AuditorsArsenalDeck(), TavernDwellerA = PrototypeCards.AuditorsArsenalTavernDweller,
-                DeckBName = "Z", DeckB = PrototypeCards.ZooPatrolDeck(), TavernDwellerB = PrototypeCards.ZooPatrolTavernDweller, Games = 10,
+                Name = "arsenal", DeckAName = "A", DeckA = CardPool.AuditorsArsenalDeck(), TavernDwellerA = CardPool.AuditorsArsenalTavernDweller,
+                DeckBName = "Z", DeckB = CardPool.ZooPatrolDeck(), TavernDwellerB = CardPool.ZooPatrolTavernDweller, Games = 10,
             };
             var r = MatchRunner.Run(cfg, db);
             Assert.AreEqual(0, r.Draws);
@@ -80,7 +80,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GreedyBot_BeatsRandomPlay()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var engine = new GameEngine(db);
             var bot = new GreedyBot(engine);
             int botWins = 0;
@@ -88,8 +88,8 @@ namespace RestartedTavern.Rules.Tests
             {
                 var state = engine.CreateGame(FormatConfig.Standard(), new[]
                 {
-                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
-                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
+                    new PlayerSetup { Deck = CardPool.GooberMobDeck(), TavernDwellerId = CardPool.GooberMobTavernDweller },
+                    new PlayerSetup { Deck = CardPool.GooberMobDeck(), TavernDwellerId = CardPool.GooberMobTavernDweller },
                 }, seed);
                 var rng = new DeterministicRng(seed);
                 var botPlayer = new PlayerId(seed % 2 == 0 ? 1 : 2);
@@ -117,13 +117,13 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void SecondPlayerCompensation_ExperimentSwitches()
         {
-            var engine = new GameEngine(PrototypeCards.CreateDatabase());
+            var engine = new GameEngine(CardPool.CreateDatabase());
             var format = FormatConfig.Standard();
             format.SecondPlayerExtraCards = 1;
             format.SecondPlayerFirstTurnBonusMana = 1;
             format.FirstPlayerSkipsDraw = false;
-            var deck = PrototypeCards.GooberMobDeck();
-            var tavernDweller = PrototypeCards.GooberMobTavernDweller;
+            var deck = CardPool.GooberMobDeck();
+            var tavernDweller = CardPool.GooberMobTavernDweller;
             var s = engine.CreateGame(format, new[] { new PlayerSetup { Deck = deck, TavernDwellerId = tavernDweller }, new PlayerSetup { Deck = deck, TavernDwellerId = tavernDweller } }, 3);
             s.AutoPass = false;
             engine.Apply(s, PlayerAction.Keep(s.Pending.Player));
@@ -162,7 +162,7 @@ namespace RestartedTavern.Rules.Tests
         public void ExperimentReport_RendersEverySection()
         {
             var sections = Experiments.Build(2);
-            Experiments.Run(sections, PrototypeCards.CreateDatabase());
+            Experiments.Run(sections, CardPool.CreateDatabase());
             var md = Experiments.ToMarkdown(sections, 2, System.TimeSpan.FromSeconds(1));
             foreach (var s in sections) StringAssert.Contains(s.Title, md);
             Assert.AreEqual(sections.Sum(s => s.Configs.Count), md.Split('\n').Count(l => l.StartsWith("| ") && !l.StartsWith("| Matchup")));

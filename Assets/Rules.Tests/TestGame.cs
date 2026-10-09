@@ -32,7 +32,7 @@ namespace RestartedTavern.Rules.Tests
         public static TestGame AtFirstMainPhase(ulong seed = 1, IEnumerable<CardDefinition> extraCards = null,
             string deckCard = "hired_sellsword", int deckSize = 20)
         {
-            var db = new CardDatabase(PrototypeCards.All().Concat(extraCards ?? Enumerable.Empty<CardDefinition>()));
+            var db = new CardDatabase(CardPool.All().Concat(extraCards ?? Enumerable.Empty<CardDefinition>()));
             var engine = new GameEngine(db);
             var format = FormatConfig.Standard();
             format.EnforceDeckRules = false;

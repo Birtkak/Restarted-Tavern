@@ -26,7 +26,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Mulligan_London_PutsCardsOnTheBottom()
         {
-            var engine = new GameEngine(PrototypeCards.CreateDatabase());
+            var engine = new GameEngine(CardPool.CreateDatabase());
             var format = FormatConfig.Standard();
             format.EnforceDeckRules = false;
             var deck = Enumerable.Repeat("hired_sellsword", 20).ToList();

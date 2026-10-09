@@ -32,12 +32,12 @@ namespace RestartedTavern.Rules.AI
         {
             var decks = new[]
             {
-                new Deck { Name = "Goober Mob", Cards = PrototypeCards.GooberMobDeck(), TavernDweller = PrototypeCards.GooberMobTavernDweller },
-                new Deck { Name = "Jungle Stampede", Cards = PrototypeCards.JungleStampedeDeck(), TavernDweller = PrototypeCards.JungleStampedeTavernDweller },
-                new Deck { Name = "Zoo Patrol", Cards = PrototypeCards.ZooPatrolDeck(), TavernDweller = PrototypeCards.ZooPatrolTavernDweller },
-                new Deck { Name = "Vesper's Ledger", Cards = PrototypeCards.VespersLedgerDeck(), TavernDweller = PrototypeCards.VespersLedgerTavernDweller },
-                new Deck { Name = "Sparkwrench Scrappers", Cards = PrototypeCards.SparkwrenchScrappersDeck(), TavernDweller = PrototypeCards.SparkwrenchScrappersTavernDweller },
-                new Deck { Name = "Auditor's Arsenal", Cards = PrototypeCards.AuditorsArsenalDeck(), TavernDweller = PrototypeCards.AuditorsArsenalTavernDweller },
+                new Deck { Name = "Goober Mob", Cards = CardPool.GooberMobDeck(), TavernDweller = CardPool.GooberMobTavernDweller },
+                new Deck { Name = "Jungle Stampede", Cards = CardPool.JungleStampedeDeck(), TavernDweller = CardPool.JungleStampedeTavernDweller },
+                new Deck { Name = "Zoo Patrol", Cards = CardPool.ZooPatrolDeck(), TavernDweller = CardPool.ZooPatrolTavernDweller },
+                new Deck { Name = "Vesper's Ledger", Cards = CardPool.VespersLedgerDeck(), TavernDweller = CardPool.VespersLedgerTavernDweller },
+                new Deck { Name = "Sparkwrench Scrappers", Cards = CardPool.SparkwrenchScrappersDeck(), TavernDweller = CardPool.SparkwrenchScrappersTavernDweller },
+                new Deck { Name = "Auditor's Arsenal", Cards = CardPool.AuditorsArsenalDeck(), TavernDweller = CardPool.AuditorsArsenalTavernDweller },
             };
             var sections = new List<Section>();
 

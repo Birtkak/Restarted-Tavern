@@ -3,12 +3,12 @@ using System.Collections.Generic;
 namespace RestartedTavern.Rules.Cards
 {
     /// <summary>
-    /// The rest of set v0.1 (docs/cards/*.md): the cards that weren't in the prototype pool yet. Batch E:
+    /// The rest of set v0.1 (docs/cards/*.md): the cards that weren't in the engine yet. Batch E:
     /// cards that needed small engine additions (intervening "if", death watchers, extra blocks, graveyard
     /// returns, attacking tokens). Batch F: cards with a choice during resolution (sacrifice, discard, "you
     /// may", put onto the battlefield, Everything Has a Price) and divided damage.
     /// </summary>
-    public static partial class PrototypeCards
+    public static partial class CardPool
     {
         private static IEnumerable<CardDefinition> V01RestCards()
         {

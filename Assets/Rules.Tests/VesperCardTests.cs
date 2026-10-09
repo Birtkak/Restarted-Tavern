@@ -11,9 +11,9 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void NewDecks_AreLegal()
         {
-            var db = PrototypeCards.CreateDatabase();
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.VespersLedgerDeck(), PrototypeCards.VespersLedgerTavernDweller));
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.SparkwrenchScrappersDeck(), PrototypeCards.SparkwrenchScrappersTavernDweller));
+            var db = CardPool.CreateDatabase();
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), CardPool.VespersLedgerDeck(), CardPool.VespersLedgerTavernDweller));
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), CardPool.SparkwrenchScrappersDeck(), CardPool.SparkwrenchScrappersTavernDweller));
         }
 
         [Test]

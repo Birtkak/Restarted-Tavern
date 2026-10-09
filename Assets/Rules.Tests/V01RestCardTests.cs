@@ -137,7 +137,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(3, g.Stats(runt).Power, "Your Goobers get +1/+1");
             Attack(g, grakka);
             g.PassRound();
-            var token = g.P(me).Battlefield.Single(c => c.DefinitionId == PrototypeCards.GooberToken);
+            var token = g.P(me).Battlefield.Single(c => c.DefinitionId == CardPool.GooberToken);
             Assert.IsTrue(token.Tapped);
             Assert.IsTrue(g.State.Combat.IsAttacking(token.Id));
             g.PassUntil(s => s.Step == Step.Main2);

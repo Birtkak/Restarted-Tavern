@@ -6,7 +6,7 @@ namespace RestartedTavern.Rules.Cards
     /// Cards that need activated abilities or Equip: the Glitterworld Equipment package, Snik,
     /// Grove Elder, and the Neutral Gold sinks (set v0.1 and the v0.2 additions).
     /// </summary>
-    public static partial class PrototypeCards
+    public static partial class CardPool
     {
         public const string MercenaryToken = "mercenary_token";
         public const string DroneToken = "drone_token";

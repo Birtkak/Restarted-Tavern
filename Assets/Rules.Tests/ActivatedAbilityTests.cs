@@ -127,7 +127,7 @@ namespace RestartedTavern.Rules.Tests
 
             g.Do(g.Activations(g.Active, contract).Single());
             g.PassRound();
-            Assert.IsNotNull(g.OnBattlefield(g.Active, Cards.PrototypeCards.MercenaryToken));
+            Assert.IsNotNull(g.OnBattlefield(g.Active, Cards.CardPool.MercenaryToken));
 
             var me = g.Active;
             g.PassToStep(Step.Main1, g.Other);
@@ -141,8 +141,8 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             var snik = g.AddToBattlefield(g.Active, "snik");
             var warchief = g.AddToBattlefield(g.Active, "goober_warchief");
-            g.AddToBattlefield(g.Active, Cards.PrototypeCards.GooberToken);
-            g.AddToBattlefield(g.Active, Cards.PrototypeCards.GooberToken);
+            g.AddToBattlefield(g.Active, Cards.CardPool.GooberToken);
+            g.AddToBattlefield(g.Active, Cards.CardPool.GooberToken);
             g.AddToBattlefield(g.Active, "hired_sellsword"); // not a Goober
             g.SetMana(g.Active, 2);
 
@@ -159,7 +159,7 @@ namespace RestartedTavern.Rules.Tests
             var copies = g.P(g.Active).Battlefield.Where(c => c.IsToken && c.DefinitionId == "goober_warchief").ToList();
             Assert.AreEqual(1, copies.Count);
             Assert.IsTrue(g.Stats(copies[0]).Has(Keyword.Haste), "the copies gain Haste");
-            Assert.AreEqual(3, g.P(g.Active).Battlefield.Count(c => c.DefinitionId == Cards.PrototypeCards.GooberToken));
+            Assert.AreEqual(3, g.P(g.Active).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
         }
 
         [Test]

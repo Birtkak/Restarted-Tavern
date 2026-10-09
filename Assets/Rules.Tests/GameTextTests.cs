@@ -11,15 +11,15 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void PrototypeDecks_AreLegalStandardDecks()
         {
-            var db = PrototypeCards.CreateDatabase();
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.GooberMobDeck(), PrototypeCards.GooberMobTavernDweller));
-            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), PrototypeCards.JungleStampedeDeck(), PrototypeCards.JungleStampedeTavernDweller));
+            var db = CardPool.CreateDatabase();
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), CardPool.GooberMobDeck(), CardPool.GooberMobTavernDweller));
+            Assert.DoesNotThrow(() => DeckValidator.Validate(db, FormatConfig.Standard(), CardPool.JungleStampedeDeck(), CardPool.JungleStampedeTavernDweller));
         }
 
         [Test]
         public void EveryActionAndEvent_CanBeDescribed_InRandomGames()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var engine = new GameEngine(db);
             for (ulong seed = 1; seed <= 20; seed++)
             {
@@ -27,8 +27,8 @@ namespace RestartedTavern.Rules.Tests
                 var events = new List<GameEvent>();
                 var state = engine.CreateGame(FormatConfig.Standard(), new[]
                 {
-                    new PlayerSetup { Deck = PrototypeCards.GooberMobDeck(), TavernDwellerId = PrototypeCards.GooberMobTavernDweller },
-                    new PlayerSetup { Deck = PrototypeCards.JungleStampedeDeck(), TavernDwellerId = PrototypeCards.JungleStampedeTavernDweller },
+                    new PlayerSetup { Deck = CardPool.GooberMobDeck(), TavernDwellerId = CardPool.GooberMobTavernDweller },
+                    new PlayerSetup { Deck = CardPool.JungleStampedeDeck(), TavernDwellerId = CardPool.JungleStampedeTavernDweller },
                 }, seed, events);
                 text.Remember(state, events);
                 var rng = new DeterministicRng(seed);
@@ -59,7 +59,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void HiddenDraws_AreNotNamedForOtherViewers()
         {
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             var text = new GameText(db);
             var draw = new CardDrawnEvent { Player = new PlayerId(2), Card = new ObjectId(5), DefinitionId = "spark_snot" };
             var g = TestGame.AtFirstMainPhase();

@@ -33,13 +33,13 @@ namespace RestartedTavern.Client
             { "Goober Mob", "Jungle Stampede", "Zoo Patrol", "Vesper's Ledger", "Sparkwrench Scrappers", "Auditor's Arsenal" };
         private static readonly Func<List<string>>[] Decks =
         {
-            PrototypeCards.GooberMobDeck, PrototypeCards.JungleStampedeDeck, PrototypeCards.ZooPatrolDeck,
-            PrototypeCards.VespersLedgerDeck, PrototypeCards.SparkwrenchScrappersDeck, PrototypeCards.AuditorsArsenalDeck,
+            CardPool.GooberMobDeck, CardPool.JungleStampedeDeck, CardPool.ZooPatrolDeck,
+            CardPool.VespersLedgerDeck, CardPool.SparkwrenchScrappersDeck, CardPool.AuditorsArsenalDeck,
         };
         private static readonly string[] TavernDwellers =
         {
-            PrototypeCards.GooberMobTavernDweller, PrototypeCards.JungleStampedeTavernDweller, PrototypeCards.ZooPatrolTavernDweller,
-            PrototypeCards.VespersLedgerTavernDweller, PrototypeCards.SparkwrenchScrappersTavernDweller, PrototypeCards.AuditorsArsenalTavernDweller,
+            CardPool.GooberMobTavernDweller, CardPool.JungleStampedeTavernDweller, CardPool.ZooPatrolTavernDweller,
+            CardPool.VespersLedgerTavernDweller, CardPool.SparkwrenchScrappersTavernDweller, CardPool.AuditorsArsenalTavernDweller,
         };
 
         /// <summary>Deck choice per seat (index into <see cref="Decks"/>). Applies from the next new game.</summary>
@@ -96,7 +96,7 @@ namespace RestartedTavern.Client
         {
             _seed = seed;
             _seedText = seed.ToString(CultureInfo.InvariantCulture);
-            var db = PrototypeCards.CreateDatabase();
+            var db = CardPool.CreateDatabase();
             _engine = new GameEngine(db);
             _text = new GameText(db);
             _botPlayer = new GreedyBot(_engine);

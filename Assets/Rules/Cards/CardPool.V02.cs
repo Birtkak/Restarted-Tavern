@@ -13,7 +13,7 @@ namespace RestartedTavern.Rules.Cards
     /// Batch D: the rest (payment rules, combat-damage and attack triggers, Gold theft, choices from the
     /// top of the deck, delayed triggers, the Dice Game auction).
     /// </summary>
-    public static partial class PrototypeCards
+    public static partial class CardPool
     {
         public const string CritterToken = "critter_token";
 

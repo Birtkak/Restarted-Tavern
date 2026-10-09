@@ -3,7 +3,7 @@
 One Tavern Dweller per faction pair (10 total). The Tavern Dweller **is your face**: it starts in the Tavern Dweller zone, has your life total, and never attacks or blocks (GAME_DESIGN §9). (Called **Patrons** until 2026-10-09.)
 - **Passive**: always on.
 - **Power (N)**: costs N, paid like any activated ability: **mana first, then Gold** (GAME_DESIGN §5.2). On other players' turns you have no mana, so it's paid with Gold there. **Once each turn** (MTG: once in each turn, yours or an opponent's), at instant speed (it goes on the Chain).
-- All 10 are implemented in the engine (`Assets/Rules/Cards/PrototypeCards.TavernDwellers.cs`).
+- All 10 are implemented in the engine (`Assets/Rules/Cards/CardPool.TavernDwellers.cs`).
 
 **Token:** *Spawn*, a 2/2 Creature: Spawn (made by The Rotmother).
 

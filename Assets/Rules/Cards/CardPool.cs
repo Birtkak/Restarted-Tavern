@@ -3,11 +3,10 @@ using System.Collections.Generic;
 namespace RestartedTavern.Rules.Cards
 {
     /// <summary>
-    /// The prototype cards (DEVELOPMENT §5 roadmap steps 2–3), taken
-    /// as-is from the v0.1 card lists. Only cards the engine can fully express today are here.
-    /// Later these move to data files (DEVELOPMENT §3).
+    /// Every card in docs/cards (sets v0.1 and v0.2, the Tavern Dwellers and tokens), split over partial files
+    /// by set, plus the six prototype decks. Later these move to data files (DEVELOPMENT §3).
     /// </summary>
-    public static partial class PrototypeCards
+    public static partial class CardPool
     {
         public const string GooberToken = "goober_token";
         public const string SpiritToken = "spirit_token";

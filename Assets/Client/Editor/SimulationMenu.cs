@@ -34,7 +34,7 @@ namespace RestartedTavern.Client.Editor
             var sections = Experiments.Build(games);
             if (only != null)
                 sections = sections.FindAll(s => Array.Exists(only, w => s.Title.ToLowerInvariant().Contains(w.Trim())));
-            Experiments.Run(sections, PrototypeCards.CreateDatabase(),
+            Experiments.Run(sections, CardPool.CreateDatabase(),
                 r => Debug.Log($"[sim] {r.Config.Name}: A {r.WinRateA:P1}, first {r.FirstPlayerWinRate:P1}, {r.AvgTurns:0.0} turns ({watch.Elapsed.TotalSeconds:0}s)"));
 
             var path = Path.Combine(Path.GetDirectoryName(Application.dataPath), "docs", "playtest", "SIMULATION_REPORT.md");

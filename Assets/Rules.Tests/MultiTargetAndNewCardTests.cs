@@ -173,7 +173,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void ZooPatrol_IsALegalDeck()
         {
-            Assert.DoesNotThrow(() => DeckValidator.Validate(PrototypeCards.CreateDatabase(), FormatConfig.Standard(), PrototypeCards.ZooPatrolDeck(), PrototypeCards.ZooPatrolTavernDweller));
+            Assert.DoesNotThrow(() => DeckValidator.Validate(CardPool.CreateDatabase(), FormatConfig.Standard(), CardPool.ZooPatrolDeck(), CardPool.ZooPatrolTavernDweller));
         }
     }
 }
