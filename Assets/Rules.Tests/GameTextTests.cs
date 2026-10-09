@@ -17,6 +17,43 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
+        public void CardDetails_ShowRulesTextDamageAndStatus()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var bomber = g.AddToBattlefield(g.Active, "barrel_bomber", damage: 1);
+            bomber.SummoningSick = true;
+            var text = new GameText(g.Engine.Cards);
+            string details = text.Details(g.State, bomber);
+            StringAssert.StartsWith("Barrel Bomber\nCost 4 · Creature — Goober · Goobers · Common\nPower/Health 3/3\n", details);
+            StringAssert.Contains("Damage 1: 2 Health left", details);
+            StringAssert.Contains(g.Engine.Cards.Get("barrel_bomber").Text, details);
+            StringAssert.Contains("summoning sick", details);
+            Assert.AreEqual("Main phase 1", GameText.StepName(Step.Main1));
+        }
+
+        [Test]
+        public void EveryCard_HasDetails_InEveryZone()
+        {
+            var db = CardPool.CreateDatabase();
+            var engine = new GameEngine(db);
+            var state = engine.CreateGame(FormatConfig.Standard(), new[]
+            {
+                new PlayerSetup { Deck = CardPool.SparkwrenchScrappersDeck(), TavernDwellerId = CardPool.SparkwrenchScrappersTavernDweller },
+                new PlayerSetup { Deck = CardPool.VespersLedgerDeck(), TavernDwellerId = CardPool.VespersLedgerTavernDweller },
+            }, 3);
+            var text = new GameText(db);
+            var bot = new AI.GreedyBot(engine);
+            for (int i = 0; i < 3000 && !state.IsGameOver; i++)
+            {
+                foreach (var p in state.Players)
+                    foreach (var c in p.Battlefield.Concat(p.Hand).Concat(p.Graveyard).Concat(p.TavernDwellerZone))
+                        Assert.IsNotEmpty(text.Details(state, c));
+                var who = engine.WaitingOn(state).Value;
+                engine.Apply(state, bot.Choose(state, who));
+            }
+        }
+
+        [Test]
         public void EveryActionAndEvent_CanBeDescribed_InRandomGames()
         {
             var db = CardPool.CreateDatabase();

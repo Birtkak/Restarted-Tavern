@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using RestartedTavern.Rules;
 using RestartedTavern.Rules.AI;
@@ -13,8 +14,10 @@ namespace RestartedTavern.Client
     /// Hot-seat debug table (DEVELOPMENT §5, roadmap step 2): plays the rules engine through
     /// IMGUI, so the rules can be tested by hand before any real client exists.
     ///
-    /// Click a card to show only the actions that involve it; click an action to do it.
-    /// Either player can be handed to the GreedyBot. Undo keeps the last 200 states.
+    /// Click a card to show only the actions that involve it; click an action to do it. Hover over or click a card
+    /// to see everything about it in the inspector. Either player can be handed to the GreedyBot (P2 is a bot by
+    /// default, for solo playtests). Undo keeps the last 200 states. Every finished game is saved to Playtests/
+    /// next to the game (Save log saves the current one), for playtest feedback.
     ///
     /// The deck buttons in the top bar pick each seat's deck for the next New game.
     ///
@@ -56,12 +59,16 @@ namespace RestartedTavern.Client
         private ulong _seed = 1;
         private string _seedText = "1";
         private bool _showAllHands;
-        private readonly bool[] _bot = new bool[2];
+        private readonly bool[] _bot = { false, true };
+        private ObjectId _hover = ObjectId.None;
+        private bool _showRules;
+        private string _savedPath;
+        private bool _savedThisGame;
         private GreedyBot _botPlayer;
         private float _nextBotTime;
         private ObjectId _focus = ObjectId.None;
 
-        private Vector2 _boardScroll, _actionsScroll, _logScroll;
+        private Vector2 _boardScroll, _actionsScroll, _logScroll, _inspectScroll, _rulesScroll;
         private GUIStyle _cardStyle, _buttonStyle, _headerStyle, _labelStyle, _bigStyle;
 
         private int _autoplay;
@@ -79,6 +86,7 @@ namespace RestartedTavern.Client
                     case "-seed": ulong.TryParse(next, out _seed); break;
                     case "-bot1": _bot[0] = true; break;
                     case "-bot2": _bot[1] = true; break;
+                    case "-hotseat": _bot[0] = _bot[1] = false; break;
                     case "-deck1": int.TryParse(next, out _deckChoice[0]); break;
                     case "-deck2": int.TryParse(next, out _deckChoice[1]); break;
                     case "-autoplay": int.TryParse(next, out _autoplay); break;
@@ -103,6 +111,9 @@ namespace RestartedTavern.Client
             _undo.Clear();
             _log.Clear();
             _focus = ObjectId.None;
+            _hover = ObjectId.None;
+            _savedPath = null;
+            _savedThisGame = false;
             _deckInPlay[0] = _deckChoice[0];
             _deckInPlay[1] = _deckChoice[1];
 
@@ -126,9 +137,10 @@ namespace RestartedTavern.Client
             var events = _engine.Apply(_state, action);
             _text.Remember(_state, events);
 
-            _log.Add("> " + action.Player + ": " + description);
+            if (action.Kind != ActionKind.PassPriority) _log.Add("> " + action.Player + ": " + description);
             AddToLog(events);
             _focus = ObjectId.None;
+            if (_state.IsGameOver && !_savedThisGame && _autoshot == null) SaveLog();
         }
 
         private void Undo()
@@ -138,6 +150,40 @@ namespace RestartedTavern.Client
             _undo.RemoveAt(_undo.Count - 1);
             _log.Add("(undo)");
             _focus = ObjectId.None;
+        }
+
+        /// <summary>Writes the game (decks, seed, result and the full log) to Playtests/ next to the game, for feedback.</summary>
+        private void SaveLog()
+        {
+            try
+            {
+                string dir = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", "Playtests");
+                Directory.CreateDirectory(dir);
+                string file = Path.Combine(dir, DateTime.Now.ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture) + "_seed" + _seed + ".txt");
+                var lines = new List<string>
+                {
+                    "Restarted Tavern playtest log",
+                    "Date: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+                    "Seed: " + _seed,
+                };
+                for (int seat = 0; seat < 2; seat++)
+                    lines.Add("P" + (seat + 1) + ": " + DeckNames[_deckInPlay[seat]] + " (" + _text.Name(TavernDwellers[_deckInPlay[seat]]) + ")"
+                              + (_bot[seat] ? ", bot" : ", human") + (_state.Players[seat].Seat == _state.StartingPlayerIndex ? ", went first" : ""));
+                lines.Add("Result: " + (_state.IsGameOver ? "winner " + string.Join(", ", _state.Winners) : "not finished")
+                          + " after turn " + _state.TurnNumber + " | life " + string.Join(" vs ", _state.Players.Select(p => p.Life)));
+                lines.Add("");
+                lines.Add("Notes (fill in): what felt good, what felt bad, confusing rules or cards, misplays caused by the UI:");
+                lines.Add("");
+                lines.Add("----- log -----");
+                lines.AddRange(_log);
+                File.WriteAllLines(file, lines);
+                _savedPath = file;
+                _savedThisGame = _state.IsGameOver;
+            }
+            catch (Exception e)
+            {
+                _savedPath = "could not save: " + e.Message;
+            }
         }
 
         private void AddToLog(List<GameEvent> events)
@@ -212,9 +258,11 @@ namespace RestartedTavern.Client
             float rightW = Mathf.Clamp(w * 0.3f, 320f, 520f);
 
             DrawTopBar(new Rect(4, 4, w - 8, 30));
-            DrawBoard(new Rect(4, 40, w - rightW - 12, h - 44));
-            DrawActions(new Rect(w - rightW - 4, 40, rightW, h * 0.48f - 40));
-            DrawLog(new Rect(w - rightW - 4, h * 0.48f + 4, rightW, h * 0.52f - 8));
+            if (_showRules) DrawRules(new Rect(4, 40, w - rightW - 12, h - 44));
+            else DrawBoard(new Rect(4, 40, w - rightW - 12, h - 44));
+            DrawInspector(new Rect(w - rightW - 4, 40, rightW, h * 0.27f));
+            DrawActions(new Rect(w - rightW - 4, 40 + h * 0.27f + 4, rightW, h * 0.36f - 4));
+            DrawLog(new Rect(w - rightW - 4, 40 + h * 0.63f + 4, rightW, h * 0.37f - 52));
         }
 
         private void EnsureStyles()
@@ -235,9 +283,11 @@ namespace RestartedTavern.Client
 
             string status = _state.IsGameOver
                 ? "GAME OVER. Winner: " + string.Join(", ", _state.Winners)
-                : "Turn " + _state.TurnNumber + "  |  " + _state.ActivePlayer + "'s turn  |  " + _state.Step
+                : "Turn " + _state.TurnNumber + "  |  " + _state.ActivePlayer + "'s turn  |  " + GameText.StepName(_state.Step)
                   + "  |  waiting on " + _engine.WaitingOn(_state);
-            GUILayout.Label(status, _labelStyle, GUILayout.Width(430));
+            GUILayout.Label(status, _labelStyle, GUILayout.Width(330));
+            if (GUILayout.Button(_showRules ? "Back to table" : "Rules", GUILayout.Width(95))) _showRules = !_showRules;
+            if (GUILayout.Button("Save log", GUILayout.Width(80))) SaveLog();
 
             if (GUILayout.Button("New game", GUILayout.Width(90))) NewGame(NextSeed());
             GUILayout.Label("seed", GUILayout.Width(32));
@@ -250,7 +300,7 @@ namespace RestartedTavern.Client
             _bot[0] = GUILayout.Toggle(_bot[0], " P1 bot", GUILayout.Width(70));
             _bot[1] = GUILayout.Toggle(_bot[1], " P2 bot", GUILayout.Width(70));
             for (int seat = 0; seat < 2; seat++)
-                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(190)))
+                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(170)))
                     _deckChoice[seat] = (_deckChoice[seat] + 1) % Decks.Length; // used by the next New game
 
             GUILayout.EndHorizontal();
@@ -332,6 +382,9 @@ namespace RestartedTavern.Client
                     GUI.backgroundColor = CardColor(c, actable.Contains(c.Id));
                     if (GUILayout.Button(_text.Describe(_state, c), _cardStyle, GUILayout.Width(cardWidth), GUILayout.Height(CardHeight)) && clickable)
                         _focus = _focus == c.Id ? ObjectId.None : c.Id;
+                    if (Event.current.type == EventType.Repaint && !c.IsHidden
+                        && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+                        _hover = c.Id;
                     GUI.backgroundColor = old;
                 }
                 GUILayout.EndHorizontal();
@@ -366,7 +419,10 @@ namespace RestartedTavern.Client
         {
             GUILayout.BeginVertical(GUI.skin.box);
             if (_state.IsGameOver)
-                GUILayout.Label("GAME OVER. Winner: " + string.Join(", ", _state.Winners), _bigStyle);
+            {
+                GUILayout.Label("GAME OVER. Winner: " + string.Join(", ", _state.Winners) + " (turn " + _state.TurnNumber + ")", _bigStyle);
+                if (_savedPath != null) GUILayout.Label("Game log saved to " + _savedPath, _labelStyle);
+            }
 
             if (_state.Pending != null)
                 GUILayout.Label("Waiting on " + _state.Pending.Player + ": " + DecisionText(_state.Pending), _labelStyle);
@@ -435,6 +491,69 @@ namespace RestartedTavern.Client
                 default: return d.Kind.ToString();
             }
         }
+
+        /// <summary>Everything about the hovered card (or the clicked one).</summary>
+        private void DrawInspector(Rect r)
+        {
+            GUILayout.BeginArea(r, GUI.skin.box);
+            var id = !_focus.IsNone ? _focus : _hover;
+            var card = id.IsNone ? null : _state.FindObject(id);
+            if (card == null || card.IsHidden)
+            {
+                GUILayout.Label("Card details", _headerStyle);
+                GUILayout.Label("Hover over a card to read it. Click a card to keep it here and to see only its actions.", _labelStyle);
+            }
+            else
+            {
+                _inspectScroll = GUILayout.BeginScrollView(_inspectScroll);
+                GUILayout.Label(_text.Details(_state, card), _labelStyle);
+                GUILayout.EndScrollView();
+            }
+            if (_savedPath != null && !_state.IsGameOver) GUILayout.Label("Saved: " + _savedPath, _labelStyle);
+            GUILayout.EndArea();
+        }
+
+        private void DrawRules(Rect r)
+        {
+            GUILayout.BeginArea(r, GUI.skin.box);
+            _rulesScroll = GUILayout.BeginScrollView(_rulesScroll);
+            GUILayout.Label("Quick rules (full rules: docs/GAME_DESIGN.md)", _bigStyle);
+            GUILayout.Label(RulesText, _labelStyle);
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        private const string RulesText =
+            "GOAL\n" +
+            "Bring the opponent from 30 life to 0. You also lose if you must draw from an empty deck.\n\n" +
+            "TURN\n" +
+            "Start (untap, +1 max mana up to 10, refill) → Draw → Main phase 1 → Combat → Main phase 2 → End. " +
+            "The first player skips their first draw. Hand size 7 at the end of your turn.\n\n" +
+            "MANA AND GOLD\n" +
+            "• Mana grows by 1 each of your turns (max 10) and refills. It only exists on your own turn.\n" +
+            "• Unspent mana becomes Gold at the end of your turn (max 5 Gold).\n" +
+            "• Creatures and other permanents are paid with mana only.\n" +
+            "• Instants, Sorceries and abilities use mana first, then Gold. Gold is what you use on the opponent's turn.\n" +
+            "• Invest and \"Pay N Gold\" costs are paid with Gold only.\n" +
+            "• Tip: mana is spent first automatically. Cast creatures before spells if you want the Gold to pay for the spell.\n\n" +
+            "COMBAT\n" +
+            "• Attackers tap. Blocking doesn't tap, and creatures can block the turn they arrive.\n" +
+            "• Several blockers can block one attacker; the attacker divides its damage among them.\n" +
+            "• Trample: damage beyond lethal on every blocker goes to the player.\n\n" +
+            "DAMAGE STAYS\n" +
+            "Damage on creatures does not wear off. A creature dies when its Health left reaches 0. Only healing removes damage. " +
+            "Losing a buff can't kill a creature (it stays at 1 Health).\n\n" +
+            "TAVERN DWELLER\n" +
+            "Your face card. Its passive always works, and its Power can be used once each turn (also on the opponent's turn), " +
+            "paid with mana first, then Gold.\n\n" +
+            "THE CHAIN\n" +
+            "Spells and abilities go on the Chain; the last one added resolves first. You can answer with Instants and abilities " +
+            "whenever you have priority.\n\n" +
+            "USING THIS TABLE\n" +
+            "• Your possible actions are the buttons on the right. Cards you can use are green; click one to filter the actions.\n" +
+            "• Hover over any card to read it in Card details.\n" +
+            "• Undo takes back the last action. Auto-pass skips moments where passing is your only option.\n" +
+            "• Each finished game is saved in the Playtests folder next to the game. Add your notes at the top of the file.";
 
         private void DrawActions(Rect r)
         {

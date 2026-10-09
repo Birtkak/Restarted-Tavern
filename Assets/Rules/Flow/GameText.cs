@@ -111,6 +111,100 @@ namespace RestartedTavern.Rules
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Everything about one card, for an inspector panel: cost, type, subtypes, faction and rarity; current and
+        /// printed stats, damage and counters; keywords; the full rules text; what's attached to it or what it's
+        /// attached to; status and controller.
+        /// </summary>
+        public string Details(GameState state, CardInstance card)
+        {
+            if (card == null) return "";
+            if (card.IsHidden) return "(hidden card)";
+            var def = _db.Get(card.DefinitionId);
+            var sb = new StringBuilder();
+            sb.Append(def.Name);
+            if (card.IsToken) sb.Append(" (token)");
+            sb.Append('\n');
+
+            if (def.IsTavernDweller)
+                sb.Append("Tavern Dweller · ").Append(string.Join(" + ", def.TavernDwellerFactions.Select(FactionName)));
+            else
+            {
+                sb.Append("Cost ").Append(def.Cost).Append(" · ").Append(def.Type);
+                if (def.Subtypes.Length > 0) sb.Append(" — ").Append(string.Join(" ", def.Subtypes));
+                sb.Append(" · ").Append(FactionName(def.Faction)).Append(" · ").Append(def.Rarity);
+            }
+            sb.Append('\n');
+
+            if (def.IsCreature)
+            {
+                if (card.Zone == Zone.Battlefield)
+                {
+                    var ch = CharacteristicsCalculator.Compute(state, _db, card);
+                    sb.Append("Power/Health ").Append(ch.Power).Append('/').Append(ch.MaxHealth);
+                    if (ch.Power != def.Power || ch.MaxHealth != def.Health)
+                        sb.Append(" (printed ").Append(def.Power).Append('/').Append(def.Health).Append(')');
+                    sb.Append('\n');
+                    if (card.Damage > 0)
+                        sb.Append("Damage ").Append(card.Damage).Append(": ").Append(ch.RemainingHealth).Append(" Health left (damage stays)\n");
+                    if (card.PlusOneCounters > 0) sb.Append("+1/+1 counters: ").Append(card.PlusOneCounters).Append('\n');
+                    var kw = KeywordText(ch.Keywords);
+                    if (kw.Length > 0) sb.Append("Keywords: ").Append(kw).Append('\n');
+                }
+                else
+                {
+                    sb.Append("Power/Health ").Append(def.Power).Append('/').Append(def.Health).Append('\n');
+                }
+            }
+
+            if (def.Text.Length > 0) sb.Append('\n').Append(def.Text).Append('\n');
+
+            if (card.Zone == Zone.Battlefield)
+            {
+                var attached = state.AllPermanents().Where(p => p.AttachedToObject == card.Id).Select(p => Name(p.DefinitionId)).ToList();
+                if (attached.Count > 0) sb.Append("\nAttached: ").Append(string.Join(", ", attached)).Append('\n');
+                if (!card.AttachedToObject.IsNone) sb.Append("\nAttached to ").Append(Name(state, card.AttachedToObject)).Append('\n');
+                if (card.AttachedToPlayer.HasValue) sb.Append("\nCursing ").Append(card.AttachedToPlayer.Value).Append('\n');
+
+                var status = new List<string>();
+                if (card.Tapped) status.Add("tapped");
+                if (def.IsCreature && card.SummoningSick && !CharacteristicsCalculator.Compute(state, _db, card).Has(Keyword.Haste))
+                    status.Add("summoning sick (can't attack or tap yet)");
+                if (state.Combat != null && state.Combat.IsAttacking(card.Id)) status.Add("attacking");
+                if (state.Combat != null && state.Combat.IsBlocking(card.Id)) status.Add("blocking");
+                if (status.Count > 0) sb.Append("Status: ").Append(string.Join(", ", status)).Append('\n');
+            }
+            if (def.IsTavernDweller && PowerUsedThisTurn(state, card)) sb.Append("Power already used this turn\n");
+            sb.Append("Controller: ").Append(card.Controller);
+            if (card.Owner != card.Controller) sb.Append(" (owner ").Append(card.Owner).Append(')');
+            return sb.ToString();
+        }
+
+        /// <summary>"shadow_money_wizards" → "Shadow Money Wizards".</summary>
+        public static string FactionName(string faction) =>
+            string.Join(" ", (faction ?? "").Split('_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
+
+        /// <summary>Step names for players: "Main phase 1", "Declare attackers".</summary>
+        public static string StepName(Step step)
+        {
+            switch (step)
+            {
+                case Step.Mulligan: return "Mulligan";
+                case Step.Start: return "Start of turn";
+                case Step.Draw: return "Draw";
+                case Step.Main1: return "Main phase 1";
+                case Step.BeginCombat: return "Beginning of combat";
+                case Step.DeclareAttackers: return "Declare attackers";
+                case Step.DeclareBlockers: return "Declare blockers";
+                case Step.CombatDamage: return "Combat damage";
+                case Step.Main2: return "Main phase 2";
+                case Step.End: return "End step";
+                case Step.Cleanup: return "Cleanup";
+                case Step.GameOver: return "Game over";
+                default: return step.ToString();
+            }
+        }
+
         /// <summary>"Hog-Rider (2 Health left, equipped)": a creature on the battlefield, for choices between copies.</summary>
         private string DescribeOneLine(GameState state, ObjectId id)
         {
@@ -139,7 +233,7 @@ namespace RestartedTavern.Rules
             switch (a.Kind)
             {
                 case ActionKind.PassPriority:
-                    return state.Chain.Count > 0 ? "Pass (let the top of the Chain resolve)" : "Pass (" + state.Step + ")";
+                    return state.Chain.Count > 0 ? "Pass (let the top of the Chain resolve)" : "Pass (move on from " + StepName(state.Step) + ")";
                 case ActionKind.Keep: return "Keep hand";
                 case ActionKind.Mulligan: return "Mulligan";
                 case ActionKind.BottomCard: return "Put on the bottom: " + Name(state, a.Card);

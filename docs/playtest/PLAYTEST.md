@@ -9,7 +9,11 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
 
 ## How to run
 
-- **Debug table**: open `Assets/Scenes/DebugTable.unity` → Play, or run the built exe (**Restarted Tavern → Build Windows Debug Table**). Tick *P2 bot* to play solo against the GreedyBot. The *P1/P2 deck* buttons pick the decks for the next *New game*.
+- **Debug table** (human playtests): run `Builds/DebugTable/RestartedTavern.exe` (build it with **Restarted Tavern → Build Windows Debug Table**), or open `Assets/Scenes/DebugTable.unity` → Play.
+  - You are **P1 (bottom)** against the GreedyBot (P2 bot is on by default; untick it, or start with `-hotseat`, for two humans).
+  - The *P1/P2 deck* buttons pick the decks for the next *New game*. **Rules** shows a one-page rules summary.
+  - Hover over any card to read it in **Card details** (stats, damage, keywords, full text, attachments). Your possible actions are the buttons on the right; click a card to filter them.
+  - Every finished game is saved to `Builds/DebugTable/Playtests/` (*Save log* saves the current one). Each file has the decks, seed, who went first, the result and the full log, plus a **Notes** line for your feedback.
 - **Simulation report** (fast way): `Tools/SimRunner`, a small .NET 8 console app that compiles the same `Assets/Rules` source files. Build it with the .NET SDK that ships with Unity, then run it from the repo:
   ```
   "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build Tools/SimRunner -c Release

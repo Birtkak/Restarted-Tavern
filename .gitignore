@@ -46,3 +46,6 @@ Thumbs.db
 Tools/**/bin/
 Tools/**/obj/
 !Tools/**/*.csproj
+
+# Playtest logs written by the debug table
+/Playtests/
