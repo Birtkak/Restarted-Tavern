@@ -64,3 +64,19 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 30 | **Neon Executioner** | 6 | Creature: Construct | R | 4/6 | Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2
+
+---
+
+## Set v0.3 draft: mana scarcity (🟡 for review, 2026-10-09)
+
+Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Status |
+|---|---|---|---|---|---|---|---|---|
+| 31 | **Market Data Feed** | 2 | Relic | U | — | Whenever an Equipment becomes attached to a creature you control, draw a card. This triggers at most once each turn. | Draw · Equipment ★ | 🟡 |
+| 32 | **Overclocked Analyst** | 3 | Creature: Construct | C | 2/3 | (3), Tap: Draw a card, then discard a card. | Draw · mana sink · card selection on a body | 🟡 |
+| 33 | **Arc Cascade** | X+1 | Sorcery | U | — | Deal X damage divided as you choose among any number of creatures and/or opponents. | Mana sink · pings ★, scaled up | 🟡 |
+| 34 | **Turret Rig** | 2 | Equipment | C | — | Equipped creature has "(2), Tap: Deal 1 damage to any target." Equip 2. | Mana sink · a repeatable ping you move around | 🟡 |
+| 35 | **Orbital Laser** | X+2 | Sorcery | R | — | Deal X damage to any target. If X is 5 or more, also deal 1 damage to each enemy creature. | Finisher (X burn) · the city's big gun | 🟡 |
+| 36 | **Satellite Uplink** | 6 | Relic | R | — | (3), Tap: Deal 2 damage to each opponent. | Finisher (inevitability) · mana sink · spare mana becomes face damage every round | 🟡 |

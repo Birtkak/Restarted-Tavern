@@ -63,3 +63,19 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 30 | **Titanback Colossus** | 8 | Creature: Beast | R | 8/8 | Trample. Whenever this attacks, heal it fully. | Chip damage never adds up on it while it keeps attacking | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2
+
+---
+
+## Set v0.3 draft: mana scarcity (🟡 for review, 2026-10-09)
+
+Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Status |
+|---|---|---|---|---|---|---|---|---|
+| 31 | **Gift of the Grove** | 3 | Sorcery | C | — | Draw a card for each creature with 5 or more Power you control (at least one). | Draw · draw from big creatures (faction pie) | 🟡 |
+| 32 | **Watering Hole** | 2 | Relic | U | — | Whenever a creature with 5 or more Power enters under your control, draw a card. (2): Heal 2 from a creature. | Draw · mana sink · healing ★ | 🟡 |
+| 33 | **Overgrowth** | X+1 | Sorcery | C | — | Put X +1/+1 counters on target creature you control. | Mana sink · +1/+1 counters; growth that stays | 🟡 |
+| 34 | **Mossgut Grower** | 3 | Creature: Beast | U | 2/3 | Trample. (3): Put a +1/+1 counter on this creature. | Mana sink · repeatable growth into a big creature | 🟡 |
+| 35 | **Call of the Deep** | X+2 | Sorcery | R | — | Target creature you control gets +X/+X and Trample until end of turn. Then it fights up to one target creature you don't control. | Finisher · Wild doesn't burn; it clears a blocker and swings for lethal | 🟡 |
+| 36 | **Rampaging Titan** | 7 | Creature: Beast | R | 7/7 | Trample. (X): This gets +X/+0 until end of turn. | Finisher · mana sink · every spare mana is Trample damage | 🟡 |

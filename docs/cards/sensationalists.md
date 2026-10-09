@@ -63,3 +63,19 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 30 | **Curse of Rot** | 5 | Curse | R | — | Attach to an opponent. At the start of that player's turn, deal 1 damage to each creature they control. Creatures they control can't be healed. | Permanent damage at its cruelest. A hard answer to Wild healing decks | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2
+
+---
+
+## Set v0.3 draft: mana scarcity (🟡 for review, 2026-10-09)
+
+Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Status |
+|---|---|---|---|---|---|---|---|---|
+| 31 | **Blood Oath** | 2 | Sorcery | C | — | Draw two cards. You lose 2 life. | Draw · pay life to draw (faction pie) | 🟡 |
+| 32 | **Séance Hotline** | 3 | Creature: Human | U | 2/3 | (2), Pay 1 life: Draw a card. Activate only once each turn. | Draw · mana sink · a call to the other side, every turn | 🟡 |
+| 33 | **Wither Away** | X+1 | Instant | C | — | Target creature gets -X/-X until end of turn. | Mana sink · scalable -X/-X removal | 🟡 |
+| 34 | **Open Casket** | 3 | Sorcery | U | — | Return a creature card with cost 3 or less from your graveyard to your hand. Invest 3: Put it onto the battlefield instead. | Big Invest · graveyard ★ | 🟡 |
+| 35 | **Final Broadcast** | X+2 | Sorcery | R | — | Each opponent loses X life and you gain X life. | Finisher (drain) · the season finale | 🟡 |
+| 36 | **Curse of Prime Time** | 4 | Curse | R | — | Attach to an opponent. At the start of that player's turn, they lose 1 life. (3): That player loses 1 life and you gain 1 life. | Finisher (inevitability) · mana sink · every leftover 3 mana is a drain | 🟡 |

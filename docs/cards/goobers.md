@@ -63,3 +63,19 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 30 | **Grand Heist** | 3 | Sorcery | R | — | Each opponent loses all their Gold. Gain that much Gold. Invest 2: Create a 1/1 Goober for each Gold you gained this way. | Punishes banking. Your own Gold cap limits the take | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2
+
+---
+
+## Set v0.3 draft: mana scarcity (🟡 for review, 2026-10-09)
+
+Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Status |
+|---|---|---|---|---|---|---|---|---|
+| 31 | **Dumpster Dive** | 2 | Instant | C | — | Discard any number of cards, then draw that many cards plus one. | Draw · rummage, the Goober way | 🟡 |
+| 32 | **Goober Bookie** | 3 | Creature: Goober | U | 2/3 | Haste. Whenever this attacks, you may discard a card. If you do, draw two cards. | Draw · card flow for the aggro deck | 🟡 |
+| 33 | **Goober Avalanche** | X+1 | Sorcery | U | — | Create X 1/1 Goobers with Haste. | Mana sink · go wide with every leftover mana | 🟡 |
+| 34 | **Fireworks Stand** | 2 | Relic | C | — | (3), Sacrifice a creature: Deal 2 damage to any target. | Mana sink · repeatable; turns tokens into burn (and Skabba triggers) | 🟡 |
+| 35 | **Big Boom** | X+1 | Sorcery | R | — | Deal X damage to any target. | Finisher (X burn) · the classic Fireball. 10 mana + Gold ends games | 🟡 |
+| 36 | **Grand Finale** | X+3 | Sorcery | R | — | Deal X damage to each opponent and 1 damage to each creature. | Finisher (X burn) · clears tokens on both sides, so you cast it to win | 🟡 |

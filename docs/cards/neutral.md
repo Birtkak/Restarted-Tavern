@@ -64,3 +64,19 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 30 | **Tavern Brawl Night** | 5 | Sorcery | R | — | Deal 2 damage to each creature. Then heal 2 from each creature you control. | Rules depth: state-based actions are only checked after the spell, so your creatures at 2 Health survive while theirs die | ✓ implemented | ✅ |
 
 **v0.2 progress:** 20 approved · C 10 · U 6 · R 4
+
+---
+
+## Set v0.3 draft: mana scarcity (🟡 for review, 2026-10-09)
+
+Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+
+| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Status |
+|---|---|---|---|---|---|---|---|---|
+| 31 | **Last Orders** | 2 | Sorcery | C | — | Draw two cards, then discard a card. | Draw · for every deck | 🟡 |
+| 32 | **Night Shift Barkeep** | 3 | Creature: Human | C | 2/4 | (4): Draw a card. Activate only once each turn. | Draw · mana sink · the late-game use for spare mana in any deck | 🟡 |
+| 33 | **Tavern Brawl Champion** | 4 | Creature: Human | U | 3/4 | (2): This gets +1/+0 until end of turn. | Mana sink · classic firebreathing | 🟡 |
+| 34 | **Gilded Mercenary** | 4 | Creature: Human | U | 4/4 | Invest 3: This enters with two +1/+1 counters and Trample. | Big Invest · a 6/6 Trample on turn 4 if you banked | 🟡 |
+| 35 | **Tavern Legend** | 6 | Creature: Human | R | 5/6 | (X): This gets +X/+0 and Trample until end of turn. | Finisher · mana sink · the regular everyone tells stories about | 🟡 |
+| 36 | **Closing Bell** | 3 | Relic | R | — | At the start of your turn, if each opponent has 10 or less life, each opponent loses 2 life. | Finisher (inevitability) · last call for anyone low on life | 🟡 |
