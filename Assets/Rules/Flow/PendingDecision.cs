@@ -17,6 +17,8 @@ namespace RestartedTavern.Rules
         /// the bottom (Auditor Prime). Answered with ChooseOption.
         /// </summary>
         TopOrBottom,
+        /// <summary>A resolving effect makes a player discard (Settle the Tab: "then discard a card"). Answered with Discard.</summary>
+        DiscardCards,
     }
 
     /// <summary>
@@ -27,7 +29,7 @@ namespace RestartedTavern.Rules
     {
         public DecisionKind Kind { get; set; }
         public PlayerId Player { get; set; }
-        /// <summary>BottomCards / DiscardToHandSize: how many cards are still to go.</summary>
+        /// <summary>BottomCards / DiscardToHandSize / DiscardCards: how many cards are still to go.</summary>
         public int Count { get; set; }
         /// <summary>ChooseTriggerTarget: the trigger being put on the Chain.</summary>
         public PendingTrigger Trigger { get; set; }

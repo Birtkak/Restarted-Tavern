@@ -41,13 +41,14 @@ namespace RestartedTavern.Rules.AI
                 case DecisionKind.Mulligan: return KeepOrMulligan(s, me, legal);
                 case DecisionKind.BottomCards:
                 case DecisionKind.DiscardToHandSize:
+                case DecisionKind.DiscardCards:
                     return legal.OrderByDescending(a => Def(s, a.Card).Cost).First();
                 case DecisionKind.DeclareAttackers: return ChooseAttack(s, me, legal);
                 case DecisionKind.DeclareBlockers: return ChooseBlock(s, me, legal);
                 case DecisionKind.ChooseTriggerTarget:
                 {
                     var trigger = s.Pending.Trigger;
-                    return legal.OrderByDescending(a => EffectValue(s, me, trigger.Ability.Effects, a.Targets, trigger.SourceId)).First();
+                    return legal.OrderByDescending(a => EffectValue(s, me, trigger.Ability.Effects, a.Targets, trigger.SourceId, trigger.Amount)).First();
                 }
                 case DecisionKind.TopOrBottom:
                 {
@@ -112,8 +113,9 @@ namespace RestartedTavern.Rules.AI
             }
             else
             {
-                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card);
+                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card, a.X);
             }
+            if (def.XGoldExtraCost) value -= a.X * GoldUnitValue(s, p);
 
             if (a.Invest) value += EffectValue(s, me, def.InvestEffects, a.Targets, a.Card) + 0.1;
 
@@ -154,19 +156,19 @@ namespace RestartedTavern.Rules.AI
         private double ManaUnitValue(GameState s, PlayerState p)
         {
             if (s.Step == Step.Main1 || s.Step == Step.BeginCombat) return 0.35;
-            return p.Gold + p.Mana > GoldCap(s) ? 0.05 : 0.25;
+            return p.Gold + p.Mana > GoldCap(s, p) ? 0.05 : 0.25;
         }
 
         /// <summary>What one Gold is worth. Gold above the cap is lost, so Gold that would overflow is cheap.</summary>
         private double GoldUnitValue(GameState s, PlayerState p)
         {
-            int cap = GoldCap(s);
+            int cap = GoldCap(s, p);
             if (s.ActivePlayer == p.Id)
                 return p.Gold + p.Mana > cap ? 0.1 : 0.3 + 0.5 * _style.GoldOnOwnTurnPenalty;
             return p.Gold >= cap ? 0.12 : 0.3;
         }
 
-        private static int GoldCap(GameState s) => s.Format.GoldCap;
+        private int GoldCap(GameState s, PlayerState p) => GoldRules.Cap(s, Db, p.Id);
 
         /// <summary>A tapped creature can't attack, and stays tapped through the opponent's turn (no blocking).</summary>
         private double TapPenalty(GameState s, PlayerId me, CardInstance creature)
@@ -237,7 +239,9 @@ namespace RestartedTavern.Rules.AI
         }
 
         /// <summary>How good these effects are for <paramref name="me"/> with these targets.</summary>
-        private double EffectValue(GameState s, PlayerId me, List<Effect> effects, IReadOnlyList<Target> targets, ObjectId source)
+        /// <summary><paramref name="x"/>: the X paid, or a trigger's event amount ("heal that much").</summary>
+        private double EffectValue(GameState s, PlayerId me, List<Effect> effects, IReadOnlyList<Target> targets, ObjectId source,
+            int x = 0)
         {
             Target? T(int i) => i < targets.Count ? targets[i] : (Target?)null;
             var pumps = new Dictionary<int, (int power, int health)>(); // "+2/+2, then it fights"
@@ -259,7 +263,7 @@ namespace RestartedTavern.Rules.AI
                                     if (Db.Get(c.DefinitionId).IsCreature) v += DamageValue(s, me, d.Amount, Target.ForObject(c.Id));
                         if (d.AlsoOpponents) v += 0.6 * d.Amount;
                         break;
-                    case HealEffect h: v += HealValue(s, me, h.Fully ? 99 : h.Amount, target); break;
+                    case HealEffect h: v += HealValue(s, me, h.Fully ? 99 : h.AmountFromEvent ? x : h.Amount, target); break;
                     case HealOtherCreaturesYouControlEffect h:
                         foreach (var c in s.GetPlayer(me).Battlefield)
                             if (c.Id != source && Db.Get(c.DefinitionId).IsCreature) v += HealValue(s, me, h.Fully ? 99 : h.Amount, Target.ForObject(c.Id));
@@ -270,7 +274,19 @@ namespace RestartedTavern.Rules.AI
                         pumps.TryGetValue(f.SourceFights ? -1 : f.TargetIndex, out var bonus);
                         v += FightValue(s, me, first, second, bonus.power, bonus.health);
                         break;
-                    case DrawCardsEffect d: v += 2.0 * d.Count; break;
+                    case DrawCardsEffect d: v += 2.0 * (d.CountIsX ? x : d.Count); break;
+                    case DrawIfGoldEffect d: v += 2.0 * (s.GetPlayer(me).Gold >= d.GoldAtLeast ? d.CountIfGold : d.Count); break;
+                    case DiscardCardsEffect d: v -= 1.2 * d.Count; break;
+                    case TapTargetEffect _:
+                    {
+                        // Tapping an enemy matters before it can attack or block; tapping our own never helps.
+                        var c = target.HasValue && !target.Value.IsPlayer ? s.FindOnBattlefield(target.Value.Object) : null;
+                        if (c == null || c.Controller == me || c.Tapped) break;
+                        bool beforeTheirAttack = s.ActivePlayer == c.Controller && s.Step < Step.DeclareAttackers;
+                        bool beforeOurAttack = s.ActivePlayer == me && (s.Step == Step.Main1 || s.Step == Step.BeginCombat);
+                        if (beforeTheirAttack || beforeOurAttack) v += 0.5 + 0.4 * Stats(s, c).Power;
+                        break;
+                    }
                     case GainGoldEffect g: v += (g.EachOpponent ? -0.5 : 0.5) * g.Amount; break;
                     case GainLifeEffect l: v += HealValue(s, me, l.Amount, Target.ForPlayer(me)); break;
                     case LoseLifeEffect l: v -= LifeLossValue(s.GetPlayer(me), l.Amount); break;

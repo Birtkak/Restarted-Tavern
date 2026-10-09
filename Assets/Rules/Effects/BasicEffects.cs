@@ -50,16 +50,18 @@ namespace RestartedTavern.Rules
         }
     }
 
-    /// <summary>"Heal N from [target]" (GAME_DESIGN §11.1).</summary>
+    /// <summary>"Heal N from [target]" (GAME_DESIGN §11.1), or "heal that much" with <see cref="AmountFromEvent"/>.</summary>
     public sealed class HealEffect : Effect
     {
         public int Amount { get; set; }
         public bool Fully { get; set; }
+        /// <summary>"Heal that much" (Grizzled Innkeeper): the triggering event's amount.</summary>
+        public bool AmountFromEvent { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
             var t = ctx.TargetAt(TargetIndex);
-            if (t.HasValue) ctx.Heal(t.Value, Fully ? int.MaxValue : Amount);
+            if (t.HasValue) ctx.Heal(t.Value, Fully ? int.MaxValue : AmountFromEvent ? ctx.EventAmount : Amount);
         }
     }
 
@@ -103,12 +105,39 @@ namespace RestartedTavern.Rules
         }
     }
 
-    /// <summary>"Draw N cards." (the controller)</summary>
+    /// <summary>"Draw N cards." (the controller), or "Draw X cards" with <see cref="CountIsX"/>.</summary>
     public sealed class DrawCardsEffect : Effect
     {
         public int Count { get; set; } = 1;
+        /// <summary>"Draw X cards" (Settle the Tab): X paid for the spell.</summary>
+        public bool CountIsX { get; set; }
 
-        public override void Resolve(EffectContext ctx) => ctx.Draw(ctx.Controller, Count);
+        public override void Resolve(EffectContext ctx) => ctx.Draw(ctx.Controller, CountIsX ? ctx.X : Count);
+    }
+
+    /// <summary>"Draw N cards. If you have G or more Gold, draw M instead." (Compound Interest)</summary>
+    public sealed class DrawIfGoldEffect : Effect
+    {
+        public int Count { get; set; }
+        public int GoldAtLeast { get; set; }
+        public int CountIfGold { get; set; }
+
+        public override void Resolve(EffectContext ctx) =>
+            ctx.Draw(ctx.Controller, ctx.State.GetPlayer(ctx.Controller).Gold >= GoldAtLeast ? CountIfGold : Count);
+    }
+
+    /// <summary>"[Then] discard N cards." The controller chooses; it must be the last effect.</summary>
+    public sealed class DiscardCardsEffect : Effect
+    {
+        public int Count { get; set; } = 1;
+
+        public override void Resolve(EffectContext ctx) => ctx.AskDiscard(ctx.Controller, Count);
+    }
+
+    /// <summary>"Tap target creature." (Spilled Drink)</summary>
+    public sealed class TapTargetEffect : Effect
+    {
+        public override void Resolve(EffectContext ctx) => ctx.Tap(ctx.CreatureAt(TargetIndex));
     }
 
     /// <summary>"Gain N Gold." (the controller), or "Each opponent gains N Gold." (shady deals)</summary>

@@ -220,6 +220,7 @@ namespace RestartedTavern.Rules
                 IsTavernDwellerPower = ab.IsTavernDwellerPower, Targets = a.Targets, X = a.X, ManaPaid = mana, GoldPaid = gold,
             });
             if (ab.IsEquip) QueueWatcherTriggers(TriggerEvent.EquipActivated, a.Player);
+            if (gold > 0) GoldSpent(a.Player, gold);
 
             GivePriority(a.Player);
         }
@@ -235,6 +236,25 @@ namespace RestartedTavern.Rules
             var p = S.GetPlayer(player);
             if (p.Deck.Count == 0) return;
             S.Pending = new PendingDecision { Kind = DecisionKind.TopOrBottom, Player = player, Card = p.Deck[0].Id };
+        }
+
+        /// <summary>
+        /// "Discard N cards" during resolution (Settle the Tab). The player picks; with fewer cards in
+        /// hand they discard what they have. Must be the last effect of its spell or ability.
+        /// </summary>
+        internal void AskDiscard(PlayerId player, int count)
+        {
+            int n = System.Math.Min(count, S.GetPlayer(player).Hand.Count);
+            if (n > 0) S.Pending = new PendingDecision { Kind = DecisionKind.DiscardCards, Player = player, Count = n };
+        }
+
+        private void AnswerDiscard(PlayerAction a)
+        {
+            var p = S.GetPlayer(a.Player);
+            MoveCard(p.Hand.Find(c => c.Id == a.Card), Zone.Graveyard);
+            if (--S.Pending.Count > 0) return;
+            S.Pending = null;
+            GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
         private void AnswerOption(PlayerAction a)

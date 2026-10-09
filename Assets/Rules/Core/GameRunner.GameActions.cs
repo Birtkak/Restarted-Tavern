@@ -225,13 +225,24 @@ namespace RestartedTavern.Rules
             if (p.Life != old) Emit(new LifeChangedEvent { Player = player, OldLife = old, NewLife = p.Life });
         }
 
-        /// <summary>Gold is clamped to 0..GoldCap; anything above the cap is lost (§5.2).</summary>
+        /// <summary>
+        /// Gold is clamped to 0..the player's Gold cap; anything gained above the cap is lost (§5.2).
+        /// Losing Gold never raises it, even if the player is somehow above the cap.
+        /// </summary>
         internal void ChangeGold(PlayerId player, int delta)
         {
             var p = S.GetPlayer(player);
             int old = p.Gold;
-            p.Gold = Math.Max(0, Math.Min(S.Format.GoldCap, p.Gold + delta));
+            int cap = delta > 0 ? Math.Max(p.Gold, GoldRules.Cap(S, Db, player)) : int.MaxValue;
+            p.Gold = Math.Max(0, Math.Min(cap, p.Gold + delta));
             if (p.Gold != old) Emit(new GoldChangedEvent { Player = player, OldGold = old, NewGold = p.Gold });
+        }
+
+        /// <summary>Tap a permanent (Spilled Drink). Tapping an attacking creature doesn't remove it from combat (MTG 506.4).</summary>
+        internal void Tap(CardInstance permanent)
+        {
+            if (permanent == null || S.FindOnBattlefield(permanent.Id) == null || permanent.Tapped) return;
+            permanent.Tapped = true;
         }
 
         internal void AddCounters(ObjectId creature, int count)

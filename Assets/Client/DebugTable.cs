@@ -416,6 +416,7 @@ namespace RestartedTavern.Client
                 case DecisionKind.DeclareBlockers: return "declare blockers (one at a time), then Done";
                 case DecisionKind.ChooseTriggerTarget: return "choose a target for " + _text.Name(d.Trigger.SourceDefinitionId);
                 case DecisionKind.DiscardToHandSize: return "discard " + d.Count + " card(s) down to 7";
+                case DecisionKind.DiscardCards: return "discard " + d.Count + " card(s)";
                 case DecisionKind.TopOrBottom: return "top card of your deck is " + _text.Name(_state, d.Card) + ": leave it or put it on the bottom";
                 default: return d.Kind.ToString();
             }

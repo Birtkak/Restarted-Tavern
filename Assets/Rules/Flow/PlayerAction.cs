@@ -46,7 +46,7 @@ namespace RestartedTavern.Rules
         public bool Invest { get; set; }
         /// <summary>ActivateAbility: index into the source's abilities (printed first, then granted ones).</summary>
         public int AbilityIndex { get; set; }
-        /// <summary>ActivateAbility: the value chosen for X.</summary>
+        /// <summary>ActivateAbility: the value chosen for X. PlayCard: the Gold paid for "pay any amount of Gold (X)".</summary>
         public int X { get; set; }
         /// <summary>ActivateAbility: the creature sacrificed to pay the cost.</summary>
         public ObjectId Sacrifice { get; set; }
@@ -75,8 +75,8 @@ namespace RestartedTavern.Rules
         public static PlayerAction Play(PlayerId p, ObjectId card, Target? target = null, bool invest = false) =>
             Play(p, card, target.HasValue ? new[] { target.Value } : Array.Empty<Target>(), invest);
 
-        public static PlayerAction Play(PlayerId p, ObjectId card, Target[] targets, bool invest = false) =>
-            new PlayerAction { Kind = ActionKind.PlayCard, Player = p, Card = card, Targets = targets, Invest = invest };
+        public static PlayerAction Play(PlayerId p, ObjectId card, Target[] targets, bool invest = false, int x = 0) =>
+            new PlayerAction { Kind = ActionKind.PlayCard, Player = p, Card = card, Targets = targets, Invest = invest, X = x };
 
         public static PlayerAction Attack(PlayerId p, ObjectId attacker, PlayerId defender) =>
             new PlayerAction { Kind = ActionKind.DeclareAttacker, Player = p, Card = attacker, Defender = defender };

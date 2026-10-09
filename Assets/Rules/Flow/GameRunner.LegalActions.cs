@@ -42,6 +42,7 @@ namespace RestartedTavern.Rules
                     break;
 
                 case DecisionKind.DiscardToHandSize:
+                case DecisionKind.DiscardCards:
                     foreach (var c in p.Hand) result.Add(PlayerAction.Discard(player, c.Id));
                     break;
 
@@ -110,9 +111,17 @@ namespace RestartedTavern.Rules
                 if (targetChoices.Count == 0) continue;
 
                 bool canInvest = Payment.CanInvest(S, Db, p, def);
+                int goldForCost = Payment.GoldNeeded(S, Db, p, def);
                 for (int invest = 0; invest <= (canInvest ? 1 : 0); invest++)
-                    foreach (var targets in targetChoices)
-                        result.Add(PlayerAction.Play(player, card.Id, targets, invest == 1));
+                {
+                    // "As an extra cost, pay any amount of Gold (X)": every X the remaining Gold allows, 0 included.
+                    int maxX = def.XGoldExtraCost
+                        ? p.Gold - goldForCost - (invest == 1 ? Costs.InvestCost(S, Db, player, def) : 0)
+                        : 0;
+                    for (int x = 0; x <= maxX; x++)
+                        foreach (var targets in targetChoices)
+                            result.Add(PlayerAction.Play(player, card.Id, targets, invest == 1, x));
+                }
             }
         }
     }

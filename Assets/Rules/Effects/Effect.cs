@@ -20,17 +20,20 @@ namespace RestartedTavern.Rules
     {
         private readonly GameRunner _runner;
 
-        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0)
+        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0, int eventAmount = 0)
         {
             _runner = runner;
             Controller = controller;
             Source = source;
             Targets = targets;
             X = x;
+            EventAmount = eventAmount;
         }
 
-        /// <summary>The X paid for an activated ability (0 otherwise).</summary>
+        /// <summary>The X paid for an activated ability or a spell's "pay any amount of Gold (X)" (0 otherwise).</summary>
         public int X { get; }
+        /// <summary>Triggered abilities: the amount of the triggering event ("heal that much"). 0 otherwise.</summary>
+        public int EventAmount { get; }
 
         public GameState State => _runner.State;
         public CardDatabase Cards => _runner.Db;
@@ -62,6 +65,9 @@ namespace RestartedTavern.Rules
         public CardInstance MoveToHand(CardInstance card) => _runner.MoveCard(card, Zone.Hand);
         /// <summary>Ask the controller whether to put the top card of their deck on the bottom. Must be the last effect.</summary>
         public void AskTopOrBottom() => _runner.AskTopOrBottom(Controller);
+        /// <summary>Ask <paramref name="player"/> to discard <paramref name="count"/> cards. Must be the last effect.</summary>
+        public void AskDiscard(PlayerId player, int count) => _runner.AskDiscard(player, count);
+        public void Tap(CardInstance permanent) => _runner.Tap(permanent);
         public void Destroy(CardInstance permanent) => _runner.MoveCard(permanent, Zone.Graveyard);
 
         public void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants) =>

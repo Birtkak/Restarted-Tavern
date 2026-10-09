@@ -35,8 +35,10 @@ namespace RestartedTavern.Rules
         public List<Effect> Effects { get; set; } = new List<Effect>();
 
         public bool Invested { get; set; }
-        /// <summary>Activated abilities: the X paid.</summary>
+        /// <summary>The X paid: an activated ability's X, or a spell's "pay any amount of Gold (X)".</summary>
         public int X { get; set; }
+        /// <summary>Triggered abilities: the amount of the event ("heal that much"), e.g. the Gold banked.</summary>
+        public int EventAmount { get; set; }
         /// <summary>Abilities: the ability's rules text (for UIs and logs).</summary>
         public string Text { get; set; } = "";
         /// <summary>A Tavern Dweller Power (GAME_DESIGN §9.1).</summary>
@@ -60,6 +62,8 @@ namespace RestartedTavern.Rules
         public PlayerId Controller { get; set; }
         public ObjectId SourceId { get; set; }
         public string SourceDefinitionId { get; set; }
+        /// <summary>The amount of the event that triggered it (Gold banked or spent), for "that much".</summary>
+        public int Amount { get; set; }
 
         public PendingTrigger Clone() => (PendingTrigger)MemberwiseClone();
     }

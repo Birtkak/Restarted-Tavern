@@ -155,8 +155,10 @@ namespace RestartedTavern.Rules
                     var card = state.FindObject(a.Card);
                     if (card?.DefinitionId != null)
                     {
-                        int gold = Payment.GoldNeeded(state, _db, state.GetPlayer(a.Player), _db.Get(card.DefinitionId));
+                        var def = _db.Get(card.DefinitionId);
+                        int gold = Payment.GoldNeeded(state, _db, state.GetPlayer(a.Player), def);
                         if (gold > 0) sb.Append("  [uses ").Append(gold).Append(" Gold]");
+                        if (def.XGoldExtraCost) sb.Append("  [X=").Append(a.X).Append(" Gold]");
                     }
                     if (a.Invest) sb.Append("  +INVEST");
                     return sb.ToString();

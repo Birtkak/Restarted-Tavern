@@ -125,6 +125,16 @@ namespace RestartedTavern.Rules
         public int Counters { get; set; } = 1;
     }
 
+    /// <summary>
+    /// "Your Gold cap is N" (Offshore Account, GAME_DESIGN §5.2). The cap is a per-player value that
+    /// starts at the format's cap; when several effects set it, the newest wins (MTG timestamp order).
+    /// See <see cref="GoldRules.Cap"/>.
+    /// </summary>
+    public sealed class GoldCapAbility : StaticAbility
+    {
+        public int Cap { get; set; }
+    }
+
     public enum CostKind
     {
         /// <summary>Casting a card from hand (creatures count: they are spells too).</summary>

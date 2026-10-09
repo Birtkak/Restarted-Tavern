@@ -66,7 +66,18 @@ namespace RestartedTavern.Rules
                 }
             }
 
-            if (losers.Count == 0 && toGraveyard.Count == 0 && toUnattach.Count == 0) return false;
+            // §5.2 (decided 2026-10-09): when a player's Gold cap goes down, Gold above it is lost at once.
+            var overCap = new List<(PlayerState player, int cap)>();
+            foreach (var p in S.Players)
+            {
+                if (p.HasLost) continue;
+                int cap = GoldRules.Cap(S, Db, p.Id);
+                if (p.Gold > cap) overCap.Add((p, cap));
+            }
+
+            if (losers.Count == 0 && toGraveyard.Count == 0 && toUnattach.Count == 0 && overCap.Count == 0) return false;
+
+            foreach (var (player, cap) in overCap) ChangeGold(player.Id, cap - player.Gold);
 
             foreach (var c in toUnattach)
             {

@@ -112,7 +112,10 @@ Unused mana is not lost.
 - 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (mana first).
 - 🔒 Gold gained above the cap of 5 is lost.
 - 🔒 **Bank** (rules term, introduced with set v0.2): when unspent mana becomes Gold at the end of your turn, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
-- 🔒 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap.
+- 🔒 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap. If several effects set it, the newest one wins (MTG timestamp order).
+- 🔒 **When a cap goes down** (the card that raised it leaves), Gold above the new cap is **lost at once**, checked like a state-based action (decided 2026-10-09). The cap always means the cap.
+- 🔒 **Spend Gold** (rules term): a player spends Gold when they pay Gold for a cost: a spell, an activated ability, Invest, "pay any amount of Gold", or a tax. "Whenever you spend Gold" triggers **once per payment**, however much Gold it was; "3 or more Gold on a single spell or ability" looks at that one payment (decided 2026-10-09). Gold that is lost or taken (Tax Office, Debt Collector, Grand Heist) is not spent.
+- 🔒 **"Gold equal to its cost"** (Counterfeit Coin, Golden Handshake, Hostile Takeover) means the **printed cost** (MTG mana value). Discounts and Invest don't change it (decided 2026-10-09).
 
 **Why this works**
 - It removes the bad feeling of "I held up mana for a trick and the opponent didn't attack". The mana is banked instead of wasted.
@@ -293,6 +296,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **v0.2 Gold rules** (§5.2): "whenever you spend Gold" triggers **once per payment**; when a Gold cap goes down, the excess Gold is **lost at once**; "Gold equal to its cost" is the **printed cost** (MTG mana value). Bank triggers use the cleanup step's priority (MTG 514.3a). v0.2 cards go into the six prototype decks in one pass after all engine batches, and the user approves the lists. |
 | 2026-10-09 | **Patrons are renamed Tavern Dwellers** (in rules text, docs and code: `TavernDweller`). **Tavern Dweller Powers: once each turn** (MTG default), so up to once on your turn and once on each opponent's turn. **"Pay N Gold" costs are Gold only**, like Invest; generic ability costs (Equip, X, Powers) stay mana first. **Archon Lumen** deals one separate 1-damage ping per Equipment, each with its own target. Deck rule: every card is from the Tavern Dweller's factions or Neutral. Activated abilities, Equip and all 10 Tavern Dwellers are implemented (DEVELOPMENT §7). |
 | 2026-10-09 | **Rules review** (playtest/RULES_REVIEW.md). Going first: back to the **MTG default** (the first player skips their turn-1 draw, no other compensation); human playtests will judge it. Gold sinks: **Tavern Dweller Powers** are the fix, so implement them next and then re-measure the Gold cap. Game-length stalls: **no new rule**; add late-game sinks and finishers in cards first. **Life gain is capped at starting life** (§11.1). |
 | 2026-10-09 | **Set v0.2 approved**: all 70 additions (10 per faction, 20 Neutral) confirmed. The rules terms they use are now locked: **bank**, per-player Gold cap, **damaged**, **can't be healed** (§5.2, §11.1). |

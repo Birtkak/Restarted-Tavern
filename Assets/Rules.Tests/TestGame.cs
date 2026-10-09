@@ -132,6 +132,7 @@ namespace RestartedTavern.Rules.Tests
                         case DecisionKind.DeclareAttackers: Do(PlayerAction.FinishAttacks(State.Pending.Player)); continue;
                         case DecisionKind.DeclareBlockers: Do(PlayerAction.FinishBlocks(State.Pending.Player)); continue;
                         case DecisionKind.DiscardToHandSize:
+                        case DecisionKind.DiscardCards:
                             Do(PlayerAction.Discard(State.Pending.Player, P(State.Pending.Player).Hand[0].Id));
                             continue;
                         case DecisionKind.TopOrBottom: Do(PlayerAction.ChooseOption(State.Pending.Player, 0)); continue;

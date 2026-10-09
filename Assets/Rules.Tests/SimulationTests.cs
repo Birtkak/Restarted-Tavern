@@ -69,7 +69,7 @@ namespace RestartedTavern.Rules.Tests
             {
                 Assert.GreaterOrEqual(p.Mana, 0, "negative mana");
                 Assert.LessOrEqual(p.MaxMana, s.Format.ManaCap);
-                Assert.That(p.Gold, Is.InRange(0, s.Format.GoldCap), "Gold out of range");
+                Assert.That(p.Gold, Is.InRange(0, GoldRules.Cap(s, db, p.Id)), "Gold out of range");
 
                 // Card conservation: every non-token card the player owns is somewhere.
                 int owned = s.Players.Sum(q => q.Battlefield.Count(c => c.Owner == p.Id && !c.IsToken))

@@ -64,6 +64,8 @@ namespace RestartedTavern.Rules
         public int ManaPaid;
         public int GoldPaid;
         public bool Invested;
+        /// <summary>"Pay any amount of Gold (X)": the X paid (included in GoldPaid).</summary>
+        public int X;
         public override string ToString() => Player + " casts " + DefinitionId + Card + (Targets?.Length > 0 ? " @" + string.Join(",", Targets) : "");
     }
 

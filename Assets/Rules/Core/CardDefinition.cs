@@ -43,6 +43,12 @@ namespace RestartedTavern.Rules
         public int? InvestCost { get; set; }
         public List<Effect> InvestEffects { get; set; } = new List<Effect>();
 
+        /// <summary>
+        /// "As an extra cost, pay any amount of Gold (X)" (Settle the Tab). Paid only with Gold, like
+        /// Invest; X can be 0. The effects read it as <see cref="EffectContext.X"/>.
+        /// </summary>
+        public bool XGoldExtraCost { get; set; }
+
         public List<TriggeredAbility> Triggers { get; set; } = new List<TriggeredAbility>();
         public List<StaticAbility> Statics { get; set; } = new List<StaticAbility>();
         /// <summary>Activated abilities (MTG 602), including Equip and a Tavern Dweller's Power.</summary>
@@ -91,6 +97,16 @@ namespace RestartedTavern.Rules
         EquipActivated,
         /// <summary>An Equipment becomes unattached. Subject = the Equipment's controller.</summary>
         EquipmentUnattached,
+        /// <summary>
+        /// "Whenever you bank Gold" (GAME_DESIGN §5.2): unspent mana became Gold in the cleanup step.
+        /// Subject = the player who banked; the amount is the Gold actually gained (EffectContext.EventAmount).
+        /// </summary>
+        GoldBanked,
+        /// <summary>
+        /// "Whenever you spend Gold": a player paid Gold for a spell, ability, Invest or tax. Once per
+        /// payment (decided 2026-10-09); the amount is the Gold paid. Gold that is lost isn't spent.
+        /// </summary>
+        GoldSpent,
     }
 
     /// <summary>Whose objects or actions a "whenever ..." trigger watches.</summary>
@@ -119,6 +135,8 @@ namespace RestartedTavern.Rules
         public int MinPower { get; set; }
         /// <summary>SpellCast: the spell's printed cost is at least this.</summary>
         public int MinCost { get; set; }
+        /// <summary>GoldBanked / GoldSpent: "2 or more Gold". 0 = any amount.</summary>
+        public int MinAmount { get; set; }
         /// <summary>"This triggers at most N times each turn" (Skabba). 0 = no limit.</summary>
         public int MaxPerTurn { get; set; }
 

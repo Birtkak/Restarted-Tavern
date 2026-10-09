@@ -39,6 +39,30 @@ namespace RestartedTavern.Rules
         }
     }
 
+    /// <summary>GAME_DESIGN §5.2: each player's Gold cap.</summary>
+    public static class GoldRules
+    {
+        /// <summary>
+        /// The format's cap, unless one of the player's permanents or their Tavern Dweller sets it
+        /// ("Your Gold cap is 8"); the newest such effect wins.
+        /// </summary>
+        public static int Cap(GameState s, CardDatabase db, PlayerId player)
+        {
+            var p = s.GetPlayer(player);
+            int cap = s.Format.GoldCap;
+            long newest = long.MinValue;
+            foreach (var list in new[] { p.TavernDwellerZone, p.Battlefield })
+                foreach (var source in list)
+                    foreach (var st in db.Get(source.DefinitionId).Statics)
+                        if (st is GoldCapAbility g && source.Timestamp > newest)
+                        {
+                            newest = source.Timestamp;
+                            cap = g.Cap;
+                        }
+            return cap;
+        }
+    }
+
     /// <summary>
     /// What a player actually pays after cost modifiers (<see cref="CostModifierAbility"/>) from
     /// their Tavern Dweller and their permanents.

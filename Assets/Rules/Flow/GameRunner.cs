@@ -123,7 +123,10 @@ namespace RestartedTavern.Rules
                 case ActionKind.DeclareBlocker: DeclareBlocker(a.Card, a.BlockedAttacker); break;
                 case ActionKind.FinishBlocks: FinishBlocks(a.Player); break;
                 case ActionKind.ChooseTarget: ChooseTriggerTarget(a.Target); break;
-                case ActionKind.Discard: DiscardToHandSize(a.Player, a.Card); break;
+                case ActionKind.Discard:
+                    if (S.Pending.Kind == DecisionKind.DiscardCards) AnswerDiscard(a);
+                    else DiscardToHandSize(a.Player, a.Card);
+                    break;
                 case ActionKind.ActivateAbility: Activate(a); break;
                 case ActionKind.ChooseOption: AnswerOption(a); break;
                 default: throw new ArgumentOutOfRangeException(nameof(a), a.Kind, null);
@@ -244,7 +247,7 @@ namespace RestartedTavern.Rules
                 case Step.CombatDamage: EnterStep(Step.Main2); break;
                 case Step.Main2: EnterStep(Step.End); break;
                 case Step.End: EnterStep(Step.Cleanup); break;
-                case Step.Cleanup: FinishCleanup(); break;
+                case Step.Cleanup: EnterStep(Step.Cleanup); break; // MTG 514.3a: another cleanup step
                 default: throw new InvalidOperationException("Can't advance from " + S.Step);
             }
         }
@@ -271,24 +274,47 @@ namespace RestartedTavern.Rules
             }
         }
 
-        /// <summary>§6 end phase: discard to 7 (done), then unspent mana becomes Gold (§5.2), then "until end of turn" ends.</summary>
+        /// <summary>
+        /// §6 end phase: discard to 7 (done), then unspent mana becomes Gold (§5.2), then "until end
+        /// of turn" ends. Banking Gold can trigger ("whenever you bank Gold"): then, as in MTG 514.3a,
+        /// the triggers go on the Chain, players get priority, and the cleanup step repeats once the
+        /// Chain is empty (AdvanceStep). In a repeated cleanup there is no mana left to bank.
+        /// </summary>
         private void FinishCleanup()
         {
             S.Pending = null;
             var ap = S.ActivePlayerState;
-            int banked = Math.Max(0, Math.Min(ap.Mana, S.Format.GoldCap - ap.Gold));
-            if (ap.Mana > 0) Emit(new GoldBankedEvent { Player = ap.Id, UnspentMana = ap.Mana, Banked = banked });
-            if (banked > 0) ChangeGold(ap.Id, banked);
-            ap.Mana = 0; // mana is only filled during your own turn (§5.2)
-            Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });
+            if (ap.Mana > 0)
+            {
+                int banked = Math.Max(0, Math.Min(ap.Mana, GoldRules.Cap(S, Db, ap.Id) - ap.Gold));
+                Emit(new GoldBankedEvent { Player = ap.Id, UnspentMana = ap.Mana, Banked = banked });
+                if (banked > 0)
+                {
+                    ChangeGold(ap.Id, banked);
+                    QueueWatcherTriggers(TriggerEvent.GoldBanked, ap.Id, t => banked >= t.MinAmount, banked);
+                }
+                ap.Mana = 0; // mana is only filled during your own turn (§5.2)
+                Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });
+            }
 
             var beforeBuffsEnd = SnapshotRemainingHealth();
             S.UntilEndOfTurn.Clear();
             CapDamageAfterBuffsEnd(beforeBuffsEnd);
             if (S.Format.DamageWearsOff)
                 foreach (var c in S.AllPermanents()) c.Damage = 0;
-            S.Combat = null;
 
+            // MTG 514.3a: state-based actions and waiting triggers give players priority in cleanup.
+            S.ResumePriorityTo = ap.Id;
+            CheckStateBasedActionsAndTriggers();
+            if (S.IsGameOver || S.Pending != null) return;
+            if (S.Chain.Count > 0)
+            {
+                S.PriorityPlayer = ap.Id;
+                S.PassesInRow = 0;
+                return;
+            }
+
+            S.Combat = null;
             var next = NextLivingPlayer(ap.Id);
             BeginTurn(next.Seat);
         }

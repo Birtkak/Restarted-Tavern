@@ -52,8 +52,8 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | 21 | **Kick 'Em While They're Down** | 2 | Sorcery | C | — | Deal 2 damage to target creature. If it was already damaged, deal 4 damage instead. | Goobers create damage, and this finishes off what they started. Plain 'damaged' text, not a keyword | conditional damage | ✅ |
-| 22 | **Loot Splitter** | 2 | Creature: Goober | C | 2/2 | Invest 2: Create a 1/1 Goober. | Stolen Gold turns into more bodies | ✓ | ✅ |
-| 23 | **Goober Sapper** | 3 | Creature: Goober | C | 2/2 | Haste. Last Breath: Deal 1 damage to each enemy creature. | Trading it away wounds the whole enemy board, and those wounds stay | ✓ | ✅ |
+| 22 | **Loot Splitter** | 2 | Creature: Goober | C | 2/2 | Invest 2: Create a 1/1 Goober. | Stolen Gold turns into more bodies | ✓ implemented | ✅ |
+| 23 | **Goober Sapper** | 3 | Creature: Goober | C | 2/2 | Haste. Last Breath: Deal 1 damage to each enemy creature. | Trading it away wounds the whole enemy board, and those wounds stay | ✓ implemented | ✅ |
 | 24 | **Reckless Charge** | 1 | Instant | C | — | Target creature gets +2/+0 and Trample until end of turn. Invest 1: Your other Goobers get +1/+0 until end of turn. | A combat trick after blockers are declared, with a Gold-paid team version | Goober-only team pump | ✅ |
 | 25 | **Gold-Tooth Bruiser** | 4 | Creature: Goober | C | 4/3 | Trample. Whenever this deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold. | Steals Gold on a body that can trample through | combat-damage trigger | ✅ |
 | 26 | **Pickpocket Boss** | 3 | Creature: Goober | U | 2/3 | Whenever another Goober you control deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold. | Turns a wide attack into a Gold drain. Takes away the opponent's instant-speed answers | combat-damage trigger | ✅ |

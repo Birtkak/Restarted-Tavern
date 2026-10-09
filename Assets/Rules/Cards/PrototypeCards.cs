@@ -367,6 +367,7 @@ namespace RestartedTavern.Rules.Cards
             yield return adventurer;
 
             foreach (var c in AbilityCards()) yield return c;
+            foreach (var c in V02Cards()) yield return c;
             foreach (var c in TavernDwellers()) yield return c;
         }
 

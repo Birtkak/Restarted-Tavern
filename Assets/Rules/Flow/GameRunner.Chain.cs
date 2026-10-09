@@ -66,7 +66,8 @@ namespace RestartedTavern.Rules
             int manaPaid = cost - goldForCost;
             p.Mana -= manaPaid;
             if (manaPaid > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
-            int goldPaid = goldForCost + (a.Invest ? Costs.InvestCost(S, Db, a.Player, def) : 0);
+            int goldPaid = goldForCost + (a.Invest ? Costs.InvestCost(S, Db, a.Player, def) : 0)
+                           + (def.XGoldExtraCost ? a.X : 0);
             if (goldPaid > 0) ChangeGold(p.Id, -goldPaid);
 
             var onChain = MoveCard(card, Zone.Chain, a.Player);
@@ -84,6 +85,7 @@ namespace RestartedTavern.Rules
                 TargetSlots = def.SpellTargets,
                 Effects = effects,
                 Invested = a.Invest,
+                X = def.XGoldExtraCost ? a.X : 0,
             };
             item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
@@ -91,9 +93,10 @@ namespace RestartedTavern.Rules
             Emit(new SpellCastEvent
             {
                 Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Targets = a.Targets,
-                ManaPaid = manaPaid, GoldPaid = goldPaid, Invested = a.Invest,
+                ManaPaid = manaPaid, GoldPaid = goldPaid, Invested = a.Invest, X = item.X,
             });
             QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player, t => def.Cost >= t.MinCost);
+            if (goldPaid > 0) GoldSpent(a.Player, goldPaid);
 
             // MTG 117.3c: the player who cast a spell receives priority afterwards.
             GivePriority(a.Player);
@@ -139,22 +142,23 @@ namespace RestartedTavern.Rules
                 }
                 else
                 {
-                    RunEffects(item.Effects, item.Controller, item.SourceId, targets);
+                    RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
             else
             {
-                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X);
+                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount);
             }
 
             Emit(new ChainItemResolvedEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
         }
 
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
-        private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0)
+        private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0,
+            int eventAmount = 0)
         {
-            var ctx = new EffectContext(this, controller, source, targets, x);
+            var ctx = new EffectContext(this, controller, source, targets, x, eventAmount);
             foreach (var e in effects)
             {
                 if (S.IsGameOver) return;
@@ -189,17 +193,23 @@ namespace RestartedTavern.Rules
         /// "Whenever ..." triggers that watch other objects, from every living player's Tavern Dweller and
         /// permanents. <paramref name="subject"/> is the player the event is about (see TriggerEvent).
         /// </summary>
-        private void QueueWatcherTriggers(TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition = null)
+        private void QueueWatcherTriggers(TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition = null,
+            int amount = 0)
         {
             foreach (var p in S.Players)
             {
                 if (p.HasLost) continue;
-                foreach (var source in p.TavernDwellerZone) QueueWatcher(source, when, subject, condition);
-                foreach (var source in new List<CardInstance>(p.Battlefield)) QueueWatcher(source, when, subject, condition);
+                foreach (var source in p.TavernDwellerZone) QueueWatcher(source, when, subject, condition, amount);
+                foreach (var source in new List<CardInstance>(p.Battlefield)) QueueWatcher(source, when, subject, condition, amount);
             }
         }
 
-        private void QueueWatcher(CardInstance source, TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition)
+        /// <summary>"Whenever you spend Gold": once per payment (decided 2026-10-09), with the amount paid.</summary>
+        private void GoldSpent(PlayerId player, int amount) =>
+            QueueWatcherTriggers(TriggerEvent.GoldSpent, player, t => amount >= t.MinAmount, amount);
+
+        private void QueueWatcher(CardInstance source, TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition,
+            int amount)
         {
             var def = Def(source);
             for (int i = 0; i < def.Triggers.Count; i++)
@@ -216,11 +226,12 @@ namespace RestartedTavern.Rules
                     if (used >= ability.MaxPerTurn) continue;
                     S.UsesThisTurn[key] = used + 1;
                 }
-                QueueTrigger(ability, source.Controller, source.Id, def.Id, source);
+                QueueTrigger(ability, source.Controller, source.Id, def.Id, source, amount);
             }
         }
 
-        private void QueueTrigger(TriggeredAbility ability, PlayerId controller, ObjectId sourceId, string sourceDefinitionId, CardInstance source)
+        private void QueueTrigger(TriggeredAbility ability, PlayerId controller, ObjectId sourceId, string sourceDefinitionId, CardInstance source,
+            int amount = 0)
         {
             int times = ability.RepeatCount != null && source != null ? ability.RepeatCount(S, Db, source) : 1;
             for (int n = 0; n < times; n++)
@@ -231,6 +242,7 @@ namespace RestartedTavern.Rules
                     Controller = controller,
                     SourceId = sourceId,
                     SourceDefinitionId = sourceDefinitionId,
+                    Amount = amount,
                 });
             }
         }
@@ -305,6 +317,7 @@ namespace RestartedTavern.Rules
                 SourceDefinitionId = t.SourceDefinitionId,
                 Effects = t.Ability.Effects,
                 TargetsExcludeSource = t.Ability.TargetNotSelf,
+                EventAmount = t.Amount,
             };
             if (t.Ability.Target != TargetSpec.None) item.TargetSlots.Add(TargetSlot.Of(t.Ability.Target));
             if (target.HasValue) item.Targets.Add(target.Value);
