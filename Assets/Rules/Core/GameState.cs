@@ -28,6 +28,8 @@ namespace RestartedTavern.Rules
         /// <summary>The Chain. The last item is the top.</summary>
         public List<ChainItem> Chain { get; set; } = new List<ChainItem>();
         public List<PendingTrigger> PendingTriggers { get; set; } = new List<PendingTrigger>();
+        /// <summary>Delayed triggers waiting for their moment (MTG 603.7).</summary>
+        public List<DelayedTrigger> DelayedTriggers { get; set; } = new List<DelayedTrigger>();
         public PendingDecision Pending { get; set; }
 
         public CombatState Combat { get; set; }
@@ -146,6 +148,8 @@ namespace RestartedTavern.Rules
             foreach (var c in Chain) s.Chain.Add(c.Clone());
             s.PendingTriggers = new List<PendingTrigger>(PendingTriggers.Count);
             foreach (var t in PendingTriggers) s.PendingTriggers.Add(t.Clone());
+            s.DelayedTriggers = new List<DelayedTrigger>(DelayedTriggers.Count);
+            foreach (var t in DelayedTriggers) s.DelayedTriggers.Add(t.Clone());
             s.Pending = Pending?.Clone();
             s.Combat = Combat?.Clone();
             s.UntilEndOfTurn = new List<TemporaryModifier>(UntilEndOfTurn.Count);

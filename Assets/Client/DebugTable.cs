@@ -417,6 +417,10 @@ namespace RestartedTavern.Client
                 case DecisionKind.ChooseTriggerTarget: return "choose a target for " + _text.Name(d.Trigger.SourceDefinitionId);
                 case DecisionKind.DiscardToHandSize: return "discard " + d.Count + " card(s) down to 7";
                 case DecisionKind.DiscardCards: return "discard " + d.Count + " card(s)";
+                case DecisionKind.ChooseFromTop: return "put one of the top " + d.Count + " cards into your hand";
+                case DecisionKind.PayAnyGold:
+                    return "Dice Game: pay any amount of Gold (bids so far: "
+                           + (d.Bids.Count == 0 ? "none" : string.Join(", ", d.Bidders.Select((p, i) => p + " " + d.Bids[i]))) + ")";
                 case DecisionKind.PayTax: return "pay " + d.Count + " or " + _text.Name(_state, d.Card) + " is countered";
                 case DecisionKind.TopOrBottom: return "top card of your deck is " + _text.Name(_state, d.Card) + ": leave it or put it on the bottom";
                 default: return d.Kind.ToString();

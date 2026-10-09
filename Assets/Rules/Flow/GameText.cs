@@ -140,6 +140,12 @@ namespace RestartedTavern.Rules
                 case ActionKind.ChooseOption:
                     if (state.Pending?.Kind == DecisionKind.TopOrBottom)
                         return (a.Option == 1 ? "Put on the bottom: " : "Leave on top: ") + Name(state, state.Pending.Card);
+                    if (state.Pending?.Kind == DecisionKind.ChooseFromTop)
+                    {
+                        var deck = state.GetPlayer(a.Player).Deck;
+                        return "Take " + (a.Option < deck.Count ? Name(state, deck[a.Option].Id) : "?") + " (the rest go to the graveyard)";
+                    }
+                    if (state.Pending?.Kind == DecisionKind.PayAnyGold) return "Pay " + a.Option + " Gold";
                     if (state.Pending?.Kind == DecisionKind.PayTax)
                         return a.Option == 1 ? "Pay " + state.Pending.Count : "Don't pay (" + Name(state, state.Pending.Card) + " is countered)";
                     return "Option " + a.Option;

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RestartedTavern.Rules
 {
     public enum DecisionKind
@@ -24,6 +26,16 @@ namespace RestartedTavern.Rules
         /// §5.2), 0 = don't. Answered with ChooseOption. Only offered when they can pay.
         /// </summary>
         PayTax,
+        /// <summary>
+        /// "Look at the top N cards of your deck. Put one into your hand and the rest into your graveyard."
+        /// (Grave Gossip). ChooseOption = the index from the top (0 = top card).
+        /// </summary>
+        ChooseFromTop,
+        /// <summary>
+        /// "Each player may pay any amount of Gold." (Dice Game). Players choose in turn order, starting with
+        /// the active player, and see earlier choices (MTG 101.4, decided 2026-10-09). ChooseOption = Gold paid.
+        /// </summary>
+        PayAnyGold,
     }
 
     /// <summary>
@@ -43,11 +55,16 @@ namespace RestartedTavern.Rules
         /// <summary>PayTax: who gets <see cref="RewardGold"/> if the tax is paid ("If they pay, you gain 2 Gold").</summary>
         public PlayerId Beneficiary { get; set; }
         public int RewardGold { get; set; }
+        /// <summary>PayAnyGold: who has chosen so far, and how much each paid (same order).</summary>
+        public List<PlayerId> Bidders { get; set; }
+        public List<int> Bids { get; set; }
 
         public PendingDecision Clone()
         {
             var d = (PendingDecision)MemberwiseClone();
             d.Trigger = Trigger?.Clone();
+            if (Bidders != null) d.Bidders = new List<PlayerId>(Bidders);
+            if (Bids != null) d.Bids = new List<int>(Bids);
             return d;
         }
 

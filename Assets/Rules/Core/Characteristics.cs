@@ -185,6 +185,17 @@ namespace RestartedTavern.Rules
         public int Cap { get; set; }
     }
 
+    /// <summary>
+    /// Payment rules that change §5.2 for their controller: "You may pay Invest costs with mana as well as
+    /// Gold" (Silent Partner; mana first, then Gold) and "You may spend Gold as though it were mana to cast
+    /// creature spells" (Shady Moneylender; mana first, then Gold).
+    /// </summary>
+    public sealed class PaymentRuleAbility : StaticAbility
+    {
+        public bool InvestWithMana { get; set; }
+        public bool GoldForCreatureSpells { get; set; }
+    }
+
     public enum CostKind
     {
         /// <summary>Casting a card from hand (creatures count: they are spells too).</summary>

@@ -119,6 +119,7 @@ namespace RestartedTavern.Rules
                 owner.Battlefield.Add(c);
             }
             S.ControlUntilEndOfTurn.RemoveAll(t => t.ReturnTo == player.Id);
+            S.DelayedTriggers.RemoveAll(t => t.Controller == player.Id);
 
             foreach (var p in S.Players)
                 p.Battlefield.RemoveAll(c => c.Owner == player.Id);

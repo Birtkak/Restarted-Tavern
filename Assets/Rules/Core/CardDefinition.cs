@@ -49,6 +49,11 @@ namespace RestartedTavern.Rules
         /// </summary>
         public bool XGoldExtraCost { get; set; }
 
+        /// <summary>"You may cast this whenever you could cast an Instant" (Retainer Mage; MTG Flash).</summary>
+        public bool Flash { get; set; }
+        /// <summary>"You may pay for it with Gold": a permanent that Gold can help pay for, mana first (Retainer Mage).</summary>
+        public bool GoldMayPay { get; set; }
+
         /// <summary>"As an extra cost, pay N life" (Blood Price). You need at least N life (MTG 119.4).</summary>
         public int ExtraLifeCost { get; set; }
         /// <summary>
@@ -132,6 +137,17 @@ namespace RestartedTavern.Rules
         DestroysCreatureInCombat,
         /// <summary>At the start of the turn of the player this Curse is attached to (Curse of Rot). EventPlayer = that player.</summary>
         StartOfEnchantedPlayersTurn,
+        /// <summary>
+        /// A creature deals combat damage to a player (Pickpocket Boss). Subject = the creature's controller;
+        /// EventObject = the creature, EventPlayer = the damaged player. See SubjectSubtype, OthersOnly.
+        /// </summary>
+        CreatureDealsCombatDamageToPlayer,
+        /// <summary>A player attacks: their attackers are declared. Subject = that player; EventAmount = how many attack (Rally Drummer).</summary>
+        PlayerAttacks,
+        /// <summary>A Curse is put into a graveyard from the battlefield. Subject = its controller (Stage Medium).</summary>
+        CurseToGraveyard,
+        /// <summary>A player paid Gold for a creature spell's cost (Shady Moneylender's "whenever you do"). Subject = the caster.</summary>
+        GoldPaidForCreatureSpell,
     }
 
     /// <summary>Whose objects or actions a "whenever ..." trigger watches.</summary>
@@ -167,8 +183,10 @@ namespace RestartedTavern.Rules
         public int MinCost { get; set; }
         /// <summary>GoldBanked / GoldSpent: "2 or more Gold". 0 = any amount.</summary>
         public int MinAmount { get; set; }
-        /// <summary>CreatureEnters: "another creature": not the source itself.</summary>
+        /// <summary>CreatureEnters / CreatureDealsCombatDamageToPlayer: "another creature": not the source itself.</summary>
         public bool OthersOnly { get; set; }
+        /// <summary>CreatureDealsCombatDamageToPlayer: only creatures with this subtype ("another Goober"). Null = any.</summary>
+        public string SubjectSubtype { get; set; }
         /// <summary>CreatureDealtDamage: only the creature this Curse or Equipment is attached to (Hex of Festering).</summary>
         public bool OnlyAttachedCreature { get; set; }
         /// <summary>

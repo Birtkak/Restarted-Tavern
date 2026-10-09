@@ -9,7 +9,29 @@ namespace RestartedTavern.Rules
     /// </summary>
     public static class Payment
     {
-        public static bool GoldAllowed(CardDefinition def) => !def.IsPermanent;
+        /// <summary>
+        /// Can Gold help pay for casting this card? Instants and Sorceries: yes. Permanents: no (§5.2), unless
+        /// the card says so (Retainer Mage) or a payment rule lets Gold pay for creature spells (Shady Moneylender).
+        /// </summary>
+        public static bool GoldAllowed(GameState s, CardDatabase db, PlayerId player, CardDefinition def)
+        {
+            if (!def.IsPermanent || def.GoldMayPay) return true;
+            return def.IsCreature && HasPaymentRule(s, db, player, r => r.GoldForCreatureSpells);
+        }
+
+        /// <summary>"You may pay Invest costs with mana as well as Gold" (Silent Partner).</summary>
+        public static bool InvestMayUseMana(GameState s, CardDatabase db, PlayerId player) =>
+            HasPaymentRule(s, db, player, r => r.InvestWithMana);
+
+        private static bool HasPaymentRule(GameState s, CardDatabase db, PlayerId player, Func<PaymentRuleAbility, bool> rule)
+        {
+            var p = s.GetPlayer(player);
+            foreach (var list in new[] { p.TavernDwellerZone, p.Battlefield })
+                foreach (var source in list)
+                    foreach (var st in db.Get(source.DefinitionId).Statics)
+                        if (st is PaymentRuleAbility r && rule(r)) return true;
+            return false;
+        }
 
         /// <summary>
         /// Gold needed for a cost after mana is used up, or -1 if it can't be paid.
@@ -26,17 +48,31 @@ namespace RestartedTavern.Rules
 
         /// <summary>Gold casting this card would take after mana is used up, or -1 if it can't be paid at all.</summary>
         public static int GoldNeeded(GameState s, CardDatabase db, PlayerState p, CardDefinition def) =>
-            GoldNeeded(p, Costs.SpellCost(s, db, p.Id, def), GoldAllowed(def));
+            GoldNeeded(p, Costs.SpellCost(s, db, p.Id, def), GoldAllowed(s, db, p.Id, def));
 
         public static bool CanPay(GameState s, CardDatabase db, PlayerState p, CardDefinition def) => GoldNeeded(s, db, p, def) >= 0;
 
-        /// <summary>Can the Invest cost be paid too, from the Gold left after the main cost?</summary>
-        public static bool CanInvest(GameState s, CardDatabase db, PlayerState p, CardDefinition def)
+        /// <summary>
+        /// How the Invest cost would be paid after the main cost: Gold only, or mana first and then Gold
+        /// with Silent Partner. Returns false if it can't be paid.
+        /// </summary>
+        public static bool InvestSplit(GameState s, CardDatabase db, PlayerState p, CardDefinition def, out int mana, out int gold)
         {
+            mana = 0;
+            gold = 0;
             if (!def.InvestCost.HasValue) return false;
-            int gold = GoldNeeded(s, db, p, def);
-            return gold >= 0 && p.Gold - gold >= Costs.InvestCost(s, db, p.Id, def);
+            int goldForCost = GoldNeeded(s, db, p, def);
+            if (goldForCost < 0) return false;
+            int manaLeft = p.Mana - (Costs.SpellCost(s, db, p.Id, def) - goldForCost);
+            int invest = Costs.InvestCost(s, db, p.Id, def);
+            if (InvestMayUseMana(s, db, p.Id)) mana = Math.Min(Math.Max(0, manaLeft), invest);
+            gold = invest - mana;
+            return goldForCost + gold <= p.Gold;
         }
+
+        /// <summary>Can the Invest cost be paid too, after the main cost?</summary>
+        public static bool CanInvest(GameState s, CardDatabase db, PlayerState p, CardDefinition def) =>
+            InvestSplit(s, db, p, def, out _, out _);
     }
 
     /// <summary>GAME_DESIGN §5.2: each player's Gold cap.</summary>

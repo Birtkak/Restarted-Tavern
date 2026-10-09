@@ -43,6 +43,10 @@ namespace RestartedTavern.Rules
         private void FinishAttacks()
         {
             S.Pending = null;
+            // "Whenever you attack with three or more creatures" (Rally Drummer).
+            int attackers = S.Combat?.Attacks.Count ?? 0;
+            if (attackers > 0)
+                QueueWatcherTriggers(TriggerEvent.PlayerAttacks, S.ActivePlayer, (t, _) => attackers >= t.MinAmount, attackers);
             GivePriority(S.ActivePlayer);
         }
 

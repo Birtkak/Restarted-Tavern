@@ -61,13 +61,15 @@ namespace RestartedTavern.Rules
 
             // §5.2: mana first, then Gold (not for permanents); Invest is paid only with Gold.
             // Cost modifiers (Tavern Dwellers, Archon Lumen...) are applied first.
+            // Silent Partner lets Invest use the mana that's left; X is always Gold.
             int cost = Costs.SpellCost(S, Db, a.Player, def);
-            int goldForCost = Payment.GoldNeeded(p, cost, Payment.GoldAllowed(def));
-            int manaPaid = cost - goldForCost;
+            int goldForCost = Payment.GoldNeeded(p, cost, Payment.GoldAllowed(S, Db, a.Player, def));
+            int investMana = 0, investGold = 0;
+            if (a.Invest) Payment.InvestSplit(S, Db, p, def, out investMana, out investGold);
+            int manaPaid = cost - goldForCost + investMana;
             p.Mana -= manaPaid;
             if (manaPaid > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
-            int goldPaid = goldForCost + (a.Invest ? Costs.InvestCost(S, Db, a.Player, def) : 0)
-                           + (def.XGoldExtraCost ? a.X : 0);
+            int goldPaid = goldForCost + investGold + (def.XGoldExtraCost ? a.X : 0);
             if (goldPaid > 0) ChangeGold(p.Id, -goldPaid);
             // Extra costs (MTG 601.2h): pay life, sacrifice a creature (its last known Power is kept).
             if (def.ExtraLifeCost > 0) ChangeLife(p.Id, -def.ExtraLifeCost);
@@ -108,6 +110,7 @@ namespace RestartedTavern.Rules
             });
             QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player, (t, _) => def.Cost >= t.MinCost);
             if (goldPaid > 0) GoldSpent(a.Player, goldPaid);
+            if (def.IsCreature && goldForCost > 0) QueueWatcherTriggers(TriggerEvent.GoldPaidForCreatureSpell, a.Player);
 
             // MTG 117.3c: the player who cast a spell receives priority afterwards.
             GivePriority(a.Player);
@@ -149,17 +152,19 @@ namespace RestartedTavern.Rules
                         else permanent.AttachedToObject = t.Object;
                     }
                     if (item.Invested)
-                        RunEffects(def.InvestEffects, item.Controller, permanent.Id, targets);
+                        RunEffects(def.InvestEffects, item.Controller, permanent.Id, targets, sourceDefinitionId: def.Id);
                 }
                 else
                 {
-                    RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, sacrificedPower: item.SacrificedPower);
+                    RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, sacrificedPower: item.SacrificedPower,
+                        sourceDefinitionId: item.SourceDefinitionId);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
             else
             {
-                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount, item.EventObject, item.EventPlayer);
+                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount, item.EventObject, item.EventPlayer,
+                    sourceDefinitionId: item.SourceDefinitionId);
             }
 
             Emit(new ChainItemResolvedEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
@@ -167,9 +172,11 @@ namespace RestartedTavern.Rules
 
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
         private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0,
-            int eventAmount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0)
+            int eventAmount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0,
+            string sourceDefinitionId = null)
         {
-            var ctx = new EffectContext(this, controller, source, targets, x, eventAmount, eventObject, eventPlayer, sacrificedPower);
+            var ctx = new EffectContext(this, controller, source, targets, x, eventAmount, eventObject, eventPlayer, sacrificedPower,
+                sourceDefinitionId);
             foreach (var e in effects)
             {
                 if (S.IsGameOver) return;
@@ -190,14 +197,14 @@ namespace RestartedTavern.Rules
         /// Queue the triggers of an object, including abilities granted to it by other permanents
         /// ("equipped creature has 'Whenever this creature attacks, ...'").
         /// </summary>
-        private void QueueTriggers(CardInstance obj, TriggerEvent when)
+        private void QueueTriggers(CardInstance obj, TriggerEvent when, PlayerId? eventPlayer = null)
         {
             var def = Def(obj);
             foreach (var ability in def.Triggers)
-                if (ability.When == when) QueueTrigger(ability, obj.Controller, obj.Id, def.Id, obj);
+                if (ability.When == when) QueueTrigger(ability, obj.Controller, obj.Id, def.Id, obj, eventPlayer: eventPlayer);
             if (obj.Zone != Zone.Battlefield) return;
             foreach (var granted in GrantedTriggers(obj))
-                if (granted.When == when) QueueTrigger(granted, obj.Controller, obj.Id, def.Id, obj);
+                if (granted.When == when) QueueTrigger(granted, obj.Controller, obj.Id, def.Id, obj, eventPlayer: eventPlayer);
         }
 
         /// <summary>
@@ -270,6 +277,18 @@ namespace RestartedTavern.Rules
         {
             foreach (var c in new List<CardInstance>(S.ActivePlayerState.TavernDwellerZone)) QueueTriggers(c, when);
             foreach (var c in new List<CardInstance>(S.ActivePlayerState.Battlefield)) QueueTriggers(c, when);
+
+            if (when == TriggerEvent.EndOfYourTurn)
+            {
+                // Delayed triggers "at the end of your turn" (MTG 603.7): they trigger once, then they're gone.
+                foreach (var d in new List<DelayedTrigger>(S.DelayedTriggers))
+                {
+                    if (d.Controller != S.ActivePlayer) continue;
+                    S.DelayedTriggers.Remove(d);
+                    QueueTrigger(d.Ability, d.Controller, d.SourceId, d.SourceDefinitionId, null, eventObject: d.EventObject);
+                }
+                return;
+            }
             if (when != TriggerEvent.StartOfYourTurn) return;
 
             // "At the start of that player's turn" on Curses attached to the active player (Curse of Rot).

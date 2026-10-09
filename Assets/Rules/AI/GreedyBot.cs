@@ -50,6 +50,25 @@ namespace RestartedTavern.Rules.AI
                     var trigger = s.Pending.Trigger;
                     return legal.OrderByDescending(a => EffectValue(s, me, trigger.Ability.Effects, a.Targets, trigger.SourceId, trigger.Amount)).First();
                 }
+                case DecisionKind.ChooseFromTop:
+                {
+                    // Take the best card we can cast soon.
+                    var deck = s.GetPlayer(me).Deck;
+                    int mana = s.GetPlayer(me).MaxMana + 1;
+                    return legal.OrderByDescending(a =>
+                    {
+                        int cost = Db.Get(deck[a.Option].DefinitionId).Cost;
+                        return cost <= mana ? cost : 0.5;
+                    }).First();
+                }
+                case DecisionKind.PayAnyGold:
+                {
+                    // Bid just enough to win if that's cheap, otherwise keep the Gold.
+                    int highest = s.Pending.Bids.Count > 0 ? s.Pending.Bids.Max() : 0;
+                    int gold = s.GetPlayer(me).Gold;
+                    int bid = s.Pending.Bids.Count == 0 ? Math.Min(gold, 2) : highest + 1 <= Math.Min(gold, 4) ? highest + 1 : 0;
+                    return legal.First(a => a.Option == bid);
+                }
                 case DecisionKind.PayTax:
                     // Pay the tax when we can: the spell was worth casting.
                     return legal.OrderByDescending(a => a.Option).First();
@@ -345,6 +364,27 @@ namespace RestartedTavern.Rules.AI
                         break;
                     }
                     case ExileTargetCardEffect _: v += 0.3; break;
+                    case StealAllGoldEffect _:
+                    {
+                        int taken = s.Players.Where(p => s.AreOpponents(me, p.Id)).Sum(p => p.Gold);
+                        int room = GoldRules.Cap(s, Db, me) - s.GetPlayer(me).Gold;
+                        v += 0.3 * taken + 0.3 * Math.Min(taken, room);
+                        break;
+                    }
+                    case CreateTokensEffect t when t.CountFromRemembered:
+                    {
+                        int taken = s.Players.Where(p => s.AreOpponents(me, p.Id)).Sum(p => p.Gold);
+                        v += 2.0 * Math.Min(taken, GoldRules.Cap(s, Db, me) - s.GetPlayer(me).Gold);
+                        break;
+                    }
+                    case LookAtTopPutOneInHandEffect _: v += 2.3; break;
+                    case DiceGameEffect _: v += 1.5; break;
+                    case ReanimateEffect _:
+                    {
+                        var card = target.HasValue && !target.Value.IsPlayer ? s.FindObject(target.Value.Object) : null;
+                        if (card != null) v += s.Step == Step.Main1 ? 1.0 + 0.8 * Db.Get(card.DefinitionId).Power : 0.3;
+                        break;
+                    }
                     case HealOrCountersEffect ho:
                     {
                         var c = Creature(s, target);

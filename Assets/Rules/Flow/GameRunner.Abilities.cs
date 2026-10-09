@@ -258,10 +258,90 @@ namespace RestartedTavern.Rules
             GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
+        /// <summary>
+        /// "Look at the top N cards of your deck. Put one into your hand and the rest into your graveyard."
+        /// (Grave Gossip). With one card there's nothing to choose. Must be the last effect.
+        /// </summary>
+        internal void AskChooseFromTop(PlayerId player, int count)
+        {
+            var deck = S.GetPlayer(player).Deck;
+            int n = System.Math.Min(count, deck.Count);
+            if (n == 0) return;
+            if (n == 1)
+            {
+                MoveCard(deck[0], Zone.Hand);
+                return;
+            }
+            S.Pending = new PendingDecision { Kind = DecisionKind.ChooseFromTop, Player = player, Count = n };
+        }
+
+        private void AnswerChooseFromTop(PlayerAction a, PendingDecision decision)
+        {
+            var deck = S.GetPlayer(a.Player).Deck;
+            var top = deck.GetRange(0, System.Math.Min(decision.Count, deck.Count));
+            for (int i = 0; i < top.Count; i++)
+                MoveCard(top[i], i == a.Option ? Zone.Hand : Zone.Graveyard);
+        }
+
+        /// <summary>
+        /// Dice Game: "Each player may pay any amount of Gold. The player who paid the most draws two cards.
+        /// If players tie for the most, each of them draws one card." Choices go in turn order from the
+        /// active player, in the open (MTG 101.4). Players with no Gold pay 0 without being asked.
+        /// </summary>
+        internal void StartGoldAuction()
+        {
+            S.Pending = new PendingDecision { Kind = DecisionKind.PayAnyGold, Bidders = new List<PlayerId>(), Bids = new List<int>() };
+            NextBidder();
+        }
+
+        private void NextBidder()
+        {
+            var d = S.Pending;
+            foreach (var p in S.LivingPlayersFrom(S.ActivePlayer))
+            {
+                if (d.Bidders.Contains(p.Id)) continue;
+                if (p.Gold > 0)
+                {
+                    d.Player = p.Id;
+                    return;
+                }
+                d.Bidders.Add(p.Id);
+                d.Bids.Add(0);
+            }
+
+            S.Pending = null;
+            int max = 0;
+            foreach (var b in d.Bids) max = System.Math.Max(max, b);
+            var top = new List<PlayerId>();
+            for (int i = 0; i < d.Bids.Count; i++)
+                if (d.Bids[i] == max) top.Add(d.Bidders[i]);
+            foreach (var p in top) Draw(p, top.Count == 1 ? 2 : 1);
+        }
+
+        private void AnswerBid(PlayerAction a)
+        {
+            var d = S.Pending;
+            if (a.Option > 0)
+            {
+                ChangeGold(a.Player, -a.Option);
+                GoldSpent(a.Player, a.Option);
+            }
+            d.Bidders.Add(a.Player);
+            d.Bids.Add(a.Option);
+            NextBidder();
+            if (S.Pending == null) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
+        }
+
         private void AnswerOption(PlayerAction a)
         {
+            if (S.Pending.Kind == DecisionKind.PayAnyGold)
+            {
+                AnswerBid(a);
+                return;
+            }
             var decision = S.Pending;
             S.Pending = null;
+            if (decision.Kind == DecisionKind.ChooseFromTop) AnswerChooseFromTop(a, decision);
             if (decision.Kind == DecisionKind.TopOrBottom && a.Option == 1)
             {
                 var card = S.GetPlayer(a.Player).Deck.Find(c => c.Id == decision.Card);

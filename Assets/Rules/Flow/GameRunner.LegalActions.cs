@@ -60,6 +60,14 @@ namespace RestartedTavern.Rules
                     result.Add(PlayerAction.ChooseOption(player, 1));
                     break;
 
+                case DecisionKind.ChooseFromTop:
+                    for (int i = 0; i < S.Pending.Count; i++) result.Add(PlayerAction.ChooseOption(player, i));
+                    break;
+
+                case DecisionKind.PayAnyGold:
+                    for (int gold = 0; gold <= p.Gold; gold++) result.Add(PlayerAction.ChooseOption(player, gold));
+                    break;
+
                 case DecisionKind.PayTax:
                     result.Add(PlayerAction.ChooseOption(player, 0)); // don't pay: it's countered
                     if (Payment.GoldNeeded(p, S.Pending.Count, true) >= 0) result.Add(PlayerAction.ChooseOption(player, 1));
@@ -108,7 +116,7 @@ namespace RestartedTavern.Rules
             foreach (var card in p.Hand)
             {
                 var def = Def(card);
-                bool instant = def.Type == CardType.Instant;
+                bool instant = def.Type == CardType.Instant || def.Flash;
                 if (!instant && !sorcerySpeed) continue;
                 if (!Payment.CanPay(S, Db, p, def)) continue;
                 if (def.ExtraLifeCost > p.Life) continue; // MTG 119.4: you can only pay life you have
@@ -134,9 +142,9 @@ namespace RestartedTavern.Rules
                 for (int invest = 0; invest <= (canInvest ? 1 : 0); invest++)
                 {
                     // "As an extra cost, pay any amount of Gold (X)": every X the remaining Gold allows, 0 included.
-                    int maxX = def.XGoldExtraCost
-                        ? p.Gold - goldForCost - (invest == 1 ? Costs.InvestCost(S, Db, player, def) : 0)
-                        : 0;
+                    int investGold = 0;
+                    if (invest == 1) Payment.InvestSplit(S, Db, p, def, out _, out investGold);
+                    int maxX = def.XGoldExtraCost ? p.Gold - goldForCost - investGold : 0;
                     for (int x = 0; x <= maxX; x++)
                         foreach (var targets in targetChoices)
                             foreach (var sacrifice in sacrifices)

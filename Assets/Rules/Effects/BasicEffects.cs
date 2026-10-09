@@ -219,10 +219,13 @@ namespace RestartedTavern.Rules
         public string TokenId { get; set; }
         public int Count { get; set; } = 1;
         public Keyword GrantUntilEndOfTurn { get; set; }
+        /// <summary>"for each Gold you gained this way": the number an earlier effect remembered (Grand Heist).</summary>
+        public bool CountFromRemembered { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
-            for (int i = 0; i < Count; i++)
+            int count = CountFromRemembered ? ctx.Remembered : Count;
+            for (int i = 0; i < count; i++)
             {
                 var token = ctx.CreateToken(ctx.Controller, TokenId);
                 if (GrantUntilEndOfTurn != Keyword.None)
@@ -254,13 +257,39 @@ namespace RestartedTavern.Rules
         public int Power { get; set; }
         public int Health { get; set; }
         public Keyword Grants { get; set; }
+        /// <summary>"Your Goobers": only this subtype. Null = all your creatures.</summary>
+        public string Subtype { get; set; }
+        /// <summary>"Your other Goobers": not the spell's target (Reckless Charge's Invest).</summary>
+        public bool OthersThanTarget { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
             var me = ctx.State.GetPlayer(ctx.Controller);
+            var target = OthersThanTarget ? ctx.TargetAt(TargetIndex) : null;
             foreach (var c in me.Battlefield)
-                if (ctx.Cards.Get(c.DefinitionId).IsCreature)
-                    ctx.ModifyUntilEndOfTurn(c.Id, Power, Health, Grants);
+            {
+                var def = ctx.Cards.Get(c.DefinitionId);
+                if (!def.IsCreature || (Subtype != null && !def.HasSubtype(Subtype))) continue;
+                if (target.HasValue && target.Value == Target.ForObject(c.Id)) continue;
+                ctx.ModifyUntilEndOfTurn(c.Id, Power, Health, Grants);
+            }
+        }
+    }
+
+    /// <summary>"Attacking creatures you control get +P/+H until end of turn." (Rally Drummer)</summary>
+    public sealed class PumpAttackingCreaturesEffect : Effect
+    {
+        public int Power { get; set; }
+        public int Health { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            if (ctx.State.Combat == null) return;
+            foreach (var attack in ctx.State.Combat.Attacks)
+            {
+                var c = ctx.State.FindOnBattlefield(attack.Attacker);
+                if (c != null && c.Controller == ctx.Controller) ctx.ModifyUntilEndOfTurn(c.Id, Power, Health, Keyword.None);
+            }
         }
     }
 

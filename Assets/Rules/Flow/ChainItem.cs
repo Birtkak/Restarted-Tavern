@@ -66,6 +66,21 @@ namespace RestartedTavern.Rules
         public override string ToString() => Kind + " " + SourceDefinitionId + " (" + Controller + ")";
     }
 
+    /// <summary>
+    /// A delayed triggered ability (MTG 603.7): "At the end of your turn, exile it." (Encore From Beyond).
+    /// It triggers once, at the end of <see cref="Controller"/>'s turn, about <see cref="EventObject"/>.
+    /// </summary>
+    public sealed class DelayedTrigger
+    {
+        public TriggeredAbility Ability { get; set; }
+        public PlayerId Controller { get; set; }
+        public ObjectId SourceId { get; set; }
+        public string SourceDefinitionId { get; set; }
+        public ObjectId EventObject { get; set; }
+
+        public DelayedTrigger Clone() => (DelayedTrigger)MemberwiseClone();
+    }
+
     /// <summary>A triggered ability that triggered but isn't on the Chain yet (MTG 603.3).</summary>
     public sealed class PendingTrigger
     {

@@ -21,8 +21,9 @@ namespace RestartedTavern.Rules
         private readonly GameRunner _runner;
 
         internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0, int eventAmount = 0,
-            ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0)
+            ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0, string sourceDefinitionId = null)
         {
+            SourceDefinitionId = sourceDefinitionId;
             EventObject = eventObject;
             EventPlayer = eventPlayer;
             SacrificedPower = sacrificedPower;
@@ -50,6 +51,8 @@ namespace RestartedTavern.Rules
         public PlayerId Controller { get; }
         /// <summary>The spell or the permanent the ability came from (it may have left the battlefield).</summary>
         public ObjectId Source { get; }
+        /// <summary>The card the spell or ability comes from.</summary>
+        public string SourceDefinitionId { get; }
         /// <summary>Chosen targets in slot order; null where a target became illegal (MTG 608.2b).</summary>
         public IReadOnlyList<Target?> Targets { get; }
         public Target? Target => TargetAt(0);
@@ -85,6 +88,21 @@ namespace RestartedTavern.Rules
         public void AskTax(ChainItem item, int amount, int rewardGold) => _runner.AskTax(item, amount, Controller, rewardGold);
         public void GainControl(CardInstance permanent, bool untilEndOfTurn) => _runner.GainControl(permanent, Controller, untilEndOfTurn);
         public CardInstance MoveTo(CardInstance card, Zone zone) => _runner.MoveCard(card, zone);
+        /// <summary>Put a card onto the battlefield under the controller's control.</summary>
+        public CardInstance PutOntoBattlefield(CardInstance card) => _runner.MoveCard(card, Zone.Battlefield, Controller);
+        /// <summary>"Look at the top N cards. Put one into your hand and the rest into your graveyard." Must be the last effect.</summary>
+        public void AskChooseFromTop(int count) => _runner.AskChooseFromTop(Controller, count);
+        /// <summary>Dice Game's Gold auction. Must be the last effect.</summary>
+        public void StartGoldAuction() => _runner.StartGoldAuction();
+        /// <summary>"At the end of your turn, [ability]" about <paramref name="obj"/> (MTG 603.7).</summary>
+        public void AddDelayedTrigger(TriggeredAbility ability, ObjectId obj) =>
+            _runner.AddDelayedTrigger(ability, Controller, Source, SourceDefinitionId, obj);
+
+        /// <summary>
+        /// A number one effect passes to a later one in the same resolution ("for each Gold you gained this
+        /// way", Grand Heist). Starts at 0.
+        /// </summary>
+        public int Remembered { get; set; }
 
         /// <summary>A spell or ability target that is still on the Chain, or null.</summary>
         public ChainItem ChainItemAt(int index)

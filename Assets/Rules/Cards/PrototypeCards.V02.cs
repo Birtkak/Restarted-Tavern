@@ -10,6 +10,8 @@ namespace RestartedTavern.Rules.Cards
     /// damage to each creature, damage/heal/arrival watchers, extra costs on spells).
     /// Batch C: the Chain and control (counterspells, bounce, control change, destroy all, graveyard
     /// targets), including the v0.1 Wizards cards that use them.
+    /// Batch D: the rest (payment rules, combat-damage and attack triggers, Gold theft, choices from the
+    /// top of the deck, delayed triggers, the Dice Game auction).
     /// </summary>
     public static partial class PrototypeCards
     {
@@ -209,6 +211,116 @@ namespace RestartedTavern.Rules.Cards
 
             foreach (var c in V02DamageCards()) yield return c;
             foreach (var c in V02ChainAndControlCards()) yield return c;
+            foreach (var c in V02FinalCards()) yield return c;
+        }
+
+        /// <summary>Batch D: the last v0.2 cards.</summary>
+        private static IEnumerable<CardDefinition> V02FinalCards()
+        {
+            const string wizards = "shadow_money_wizards";
+
+            // ---------------------------------------------------------------- Shadow Money Wizards: payment rules
+            var retainer = Creature("retainer_mage", "Retainer Mage", 3, 2, 3, wizards, Rarity.Common, "Wizard", Keyword.Flying,
+                "Flying. You may cast this whenever you could cast an Instant. If you do, you may pay for it with Gold.");
+            retainer.Flash = true;
+            retainer.GoldMayPay = true; // decided 2026-10-09: every cast of it counts, so Gold can always help (mana first)
+            yield return retainer;
+
+            var partner = Creature("silent_partner", "Silent Partner", 4, 2, 5, wizards, Rarity.Uncommon, "Wizard", Keyword.None,
+                "You may pay Invest costs with mana as well as Gold.");
+            partner.Statics.Add(new PaymentRuleAbility { InvestWithMana = true });
+            yield return partner;
+
+            // ---------------------------------------------------------------- Neutral
+            var moneylender = Creature("shady_moneylender", "Shady Moneylender", 3, 2, 3, "neutral", Rarity.Rare, "Human", Keyword.None,
+                "You may spend Gold as though it were mana to cast creature spells. Whenever you do, each opponent gains 1 Gold.");
+            moneylender.Statics.Add(new PaymentRuleAbility { GoldForCreatureSpells = true });
+            moneylender.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.GoldPaidForCreatureSpell, Subject = TriggerSubject.You,
+                Effects = { new GainGoldEffect { Amount = 1, EachOpponent = true } },
+            });
+            yield return moneylender;
+
+            yield return new CardDefinition
+            {
+                Id = "dice_game", Name = "Dice Game", Type = CardType.Sorcery, Cost = 2, Faction = "neutral", Rarity = Rarity.Uncommon,
+                Text = "Each player may pay any amount of Gold. The player who paid the most draws two cards. "
+                       + "If players tie for the most, each of them draws one card.",
+                SpellEffects = { new DiceGameEffect() },
+            };
+
+            // ---------------------------------------------------------------- Goobers
+            var bruiser = Creature("gold_tooth_bruiser", "Gold-Tooth Bruiser", 4, 4, 3, "goobers", Rarity.Common, "Goober",
+                Keyword.Trample,
+                "Trample. Whenever this deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold.");
+            bruiser.Triggers.Add(new TriggeredAbility { When = TriggerEvent.DealsCombatDamageToPlayer, Effects = { new DrainGoldEffect() } });
+            yield return bruiser;
+
+            var pickpocket = Creature("pickpocket_boss", "Pickpocket Boss", 3, 2, 3, "goobers", Rarity.Uncommon, "Goober", Keyword.None,
+                "Whenever another Goober you control deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold.");
+            pickpocket.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.CreatureDealsCombatDamageToPlayer, Subject = TriggerSubject.You, SubjectSubtype = "Goober",
+                OthersOnly = true, Effects = { new DrainGoldEffect() },
+            });
+            yield return pickpocket;
+
+            var drummer = Creature("rally_drummer", "Rally Drummer", 3, 2, 3, "goobers", Rarity.Uncommon, "Goober", Keyword.None,
+                "Whenever you attack with three or more creatures, attacking creatures you control get +1/+0 until end of turn.");
+            drummer.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.PlayerAttacks, Subject = TriggerSubject.You, MinAmount = 3,
+                Effects = { new PumpAttackingCreaturesEffect { Power = 1 } },
+            });
+            yield return drummer;
+
+            yield return new CardDefinition
+            {
+                Id = "reckless_charge", Name = "Reckless Charge", Type = CardType.Instant, Cost = 1, Faction = "goobers",
+                Rarity = Rarity.Common,
+                Text = "Target creature gets +2/+0 and Trample until end of turn. Invest 1: Your other Goobers get +1/+0 until end of turn.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new PumpTargetEffect { Power = 2, Grants = Keyword.Trample } },
+                InvestCost = 1,
+                InvestEffects = { new PumpYourCreaturesEffect { Power = 1, Subtype = "Goober", OthersThanTarget = true } },
+            };
+
+            yield return new CardDefinition
+            {
+                Id = "grand_heist", Name = "Grand Heist", Type = CardType.Sorcery, Cost = 3, Faction = "goobers", Rarity = Rarity.Rare,
+                Text = "Each opponent loses all their Gold. Gain that much Gold. Invest 2: Create a 1/1 Goober for each Gold you gained this way.",
+                SpellEffects = { new StealAllGoldEffect() },
+                InvestCost = 2,
+                InvestEffects = { new CreateTokensEffect { TokenId = GooberToken, CountFromRemembered = true } },
+            };
+
+            // ---------------------------------------------------------------- Sensationalists
+            yield return new CardDefinition
+            {
+                Id = "grave_gossip", Name = "Grave Gossip", Type = CardType.Sorcery, Cost = 1, Faction = "sensationalists",
+                Rarity = Rarity.Common,
+                Text = "Look at the top three cards of your deck. Put one into your hand and the rest into your graveyard. You lose 1 life.",
+                // The choice waits for the player, so it has to be the last effect; losing the life first changes nothing.
+                SpellEffects = { new LoseLifeEffect { Amount = 1 }, new LookAtTopPutOneInHandEffect { Count = 3 } },
+            };
+
+            var medium = Creature("stage_medium", "Stage Medium", 4, 3, 4, "sensationalists", Rarity.Uncommon, "Human", Keyword.Lifelink,
+                "Lifelink. Whenever a Curse you control is put into a graveyard from the battlefield, draw a card.");
+            medium.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.CurseToGraveyard, Subject = TriggerSubject.You, Effects = { new DrawCardsEffect { Count = 1 } },
+            });
+            yield return medium;
+
+            yield return new CardDefinition
+            {
+                Id = "encore_from_beyond", Name = "Encore From Beyond", Type = CardType.Sorcery, Cost = 3, Faction = "sensationalists",
+                Rarity = Rarity.Uncommon,
+                Text = "Return target creature card from your graveyard to the battlefield. It gains Haste. At the end of your turn, exile it.",
+                SpellTarget = TargetSpec.CreatureCardInYourGraveyard,
+                SpellEffects = { new ReanimateEffect { GainsHaste = true, ExileAtEndOfTurn = true } },
+            };
         }
 
         /// <summary>Batch C: the Chain and control.</summary>

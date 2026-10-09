@@ -75,6 +75,8 @@ namespace RestartedTavern.Rules
                 QueueTriggers(def, TriggerEvent.LastBreath, lastController, card.Id);
                 QueueWatcherTriggers(TriggerEvent.CreatureDies, lastController, (t, _) => t.MinPower <= 0 || lastPower >= t.MinPower);
             }
+            if (from == Zone.Battlefield && to == Zone.Graveyard && def.Type == CardType.Curse)
+                QueueWatcherTriggers(TriggerEvent.CurseToGraveyard, lastController);
             if (to == Zone.Battlefield)
             {
                 ApplyEntersWithCounters(moved);
@@ -177,7 +179,15 @@ namespace RestartedTavern.Rules
                 Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 ChangeLife(target.Player, -amount);
                 var dealer = isCombat ? S.FindOnBattlefield(source) : null;
-                if (dealer != null) QueueTriggers(dealer, TriggerEvent.DealsCombatDamageToPlayer);
+                if (dealer != null)
+                {
+                    QueueTriggers(dealer, TriggerEvent.DealsCombatDamageToPlayer, target.Player);
+                    var dealerDef = Def(dealer);
+                    QueueWatcherTriggers(TriggerEvent.CreatureDealsCombatDamageToPlayer, dealer.Controller,
+                        (t, watcher) => (!t.OthersOnly || watcher.Id != dealer.Id)
+                                        && (t.SubjectSubtype == null || dealerDef.HasSubtype(t.SubjectSubtype)),
+                        amount, dealer.Id, target.Player);
+                }
             }
             else
             {
@@ -356,6 +366,13 @@ namespace RestartedTavern.Rules
                     MoveControl(permanent, t.ReturnTo);
             }
         }
+
+        /// <summary>Set up a delayed trigger "at the end of your turn" about <paramref name="obj"/> (MTG 603.7).</summary>
+        internal void AddDelayedTrigger(TriggeredAbility ability, PlayerId controller, ObjectId source, string sourceDefinitionId, ObjectId obj) =>
+            S.DelayedTriggers.Add(new DelayedTrigger
+            {
+                Ability = ability, Controller = controller, SourceId = source, SourceDefinitionId = sourceDefinitionId, EventObject = obj,
+            });
 
         internal void Untap(CardInstance permanent)
         {

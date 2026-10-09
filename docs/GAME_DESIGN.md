@@ -107,7 +107,7 @@ Unused mana is not lost.
 - 🔒 **Mana is always used first.** When a cost can be paid with both, your available mana is spent first automatically, and Gold pays only what mana can't. There's no choosing the split. (Invest is separate: it is always paid with Gold.)
   - Timing doesn't change: a Sorcery is still cast in your own main phase. On other players' turns you have no mana, so Instants, abilities and Tavern Dweller Powers are paid with Gold there.
   - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 2 mana and then 2 Gold.
-- 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early.
+- 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early. A few cards break this on purpose, and mana is still spent first: **Retainer Mage** (Gold can pay for it whenever it's cast, decided 2026-10-09) and **Shady Moneylender** (Gold can pay for your creature spells). **Silent Partner** lets mana pay for Invest (mana first, then Gold).
 - 🔒 **Clarification**: your mana pool is only filled during your own turn. On other players' turns you have **no mana, only Gold**, so Gold is how you cast Instants on opponents' turns.
 - 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (mana first).
 - 🔒 Gold gained above the cap of 5 is lost.
@@ -301,6 +301,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **v0.2 card rulings**: Gold-Tooth Bruiser / Pickpocket Boss: "that player loses 1 Gold and you gain 1 Gold" are separate, so **you gain 1 even if they had none** (MTG reading). **Dice Game**: players choose **in the open, in turn order** from the active player (MTG 101.4). **Retainer Mage**: Gold can help pay for it **whenever it's cast** (Flash, mana first). All 70 v0.2 cards now run in the engine (DEVELOPMENT §7). |
 | 2026-10-09 | **v0.2 Gold rules** (§5.2): "whenever you spend Gold" triggers **once per payment**; when a Gold cap goes down, the excess Gold is **lost at once**; "Gold equal to its cost" is the **printed cost** (MTG mana value). Bank triggers use the cleanup step's priority (MTG 514.3a). v0.2 cards go into the six prototype decks in one pass after all engine batches, and the user approves the lists. |
 | 2026-10-09 | **Patrons are renamed Tavern Dwellers** (in rules text, docs and code: `TavernDweller`). **Tavern Dweller Powers: once each turn** (MTG default), so up to once on your turn and once on each opponent's turn. **"Pay N Gold" costs are Gold only**, like Invest; generic ability costs (Equip, X, Powers) stay mana first. **Archon Lumen** deals one separate 1-damage ping per Equipment, each with its own target. Deck rule: every card is from the Tavern Dweller's factions or Neutral. Activated abilities, Equip and all 10 Tavern Dwellers are implemented (DEVELOPMENT §7). |
 | 2026-10-09 | **Rules review** (playtest/RULES_REVIEW.md). Going first: back to the **MTG default** (the first player skips their turn-1 draw, no other compensation); human playtests will judge it. Gold sinks: **Tavern Dweller Powers** are the fix, so implement them next and then re-measure the Gold cap. Game-length stalls: **no new rule**; add late-game sinks and finishers in cards first. **Life gain is capped at starting life** (§11.1). |
