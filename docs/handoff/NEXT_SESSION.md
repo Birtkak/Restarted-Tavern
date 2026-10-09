@@ -72,9 +72,10 @@ WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
 - 199 EditMode tests, all green. Every card in docs/cards is implemented (CardPool*.cs).
 
 CANDIDATE NEXT STEPS (offer these; the user picks)
-1. Going first (RULES_REVIEW #1), now the strongest open rules question: with the attack planner the
-   first player wins 83% of Jungle mirrors and 77% of Goober mirrors (PLAYTEST.md, latest findings).
-   Design question for the user: show the MTG default next to the measured alternatives.
+1. Going first (RULES_REVIEW #1): the user chose to keep the MTG default until human playtests judge it
+   (2026-10-09). Measured: a rotating first player (A B, B A...) brings mirrors to 41-53%; a round mana
+   pool alone doesn't help. The switches stay in FormatConfig. Don't push this again unless playtests
+   or the user bring it up.
 2. Payment order warning (RULES_REVIEW #6): mana is spent first, so casting a Sorcery before a creature can
    strand the creature. The UI should warn or order plays.
 3. The weak Tavern Dwellers: Mukk, Sparkwrench and Auditor Prime barely used their Powers in sims.

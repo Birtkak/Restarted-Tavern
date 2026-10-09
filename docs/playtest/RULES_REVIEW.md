@@ -20,6 +20,23 @@ Severity: 🔴 fundamental (affects every game), 🟠 significant (affects a cor
 
 ## 🔴 1. Going first is a big advantage
 
+**Update 2026-10-09 (after the attack planner): the edge grew** to 77-83% in the aggro mirrors (Goober, Jungle, Auditor). Decision: keep the MTG default for now and let human playtests judge. What was measured (report section "Mana model", first-player win% per mirror, 50% is fair):
+
+| Variant | Goober | Jungle | Zoo | Vesper | Spark | Auditor | Avg off 50% |
+|---|---|---|---|---|---|---|---|
+| Today (MTG default) | 77 | 83 | 68 | 57 | 58 | 76 | 19.8 |
+| Round pool (refill per round, bank at round end) | 86 | 86 | 57 | 60 | 59 | 76 | 20.7 |
+| Round pool + Gold first on other players' turns | 83 | 83 | 53 | 56 | 59 | 76 | 18.5 |
+| **Rotating first player** (A B, B A, A B...) | 53 | 53 | 53 | 41 | 47 | 47 | **4.0** |
+| **Rotating + round pool + Gold first** | 48 | 51 | 53 | 45 | 46 | 46 | **3.3** |
+| First player skips their first mana | 18 | 16 | 41 | 36 | 33 | 23 | 22.2 |
+
+- **Why:** players already have equal mana every round; the edge is acting first in every round. The round pool doesn't fix that: the first player develops, then reacts on the opponent's turn with leftovers that would be banked anyway, while the second player must react *before* developing.
+- **Rotating the first player** removes it. Cost: in 1v1 each player gets two turns in a row at every other round boundary (a creature played on the first can attack on the second).
+- Switches (`FormatConfig`): `ManaPerRound`, `GoldFirstOffTurn`, `RotateRoundLeader`, `FirstPlayerSkipsFirstMana`. Not yet measured: rotation without the turn-1 draw skip.
+
+Original analysis (before the v0.2 decks and the attack planner):
+
 | Mirror (Greedy bots) | 1st player wins |
 |---|---|
 | Goober Mob (aggro) | **71%** |
