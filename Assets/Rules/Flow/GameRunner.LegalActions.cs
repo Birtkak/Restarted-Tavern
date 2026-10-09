@@ -68,6 +68,16 @@ namespace RestartedTavern.Rules
                     for (int gold = 0; gold <= p.Gold; gold++) result.Add(PlayerAction.ChooseOption(player, gold));
                     break;
 
+                case DecisionKind.ChooseObject:
+                    foreach (var id in S.Pending.Choices) result.Add(PlayerAction.ChooseTarget(player, Target.ForObject(id)));
+                    if (S.Pending.Optional) result.Add(new PlayerAction { Kind = ActionKind.ChooseTarget, Player = player });
+                    break;
+
+                case DecisionKind.YesNo:
+                    result.Add(PlayerAction.ChooseOption(player, 0));
+                    result.Add(PlayerAction.ChooseOption(player, 1));
+                    break;
+
                 case DecisionKind.PayTax:
                     result.Add(PlayerAction.ChooseOption(player, 0)); // don't pay: it's countered
                     if (Payment.GoldNeeded(p, S.Pending.Count, true) >= 0) result.Add(PlayerAction.ChooseOption(player, 1));
@@ -102,6 +112,37 @@ namespace RestartedTavern.Rules
 
                 default:
                     throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private static readonly List<int[]> NoDivision = new List<int[]> { Array.Empty<int>() };
+
+        /// <summary>
+        /// Every way to divide <paramref name="total"/> damage among <paramref name="targets"/> targets, at least 1
+        /// each (MTG 601.2d). No divided damage: one empty division.
+        /// </summary>
+        private static List<int[]> Divisions(int total, int targets)
+        {
+            if (total <= 0) return NoDivision;
+            var result = new List<int[]>();
+            if (targets == 0 || targets > total) return result;
+            var parts = new int[targets];
+            Split(0, total);
+            return result;
+
+            void Split(int index, int left)
+            {
+                if (index == targets - 1)
+                {
+                    parts[index] = left;
+                    result.Add((int[])parts.Clone());
+                    return;
+                }
+                for (int n = 1; n <= left - (targets - 1 - index); n++)
+                {
+                    parts[index] = n;
+                    Split(index + 1, left - n);
+                }
             }
         }
 
@@ -152,9 +193,13 @@ namespace RestartedTavern.Rules
                             {
                                 // Targeting the creature you sacrifice would only make the spell fizzle.
                                 if (!sacrifice.IsNone && Array.IndexOf(targets, Target.ForObject(sacrifice)) >= 0) continue;
-                                var play = PlayerAction.Play(player, card.Id, targets, invest == 1, x);
-                                play.Sacrifice = sacrifice;
-                                result.Add(play);
+                                foreach (var division in Divisions(def.DividedDamage, targets.Length))
+                                {
+                                    var play = PlayerAction.Play(player, card.Id, targets, invest == 1, x);
+                                    play.Sacrifice = sacrifice;
+                                    play.Division = division;
+                                    result.Add(play);
+                                }
                             }
                 }
             }

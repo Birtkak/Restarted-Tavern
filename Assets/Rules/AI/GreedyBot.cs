@@ -69,6 +69,13 @@ namespace RestartedTavern.Rules.AI
                     int bid = s.Pending.Bids.Count == 0 ? Math.Min(gold, 2) : highest + 1 <= Math.Min(gold, 4) ? highest + 1 : 0;
                     return legal.First(a => a.Option == bid);
                 }
+                case DecisionKind.ChooseObject: return ChooseObject(s, me, legal);
+                case DecisionKind.YesNo:
+                {
+                    // Our own "you may lose 2 life": only with life to spare. Someone else's offer (The Dealer): pay.
+                    bool yes = s.Pending.EffectController != me || s.GetPlayer(me).Life > 12;
+                    return legal.First(a => a.Option == (yes ? 1 : 0));
+                }
                 case DecisionKind.PayTax:
                     // Pay the tax when we can: the spell was worth casting.
                     return legal.OrderByDescending(a => a.Option).First();
@@ -133,6 +140,11 @@ namespace RestartedTavern.Rules.AI
                 value = 2 * def.Cost + 1;
                 if (def.Keywords.HasFlag(Keyword.Haste) && s.Step == Step.Main1) value += 1;
             }
+            else if (def.DividedDamage > 0)
+            {
+                value = 0;
+                for (int i = 0; i < a.Targets.Length && i < a.Division.Length; i++) value += DamageValue(s, me, a.Division[i], a.Targets[i]);
+            }
             else
             {
                 var victim = a.Sacrifice.IsNone ? null : s.FindOnBattlefield(a.Sacrifice);
@@ -148,6 +160,42 @@ namespace RestartedTavern.Rules.AI
             // Gold is flexible (instant speed); spend mana first when it's our turn.
             if (s.ActivePlayer == me) value -= _style.GoldOnOwnTurnPenalty * Math.Max(0, Payment.GoldNeeded(s, Db, p, def));
             return value;
+        }
+
+        /// <summary>
+        /// A choice during resolution. Losing something (sacrifice, discard, a creature someone takes): the least
+        /// valuable, or nothing when that's allowed and it isn't worth it. Getting something: the best.
+        /// </summary>
+        private PlayerAction ChooseObject(GameState s, PlayerId me, List<PlayerAction> legal)
+        {
+            var d = s.Pending;
+            var p = s.GetPlayer(me);
+            var decline = legal.FirstOrDefault(a => !a.Target.HasValue);
+            var options = legal.Where(a => a.Target.HasValue).ToList();
+            double Value(PlayerAction a)
+            {
+                var obj = s.FindObject(a.Target.Value.Object);
+                if (obj == null) return 0;
+                return obj.Zone == Zone.Battlefield ? Worth(s, obj) : Db.Get(obj.DefinitionId).Cost;
+            }
+
+            bool discard = d.Then.Any(e => e is DiscardEventObjectEffect);
+            bool losing = discard || d.Then.Any(e => e is SacrificeEventObjectEffect || e is GainControlOfEventObjectEffect);
+            if (!losing) return options.OrderByDescending(Value).First();
+
+            if (discard)
+            {
+                // Swap away an expensive card we can't cast soon.
+                var worst = options.OrderByDescending(Value).First();
+                bool swap = Value(worst) > p.MaxMana + 2;
+                return swap || decline == null ? worst : decline;
+            }
+
+            var cheapest = options.OrderBy(Value).First();
+            if (decline == null) return cheapest;
+            bool elseLosesLife = d.Else != null && d.Else.Any(e => e is LoseLifeEffect);
+            bool worthIt = elseLosesLife ? Value(cheapest) < 6 || p.Life <= 6 : Value(cheapest) <= 4;
+            return worthIt ? cheapest : decline;
         }
 
         // ------------------------------------------------------------------ abilities and Tavern Dweller Powers
@@ -381,6 +429,28 @@ namespace RestartedTavern.Rules.AI
                     case LookAtTopPutOneInHandRestOnBottomEffect _: v += 2.2; break;
                     case RevealUntilCreatureEffect _: v += 8; break;
                     case EachPlayerDrawsEffect _: break; // everyone gets the same
+                    case SacrificeChoiceEffect sc when sc.Who == Chooser.EachOpponent:
+                        foreach (var p in s.Players.Where(p => s.AreOpponents(me, p.Id)))
+                        {
+                            var creatures = p.Battlefield.Where(c => Db.Get(c.DefinitionId).IsCreature).ToList();
+                            if (creatures.Count > 0) v += creatures.Min(c => Worth(s, c)) + 1;
+                        }
+                        break;
+                    case ChooseCreatureCardToBattlefieldEffect cc:
+                        foreach (var p in s.Players.Where(p => !cc.OnlyYourGraveyard || p.Id == me))
+                        {
+                            var cards = p.Graveyard.Where(c => Db.Get(c.DefinitionId).IsCreature
+                                && (!cc.MaxCost.HasValue || Db.Get(c.DefinitionId).Cost <= cc.MaxCost.Value)).ToList();
+                            if (cards.Count > 0) v += 2 * cards.Max(c => Db.Get(c.DefinitionId).Cost) + 1;
+                        }
+                        break;
+                    case EverythingHasAPriceEffect ep:
+                        foreach (var p in s.Players.Where(p => s.AreOpponents(me, p.Id)))
+                        {
+                            var creatures = p.Battlefield.Where(c => Db.Get(c.DefinitionId).IsCreature).ToList();
+                            if (creatures.Count > 0) v += 2 * creatures.Max(c => Worth(s, c)) - 0.3 * ep.Gold - 2.0 * ep.Cards;
+                        }
+                        break;
                     case AllCreaturesGetEffect all:
                         foreach (var p in s.Players)
                             foreach (var c in p.Battlefield)

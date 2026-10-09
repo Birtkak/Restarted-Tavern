@@ -12,6 +12,14 @@ namespace RestartedTavern.Rules
         /// </summary>
         private void GivePriority(PlayerId to)
         {
+            // Choices queued by a resolving effect come first, one after another.
+            if (S.Pending == null && S.ChoiceQueue.Count > 0)
+            {
+                S.Pending = S.ChoiceQueue[0];
+                S.ChoiceQueue.RemoveAt(0);
+                S.ResumePriorityTo = to;
+                return;
+            }
             S.ResumePriorityTo = to;
             CheckStateBasedActionsAndTriggers();
             if (S.IsGameOver || S.Pending != null) return;
@@ -99,6 +107,7 @@ namespace RestartedTavern.Rules
                 Invested = a.Invest,
                 X = def.XGoldExtraCost ? a.X : 0,
                 SacrificedPower = sacrificedPower,
+                Division = a.Division,
             };
             item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
@@ -162,7 +171,7 @@ namespace RestartedTavern.Rules
                 else
                 {
                     RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, sacrificedPower: item.SacrificedPower,
-                        sourceDefinitionId: item.SourceDefinitionId, invested: item.Invested);
+                        sourceDefinitionId: item.SourceDefinitionId, invested: item.Invested, division: item.Division);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
@@ -178,10 +187,11 @@ namespace RestartedTavern.Rules
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
         private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0,
             int eventAmount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0,
-            string sourceDefinitionId = null, bool invested = false)
+            string sourceDefinitionId = null, bool invested = false, int[] division = null)
         {
             var ctx = new EffectContext(this, controller, source, targets, x, eventAmount, eventObject, eventPlayer, sacrificedPower,
                 sourceDefinitionId, invested);
+            if (division != null) ctx.Division = division;
             foreach (var e in effects)
             {
                 if (S.IsGameOver) return;

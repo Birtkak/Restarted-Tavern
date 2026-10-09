@@ -5,7 +5,8 @@ namespace RestartedTavern.Rules.Cards
     /// <summary>
     /// The rest of set v0.1 (docs/cards/*.md): the cards that weren't in the prototype pool yet. Batch E:
     /// cards that needed small engine additions (intervening "if", death watchers, extra blocks, graveyard
-    /// returns, attacking tokens).
+    /// returns, attacking tokens). Batch F: cards with a choice during resolution (sacrifice, discard, "you
+    /// may", put onto the battlefield, Everything Has a Price) and divided damage.
     /// </summary>
     public static partial class PrototypeCards
     {
@@ -286,6 +287,116 @@ namespace RestartedTavern.Rules.Cards
                 When = TriggerEvent.SpellCast, Subject = TriggerSubject.Opponents, Effects = { new TaxOfficeEffect() },
             });
             yield return taxOffice;
+
+            foreach (var c in V01ChoiceCards()) yield return c;
+        }
+
+        /// <summary>Batch F: choices during resolution and divided damage.</summary>
+        private static IEnumerable<CardDefinition> V01ChoiceCards()
+        {
+            const string wizards = "shadow_money_wizards";
+            const string sens = "sensationalists";
+
+            var imp = Creature("ledger_imp", "Ledger Imp", 1, 1, 2, wizards, Rarity.Common, "Imp", Keyword.None,
+                "Arrival: You may lose 2 life. If you do, gain 1 Gold.");
+            imp.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.Arrival,
+                Effects =
+                {
+                    new YouMayEffect
+                    {
+                        Prompt = "Lose 2 life to gain 1 Gold?",
+                        Then = { new LoseLifeEffect { Amount = 2 }, new GainGoldEffect { Amount = 1 } },
+                    },
+                },
+            });
+            yield return imp;
+
+            var dealer = Creature("the_dealer", "The Dealer", 6, 4, 6, wizards, Rarity.Rare, "Wizard", Keyword.Flying,
+                "Flying. At the start of your turn, each opponent may give you 2 Gold. For each one who doesn't, draw a card.");
+            dealer.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.StartOfYourTurn,
+                Effects = { new EachOpponentMayPayGoldEffect { Gold = 2, IfNot = { new DrawCardsEffect { Count = 1 } } } },
+            });
+            yield return dealer;
+
+            yield return new CardDefinition
+            {
+                Id = "everything_has_a_price", Name = "Everything Has a Price", Type = CardType.Sorcery, Cost = 9, Faction = wizards,
+                Rarity = Rarity.Legendary,
+                Text = "For each opponent, gain control of the creature they control with the highest cost. That player gains 5 Gold and draws 2 cards.",
+                SpellEffects = { new EverythingHasAPriceEffect { Gold = 5, Cards = 2 } },
+            };
+
+            var shaman = Creature("goober_shaman", "Goober Shaman", 2, 2, 2, "goobers", Rarity.Uncommon, "Goober", Keyword.None,
+                "Arrival: You may discard a card. If you do, draw a card.");
+            shaman.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.Arrival, Effects = { new DiscardChoiceEffect { Then = { new DrawCardsEffect { Count = 1 } } } },
+            });
+            yield return shaman;
+
+            yield return new CardDefinition
+            {
+                Id = "firecracker_volley", Name = "Firecracker Volley", Type = CardType.Sorcery, Cost = 3, Faction = "goobers",
+                Rarity = Rarity.Uncommon,
+                Text = "Deal 3 damage divided as you choose among any number of creatures and/or players.",
+                DividedDamage = 3,
+                // "any number" can't be more than 3: each target gets at least 1.
+                SpellTargets =
+                {
+                    TargetSlot.Of(TargetSpec.AnyTarget),
+                    TargetSlot.Of(TargetSpec.AnyTarget, optional: true),
+                    TargetSlot.Of(TargetSpec.AnyTarget, optional: true),
+                },
+                SpellEffects = { new DealDividedDamageEffect() },
+            };
+
+            yield return new CardDefinition
+            {
+                Id = "midnight_ritual", Name = "Midnight Ritual", Type = CardType.Instant, Cost = 1, Faction = sens, Rarity = Rarity.Uncommon,
+                Text = "As an extra cost, sacrifice a creature. Draw 2 cards. "
+                       + "Invest 2: Return a creature card with cost 3 or less from your graveyard to the battlefield.",
+                SacrificeCreatureCost = true,
+                SpellEffects = { new DrawCardsEffect { Count = 2 } },
+                InvestCost = 2,
+                InvestEffects = { new ChooseCreatureCardToBattlefieldEffect { OnlyYourGraveyard = true, MaxCost = 3 } },
+            };
+
+            yield return new CardDefinition
+            {
+                Id = "spectacle_of_blood", Name = "Spectacle of Blood", Type = CardType.Sorcery, Cost = 3, Faction = sens,
+                Rarity = Rarity.Uncommon, Text = "Each opponent sacrifices a creature.",
+                SpellEffects = { new SacrificeChoiceEffect { Who = Chooser.EachOpponent } },
+            };
+
+            var ringmaster = Creature("midnight_ringmaster", "Midnight Ringmaster", 5, 4, 5, sens, Rarity.Common, "Human",
+                Keyword.Lifelink, "Lifelink. Arrival: You may sacrifice another creature. If you do, draw 2 cards.");
+            ringmaster.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.Arrival,
+                Effects = { new SacrificeChoiceEffect { OthersOnly = true, Optional = true, Then = { new DrawCardsEffect { Count = 2 } } } },
+            });
+            yield return ringmaster;
+
+            yield return new CardDefinition
+            {
+                Id = "exhumation_broadcast", Name = "Exhumation Broadcast", Type = CardType.Sorcery, Cost = 5, Faction = sens,
+                Rarity = Rarity.Rare, Text = "Choose a creature card in each graveyard. Put them onto the battlefield under your control.",
+                SpellEffects = { new ChooseCreatureCardToBattlefieldEffect() },
+            };
+
+            var headliner = Creature("abyssal_headliner", "Abyssal Headliner", 6, 6, 6, sens, Rarity.Rare, "Horror", Keyword.Flying,
+                "Flying. At the start of your turn, sacrifice another creature or lose 3 life.");
+            headliner.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.StartOfYourTurn,
+                // Choosing no creature means losing 3 life; with no other creature, you lose the life.
+                Effects = { new SacrificeChoiceEffect { OthersOnly = true, Optional = true, Else = { new LoseLifeEffect { Amount = 3 } } } },
+            });
+            yield return headliner;
         }
     }
 }

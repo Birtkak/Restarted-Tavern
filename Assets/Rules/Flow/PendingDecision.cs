@@ -36,6 +36,14 @@ namespace RestartedTavern.Rules
         /// the active player, and see earlier choices (MTG 101.4, decided 2026-10-09). ChooseOption = Gold paid.
         /// </summary>
         PayAnyGold,
+        /// <summary>
+        /// "Choose a [creature / card] ..." during resolution (sacrifice, discard, put onto the battlefield...).
+        /// Answered with ChooseTarget (one of <see cref="PendingDecision.Choices"/>), or ChooseTarget with no
+        /// target to decline when <see cref="PendingDecision.Optional"/>. Then its follow-up effects run.
+        /// </summary>
+        ChooseObject,
+        /// <summary>"You may ..." / "may give you 2 Gold" during resolution: ChooseOption 1 = yes, 0 = no.</summary>
+        YesNo,
     }
 
     /// <summary>
@@ -57,6 +65,19 @@ namespace RestartedTavern.Rules
         public int RewardGold { get; set; }
         /// <summary>ChooseFromTop: the other cards go to the bottom of the deck instead of the graveyard (Pocket Change).</summary>
         public bool RestToBottom { get; set; }
+        /// <summary>ChooseObject: the objects that can be chosen.</summary>
+        public List<ObjectId> Choices { get; set; }
+        /// <summary>ChooseObject: choosing nothing is allowed ("you may").</summary>
+        public bool Optional { get; set; }
+        /// <summary>ChooseObject / YesNo: what happens after a choice (EventObject = the chosen object, EventPlayer = the chooser) or a decline / "no".</summary>
+        public List<Effect> Then { get; set; }
+        public List<Effect> Else { get; set; }
+        /// <summary>ChooseObject / YesNo: who controls the follow-up effects, and where they come from.</summary>
+        public PlayerId EffectController { get; set; }
+        public ObjectId Source { get; set; }
+        public string SourceDefinitionId { get; set; }
+        /// <summary>ChooseObject / YesNo: what is being asked, for UIs and logs ("Sacrifice a creature").</summary>
+        public string Prompt { get; set; }
         /// <summary>PayAnyGold: who has chosen so far, and how much each paid (same order).</summary>
         public List<PlayerId> Bidders { get; set; }
         public List<int> Bids { get; set; }
@@ -67,6 +88,7 @@ namespace RestartedTavern.Rules
             d.Trigger = Trigger?.Clone();
             if (Bidders != null) d.Bidders = new List<PlayerId>(Bidders);
             if (Bids != null) d.Bids = new List<int>(Bids);
+            if (Choices != null) d.Choices = new List<ObjectId>(Choices);
             return d;
         }
 

@@ -120,6 +120,7 @@ namespace RestartedTavern.Rules
             }
             S.ControlUntilEndOfTurn.RemoveAll(t => t.ReturnTo == player.Id);
             S.DelayedTriggers.RemoveAll(t => t.Controller == player.Id);
+            S.ChoiceQueue.RemoveAll(d => d.Player == player.Id);
 
             foreach (var p in S.Players)
                 p.Battlefield.RemoveAll(c => c.Owner == player.Id);

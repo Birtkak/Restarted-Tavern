@@ -124,7 +124,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 2. ✅ **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards (§7).
 3. 🚧 **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage. *Bot simulations and the first findings are in [playtest/PLAYTEST.md](playtest/PLAYTEST.md); human playtests are next.*
 4. **Minimal visual client** in Unity (Windows build): hot-seat 1v1.
-5. Implement the full first set (120 cards) and a basic AI.
+5. ✅ Implement the full first set (120 cards) and a basic AI. *All v0.1 and v0.2 cards run in the engine (2026-10-09); GreedyBot plays them.*
 6. Later: multiplayer (3–4 players), singleton format, online play.
 
 ---
@@ -164,9 +164,10 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - **The Chain and control (set v0.2, batch C)**: everything on the Chain has an object id (`ChainItem.ObjectId`), so spells and abilities can be targeted (`TargetSpec.SpellOnChain`, `SpellOrAbilityOnChain`, `TargetSlot.MaxCost`); **counterspells** (`GameRunner.Counter`, `CounterTargetEffect`) and **taxes** (`DecisionKind.PayTax`, mana first, then Gold); **bounce** (`ReturnToHandEffect`, `ReturnAllCreaturesEffect`); **control change** (`GainControlEffect`, permanent or until end of turn via `GameState.ControlUntilEndOfTurn`; summoning sick, leaves combat; control returns when a player leaves the game); destroy all creatures; creature cards in any graveyard as targets.
 - **The last v0.2 mechanics (batch D)**: payment rules (`CardDefinition.Flash` and `GoldMayPay`; `PaymentRuleAbility` for "Invest with mana" and "Gold for creature spells"; `Payment.InvestSplit`); watcher triggers `CreatureDealsCombatDamageToPlayer` (with `SubjectSubtype`), `PlayerAttacks` (number of attackers), `CurseToGraveyard`, `GoldPaidForCreatureSpell`; Gold theft (`DrainGoldEffect`, `StealAllGoldEffect` with `EffectContext.Remembered` for "for each Gold gained this way"); **delayed triggers** (`GameState.DelayedTriggers`, MTG 603.7: "at the end of your turn, exile it"); mid-resolution choices `DecisionKind.ChooseFromTop` (Grave Gossip) and `PayAnyGold` (Dice Game: open choices in turn order).
 - **Rest of set v0.1 (batch E)**: intervening "if" on triggers (`TriggeredAbility.Condition`, checked on trigger and on resolution, MTG 603.4); death watchers with "another", a subtype, or "a creature that player controls" (Curses on players); "your second spell each turn" (spell count in `UsesThisTurn`); "whenever this is dealt damage and survives"; triggers granted to your other creatures (`GrantTriggerToYourCreaturesAbility`); Curse triggers at the start of the enchanted creature's controller's turn; "can block an additional creature" (`CardDefinition.ExtraBlocks`, the blocker splits its damage); tokens that enter tapped and attacking; graveyard targets with a cost limit; reveal-until; look at the top N with the rest on the bottom.
+- **Choices during resolution (batch F)**: `DecisionKind.ChooseObject` ("choose a creature / card", optional or not) and `YesNo` ("you may", "may give you 2 Gold"), each with follow-up effects (`PendingDecision.Then/Else`; EventObject = the choice, EventPlayer = the chooser). Several choices from one effect wait in `GameState.ChoiceQueue` and are asked one after another. **Divided damage** (`CardDefinition.DividedDamage`, `PlayerAction.Division`, chosen on casting, MTG 601.2d). **Every card in docs/cards (set v0.1 and v0.2) and all 10 Tavern Dwellers are now in the engine.**
 - `GameEngine.CacheLegalActions` (opt-in, used by `MatchRunner`): the bot's legal-action list is reused by `Apply`'s validation, so it isn't enumerated twice.
 
-**Tests** (`Assets/Rules.Tests`, 181 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 191 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
@@ -186,12 +187,9 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
 **Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))
-- v0.1 cards not in the pool yet (they need a "choose a card / yes or no" decision or divided damage): Ledger Imp, Goober Shaman, Firecracker Volley, Midnight Ritual, Spectacle of Blood, Midnight Ringmaster, Exhumation Broadcast, Abyssal Headliner, Everything Has a Price, The Dealer.
 - A Tavern Dweller zone that can be targeted or removed (v0.1: it can't), and Tavern Dwellers in multiplayer politics.
 - Snik copies by **target** (chosen on activation). Copying something that left in response uses nothing (MTG would use last known information).
 - Player choices that are currently automatic: how an attacker splits damage among several blockers (§7.2), which Legendary to keep, and ordering your own simultaneous triggers.
-- Divided damage ("deal 3 damage divided as you choose"), "may" choices outside triggers, rummaging, and "whenever this is dealt damage" triggers on the creature itself (Worldroot Hydra).
-- Everything Has a Price (v0.1 Legendary): steals the highest-cost creature from each opponent, with the owner choosing on ties.
 - Replacement effects, and filtering events by hidden information.
 - Loading card data from JSON (see §0.1).
 

@@ -336,11 +336,74 @@ namespace RestartedTavern.Rules
             if (S.Pending == null) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
+        /// <summary>
+        /// Ask <paramref name="chooser"/> to choose one of <paramref name="choices"/> (or nothing, if optional).
+        /// Then <paramref name="then"/> runs about the chosen object, or <paramref name="otherwise"/> if they chose
+        /// nothing. With no choices the "otherwise" effects run at once; a forced single choice is made at once.
+        /// If another choice is already waiting, this one waits its turn (GameState.ChoiceQueue).
+        /// </summary>
+        internal void AskChoice(PlayerId chooser, List<ObjectId> choices, bool optional, List<Effect> then, List<Effect> otherwise,
+            PlayerId controller, ObjectId source, string sourceDefinitionId, string prompt)
+        {
+            if (choices.Count == 0 || (choices.Count == 1 && !optional))
+            {
+                bool chosen = choices.Count == 1;
+                RunChoiceEffects(chosen ? then : otherwise, controller, source, sourceDefinitionId, chosen ? choices[0] : ObjectId.None, chooser);
+                return;
+            }
+            Enqueue(new PendingDecision
+            {
+                Kind = DecisionKind.ChooseObject, Player = chooser, Choices = choices, Optional = optional, Then = then, Else = otherwise,
+                EffectController = controller, Source = source, SourceDefinitionId = sourceDefinitionId, Prompt = prompt,
+            });
+        }
+
+        /// <summary>A yes/no question to <paramref name="chooser"/>: "yes" runs <paramref name="then"/>, "no" runs <paramref name="otherwise"/>.</summary>
+        internal void AskYesNo(PlayerId chooser, List<Effect> then, List<Effect> otherwise, PlayerId controller, ObjectId source,
+            string sourceDefinitionId, string prompt) =>
+            Enqueue(new PendingDecision
+            {
+                Kind = DecisionKind.YesNo, Player = chooser, Then = then, Else = otherwise,
+                EffectController = controller, Source = source, SourceDefinitionId = sourceDefinitionId, Prompt = prompt,
+            });
+
+        private void Enqueue(PendingDecision d)
+        {
+            if (S.Pending == null) S.Pending = d;
+            else S.ChoiceQueue.Add(d);
+        }
+
+        private void RunChoiceEffects(List<Effect> effects, PlayerId controller, ObjectId source, string sourceDefinitionId,
+            ObjectId chosen, PlayerId chooser)
+        {
+            if (effects == null || effects.Count == 0) return;
+            RunEffects(effects, controller, source, new List<Target?>(), eventObject: chosen, eventPlayer: chooser,
+                sourceDefinitionId: sourceDefinitionId);
+        }
+
+        private void AnswerChoice(Target? target)
+        {
+            var d = S.Pending;
+            S.Pending = null;
+            bool chosen = target.HasValue;
+            RunChoiceEffects(chosen ? d.Then : d.Else, d.EffectController, d.Source, d.SourceDefinitionId,
+                chosen ? target.Value.Object : ObjectId.None, d.Player);
+            if (S.Pending == null && !S.IsGameOver) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
+        }
+
         private void AnswerOption(PlayerAction a)
         {
             if (S.Pending.Kind == DecisionKind.PayAnyGold)
             {
                 AnswerBid(a);
+                return;
+            }
+            if (S.Pending.Kind == DecisionKind.YesNo)
+            {
+                var d = S.Pending;
+                S.Pending = null;
+                RunChoiceEffects(a.Option == 1 ? d.Then : d.Else, d.EffectController, d.Source, d.SourceDefinitionId, ObjectId.None, d.Player);
+                if (S.Pending == null && !S.IsGameOver) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
                 return;
             }
             var decision = S.Pending;

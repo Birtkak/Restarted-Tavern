@@ -97,6 +97,21 @@ namespace RestartedTavern.Rules
         public CardInstance PutOntoBattlefield(CardInstance card) => _runner.MoveCard(card, Zone.Battlefield, Controller);
         /// <summary>"Look at the top N cards. Put one into your hand and the rest into your graveyard." Must be the last effect.</summary>
         public void AskChooseFromTop(int count, bool restToBottom = false) => _runner.AskChooseFromTop(Controller, count, restToBottom);
+        /// <summary>
+        /// Ask <paramref name="chooser"/> to choose one of <paramref name="choices"/> ("sacrifice a creature",
+        /// "discard a card"). <paramref name="then"/> runs with EventObject = the choice and EventPlayer = the chooser;
+        /// <paramref name="otherwise"/> runs if nothing is chosen. Put it last, or put what follows into <paramref name="then"/>.
+        /// </summary>
+        public void AskChoice(PlayerId chooser, List<ObjectId> choices, bool optional, List<Effect> then, List<Effect> otherwise, string prompt) =>
+            _runner.AskChoice(chooser, choices, optional, then, otherwise, Controller, Source, SourceDefinitionId, prompt);
+
+        /// <summary>A yes/no question ("you may lose 2 life", "may give you 2 Gold"). Same rules as <see cref="AskChoice"/>.</summary>
+        public void AskYesNo(PlayerId chooser, List<Effect> then, List<Effect> otherwise, string prompt) =>
+            _runner.AskYesNo(chooser, then, otherwise, Controller, Source, SourceDefinitionId, prompt);
+
+        /// <summary>Divided damage (Firecracker Volley): how much goes to each target, chosen on casting (MTG 601.2d).</summary>
+        public IReadOnlyList<int> Division { get; internal set; } = System.Array.Empty<int>();
+
         /// <summary>"Create a 1/1 Goober that's tapped and attacking" (Grakka).</summary>
         public void CreateAttackingToken(string tokenId) => _runner.CreateAttackingToken(Controller, tokenId);
         /// <summary>Dice Game's Gold auction. Must be the last effect.</summary>

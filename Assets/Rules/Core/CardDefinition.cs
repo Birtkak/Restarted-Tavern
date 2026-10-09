@@ -49,6 +49,12 @@ namespace RestartedTavern.Rules
         /// </summary>
         public bool XGoldExtraCost { get; set; }
 
+        /// <summary>
+        /// "Deal N damage divided as you choose among any number of targets" (Firecracker Volley): the total. The
+        /// split is chosen on casting (MTG 601.2d), at least 1 per target (PlayerAction.Division).
+        /// </summary>
+        public int DividedDamage { get; set; }
+
         /// <summary>"Can block an additional creature each combat" (Retired Champion): how many extra.</summary>
         public int ExtraBlocks { get; set; }
 

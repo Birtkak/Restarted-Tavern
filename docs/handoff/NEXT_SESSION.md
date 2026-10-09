@@ -61,7 +61,7 @@ WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
 - AI/GreedyBot.cs (values abilities, Equip and Powers; saves Gold for the opponent's end step),
   AI/MatchRunner.cs + AI/Experiments.cs (report in docs/playtest/SIMULATION_REPORT.md).
 - Client/DebugTable.cs: hot-seat IMGUI table with the Tavern Dweller row.
-- 163 EditMode tests, all green.
+- 191 EditMode tests, all green. Every card in docs/cards is implemented (PrototypeCards*.cs).
 
 CANDIDATE NEXT STEPS (offer these; the user picks)
 1. Smarter bot attacks (recommended first). The bot only goes all-in when the defender has no
@@ -74,8 +74,10 @@ CANDIDATE NEXT STEPS (offer these; the user picks)
    Sparkwrench Scrappers now has some Equipment (deck pass), but nothing is measured yet. Option A:
    decks built around them. Option B: Power changes — design question for the user, show options.
 4. Visual client (DEVELOPMENT §5 roadmap step 4): a real Unity hot-seat table for human playtests.
-5. The remaining v0.1 cards that aren't in the pool (Velvet Embezzler, Debt Collector, Tax Office,
-   The Dealer, Everything Has a Price, ...): most need small engine additions.
+5. Player choices the engine still makes automatically: how an attacker splits damage among
+   several blockers, which Legendary to keep, ordering your own simultaneous triggers. Needed before
+   human playtests.
+(Done 2026-10-09: every v0.1 and v0.2 card is in the engine, 191 tests.)
 
 HOW TO WORK WITH THIS USER
 - The user has the vision and wants Claude to propose details. For design questions, use

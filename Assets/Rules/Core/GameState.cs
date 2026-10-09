@@ -31,6 +31,11 @@ namespace RestartedTavern.Rules
         /// <summary>Delayed triggers waiting for their moment (MTG 603.7).</summary>
         public List<DelayedTrigger> DelayedTriggers { get; set; } = new List<DelayedTrigger>();
         public PendingDecision Pending { get; set; }
+        /// <summary>
+        /// Choices that wait their turn: when one resolving effect asks several players (each opponent
+        /// sacrifices a creature), they choose one after another in turn order.
+        /// </summary>
+        public List<PendingDecision> ChoiceQueue { get; set; } = new List<PendingDecision>();
 
         public CombatState Combat { get; set; }
         public List<TemporaryModifier> UntilEndOfTurn { get; set; } = new List<TemporaryModifier>();
@@ -151,6 +156,8 @@ namespace RestartedTavern.Rules
             s.DelayedTriggers = new List<DelayedTrigger>(DelayedTriggers.Count);
             foreach (var t in DelayedTriggers) s.DelayedTriggers.Add(t.Clone());
             s.Pending = Pending?.Clone();
+            s.ChoiceQueue = new List<PendingDecision>(ChoiceQueue.Count);
+            foreach (var d in ChoiceQueue) s.ChoiceQueue.Add(d.Clone());
             s.Combat = Combat?.Clone();
             s.UntilEndOfTurn = new List<TemporaryModifier>(UntilEndOfTurn.Count);
             foreach (var m in UntilEndOfTurn) s.UntilEndOfTurn.Add(m.Clone());

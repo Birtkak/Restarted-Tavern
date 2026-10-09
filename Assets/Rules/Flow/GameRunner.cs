@@ -122,7 +122,10 @@ namespace RestartedTavern.Rules
                 case ActionKind.FinishAttacks: FinishAttacks(); break;
                 case ActionKind.DeclareBlocker: DeclareBlocker(a.Card, a.BlockedAttacker); break;
                 case ActionKind.FinishBlocks: FinishBlocks(a.Player); break;
-                case ActionKind.ChooseTarget: ChooseTriggerTarget(a.Target); break;
+                case ActionKind.ChooseTarget:
+                    if (S.Pending.Kind == DecisionKind.ChooseObject) AnswerChoice(a.Target);
+                    else ChooseTriggerTarget(a.Target);
+                    break;
                 case ActionKind.Discard:
                     if (S.Pending.Kind == DecisionKind.DiscardCards) AnswerDiscard(a);
                     else DiscardToHandSize(a.Player, a.Card);

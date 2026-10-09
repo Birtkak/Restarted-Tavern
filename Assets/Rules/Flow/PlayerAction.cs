@@ -52,6 +52,8 @@ namespace RestartedTavern.Rules
         public ObjectId Sacrifice { get; set; }
         /// <summary>ChooseOption: the option picked.</summary>
         public int Option { get; set; }
+        /// <summary>PlayCard with divided damage: the damage for each target, in target order (MTG 601.2d).</summary>
+        public int[] Division { get; set; } = Array.Empty<int>();
 
         public static PlayerAction Pass(PlayerId p) => new PlayerAction { Kind = ActionKind.PassPriority, Player = p };
         public static PlayerAction Keep(PlayerId p) => new PlayerAction { Kind = ActionKind.Keep, Player = p };
@@ -91,7 +93,7 @@ namespace RestartedTavern.Rules
                 && BlockedAttacker == other.BlockedAttacker && Defender == other.Defender
                 && Targets.SequenceEqual(other.Targets)
                 && Invest == other.Invest && AbilityIndex == other.AbilityIndex && X == other.X
-                && Sacrifice == other.Sacrifice && Option == other.Option;
+                && Sacrifice == other.Sacrifice && Option == other.Option && Division.SequenceEqual(other.Division);
         }
 
         public override bool Equals(object obj) => obj is PlayerAction other && Equals(other);
@@ -111,6 +113,7 @@ namespace RestartedTavern.Rules
                 h = h * 31 + X;
                 h = h * 31 + Sacrifice.Value;
                 h = h * 31 + Option;
+                foreach (var d in Division) h = h * 31 + d;
                 return h;
             }
         }
@@ -128,6 +131,7 @@ namespace RestartedTavern.Rules
             if (X != 0) sb.Append(" X=").Append(X);
             if (!Sacrifice.IsNone) sb.Append(" sac ").Append(Sacrifice);
             if (Kind == ActionKind.ChooseOption) sb.Append(' ').Append(Option);
+            if (Division.Length > 0) sb.Append(" split ").Append(string.Join("/", Division));
             return sb.ToString();
         }
     }

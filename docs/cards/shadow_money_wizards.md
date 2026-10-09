@@ -29,7 +29,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 ## Legendary
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
-| 9 | **Everything Has a Price** | 9 | Sorcery | L | — | For each opponent, gain control of the creature they control with the highest cost. That player gains 5 Gold and draws 2 cards. *"Name your price. I'll pay it twice."* | The ultimate shady deal. In multiplayer it steals one creature from every opponent. If several creatures tie for highest cost, that creature's controller chooses which one | ✅ |
+| 9 | **Everything Has a Price** | 9 | Sorcery | L | — | For each opponent, gain control of the creature they control with the highest cost. That player gains 5 Gold and draws 2 cards. *"Name your price. I'll pay it twice."* | The ultimate shady deal. In multiplayer it steals one creature from every opponent. If several creatures tie for highest cost, that creature's controller chooses which one. Engine ruling: an opponent with no creature gets no Gold or cards (the payment is for the creature) | ✅ |
 
 ## Batch 2
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |

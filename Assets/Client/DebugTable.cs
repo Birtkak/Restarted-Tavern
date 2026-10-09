@@ -421,6 +421,9 @@ namespace RestartedTavern.Client
                 case DecisionKind.PayAnyGold:
                     return "Dice Game: pay any amount of Gold (bids so far: "
                            + (d.Bids.Count == 0 ? "none" : string.Join(", ", d.Bidders.Select((p, i) => p + " " + d.Bids[i]))) + ")";
+                case DecisionKind.ChooseObject:
+                case DecisionKind.YesNo:
+                    return d.Prompt + " (" + _text.Name(d.SourceDefinitionId) + ")";
                 case DecisionKind.PayTax: return "pay " + d.Count + " or " + _text.Name(_state, d.Card) + " is countered";
                 case DecisionKind.TopOrBottom: return "top card of your deck is " + _text.Name(_state, d.Card) + ": leave it or put it on the bottom";
                 default: return d.Kind.ToString();

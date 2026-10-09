@@ -136,7 +136,10 @@ namespace RestartedTavern.Rules
                 case ActionKind.Discard: return "Discard: " + Name(state, a.Card);
                 case ActionKind.FinishAttacks: return "Done attacking";
                 case ActionKind.FinishBlocks: return "Done blocking";
-                case ActionKind.ChooseTarget: return a.Target.HasValue ? "Target: " + Name(state, a.Target.Value) : "No target (decline)";
+                case ActionKind.ChooseTarget:
+                    if (state.Pending?.Kind == DecisionKind.ChooseObject)
+                        return a.Target.HasValue ? state.Pending.Prompt + ": " + Name(state, a.Target.Value) : "Choose nothing";
+                    return a.Target.HasValue ? "Target: " + Name(state, a.Target.Value) : "No target (decline)";
                 case ActionKind.ChooseOption:
                     if (state.Pending?.Kind == DecisionKind.TopOrBottom)
                         return (a.Option == 1 ? "Put on the bottom: " : "Leave on top: ") + Name(state, state.Pending.Card);
@@ -146,6 +149,7 @@ namespace RestartedTavern.Rules
                         return "Take " + (a.Option < deck.Count ? Name(state, deck[a.Option].Id) : "?") + " (the rest go to the graveyard)";
                     }
                     if (state.Pending?.Kind == DecisionKind.PayAnyGold) return "Pay " + a.Option + " Gold";
+                    if (state.Pending?.Kind == DecisionKind.YesNo) return (a.Option == 1 ? "Yes: " : "No: ") + state.Pending.Prompt;
                     if (state.Pending?.Kind == DecisionKind.PayTax)
                         return a.Option == 1 ? "Pay " + state.Pending.Count : "Don't pay (" + Name(state, state.Pending.Card) + " is countered)";
                     return "Option " + a.Option;
@@ -172,6 +176,7 @@ namespace RestartedTavern.Rules
                     }
                     if (a.Invest) sb.Append("  +INVEST");
                     if (!a.Sacrifice.IsNone) sb.Append("  [sacrifice ").Append(Name(state, a.Sacrifice)).Append(']');
+                    if (a.Division.Length > 0) sb.Append("  [split ").Append(string.Join("/", a.Division)).Append(']');
                     return sb.ToString();
                 }
                 default: return a.ToString();
