@@ -55,8 +55,8 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>Gold casting this card would take after mana is used up, or -1 if it can't be paid at all.</summary>
-        public static int GoldNeeded(GameState s, CardDatabase db, PlayerState p, CardDefinition def) =>
-            GoldNeeded(p, Costs.SpellCost(s, db, p.Id, def), GoldAllowed(s, db, p.Id, def));
+        public static int GoldNeeded(GameState s, CardDatabase db, PlayerState p, CardDefinition def, int x = 1) =>
+            GoldNeeded(p, Costs.SpellCost(s, db, p.Id, def) + (def.XCost ? x : 0), GoldAllowed(s, db, p.Id, def));
 
         public static bool CanPay(GameState s, CardDatabase db, PlayerState p, CardDefinition def) => GoldNeeded(s, db, p, def) >= 0;
 

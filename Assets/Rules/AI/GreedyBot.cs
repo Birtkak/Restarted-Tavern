@@ -83,6 +83,7 @@ namespace RestartedTavern.Rules.AI
                     // Keep the healthiest, best-equipped copy.
                     return legal.OrderByDescending(a => KeepValue(s, s.FindOnBattlefield(a.Target.Value.Object))).First();
                 case DecisionKind.AssignCombatDamage: return ChooseDamageSplit(s, legal);
+                case DecisionKind.DivideDamage: return ChooseDividePoint(s, me, legal);
                 case DecisionKind.OrderTriggers:
                     // The order rarely matters for these cards: keep the order the triggers happened in.
                     return legal[0];
@@ -211,7 +212,7 @@ namespace RestartedTavern.Rules.AI
             {
                 var victim = a.Sacrifice.IsNone ? null : s.FindOnBattlefield(a.Sacrifice);
                 int x = victim != null ? Stats(s, victim).Power : a.X;
-                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card, x);
+                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card, x, def, a.Invest);
                 if (victim != null) value -= Worth(s, victim) + 0.5;
             }
             if (def.XGoldExtraCost) value -= a.X * GoldUnitValue(s, p);

@@ -81,16 +81,16 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 
 ---
 
-## Set v0.3 draft: mana scarcity (🟡 for review, 2026-10-09)
+## Set v0.3 additions: mana scarcity (approved 2026-10-09)
 
 Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
 **X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
 
-| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Status |
-|---|---|---|---|---|---|---|---|---|
-| 31 | **Ledger Clerk** | 2 | Creature: Wizard | C | 1/3 | (3), Tap: Draw a card. | Draw · a cheap body that turns spare mana into cards every round | 🟡 |
-| 32 | **Insider Trading** | X+2 | Instant | U | — | Draw X cards. Each opponent gains 1 Gold. | Draw · X sink · instant-speed refuel with the faction's shady drawback | 🟡 |
-| 33 | **Eviction Notice** | X+1 | Instant | C | — | Return target creature with cost X or less to its owner's hand. Draw a card. | Mana sink · scalable bounce: cheap early, answers bombs late | 🟡 |
-| 34 | **Audit the Books** | 3 | Sorcery | U | — | Return target creature with cost 4 or less to its owner's hand. Invest 3: Draw two cards. | Big Invest · tempo now, cards with banked Gold | 🟡 |
-| 35 | **Foreclosure** | X+3 | Sorcery | R | — | Each opponent loses X life. You gain X Gold. | Finisher (drain) · the debt comes due. The Gold refills your bank for counters next turn | 🟡 |
-| 36 | **Loan Shark** | 6 | Creature: Wizard | R | 3/5 | Flying. At the end of your turn, each opponent loses life equal to the Gold you have. | Finisher (inevitability) · rewards banking (Gold ★). With a cap of 3-5 that's 3-5 life a turn | 🟡 |
+| # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Engine | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 31 | **Ledger Clerk** | 2 | Creature: Wizard | C | 1/3 | (3), Tap: Draw a card. | Draw · a cheap body that turns spare mana into cards every round | ✓ implemented | ✅ |
+| 32 | **Insider Trading** | X+2 | Instant | U | — | Draw X cards. Each opponent gains 1 Gold. | Draw · X sink · instant-speed refuel with the faction's shady drawback | ✓ implemented | ✅ |
+| 33 | **Eviction Notice** | X+1 | Instant | C | — | Return target creature with cost X or less to its owner's hand. Draw a card. | Mana sink · scalable bounce: cheap early, answers bombs late | ✓ implemented | ✅ |
+| 34 | **Audit the Books** | 3 | Sorcery | U | — | Return target creature with cost 4 or less to its owner's hand. Invest 3: Draw two cards. | Big Invest · tempo now, cards with banked Gold | ✓ implemented | ✅ |
+| 35 | **Foreclosure** | X+3 | Sorcery | R | — | Each opponent loses X life. You gain X Gold. | Finisher (drain) · the debt comes due. The Gold refills your bank for counters next turn | ✓ implemented | ✅ |
+| 36 | **Loan Shark** | 6 | Creature: Wizard | R | 3/5 | Flying. At the end of your turn, each opponent loses life equal to the Gold you have. | Finisher (inevitability) · rewards banking (Gold ★). With a cap of 3-5 that's 3-5 life a turn | ✓ implemented | ✅ |

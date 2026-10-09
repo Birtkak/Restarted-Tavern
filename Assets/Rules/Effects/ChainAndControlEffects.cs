@@ -54,6 +54,9 @@ namespace RestartedTavern.Rules
         {
             var c = ctx.CreatureAt(TargetIndex);
             if (c == null) return;
+            // "with cost X or less" (Eviction Notice) is checked again on resolution.
+            if (ctx.SourceDefinitionId != null && ctx.Cards.Get(ctx.SourceDefinitionId).TargetMaxCostIsX
+                && ctx.Cards.Get(c.DefinitionId).Cost > ctx.X) return;
             var controller = c.Controller;
             int cost = ctx.Cards.Get(c.DefinitionId).Cost;
             ctx.MoveTo(c, Zone.Hand);

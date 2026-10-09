@@ -126,6 +126,7 @@ namespace RestartedTavern.Rules
                 case ActionKind.ChooseTarget:
                     if (S.Pending.Kind == DecisionKind.ChooseObject) AnswerChoice(a.Target);
                     else if (S.Pending.Kind == DecisionKind.KeepLegendary) KeepLegendary(a.Target.Value.Object);
+                    else if (S.Pending.Kind == DecisionKind.DivideDamage) AnswerDividePoint(a.Target.Value);
                     else ChooseTriggerTarget(a.Target);
                     break;
                 case ActionKind.Discard:

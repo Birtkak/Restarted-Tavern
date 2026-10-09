@@ -10,7 +10,7 @@ namespace RestartedTavern.Rules.AI
         /// <summary>How good these effects are for <paramref name="me"/> with these targets.</summary>
         /// <summary><paramref name="x"/>: the X paid, a trigger's event amount ("heal that much"), or a sacrificed creature's Power.</summary>
         private double EffectValue(GameState s, PlayerId me, List<Effect> effects, IReadOnlyList<Target> targets, ObjectId source,
-            int x = 0)
+            int x = 0, CardDefinition sourceDef = null, bool invested = false)
         {
             Target? T(int i) => i < targets.Count ? targets[i] : (Target?)null;
             var pumps = new Dictionary<int, (int power, int health)>(); // "+2/+2, then it fights"
@@ -57,6 +57,9 @@ namespace RestartedTavern.Rules.AI
                         v += canPay ? 0.3 * cu.Amount + 0.3 * cu.RewardGoldIfPaid : ChainItemWorth(item);
                         break;
                     }
+                    case ReturnToHandEffect rh when sourceDef != null && sourceDef.TargetMaxCostIsX
+                                                    && Creature(s, target) is CardInstance tooBig && Db.Get(tooBig.DefinitionId).Cost > x:
+                        break; // costs more than X: nothing happens
                     case ReturnToHandEffect rh:
                     {
                         var c = Creature(s, target);
@@ -167,7 +170,22 @@ namespace RestartedTavern.Rules.AI
                         else v += CreatureOwnerSign(s, me, target) * 2.0 * ho.CountersIfUndamaged;
                         break;
                     }
-                    case DealDamageToEachOpponentEffect d: v += 0.6 * d.Amount; break;
+                    case DealDamageToEachOpponentEffect d: v += FaceValue(s, me, d.AmountIsX ? x : d.Amount); break;
+                    case EachOpponentLosesLifeEffect l: v += FaceValue(s, me, l.AmountIsX ? x : l.Amount); break;
+                    case AttachedPlayerLosesLifeEffect l: v += FaceValue(s, me, l.Amount) + (l.YouGainLife ? 0.3 * l.Amount : 0); break;
+                    case DrawPerBigCreatureEffect d:
+                        v += DrawValue(s, me, System.Math.Max(1, s.GetPlayer(me).Battlefield.Count(c =>
+                            Db.Get(c.DefinitionId).IsCreature && Stats(s, c).Power >= d.MinPower)));
+                        break;
+                    case RummageAnyEffect _: v += 1.0; break;
+                    case GrantKeywordToSourceEffect _: v += 1.0; break;
+                    case DivideXDamageEffect _: v += DivideValue(s, me, x); break;
+                    case ReturnGraveyardCreatureEffect rg:
+                    {
+                        var card = target.HasValue && !target.Value.IsPlayer ? s.FindObject(target.Value.Object) : null;
+                        if (card != null) v += Db.Get(card.DefinitionId).Cost * (rg.ToBattlefieldIfInvested && invested ? 2.0 : 1.0) + 0.5;
+                        break;
+                    }
                     case DealDamageToEachEnemyCreatureEffect d:
                         foreach (var p in s.Players)
                             if (s.AreOpponents(me, p.Id))
@@ -199,37 +217,46 @@ namespace RestartedTavern.Rules.AI
                         if (beforeTheirAttack || beforeOurAttack) v += 0.5 + 0.4 * Stats(s, c).Power;
                         break;
                     }
-                    case GainGoldEffect g: v += (g.EachOpponent ? -0.5 : 0.5) * g.Amount; break;
+                    case GainGoldEffect g: v += (g.EachOpponent ? -0.5 : 0.5) * (g.AmountIsX ? x : g.Amount); break;
                     case GainLifeEffect l: v += HealValue(s, me, l.Amount, Target.ForPlayer(me)); break;
                     case LoseLifeEffect l: v -= LifeLossValue(s.GetPlayer(me), l.Amount); break;
-                    case DrainEffect d: v += 0.6 * d.Amount + HealValue(s, me, d.Amount, Target.ForPlayer(me)); break;
+                    case DrainEffect d:
+                    {
+                        int amount = d.AmountIsX ? x : d.Amount;
+                        v += FaceValue(s, me, amount) + HealValue(s, me, amount, Target.ForPlayer(me));
+                        break;
+                    }
                     case DestroyEffect _:
                     {
                         var c = Creature(s, target);
                         if (c != null) v += c.Controller == me ? -Worth(s, c) - 2 : Worth(s, c) + 1;
                         break;
                     }
-                    case CreateTokensEffect t: v += 2.0 * t.Count; break;
-                    case AddCountersEffect c: v += CreatureOwnerSign(s, me, target) * 2.0 * c.Count; break;
-                    case PumpTargetEffect pt when pt.Health < 0:
+                    case CreateTokensEffect t: v += 2.0 * (t.CountIsX ? x : t.Count); break;
+                    case AddCountersEffect c: v += CreatureOwnerSign(s, me, target) * 2.0 * (c.CountIsX ? x : c.Count); break;
+                    case PumpTargetEffect pt when pt.Health + pt.HealthPerX * x < 0:
                     {
-                        // A -X/-X kills if it takes all the Health that's left (Fatal Rumor).
+                        // A -X/-X kills if it takes all the Health that's left (Fatal Rumor, Wither Away).
+                        int pp = pt.Power + pt.PowerPerX * x, ph = pt.Health + pt.HealthPerX * x;
                         var c = Creature(s, target);
-                        if (c != null && -pt.Health >= Stats(s, c).RemainingHealth)
+                        if (c != null && -ph >= Stats(s, c).RemainingHealth)
                             v += c.Controller == me ? -Worth(s, c) - 2 : Worth(s, c) + 1;
                         else
-                            v += CreatureOwnerSign(s, me, target) * (pt.Power + pt.Health) * 0.5;
+                            v += CreatureOwnerSign(s, me, target) * (pp + ph) * 0.5;
                         break;
                     }
                     case PumpTargetEffect pt when effects.Any(e2 => e2 is FightEffect):
-                        v += CreatureOwnerSign(s, me, target) * (pt.Power + pt.Health) * 0.5;
-                        pumps[pt.TargetIndex] = (pt.Power, pt.Health);
+                    {
+                        int pp = pt.Power + pt.PowerPerX * x, ph = pt.Health + pt.HealthPerX * x;
+                        v += CreatureOwnerSign(s, me, target) * (pp + ph) * 0.5;
+                        pumps[pt.TargetIndex] = (pp, ph);
                         break;
+                    }
                     case PumpTargetEffect pt:
-                        v += PumpValue(s, me, Creature(s, target), pt.Power, pt.Health, pt.Grants);
+                        v += PumpValue(s, me, Creature(s, target), pt.Power + pt.PowerPerX * x, pt.Health + pt.HealthPerX * x, pt.Grants);
                         break;
                     case PumpSourceEffect ps:
-                        v += PumpValue(s, me, s.FindOnBattlefield(source), ps.Power, ps.Health, ps.Grants);
+                        v += PumpValue(s, me, s.FindOnBattlefield(source), ps.Power + ps.PowerPerX * x, ps.Health, ps.Grants);
                         break;
                     case AttachSourceEffect _:
                         v += EquipValue(s, me, s.FindOnBattlefield(source), Creature(s, target));
@@ -303,6 +330,7 @@ namespace RestartedTavern.Rules.AI
         /// <summary>A DealDamageEffect's amount for this target (Kick 'Em: more if damaged; Fling the Runt: the sacrificed Power).</summary>
         private int DamageAmount(GameState s, PlayerId me, DealDamageEffect d, Target? target, int x)
         {
+            if (d.AmountIsX) return x;
             if (d.AmountIsSacrificedPower) return x;
             if (d.PlusOnePerYourCreatureOfSubtype != null)
                 return d.Amount + s.GetPlayer(me).Battlefield.Count(c =>
@@ -387,6 +415,59 @@ namespace RestartedTavern.Rules.AI
                 if (!double.IsNegativeInfinity(best)) total += best;
             }
             return total;
+        }
+
+        /// <summary>Damage or life loss to each opponent: lethal is worth everything, otherwise more the lower their life.</summary>
+        private double FaceValue(GameState s, PlayerId me, int amount)
+        {
+            if (amount <= 0) return 0;
+            int lowest = int.MaxValue;
+            foreach (var p in s.Players)
+                if (!p.HasLost && s.AreOpponents(me, p.Id)) lowest = Math.Min(lowest, p.Life);
+            if (lowest == int.MaxValue) return 0;
+            return amount >= lowest ? 100 : amount * (0.6 + 4.0 / Math.Max(1, lowest));
+        }
+
+        /// <summary>X damage divided freely: given greedily, one point at a time, to whatever gains the most.</summary>
+        private double DivideValue(GameState s, PlayerId me, int x)
+        {
+            var assigned = new Dictionary<Target, int>();
+            var choices = new List<Target>();
+            foreach (var p in s.Players)
+            {
+                if (p.HasLost) continue;
+                if (s.AreOpponents(me, p.Id)) choices.Add(Target.ForPlayer(p.Id));
+                foreach (var c in p.Battlefield)
+                    if (Db.Get(c.DefinitionId).IsCreature) choices.Add(Target.ForObject(c.Id));
+            }
+            double total = 0;
+            for (int i = 0; i < x && choices.Count > 0; i++)
+            {
+                double best = double.NegativeInfinity;
+                Target pick = choices[0];
+                foreach (var t in choices)
+                {
+                    assigned.TryGetValue(t, out int k);
+                    double gain = DamageValue(s, me, k + 1, t) - DamageValue(s, me, k, t);
+                    if (gain > best) { best = gain; pick = t; }
+                }
+                assigned.TryGetValue(pick, out int had);
+                assigned[pick] = had + 1;
+                total += best;
+            }
+            return total;
+        }
+
+        /// <summary>Divide-damage decision: the point that gains the most right now (kills first).</summary>
+        private PlayerAction ChooseDividePoint(GameState s, PlayerId me, List<PlayerAction> legal)
+        {
+            var d = s.Pending;
+            return legal.OrderByDescending(a =>
+            {
+                var t = a.Target.Value;
+                int k = d.Assigned.Count(x => x == t);
+                return DamageValue(s, me, k + 1, t) - DamageValue(s, me, k, t);
+            }).First();
         }
 
         private double Worth(GameState s, CardInstance c) =>

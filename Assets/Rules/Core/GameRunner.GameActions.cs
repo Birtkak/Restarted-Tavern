@@ -168,6 +168,7 @@ namespace RestartedTavern.Rules
             Emit(new AttachedEvent { Equipment = equipment.Id, EquipmentDefinitionId = equipment.DefinitionId, AttachedTo = creature.Id });
             if (!old.IsNone) QueueWatcherTriggers(TriggerEvent.EquipmentUnattached, equipment.Controller);
             QueueTriggers(creature, TriggerEvent.EquipmentAttachedToThis);
+            QueueWatcherTriggers(TriggerEvent.EquipmentAttached, creature.Controller);
         }
 
         /// <summary>

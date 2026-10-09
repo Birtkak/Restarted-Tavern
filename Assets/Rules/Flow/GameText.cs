@@ -265,6 +265,8 @@ namespace RestartedTavern.Rules
                 case ActionKind.ChooseTarget:
                     if (state.Pending?.Kind == DecisionKind.ChooseObject)
                         return a.Target.HasValue ? state.Pending.Prompt + ": " + Name(state, a.Target.Value) : "Choose nothing";
+                    if (state.Pending?.Kind == DecisionKind.DivideDamage && a.Target.HasValue)
+                        return "Deal 1 damage to " + Name(state, a.Target.Value) + "  (" + (state.Pending.Assigned.Count + 1) + " of " + state.Pending.Count + ")";
                     if (state.Pending?.Kind == DecisionKind.KeepLegendary)
                         return "Keep " + DescribeOneLine(state, a.Target.Value.Object) + " (the other copies go to the graveyard)";
                     return a.Target.HasValue ? "Target: " + Name(state, a.Target.Value) : "No target (decline)";
@@ -313,9 +315,10 @@ namespace RestartedTavern.Rules
                     if (card?.DefinitionId != null)
                     {
                         var def = _db.Get(card.DefinitionId);
-                        int gold = Payment.GoldNeeded(state, _db, state.GetPlayer(a.Player), def);
+                        int gold = Payment.GoldNeeded(state, _db, state.GetPlayer(a.Player), def, a.X);
                         if (gold > 0) sb.Append("  [uses ").Append(gold).Append(" Gold]");
                         if (def.XGoldExtraCost) sb.Append("  [X=").Append(a.X).Append(" Gold]");
+                        if (def.XCost) sb.Append("  [X=").Append(a.X).Append(']');
                     }
                     if (a.Invest) sb.Append("  +INVEST");
                     if (!a.Sacrifice.IsNone) sb.Append("  [sacrifice ").Append(Name(state, a.Sacrifice)).Append(']');

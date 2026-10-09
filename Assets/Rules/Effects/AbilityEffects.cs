@@ -108,8 +108,10 @@ namespace RestartedTavern.Rules
         public int Power { get; set; }
         public int Health { get; set; }
         public Keyword Grants { get; set; }
+        /// <summary>"(X): This gets +X/+0" (Rampaging Titan, Tavern Legend): Power added per X.</summary>
+        public int PowerPerX { get; set; }
 
-        public override void Resolve(EffectContext ctx) => ctx.ModifyUntilEndOfTurn(ctx.Source, Power, Health, Grants);
+        public override void Resolve(EffectContext ctx) => ctx.ModifyUntilEndOfTurn(ctx.Source, Power + PowerPerX * ctx.X, Health, Grants);
     }
 
     /// <summary>"Heal N from each Construct and each equipped creature you control" (Repair Bay).</summary>

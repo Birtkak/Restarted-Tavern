@@ -252,7 +252,7 @@ namespace RestartedTavern.Rules
         public static Characteristics Compute(GameState state, CardDatabase db, CardInstance card)
         {
             var def = db.Get(card.DefinitionId);
-            var keywords = def.Keywords;
+            var keywords = def.Keywords | card.GrantedKeywords;
             int power = def.Power, health = def.Health;
 
             if (card.Zone == Zone.Battlefield)

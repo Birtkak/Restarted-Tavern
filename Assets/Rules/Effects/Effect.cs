@@ -106,6 +106,9 @@ namespace RestartedTavern.Rules
             _runner.AskChoice(chooser, choices, optional, then, otherwise, Controller, Source, SourceDefinitionId, prompt);
 
         /// <summary>A yes/no question ("you may lose 2 life", "may give you 2 Gold"). Same rules as <see cref="AskChoice"/>.</summary>
+        /// <summary>"Deal N damage divided as you choose among any number of creatures and/or opponents", one point at a time.</summary>
+        public void AskDivideDamage(int amount) => _runner.AskDivideDamage(Controller, Source, SourceDefinitionId, amount);
+
         public void AskYesNo(PlayerId chooser, List<Effect> then, List<Effect> otherwise, string prompt) =>
             _runner.AskYesNo(chooser, then, otherwise, Controller, Source, SourceDefinitionId, prompt);
 

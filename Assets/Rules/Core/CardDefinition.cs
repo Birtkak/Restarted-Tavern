@@ -48,6 +48,13 @@ namespace RestartedTavern.Rules
         /// Invest; X can be 0. The effects read it as <see cref="EffectContext.X"/>.
         /// </summary>
         public bool XGoldExtraCost { get; set; }
+        /// <summary>
+        /// "X" in the cost (set v0.3): the cost is the printed cost plus X, chosen on casting (at least 1) and paid like the
+        /// card (§5.2: spells with mana and Gold, permanents with mana only). Effects read it as X.
+        /// </summary>
+        public bool XCost { get; set; }
+        /// <summary>"Target creature with cost X or less" (Eviction Notice): creature targets must cost X or less.</summary>
+        public bool TargetMaxCostIsX { get; set; }
 
         /// <summary>
         /// "Deal N damage divided as you choose among any number of targets" (Firecracker Volley): the total. The
@@ -107,6 +114,8 @@ namespace RestartedTavern.Rules
         DealsCombatDamageToPlayer,
         /// <summary>An Equipment becomes attached to this creature.</summary>
         EquipmentAttachedToThis,
+        /// <summary>An Equipment becomes attached to a creature (Equip or anything else). Subject = the creature's controller.</summary>
+        EquipmentAttached,
 
         // "Whenever ..." abilities that watch other objects. They work from the battlefield and
         // the Tavern Dweller zone; see TriggeredAbility.Subject for whose objects they watch.

@@ -103,6 +103,10 @@ namespace RestartedTavern.Rules
                         result.Add(PlayerAction.AssignDamage(player, division));
                     break;
 
+                case DecisionKind.DivideDamage:
+                    foreach (var t in S.Pending.TargetChoices) result.Add(PlayerAction.ChooseTarget(player, t));
+                    break;
+
                 case DecisionKind.OrderTriggers:
                     foreach (int i in TriggerOrderOptions(player)) result.Add(PlayerAction.ChooseOption(player, i));
                     break;
@@ -170,6 +174,18 @@ namespace RestartedTavern.Rules
             }
         }
 
+        /// <summary>"Target creature with cost X or less" (Eviction Notice).</summary>
+        private bool TargetsCostAtMost(Target[] targets, int x)
+        {
+            foreach (var t in targets)
+            {
+                if (t.IsPlayer) continue;
+                var c = S.FindObject(t.Object);
+                if (c != null && Def(c).Cost > x) return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// GAME_DESIGN §10 timing + §5.2 payment. Timing: Instants whenever you have priority,
         /// everything else in your own main phase with an empty Chain. Payment is automatic:
@@ -211,11 +227,18 @@ namespace RestartedTavern.Rules
                     // "As an extra cost, pay any amount of Gold (X)": every X the remaining Gold allows, 0 included.
                     int investGold = 0;
                     if (invest == 1) Payment.InvestSplit(S, Db, p, def, out _, out investGold);
-                    int maxX = def.XGoldExtraCost ? p.Gold - goldForCost - investGold : 0;
-                    for (int x = 0; x <= maxX; x++)
+                    int minX = 0, maxX = def.XGoldExtraCost ? p.Gold - goldForCost - investGold : 0;
+                    if (def.XCost)
+                    {
+                        // "X" in the cost: every X from 1 up to what can be paid.
+                        minX = 1;
+                        while (Payment.GoldNeeded(S, Db, p, def, maxX + 1) >= 0) maxX++;
+                    }
+                    for (int x = minX; x <= maxX; x++)
                         foreach (var targets in targetChoices)
                             foreach (var sacrifice in sacrifices)
                             {
+                                if (def.TargetMaxCostIsX && !TargetsCostAtMost(targets, x)) continue;
                                 // Targeting the creature you sacrifice would only make the spell fizzle.
                                 if (!sacrifice.IsNone && Array.IndexOf(targets, Target.ForObject(sacrifice)) >= 0) continue;
                                 foreach (var division in Divisions(def.DividedDamage, targets.Length))

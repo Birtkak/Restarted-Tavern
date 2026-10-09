@@ -111,12 +111,21 @@ namespace RestartedTavern.Rules
                     choices = EnumerateTargetChoices(p.Id, ab.Targets, exclude);
                 }
 
+                // "(X): ..." (Rampaging Titan): one action per X from 1 up to what can be paid.
+                int maxX = 0;
+                if (ab.HasX && ab.XTargets == null)
+                    while (Payment.GoldNeeded(p, generic + maxX + 1, true, ab.GoldCost) >= 0) maxX++;
                 foreach (var targets in choices)
                 {
                     if (ab.TargetsAllowed != null && !ab.TargetsAllowed(S, source, targets)) continue;
                     foreach (var sacrifice in sacrifices)
                     {
                         if (!sacrifice.IsNone && System.Array.IndexOf(targets, Target.ForObject(sacrifice)) >= 0) continue;
+                        if (ab.HasX && ab.XTargets == null)
+                        {
+                            for (int x = 1; x <= maxX; x++) result.Add(PlayerAction.Activate(p.Id, source.Id, i, targets, x, sacrifice));
+                            continue;
+                        }
                         result.Add(PlayerAction.Activate(p.Id, source.Id, i, targets, ab.XTargets != null ? targets.Length : 0, sacrifice));
                     }
                 }
@@ -360,6 +369,45 @@ namespace RestartedTavern.Rules
                 Kind = DecisionKind.ChooseObject, Player = chooser, Choices = choices, Optional = optional, Then = then, Else = otherwise,
                 EffectController = controller, Source = source, SourceDefinitionId = sourceDefinitionId, Prompt = prompt,
             });
+        }
+
+        /// <summary>
+        /// "Deal N damage divided as you choose among any number of creatures and/or opponents" (Arc Cascade): the chooser
+        /// assigns the damage one point at a time (DecisionKind.DivideDamage), then it's all dealt at once.
+        /// </summary>
+        internal void AskDivideDamage(PlayerId chooser, ObjectId source, string sourceDefinitionId, int amount)
+        {
+            if (amount <= 0) return;
+            var choices = new List<Target>();
+            foreach (var p in S.LivingPlayersFrom(chooser))
+            {
+                if (S.AreOpponents(chooser, p.Id)) choices.Add(Target.ForPlayer(p.Id));
+                foreach (var c in p.Battlefield)
+                    if (Def(c).IsCreature) choices.Add(Target.ForObject(c.Id));
+            }
+            if (choices.Count == 0) return;
+            Enqueue(new PendingDecision
+            {
+                Kind = DecisionKind.DivideDamage, Player = chooser, Count = amount, TargetChoices = choices, Assigned = new List<Target>(),
+                Source = source, SourceDefinitionId = sourceDefinitionId, Prompt = "Deal 1 damage to",
+            });
+        }
+
+        private void AnswerDividePoint(Target target)
+        {
+            var d = S.Pending;
+            d.Assigned.Add(target);
+            if (d.Assigned.Count < d.Count) return; // the next point
+            S.Pending = null;
+            var totals = new List<(Target target, int amount)>();
+            foreach (var t in d.Assigned)
+            {
+                int i = totals.FindIndex(x => x.target == t);
+                if (i < 0) totals.Add((t, 1));
+                else totals[i] = (t, totals[i].amount + 1);
+            }
+            foreach (var (t, amount) in totals) DealDamage(d.Source, t, amount, false);
+            if (S.Pending == null && !S.IsGameOver) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
         /// <summary>A yes/no question to <paramref name="chooser"/>: "yes" runs <paramref name="then"/>, "no" runs <paramref name="otherwise"/>.</summary>

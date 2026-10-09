@@ -63,6 +63,8 @@ Starting values for the budget, to be tuned in playtesting.
 
 🔒 **Set v0.2 (approved 2026-10-09):** +10 cards per faction (5 C / 3 U / 2 R) and +20 Neutral (10 C / 6 U / 4 R), so 30 per faction, 30 Neutral and 10 Tavern Dwellers (190 total). The goal is depth for the mechanics already in place, not new keywords. The cards are in each card list under "Set v0.2 additions".
 
+🔒 **Set v0.3 (approved 2026-10-09): mana scarcity.** +6 cards per faction and +6 Neutral (36), 2 C / 2 U / 2 R each: 2 card draw, 2 mana sinks (X spells, repeatable "(N): ..." or "(X): ..." abilities, Invest 3), 2 finishers (X burn to face, drains, inevitability). Pricing: X spells cost about X+1 for X damage or X cards; repeatable abilities cost 2-4 per use; Invest stays at 3 or less (Gold cap 3 with Runeterra mana).
+
 🟡 Mana curve for each faction's 20 cards: about 3 one-drops, 4 two-drops, 4 three-drops, 3 four-drops, 3 five-drops, 2 six-drops, and 1 card at 7–10. Plus about 6 non-creature cards spread across the curve.
 
 ---

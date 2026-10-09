@@ -62,6 +62,12 @@ namespace RestartedTavern.Rules
         /// GameState.PendingTriggers. Triggers of the same ability of the same card are offered once.
         /// </summary>
         OrderTriggers,
+        /// <summary>
+        /// "Deal N damage divided as you choose among any number of creatures and/or opponents" (Arc Cascade): pick who gets
+        /// the next point (ChooseTarget, one of <see cref="PendingDecision.TargetChoices"/>). After <see cref="PendingDecision.Count"/>
+        /// points all the damage is dealt at once.
+        /// </summary>
+        DivideDamage,
     }
 
     /// <summary>
@@ -97,6 +103,9 @@ namespace RestartedTavern.Rules
         /// <summary>ChooseObject / YesNo: what is being asked, for UIs and logs ("Sacrifice a creature").</summary>
         public string Prompt { get; set; }
         /// <summary>PayAnyGold: who has chosen so far, and how much each paid (same order).</summary>
+        /// <summary>DivideDamage: who can get a point, and the points assigned so far.</summary>
+        public List<Target> TargetChoices { get; set; }
+        public List<Target> Assigned { get; set; }
         public List<PlayerId> Bidders { get; set; }
         public List<int> Bids { get; set; }
 
@@ -107,6 +116,8 @@ namespace RestartedTavern.Rules
             if (Bidders != null) d.Bidders = new List<PlayerId>(Bidders);
             if (Bids != null) d.Bids = new List<int>(Bids);
             if (Choices != null) d.Choices = new List<ObjectId>(Choices);
+            if (TargetChoices != null) d.TargetChoices = new List<Target>(TargetChoices);
+            if (Assigned != null) d.Assigned = new List<Target>(Assigned);
             return d;
         }
 

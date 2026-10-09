@@ -14,6 +14,8 @@ namespace RestartedTavern.Rules
         public bool AmountIsSacrificedPower { get; set; }
         /// <summary>"X is 2 plus the number of Goobers you control" (Scrapheap Inferno): add one per creature you control with this subtype.</summary>
         public string PlusOnePerYourCreatureOfSubtype { get; set; }
+        /// <summary>"Deal X damage" (Big Boom, Orbital Laser).</summary>
+        public bool AmountIsX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
@@ -29,6 +31,7 @@ namespace RestartedTavern.Rules
 
         public int AmountFor(EffectContext ctx, Target t)
         {
+            if (AmountIsX) return ctx.X;
             if (AmountIsSacrificedPower) return ctx.SacrificedPower;
             if (PlusOnePerYourCreatureOfSubtype != null)
             {
@@ -53,11 +56,14 @@ namespace RestartedTavern.Rules
     public sealed class DealDamageToEachOpponentEffect : Effect
     {
         public int Amount { get; set; }
+        /// <summary>"Deal X damage to each opponent" (Grand Finale).</summary>
+        public bool AmountIsX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
+            int amount = AmountIsX ? ctx.X : Amount;
             foreach (var p in new List<PlayerState>(ctx.Opponents()))
-                ctx.DealDamage(Target.ForPlayer(p.Id), Amount);
+                ctx.DealDamage(Target.ForPlayer(p.Id), amount);
         }
     }
 
@@ -66,9 +72,12 @@ namespace RestartedTavern.Rules
     {
         public int Amount { get; set; }
         public bool AlsoOpponents { get; set; }
+        /// <summary>"If X is N or more, also ..." (Orbital Laser): does nothing when X is lower.</summary>
+        public int MinX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
+            if (ctx.X < MinX) return;
             foreach (var c in ctx.EnemyCreatures())
                 ctx.DealDamage(Target.ForObject(c.Id), Amount);
             if (AlsoOpponents)
@@ -191,15 +200,18 @@ namespace RestartedTavern.Rules
     {
         public int Amount { get; set; }
         public bool EachOpponent { get; set; }
+        /// <summary>"You gain X Gold" (Foreclosure).</summary>
+        public bool AmountIsX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
+            int amount = AmountIsX ? ctx.X : Amount;
             if (!EachOpponent)
             {
-                ctx.GainGold(ctx.Controller, Amount);
+                ctx.GainGold(ctx.Controller, amount);
                 return;
             }
-            foreach (var p in new List<PlayerState>(ctx.Opponents())) ctx.GainGold(p.Id, Amount);
+            foreach (var p in new List<PlayerState>(ctx.Opponents())) ctx.GainGold(p.Id, amount);
         }
     }
 
@@ -226,11 +238,14 @@ namespace RestartedTavern.Rules
     public sealed class DrainEffect : Effect
     {
         public int Amount { get; set; }
+        /// <summary>"Each opponent loses X life and you gain X life" (Final Broadcast).</summary>
+        public bool AmountIsX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
-            foreach (var p in new List<PlayerState>(ctx.Opponents())) ctx.LoseLife(p.Id, Amount);
-            ctx.Heal(Target.ForPlayer(ctx.Controller), Amount);
+            int amount = AmountIsX ? ctx.X : Amount;
+            foreach (var p in new List<PlayerState>(ctx.Opponents())) ctx.LoseLife(p.Id, amount);
+            ctx.Heal(Target.ForPlayer(ctx.Controller), amount);
         }
     }
 
@@ -252,10 +267,12 @@ namespace RestartedTavern.Rules
         public Keyword GrantUntilEndOfTurn { get; set; }
         /// <summary>"for each Gold you gained this way": the number an earlier effect remembered (Grand Heist).</summary>
         public bool CountFromRemembered { get; set; }
+        /// <summary>"Create X ..." (Goober Avalanche).</summary>
+        public bool CountIsX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
-            int count = CountFromRemembered ? ctx.Remembered : Count;
+            int count = CountIsX ? ctx.X : CountFromRemembered ? ctx.Remembered : Count;
             for (int i = 0; i < count; i++)
             {
                 var token = ctx.CreateToken(ctx.Controller, TokenId);
@@ -271,11 +288,14 @@ namespace RestartedTavern.Rules
         public int Power { get; set; }
         public int Health { get; set; }
         public Keyword Grants { get; set; }
+        /// <summary>"+X/+X" or "-X/-X": added once per X (Call of the Deep: 1 and 1; Wither Away: -1 and -1).</summary>
+        public int PowerPerX { get; set; }
+        public int HealthPerX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
             var c = ctx.CreatureAt(TargetIndex);
-            if (c != null) ctx.ModifyUntilEndOfTurn(c.Id, Power, Health, Grants);
+            if (c != null) ctx.ModifyUntilEndOfTurn(c.Id, Power + PowerPerX * ctx.X, Health + HealthPerX * ctx.X, Grants);
         }
     }
 
@@ -328,11 +348,13 @@ namespace RestartedTavern.Rules
     public sealed class AddCountersEffect : Effect
     {
         public int Count { get; set; } = 1;
+        /// <summary>"Put X +1/+1 counters" (Overgrowth).</summary>
+        public bool CountIsX { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
             var c = ctx.CreatureAt(TargetIndex);
-            if (c != null) ctx.AddCounters(c.Id, Count);
+            if (c != null) ctx.AddCounters(c.Id, CountIsX ? ctx.X : Count);
         }
     }
 }

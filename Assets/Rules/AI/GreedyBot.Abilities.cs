@@ -12,7 +12,7 @@ namespace RestartedTavern.Rules.AI
             var p = s.GetPlayer(me);
             var source = s.FindObject(a.Card);
             var ab = _engine.GetAbilities(s, source)[a.AbilityIndex];
-            double v = EffectValue(s, me, ab.Effects, a.Targets, source.Id);
+            double v = EffectValue(s, me, ab.Effects, a.Targets, source.Id, a.X);
 
             if (!a.Sacrifice.IsNone)
             {
@@ -125,6 +125,8 @@ namespace RestartedTavern.Rules.AI
             if (inCombat && s.Step == Step.DeclareBlockers && s.Pending == null)
             {
                 bool blocked = s.Combat.IsBlocking(c.Id) || (s.Combat.AttackOf(c.Id)?.Blocked ?? false);
+                var attack = s.Combat.AttackOf(c.Id);
+                if (!blocked && attack != null && power > 0 && Stats(s, c).Power + power >= s.GetPlayer(attack.Defender).Life) return 100;
                 return blocked ? (power + health) * 0.6 + trample : power * 0.6;
             }
             bool canAttack = !c.Tapped && (!c.SummoningSick || Stats(s, c).Has(Keyword.Haste));

@@ -140,6 +140,7 @@ namespace RestartedTavern.Rules.Tests
                         case DecisionKind.ChooseObject:
                         case DecisionKind.OrderTriggers:
                         case DecisionKind.KeepLegendary:
+                        case DecisionKind.DivideDamage:
                             Do(Legal(State.Pending.Player)[0]); continue;
                         default: Assert.Fail("PassUntil hit a decision: " + State.Pending); return;
                     }

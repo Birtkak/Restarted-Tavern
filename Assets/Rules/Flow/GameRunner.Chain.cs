@@ -70,7 +70,7 @@ namespace RestartedTavern.Rules
             // §5.2: mana first, then Gold (not for permanents); Invest is paid only with Gold.
             // Cost modifiers (Tavern Dwellers, Archon Lumen...) are applied first.
             // Silent Partner lets Invest use the mana that's left; X is always Gold.
-            int cost = Costs.SpellCost(S, Db, a.Player, def);
+            int cost = Costs.SpellCost(S, Db, a.Player, def) + (def.XCost ? a.X : 0);
             int goldForCost = Payment.GoldNeeded(p, cost, Payment.GoldAllowed(S, Db, a.Player, def));
             int investMana = 0, investGold = 0;
             if (a.Invest) Payment.InvestSplit(S, Db, p, def, out investMana, out investGold);
@@ -105,7 +105,7 @@ namespace RestartedTavern.Rules
                 TargetSlots = def.SpellTargets,
                 Effects = effects,
                 Invested = a.Invest,
-                X = def.XGoldExtraCost ? a.X : 0,
+                X = def.XGoldExtraCost || def.XCost ? a.X : 0,
                 SacrificedPower = sacrificedPower,
                 Division = a.Division,
             };
