@@ -180,7 +180,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. `MatchRunner` and `Experiments` run bot-vs-bot balance experiments (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
-**Not yet implemented** (next steps)
+**Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))
 - Cards blocked on other features: Hardlight Aegis (damage prevention), Champion's Belt (combat-kill trigger), the "bank" / spend-Gold triggers, Offshore Account (per-player Gold cap), and the other v0.2 cards whose Engine column names a missing feature.
 - A Tavern Dweller zone that can be targeted or removed (v0.1: it can't), and Tavern Dwellers in multiplayer politics.
 - Snik copies by **target** (chosen on activation). Copying something that left in response uses nothing (MTG would use last known information).
