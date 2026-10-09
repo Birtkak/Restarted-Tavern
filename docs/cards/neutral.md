@@ -46,21 +46,21 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 12 | **Spilled Drink** | 1 | Instant | C | — | Tap target creature. Invest 1: Draw a card. | Stops an attacker or clears a blocker at instant speed. The Gold-paid bonus makes it a full card | ✓ implemented | ✅ |
 | 13 | **Tip Jar** | 1 | Relic | C | — | Pay 3 Gold: Draw a card. Activate only once per turn. | A Gold sink for every deck. Simulations showed Gold piling up at the cap with nothing to buy | ✓ implemented | ✅ |
 | 14 | **Field Medic** | 2 | Creature: Human | C | 1/3 | Arrival: Heal 2 from target creature. | Healing for every deck, on a body | ✓ implemented | ✅ |
-| 15 | **Called Shot** | 2 | Instant | C | — | Deal 2 damage to target attacking or blocking creature. | Generic combat removal, weaker than faction burn. The damage stays if it doesn't kill | combat-state target filter | ✅ |
+| 15 | **Called Shot** | 2 | Instant | C | — | Deal 2 damage to target attacking or blocking creature. | Generic combat removal, weaker than faction burn. The damage stays if it doesn't kill | ✓ implemented | ✅ |
 | 16 | **House Special** | 2 | Sorcery | C | — | Draw a card. Invest 3: Draw two more cards. | A Gold sink at sorcery speed. Turns a banked 3 Gold into cards | ✓ implemented | ✅ |
 | 17 | **Tavern Recruiter** | 3 | Creature: Human | C | 2/3 | Invest 2: Create a 2/2 Mercenary. | An Invest creature for every deck | ✓ implemented | ✅ |
 | 18 | **Hired Muscle** | 3 | Creature: Human | C | 3/3 | Pay 2 Gold: This gets +2/+0 until end of turn. Activate only once per turn. | A Gold-fuelled combat threat: a bluff with Gold up | ✓ implemented | ✅ |
 | 19 | **Doorman** | 4 | Creature: Human | C | 3/5 | Arrival: Gain 1 Gold. | A solid body that tops up Gold | ✓ implemented | ✅ |
 | 20 | **Caravan Guard** | 5 | Creature: Human | C | 4/6 | Reach. | An anti-flyer for every deck. Big Health shrugs off pings | ✓ implemented | ✅ |
-| 21 | **Bar Brawl** | 3 | Sorcery | U | — | Deal 1 damage to each creature. | Symmetric chip damage. It hurts Goober tokens and Critters most, and wounds everything else | each-creature damage | ✅ |
-| 22 | **Scarred Veteran** | 3 | Creature: Human | U | 2/4 | This gets +1/+0 for each damage on it. | Permanent-damage depth: wounds make it hit harder, so healing it is a real choice | damage-based stats | ✅ |
+| 21 | **Bar Brawl** | 3 | Sorcery | U | — | Deal 1 damage to each creature. | Symmetric chip damage. It hurts Goober tokens and Critters most, and wounds everything else | ✓ implemented | ✅ |
+| 22 | **Scarred Veteran** | 3 | Creature: Human | U | 2/4 | This gets +1/+0 for each damage on it. | Permanent-damage depth: wounds make it hit harder, so healing it is a real choice | ✓ implemented | ✅ |
 | 23 | **Traveling Bard** | 2 | Creature: Human | U | 2/2 | Whenever you spend 3 or more Gold on a single spell or ability, draw a card. | Rewards big Gold moves (Invest, Equipment paid with Gold) | ✓ implemented | ✅ |
 | 24 | **Wound Dresser** | 3 | Creature: Human | U | 2/3 | Pay 2 Gold: Heal 2 from target creature. Activate only once per turn. | Repeatable healing paid with Gold, at instant speed | ✓ implemented | ✅ |
 | 25 | **Settle the Tab** | 3 | Sorcery | U | — | As an extra cost, pay any amount of Gold (X). Draw X cards, then discard a card. | Cash in a full bank for cards | ✓ implemented | ✅ |
 | 26 | **Dice Game** | 2 | Sorcery | U | — | Each player may pay any amount of Gold. The player who paid the most draws two cards. If players tie for the most, each of them draws one card. | Multiplayer politics: a Gold auction | simultaneous choices | ✅ |
 | 27 | **Shady Moneylender** | 3 | Creature: Human | R | 2/3 | You may spend Gold as though it were mana to cast creature spells. Whenever you do, each opponent gains 1 Gold. | Breaks the 'Gold can't buy creatures' rule for a price. A test of how strong that rule is | payment rule + trigger | ✅ |
-| 28 | **Champion's Belt** | 3 | Equipment | R | — | Equipped creature gets +2/+2. Whenever equipped creature destroys a creature in combat, heal it fully. Equip 3. | Equipment for every deck. A champion who wins fights stays fresh | Equip + combat-kill trigger | ✅ |
+| 28 | **Champion's Belt** | 3 | Equipment | R | — | Equipped creature gets +2/+2. Whenever equipped creature destroys a creature in combat, heal it fully. Equip 3. | Equipment for every deck. A champion who wins fights stays fresh | ✓ implemented | ✅ |
 | 29 | **Grizzled Innkeeper** | 4 | Creature: Human | R | 3/5 | Whenever you bank Gold, heal that much from target creature you control. | Banking and healing in one card: not spending mana repairs your board | ✓ implemented | ✅ |
-| 30 | **Tavern Brawl Night** | 5 | Sorcery | R | — | Deal 2 damage to each creature. Then heal 2 from each creature you control. | Rules depth: state-based actions are only checked after the spell, so your creatures at 2 Health survive while theirs die | each-creature damage | ✅ |
+| 30 | **Tavern Brawl Night** | 5 | Sorcery | R | — | Deal 2 damage to each creature. Then heal 2 from each creature you control. | Rules depth: state-based actions are only checked after the spell, so your creatures at 2 Health survive while theirs die | ✓ implemented | ✅ |
 
 **v0.2 progress:** 20 approved · C 10 · U 6 · R 4

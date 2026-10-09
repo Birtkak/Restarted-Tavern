@@ -49,6 +49,14 @@ namespace RestartedTavern.Rules
         /// </summary>
         public bool XGoldExtraCost { get; set; }
 
+        /// <summary>"As an extra cost, pay N life" (Blood Price). You need at least N life (MTG 119.4).</summary>
+        public int ExtraLifeCost { get; set; }
+        /// <summary>
+        /// "As an extra cost, sacrifice a creature" (Fling the Runt). The creature is chosen with the action
+        /// (PlayerAction.Sacrifice); its last known Power is <see cref="EffectContext.SacrificedPower"/>.
+        /// </summary>
+        public bool SacrificeCreatureCost { get; set; }
+
         public List<TriggeredAbility> Triggers { get; set; } = new List<TriggeredAbility>();
         public List<StaticAbility> Statics { get; set; } = new List<StaticAbility>();
         /// <summary>Activated abilities (MTG 602), including Equip and a Tavern Dweller's Power.</summary>
@@ -107,6 +115,23 @@ namespace RestartedTavern.Rules
         /// payment (decided 2026-10-09); the amount is the Gold paid. Gold that is lost isn't spent.
         /// </summary>
         GoldSpent,
+
+        /// <summary>
+        /// A creature is dealt damage (after prevention). Subject = its controller; EventObject = the creature,
+        /// EventPlayer = its controller, EventAmount = the damage. See OnlyAttachedCreature, MaxRemainingHealth.
+        /// </summary>
+        CreatureDealtDamage,
+        /// <summary>A player heals damage from a creature. Subject = the healer (the effect's controller); EventObject = the creature.</summary>
+        CreatureHealed,
+        /// <summary>A creature enters the battlefield. Subject = its controller; EventObject = the creature. See OthersOnly, MinPower.</summary>
+        CreatureEnters,
+        /// <summary>
+        /// This creature dealt combat damage to a creature that now has lethal damage ("destroys a
+        /// creature in combat", Champion's Belt). Once per creature destroyed.
+        /// </summary>
+        DestroysCreatureInCombat,
+        /// <summary>At the start of the turn of the player this Curse is attached to (Curse of Rot). EventPlayer = that player.</summary>
+        StartOfEnchantedPlayersTurn,
     }
 
     /// <summary>Whose objects or actions a "whenever ..." trigger watches.</summary>
@@ -126,17 +151,31 @@ namespace RestartedTavern.Rules
         public bool TargetNotSelf { get; set; }
         /// <summary>"You may ...": the controller can choose no target, and then nothing happens.</summary>
         public bool TargetOptional { get; set; }
+        /// <summary>"target damaged creature" (Ambush Predator).</summary>
+        public bool TargetDamaged { get; set; }
+
+        /// <summary>The target slot, with its filters. Legality is checked again on resolution.</summary>
+        public TargetSlot Slot => new TargetSlot { Spec = Target, Damaged = TargetDamaged };
         public List<Effect> Effects { get; set; } = new List<Effect>();
         public string Text { get; set; } = "";
 
         // Conditions for "whenever ..." triggers (CreatureDies, SpellCast, EquipActivated, EquipmentUnattached).
         public TriggerSubject Subject { get; set; } = TriggerSubject.Anyone;
-        /// <summary>CreatureDies: the creature's last known Power is at least this.</summary>
+        /// <summary>CreatureDies / CreatureEnters: the creature's (last known) Power is at least this.</summary>
         public int MinPower { get; set; }
         /// <summary>SpellCast: the spell's printed cost is at least this.</summary>
         public int MinCost { get; set; }
         /// <summary>GoldBanked / GoldSpent: "2 or more Gold". 0 = any amount.</summary>
         public int MinAmount { get; set; }
+        /// <summary>CreatureEnters: "another creature": not the source itself.</summary>
+        public bool OthersOnly { get; set; }
+        /// <summary>CreatureDealtDamage: only the creature this Curse or Equipment is attached to (Hex of Festering).</summary>
+        public bool OnlyAttachedCreature { get; set; }
+        /// <summary>
+        /// CreatureDealtDamage: "if it has N or less Health remaining" (Neon Executioner). An intervening
+        /// "if" (MTG 603.4): checked when it triggers; the effect checks again when it resolves.
+        /// </summary>
+        public int? MaxRemainingHealth { get; set; }
         /// <summary>"This triggers at most N times each turn" (Skabba). 0 = no limit.</summary>
         public int MaxPerTurn { get; set; }
 

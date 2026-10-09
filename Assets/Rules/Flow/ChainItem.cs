@@ -39,6 +39,12 @@ namespace RestartedTavern.Rules
         public int X { get; set; }
         /// <summary>Triggered abilities: the amount of the event ("heal that much"), e.g. the Gold banked.</summary>
         public int EventAmount { get; set; }
+        /// <summary>Triggered abilities: the object the event was about ("put a counter on it").</summary>
+        public ObjectId EventObject { get; set; }
+        /// <summary>Triggered abilities: the player the event was about ("its controller loses 1 life").</summary>
+        public PlayerId? EventPlayer { get; set; }
+        /// <summary>Spells with "sacrifice a creature" as an extra cost: its last known Power.</summary>
+        public int SacrificedPower { get; set; }
         /// <summary>Abilities: the ability's rules text (for UIs and logs).</summary>
         public string Text { get; set; } = "";
         /// <summary>A Tavern Dweller Power (GAME_DESIGN §9.1).</summary>
@@ -62,8 +68,12 @@ namespace RestartedTavern.Rules
         public PlayerId Controller { get; set; }
         public ObjectId SourceId { get; set; }
         public string SourceDefinitionId { get; set; }
-        /// <summary>The amount of the event that triggered it (Gold banked or spent), for "that much".</summary>
+        /// <summary>The amount of the event that triggered it (Gold banked or spent, damage dealt), for "that much".</summary>
         public int Amount { get; set; }
+        /// <summary>The object the event was about (the creature dealt damage, healed or entering).</summary>
+        public ObjectId EventObject { get; set; }
+        /// <summary>The player the event was about.</summary>
+        public PlayerId? EventPlayer { get; set; }
 
         public PendingTrigger Clone() => (PendingTrigger)MemberwiseClone();
     }

@@ -73,12 +73,13 @@ namespace RestartedTavern.Rules
             {
                 Emit(new CreatureDiedEvent { Card = card.Id, DefinitionId = def.Id, Controller = lastController });
                 QueueTriggers(def, TriggerEvent.LastBreath, lastController, card.Id);
-                QueueWatcherTriggers(TriggerEvent.CreatureDies, lastController, t => t.MinPower <= 0 || lastPower >= t.MinPower);
+                QueueWatcherTriggers(TriggerEvent.CreatureDies, lastController, (t, _) => t.MinPower <= 0 || lastPower >= t.MinPower);
             }
             if (to == Zone.Battlefield)
             {
                 ApplyEntersWithCounters(moved);
                 QueueTriggers(moved, TriggerEvent.Arrival);
+                QueueCreatureEnters(moved);
             }
 
             return moved;
@@ -108,7 +109,18 @@ namespace RestartedTavern.Rules
             Emit(new TokenCreatedEvent { Controller = controller, Token = token.Id, DefinitionId = definitionId });
             ApplyEntersWithCounters(token);
             QueueTriggers(token, TriggerEvent.Arrival);
+            QueueCreatureEnters(token);
             return token;
+        }
+
+        /// <summary>"Whenever another creature with 5 or more Power enters under your control" (Herd Matriarch).</summary>
+        private void QueueCreatureEnters(CardInstance permanent)
+        {
+            if (!Def(permanent).IsCreature) return;
+            int power = Stats(permanent).Power; // as it exists on the battlefield, counters included (MTG 603.6a)
+            QueueWatcherTriggers(TriggerEvent.CreatureEnters, permanent.Controller,
+                (t, source) => (!t.OthersOnly || source.Id != permanent.Id) && (t.MinPower <= 0 || power >= t.MinPower),
+                eventObject: permanent.Id, eventPlayer: permanent.Controller);
         }
 
         /// <summary>
@@ -153,14 +165,15 @@ namespace RestartedTavern.Rules
 
         /// <summary>
         /// Damage to a creature stays until healed (§7.3); damage to a player is life loss.
-        /// Lifelink: the damage also heals the source's controller (§11).
+        /// Lifelink: the damage also heals the source's controller (§11). Returns the damage actually
+        /// dealt: "can't be dealt more than N damage each turn" (Hardlight Aegis) prevents the rest.
         /// </summary>
-        internal void DealDamage(ObjectId source, Target target, int amount, bool isCombat)
+        internal int DealDamage(ObjectId source, Target target, int amount, bool isCombat)
         {
-            if (amount <= 0) return;
+            if (amount <= 0) return 0;
             if (target.IsPlayer)
             {
-                if (S.GetPlayer(target.Player).HasLost) return;
+                if (S.GetPlayer(target.Player).HasLost) return 0;
                 Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 ChangeLife(target.Player, -amount);
                 var dealer = isCombat ? S.FindOnBattlefield(source) : null;
@@ -169,14 +182,29 @@ namespace RestartedTavern.Rules
             else
             {
                 var creature = S.FindOnBattlefield(target.Object);
-                if (creature == null || !Def(creature).IsCreature) return;
+                if (creature == null || !Def(creature).IsCreature) return 0;
+
+                // Damage dealt to each creature this turn, for "can't be dealt more than N damage each turn".
+                string key = "damage:" + creature.Id.Value;
+                S.UsesThisTurn.TryGetValue(key, out int taken);
+                int cap = CharacteristicsCalculator.MaxDamageEachTurn(S, Db, creature);
+                if (cap < int.MaxValue) amount = Math.Min(amount, Math.Max(0, cap - taken));
+                if (amount <= 0) return 0;
+                S.UsesThisTurn[key] = taken + amount;
+
                 Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 creature.Damage += amount;
+                int remaining = Stats(creature).RemainingHealth;
+                QueueWatcherTriggers(TriggerEvent.CreatureDealtDamage, creature.Controller,
+                    (t, watcher) => (!t.OnlyAttachedCreature || watcher.AttachedToObject == creature.Id)
+                                    && (!t.MaxRemainingHealth.HasValue || remaining <= t.MaxRemainingHealth.Value),
+                    amount, creature.Id, creature.Controller);
             }
 
             var src = S.FindOnBattlefield(source);
             if (src != null && Stats(src).Has(Keyword.Lifelink))
                 Heal(Target.ForPlayer(src.Controller), amount);
+            return amount;
         }
 
         /// <summary>
@@ -194,9 +222,10 @@ namespace RestartedTavern.Rules
 
         /// <summary>
         /// Heal X (§11.1): remove up to X damage from a creature, or restore a player's life up
-        /// to the starting life total.
+        /// to the starting life total. A creature that "can't be healed" keeps its damage.
+        /// <paramref name="healer"/> is the player whose effect heals ("whenever you heal a creature").
         /// </summary>
-        internal void Heal(Target target, int amount)
+        internal void Heal(Target target, int amount, PlayerId? healer = null)
         {
             if (amount <= 0) return;
             int healed;
@@ -210,9 +239,11 @@ namespace RestartedTavern.Rules
             else
             {
                 var creature = S.FindOnBattlefield(target.Object);
-                if (creature == null) return;
+                if (creature == null || CharacteristicsCalculator.CantBeHealed(S, Db, creature)) return;
                 healed = Math.Min(amount, creature.Damage);
                 creature.Damage -= healed;
+                if (healed > 0 && healer.HasValue)
+                    QueueWatcherTriggers(TriggerEvent.CreatureHealed, healer.Value, null, healed, creature.Id, creature.Controller);
             }
             if (healed > 0) Emit(new HealedEvent { Target = target, Amount = healed });
         }

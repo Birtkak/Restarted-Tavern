@@ -36,9 +36,20 @@ namespace RestartedTavern.Rules
         public bool Optional { get; set; }
         /// <summary>Only creatures with this subtype ("other Goobers you control"). Null = any.</summary>
         public string Subtype { get; set; }
+        /// <summary>"target damaged creature": it has damage on it (GAME_DESIGN §11.1).</summary>
+        public bool Damaged { get; set; }
+        /// <summary>"target creature with 2 or less Health remaining" (Finisher Protocol). Null = any.</summary>
+        public int? MaxRemainingHealth { get; set; }
+        /// <summary>"target attacking or blocking creature" (Called Shot).</summary>
+        public bool AttackingOrBlocking { get; set; }
 
         public static TargetSlot Of(TargetSpec spec, bool optional = false, string subtype = null) =>
             new TargetSlot { Spec = spec, Optional = optional, Subtype = subtype };
+
+        /// <summary>Same spec and the same filters (for listing {A,B} but not {B,A}).</summary>
+        public bool SameFilterAs(TargetSlot other) =>
+            Spec == other.Spec && Subtype == other.Subtype && Damaged == other.Damaged
+            && MaxRemainingHealth == other.MaxRemainingHealth && AttackingOrBlocking == other.AttackingOrBlocking;
     }
 
     /// <summary>A chosen target: either a player or a game object.</summary>

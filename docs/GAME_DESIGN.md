@@ -266,6 +266,8 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Sacrifice**: put a permanent you control into its owner's graveyard. This can't be prevented.
 - **Damaged** 🔒: a creature with damage on it (Health remaining below its max). This is plain card text, not a keyword: Bloodied, Wound and Pristine stay rejected as keywords (§11). "Health remaining" is max Health minus damage.
 - **Can't be healed** 🔒: Heal effects remove no damage from it. It can still get bigger (+1/+1 counters, buffs).
+- **Destroys a creature in combat** (Champion's Belt): it dealt combat damage to that creature, and the creature now has lethal damage. It triggers once for each creature destroyed, even if both creatures die.
+- **"Can't be dealt more than N damage each turn"** (Hardlight Aegis): damage over the limit is prevented, so it isn't dealt (no Lifelink, no "is dealt damage" triggers). Damage the creature took earlier in the same turn counts, even if the effect started later (MTG). Trample still assigns lethal damage as if nothing were prevented (MTG 702.19c).
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
 - **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with mana first, then Gold (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means your main phase with an empty Chain.
 

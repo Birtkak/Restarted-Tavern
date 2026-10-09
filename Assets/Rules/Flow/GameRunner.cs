@@ -291,7 +291,7 @@ namespace RestartedTavern.Rules
                 if (banked > 0)
                 {
                     ChangeGold(ap.Id, banked);
-                    QueueWatcherTriggers(TriggerEvent.GoldBanked, ap.Id, t => banked >= t.MinAmount, banked);
+                    QueueWatcherTriggers(TriggerEvent.GoldBanked, ap.Id, (t, _) => banked >= t.MinAmount, banked);
                 }
                 ap.Mana = 0; // mana is only filled during your own turn (§5.2)
                 Emit(new ManaChangedEvent { Player = ap.Id, Mana = 0, MaxMana = ap.MaxMana });

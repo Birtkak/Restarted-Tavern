@@ -6,6 +6,8 @@ namespace RestartedTavern.Rules.Cards
     /// Set v0.2 additions (docs/cards/*.md, approved 2026-10-09), added batch by batch as the engine
     /// learns their mechanics. Batch A: the Gold economy (bank, spend-Gold, the per-player Gold cap,
     /// "pay any amount of Gold") plus the v0.2 cards that only needed existing mechanics.
+    /// Batch B: damage and healing ("damaged", Health remaining, can't be healed, damage prevention,
+    /// damage to each creature, damage/heal/arrival watchers, extra costs on spells).
     /// </summary>
     public static partial class PrototypeCards
     {
@@ -202,6 +204,212 @@ namespace RestartedTavern.Rules.Cards
                 When = TriggerEvent.LastBreath, Effects = { new CreateTokensEffect { TokenId = SpiritToken } },
             });
             yield return usher;
+
+            foreach (var c in V02DamageCards()) yield return c;
+        }
+
+        /// <summary>Batch B: damage and healing.</summary>
+        private static IEnumerable<CardDefinition> V02DamageCards()
+        {
+            // ---------------------------------------------------------------- Neutral
+            yield return new CardDefinition
+            {
+                Id = "called_shot", Name = "Called Shot", Type = CardType.Instant, Cost = 2, Faction = "neutral",
+                Rarity = Rarity.Common, Text = "Deal 2 damage to target attacking or blocking creature.",
+                SpellTargets = { new TargetSlot { Spec = TargetSpec.Creature, AttackingOrBlocking = true } },
+                SpellEffects = { new DealDamageEffect { Amount = 2 } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "bar_brawl", Name = "Bar Brawl", Type = CardType.Sorcery, Cost = 3, Faction = "neutral",
+                Rarity = Rarity.Uncommon, Text = "Deal 1 damage to each creature.",
+                SpellEffects = { new DealDamageToEachCreatureEffect { Amount = 1 } },
+            };
+
+            var veteran = Creature("scarred_veteran", "Scarred Veteran", 3, 2, 4, "neutral", Rarity.Uncommon, "Human",
+                Keyword.None, "This gets +1/+0 for each damage on it.");
+            veteran.Statics.Add(new PowerPerDamageAbility());
+            yield return veteran;
+
+            yield return new CardDefinition
+            {
+                Id = "tavern_brawl_night", Name = "Tavern Brawl Night", Type = CardType.Sorcery, Cost = 5, Faction = "neutral",
+                Rarity = Rarity.Rare, Text = "Deal 2 damage to each creature. Then heal 2 from each creature you control.",
+                // State-based actions wait until the spell is done, so your creatures at 2 Health survive.
+                SpellEffects =
+                {
+                    new DealDamageToEachCreatureEffect { Amount = 2 },
+                    new HealOtherCreaturesYouControlEffect { Amount = 2 },
+                },
+            };
+
+            yield return Equipment("champions_belt", "Champion's Belt", 3, "neutral", Rarity.Rare, 3,
+                new AttachedCreatureModifier
+                {
+                    Power = 2, Health = 2,
+                    Triggers =
+                    {
+                        new TriggeredAbility
+                        {
+                            When = TriggerEvent.DestroysCreatureInCombat, Effects = { new HealSelfEffect { Fully = true } },
+                            Text = "Whenever this destroys a creature in combat, heal it fully.",
+                        },
+                    },
+                },
+                "Equipped creature gets +2/+2. Whenever equipped creature destroys a creature in combat, heal it fully. Equip 3.");
+
+            // ---------------------------------------------------------------- Goobers
+            yield return new CardDefinition
+            {
+                Id = "kick_em_while_theyre_down", Name = "Kick 'Em While They're Down", Type = CardType.Sorcery, Cost = 2,
+                Faction = "goobers", Rarity = Rarity.Common,
+                Text = "Deal 2 damage to target creature. If it was already damaged, deal 4 damage instead.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new DealDamageEffect { Amount = 2, AmountIfDamaged = 4 } },
+            };
+            yield return new CardDefinition
+            {
+                Id = "fling_the_runt", Name = "Fling the Runt", Type = CardType.Instant, Cost = 1, Faction = "goobers",
+                Rarity = Rarity.Uncommon,
+                Text = "As an extra cost, sacrifice a creature. Deal damage equal to its Power to any target.",
+                SacrificeCreatureCost = true,
+                SpellTarget = TargetSpec.AnyTarget,
+                SpellEffects = { new DealDamageEffect { AmountIsSacrificedPower = true } },
+            };
+
+            var chaos = Creature("chaos_engine", "Chaos Engine", 5, 4, 4, "goobers", Rarity.Rare, "Goober", Keyword.Haste,
+                "Haste. At the start of your turn, deal 1 damage to each other creature.");
+            chaos.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.StartOfYourTurn, Effects = { new DealDamageToEachCreatureEffect { Amount = 1, ExcludeSource = true } },
+            });
+            yield return chaos;
+
+            // ---------------------------------------------------------------- Glitterworld
+            yield return new CardDefinition
+            {
+                Id = "finisher_protocol", Name = "Finisher Protocol", Type = CardType.Instant, Cost = 2, Faction = "glitterworld",
+                Rarity = Rarity.Common, Text = "Destroy target creature with 2 or less Health remaining.",
+                SpellTargets = { new TargetSlot { Spec = TargetSpec.Creature, MaxRemainingHealth = 2 } },
+                SpellEffects = { new DestroyEffect() },
+            };
+            yield return new CardDefinition
+            {
+                Id = "smart_rounds", Name = "Smart Rounds", Type = CardType.Sorcery, Cost = 3, Faction = "glitterworld",
+                Rarity = Rarity.Uncommon,
+                Text = "Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new DamageTargetThenEachDamagedEffect { Amount = 1 } },
+            };
+            yield return Equipment("hardlight_aegis", "Hardlight Aegis", 4, "glitterworld", Rarity.Rare, 2,
+                new AttachedCreatureModifier { Health = 3, MaxDamageEachTurn = 2 },
+                "Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2.");
+
+            var executioner = Creature("neon_executioner", "Neon Executioner", 6, 4, 6, "glitterworld", Rarity.Rare, "Construct",
+                Keyword.None, "Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it.");
+            executioner.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.CreatureDealtDamage, Subject = TriggerSubject.Opponents, MaxRemainingHealth = 2,
+                Effects = { new DestroyEventCreatureEffect { MaxRemainingHealth = 2 } },
+            });
+            yield return executioner;
+
+            // ---------------------------------------------------------------- Evergrowing Wild
+            yield return new CardDefinition
+            {
+                Id = "overflowing_spring", Name = "Overflowing Spring", Type = CardType.Instant, Cost = 2,
+                Faction = "evergrowing_wild", Rarity = Rarity.Uncommon,
+                Text = "Heal 4 from target creature. If it had no damage, put two +1/+1 counters on it instead.",
+                SpellTarget = TargetSpec.Creature,
+                SpellEffects = { new HealOrCountersEffect { Amount = 4, CountersIfUndamaged = 2 } },
+            };
+
+            var mender = Creature("sap_mender", "Sap Mender", 2, 1, 3, "evergrowing_wild", Rarity.Uncommon, "Plant", Keyword.None,
+                "Whenever you heal a creature, put a +1/+1 counter on it.");
+            mender.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.CreatureHealed, Subject = TriggerSubject.You, Effects = { new AddCountersToEventCreatureEffect() },
+            });
+            yield return mender;
+
+            var predator = Creature("ambush_predator", "Ambush Predator", 3, 3, 2, "evergrowing_wild", Rarity.Common, "Cat",
+                Keyword.None, "Arrival: This fights up to one target damaged creature you don't control.");
+            predator.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.Arrival, Target = TargetSpec.CreatureYouDontControl, TargetDamaged = true, TargetOptional = true,
+                Effects = { new FightEffect { SourceFights = true } },
+            });
+            yield return predator;
+
+            var matriarch = Creature("herd_matriarch", "Herd Matriarch", 4, 3, 5, "evergrowing_wild", Rarity.Uncommon, "Beast",
+                Keyword.None,
+                "Whenever another creature with 5 or more Power enters the battlefield under your control, put two +1/+1 counters on it.");
+            matriarch.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.CreatureEnters, Subject = TriggerSubject.You, OthersOnly = true, MinPower = 5,
+                Effects = { new AddCountersToEventCreatureEffect { Count = 2 } },
+            });
+            yield return matriarch;
+
+            // ---------------------------------------------------------------- Sensationalists
+            var festering = new CardDefinition
+            {
+                Id = "hex_of_festering", Name = "Hex of Festering", Type = CardType.Curse, Cost = 2, Faction = "sensationalists",
+                Rarity = Rarity.Common,
+                Text = "Attach to an enemy creature. It can't be healed. Whenever it's dealt damage, its controller loses 1 life.",
+                SpellTarget = TargetSpec.CreatureYouDontControl,
+            };
+            festering.Statics.Add(new CantBeHealedAbility());
+            festering.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.CreatureDealtDamage, OnlyAttachedCreature = true, Effects = { new EventPlayerLosesLifeEffect() },
+            });
+            yield return festering;
+
+            yield return new CardDefinition
+            {
+                Id = "blood_price", Name = "Blood Price", Type = CardType.Instant, Cost = 2, Faction = "sensationalists",
+                Rarity = Rarity.Common, Text = "As an extra cost, pay 3 life. Destroy target damaged creature.",
+                ExtraLifeCost = 3,
+                SpellTargets = { new TargetSlot { Spec = TargetSpec.Creature, Damaged = true } },
+                SpellEffects = { new DestroyEffect() },
+            };
+
+            var hollow = new CardDefinition
+            {
+                Id = "hex_of_hollow_bones", Name = "Hex of Hollow Bones", Type = CardType.Curse, Cost = 4, Faction = "sensationalists",
+                Rarity = Rarity.Uncommon,
+                Text = "Attach to an enemy creature. It gets -1/-1 for each creature card in your graveyard (up to -4/-4).",
+                SpellTarget = TargetSpec.CreatureYouDontControl,
+            };
+            hollow.Statics.Add(new AttachedScalingModifier
+            {
+                PowerPer = -1, HealthPer = -1,
+                Count = (s, db, curse) =>
+                {
+                    int n = 0;
+                    foreach (var c in s.GetPlayer(curse.Controller).Graveyard)
+                        if (db.Get(c.DefinitionId).IsCreature) n++;
+                    return System.Math.Min(4, n);
+                },
+            });
+            yield return hollow;
+
+            var rot = new CardDefinition
+            {
+                Id = "curse_of_rot", Name = "Curse of Rot", Type = CardType.Curse, Cost = 5, Faction = "sensationalists",
+                Rarity = Rarity.Rare,
+                Text = "Attach to an opponent. At the start of that player's turn, deal 1 damage to each creature they control. "
+                       + "Creatures they control can't be healed.",
+                SpellTarget = TargetSpec.Opponent,
+            };
+            rot.Statics.Add(new CantBeHealedAbility());
+            rot.Triggers.Add(new TriggeredAbility
+            {
+                When = TriggerEvent.StartOfEnchantedPlayersTurn,
+                Effects = { new DealDamageToEachCreatureEffect { Amount = 1, OnlyEventPlayer = true } },
+            });
+            yield return rot;
         }
     }
 }

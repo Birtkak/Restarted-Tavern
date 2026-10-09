@@ -158,8 +158,20 @@ namespace RestartedTavern.Rules
                 if (power > 0) hits.Add((blocker.Id, Target.ForObject(attacker.Id), power));
             }
 
+            var damagedBy = new List<(ObjectId source, ObjectId creature)>();
             foreach (var (source, target, amount) in hits)
-                DealDamage(source, target, amount, true);
+                if (DealDamage(source, target, amount, true) > 0 && !target.IsPlayer)
+                    damagedBy.Add((source, target.Object));
+
+            // "Whenever this destroys a creature in combat" (Champion's Belt): it dealt combat damage to a
+            // creature that now has lethal damage; state-based actions will destroy it.
+            foreach (var (source, creatureId) in damagedBy)
+            {
+                var creature = S.FindOnBattlefield(creatureId);
+                var dealer = S.FindOnBattlefield(source);
+                if (creature != null && dealer != null && Stats(creature).RemainingHealth <= 0)
+                    QueueTriggers(dealer, TriggerEvent.DestroysCreatureInCombat);
+            }
         }
     }
 }

@@ -20,8 +20,12 @@ namespace RestartedTavern.Rules
     {
         private readonly GameRunner _runner;
 
-        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0, int eventAmount = 0)
+        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0, int eventAmount = 0,
+            ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0)
         {
+            EventObject = eventObject;
+            EventPlayer = eventPlayer;
+            SacrificedPower = sacrificedPower;
             _runner = runner;
             Controller = controller;
             Source = source;
@@ -34,6 +38,12 @@ namespace RestartedTavern.Rules
         public int X { get; }
         /// <summary>Triggered abilities: the amount of the triggering event ("heal that much"). 0 otherwise.</summary>
         public int EventAmount { get; }
+        /// <summary>Triggered abilities: the object the event was about ("put a counter on it"). None otherwise.</summary>
+        public ObjectId EventObject { get; }
+        /// <summary>Triggered abilities: the player the event was about ("its controller", "that player").</summary>
+        public PlayerId? EventPlayer { get; }
+        /// <summary>Spells with "sacrifice a creature" as an extra cost: the creature's last known Power.</summary>
+        public int SacrificedPower { get; }
 
         public GameState State => _runner.State;
         public CardDatabase Cards => _runner.Db;
@@ -53,7 +63,8 @@ namespace RestartedTavern.Rules
         }
 
         public void DealDamage(Target target, int amount) => _runner.DealDamage(Source, target, amount, false);
-        public void Heal(Target target, int amount) => _runner.Heal(target, amount);
+        /// <summary>The controller heals (this is what "whenever you heal a creature" watches).</summary>
+        public void Heal(Target target, int amount) => _runner.Heal(target, amount, Controller);
         public void Draw(PlayerId player, int count) => _runner.Draw(player, count);
         public void GainGold(PlayerId player, int amount) => _runner.ChangeGold(player, amount);
         public void LoseLife(PlayerId player, int amount) => _runner.ChangeLife(player, -amount);

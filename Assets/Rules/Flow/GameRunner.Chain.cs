@@ -69,6 +69,15 @@ namespace RestartedTavern.Rules
             int goldPaid = goldForCost + (a.Invest ? Costs.InvestCost(S, Db, a.Player, def) : 0)
                            + (def.XGoldExtraCost ? a.X : 0);
             if (goldPaid > 0) ChangeGold(p.Id, -goldPaid);
+            // Extra costs (MTG 601.2h): pay life, sacrifice a creature (its last known Power is kept).
+            if (def.ExtraLifeCost > 0) ChangeLife(p.Id, -def.ExtraLifeCost);
+            int sacrificedPower = 0;
+            if (!a.Sacrifice.IsNone)
+            {
+                var victim = S.FindOnBattlefield(a.Sacrifice);
+                sacrificedPower = Stats(victim).Power;
+                MoveCard(victim, Zone.Graveyard);
+            }
 
             var onChain = MoveCard(card, Zone.Chain, a.Player);
             var effects = new List<Effect>(def.SpellEffects);
@@ -86,6 +95,7 @@ namespace RestartedTavern.Rules
                 Effects = effects,
                 Invested = a.Invest,
                 X = def.XGoldExtraCost ? a.X : 0,
+                SacrificedPower = sacrificedPower,
             };
             item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
@@ -95,7 +105,7 @@ namespace RestartedTavern.Rules
                 Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Targets = a.Targets,
                 ManaPaid = manaPaid, GoldPaid = goldPaid, Invested = a.Invest, X = item.X,
             });
-            QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player, t => def.Cost >= t.MinCost);
+            QueueWatcherTriggers(TriggerEvent.SpellCast, a.Player, (t, _) => def.Cost >= t.MinCost);
             if (goldPaid > 0) GoldSpent(a.Player, goldPaid);
 
             // MTG 117.3c: the player who cast a spell receives priority afterwards.
@@ -142,13 +152,13 @@ namespace RestartedTavern.Rules
                 }
                 else
                 {
-                    RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X);
+                    RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, sacrificedPower: item.SacrificedPower);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
             else
             {
-                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount);
+                RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount, item.EventObject, item.EventPlayer);
             }
 
             Emit(new ChainItemResolvedEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
@@ -156,9 +166,9 @@ namespace RestartedTavern.Rules
 
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
         private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0,
-            int eventAmount = 0)
+            int eventAmount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0)
         {
-            var ctx = new EffectContext(this, controller, source, targets, x, eventAmount);
+            var ctx = new EffectContext(this, controller, source, targets, x, eventAmount, eventObject, eventPlayer, sacrificedPower);
             foreach (var e in effects)
             {
                 if (S.IsGameOver) return;
@@ -193,23 +203,29 @@ namespace RestartedTavern.Rules
         /// "Whenever ..." triggers that watch other objects, from every living player's Tavern Dweller and
         /// permanents. <paramref name="subject"/> is the player the event is about (see TriggerEvent).
         /// </summary>
-        private void QueueWatcherTriggers(TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition = null,
-            int amount = 0)
+        /// <param name="condition">Extra check per ability; gets the ability and its source.</param>
+        /// <param name="amount">The event's amount (Gold banked or spent, damage dealt), for "that much".</param>
+        /// <param name="eventObject">The object the event is about (the creature dealt damage, healed or entering).</param>
+        /// <param name="eventPlayer">The player the event is about.</param>
+        private void QueueWatcherTriggers(TriggerEvent when, PlayerId subject,
+            System.Func<TriggeredAbility, CardInstance, bool> condition = null,
+            int amount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null)
         {
             foreach (var p in S.Players)
             {
                 if (p.HasLost) continue;
-                foreach (var source in p.TavernDwellerZone) QueueWatcher(source, when, subject, condition, amount);
-                foreach (var source in new List<CardInstance>(p.Battlefield)) QueueWatcher(source, when, subject, condition, amount);
+                foreach (var source in p.TavernDwellerZone) QueueWatcher(source, when, subject, condition, amount, eventObject, eventPlayer);
+                foreach (var source in new List<CardInstance>(p.Battlefield))
+                    QueueWatcher(source, when, subject, condition, amount, eventObject, eventPlayer);
             }
         }
 
         /// <summary>"Whenever you spend Gold": once per payment (decided 2026-10-09), with the amount paid.</summary>
         private void GoldSpent(PlayerId player, int amount) =>
-            QueueWatcherTriggers(TriggerEvent.GoldSpent, player, t => amount >= t.MinAmount, amount);
+            QueueWatcherTriggers(TriggerEvent.GoldSpent, player, (t, _) => amount >= t.MinAmount, amount);
 
-        private void QueueWatcher(CardInstance source, TriggerEvent when, PlayerId subject, System.Func<TriggeredAbility, bool> condition,
-            int amount)
+        private void QueueWatcher(CardInstance source, TriggerEvent when, PlayerId subject,
+            System.Func<TriggeredAbility, CardInstance, bool> condition, int amount, ObjectId eventObject, PlayerId? eventPlayer)
         {
             var def = Def(source);
             for (int i = 0; i < def.Triggers.Count; i++)
@@ -218,7 +234,7 @@ namespace RestartedTavern.Rules
                 if (ability.When != when) continue;
                 if (ability.Subject == TriggerSubject.You && subject != source.Controller) continue;
                 if (ability.Subject == TriggerSubject.Opponents && !S.AreOpponents(source.Controller, subject)) continue;
-                if (condition != null && !condition(ability)) continue;
+                if (condition != null && !condition(ability, source)) continue;
                 if (ability.MaxPerTurn > 0)
                 {
                     string key = "trigger:" + source.Id.Value + ":" + i;
@@ -226,12 +242,12 @@ namespace RestartedTavern.Rules
                     if (used >= ability.MaxPerTurn) continue;
                     S.UsesThisTurn[key] = used + 1;
                 }
-                QueueTrigger(ability, source.Controller, source.Id, def.Id, source, amount);
+                QueueTrigger(ability, source.Controller, source.Id, def.Id, source, amount, eventObject, eventPlayer);
             }
         }
 
         private void QueueTrigger(TriggeredAbility ability, PlayerId controller, ObjectId sourceId, string sourceDefinitionId, CardInstance source,
-            int amount = 0)
+            int amount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null)
         {
             int times = ability.RepeatCount != null && source != null ? ability.RepeatCount(S, Db, source) : 1;
             for (int n = 0; n < times; n++)
@@ -243,6 +259,8 @@ namespace RestartedTavern.Rules
                     SourceId = sourceId,
                     SourceDefinitionId = sourceDefinitionId,
                     Amount = amount,
+                    EventObject = eventObject,
+                    EventPlayer = eventPlayer,
                 });
             }
         }
@@ -251,6 +269,22 @@ namespace RestartedTavern.Rules
         {
             foreach (var c in new List<CardInstance>(S.ActivePlayerState.TavernDwellerZone)) QueueTriggers(c, when);
             foreach (var c in new List<CardInstance>(S.ActivePlayerState.Battlefield)) QueueTriggers(c, when);
+            if (when != TriggerEvent.StartOfYourTurn) return;
+
+            // "At the start of that player's turn" on Curses attached to the active player (Curse of Rot).
+            var active = S.ActivePlayer;
+            foreach (var p in S.Players)
+            {
+                if (p.HasLost) continue;
+                foreach (var c in new List<CardInstance>(p.Battlefield))
+                {
+                    if (c.AttachedToPlayer != active) continue;
+                    var def = Def(c);
+                    foreach (var ability in def.Triggers)
+                        if (ability.When == TriggerEvent.StartOfEnchantedPlayersTurn)
+                            QueueTrigger(ability, c.Controller, c.Id, def.Id, c, eventPlayer: active);
+                }
+            }
         }
 
         /// <summary>
@@ -275,7 +309,7 @@ namespace RestartedTavern.Rules
 
                 if (trigger.Ability.Target != TargetSpec.None)
                 {
-                    var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Target,
+                    var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Slot,
                         trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None);
                     if (targets.Count == 0) continue; // MTG 603.3d: no legal target → removed
                     if (targets.Count > 1 || trigger.Ability.TargetOptional)
@@ -318,8 +352,10 @@ namespace RestartedTavern.Rules
                 Effects = t.Ability.Effects,
                 TargetsExcludeSource = t.Ability.TargetNotSelf,
                 EventAmount = t.Amount,
+                EventObject = t.EventObject,
+                EventPlayer = t.EventPlayer,
             };
-            if (t.Ability.Target != TargetSpec.None) item.TargetSlots.Add(TargetSlot.Of(t.Ability.Target));
+            if (t.Ability.Target != TargetSpec.None) item.TargetSlots.Add(t.Ability.Slot);
             if (target.HasValue) item.Targets.Add(target.Value);
             S.Chain.Add(item);
             Emit(new AbilityTriggeredEvent
@@ -387,6 +423,9 @@ namespace RestartedTavern.Rules
                     var def = Def(c);
                     if (!def.IsCreature || c.Id == exclude) continue;
                     if (slot.Subtype != null && !def.HasSubtype(slot.Subtype)) continue;
+                    if (slot.Damaged && c.Damage <= 0) continue;
+                    if (slot.MaxRemainingHealth.HasValue && Stats(c).RemainingHealth > slot.MaxRemainingHealth.Value) continue;
+                    if (slot.AttackingOrBlocking && (S.Combat == null || !(S.Combat.IsAttacking(c.Id) || S.Combat.IsBlocking(c.Id)))) continue;
                     bool ok;
                     switch (spec)
                     {
@@ -436,7 +475,7 @@ namespace RestartedTavern.Rules
                     return;
                 }
                 if (slots[slot].Optional) result.Add(chosen.ToArray()); // stop here: later optional slots stay empty
-                bool sameAsPrevious = slot > 0 && slots[slot].Spec == slots[slot - 1].Spec && slots[slot].Subtype == slots[slot - 1].Subtype;
+                bool sameAsPrevious = slot > 0 && slots[slot].SameFilterAs(slots[slot - 1]);
                 var options = candidates[slot];
                 for (int i = sameAsPrevious ? previousIndex + 1 : 0; i < options.Count; i++)
                 {

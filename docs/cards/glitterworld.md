@@ -55,12 +55,12 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 21 | **Gilded Knuckles** | 1 | Equipment | C | — | Equipped creature gets +2/+0. Equip 1. | Cheap to cast; the Equip can be paid with banked Gold | ✓ implemented | ✅ |
 | 22 | **Patch-Up Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Heal 2 from target Construct or equipped creature. | Machine repair on a drone | ✓ implemented | ✅ |
 | 23 | **Scrap Collector** | 2 | Creature: Construct | C | 2/2 | Whenever an Equipment you control becomes unattached, gain 1 Gold. | When an equipped creature dies, you get Gold back to re-equip | ✓ implemented | ✅ |
-| 24 | **Finisher Protocol** | 2 | Instant | C | — | Destroy target creature with 2 or less Health remaining. | The ping plan's closer: spread damage, then delete | remaining-Health target filter | ✅ |
+| 24 | **Finisher Protocol** | 2 | Instant | C | — | Destroy target creature with 2 or less Health remaining. | The ping plan's closer: spread damage, then delete | ✓ implemented | ✅ |
 | 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to a creature." Equip 1. | Ping engine on any attacker | ✓ implemented | ✅ |
-| 26 | **Smart Rounds** | 3 | Sorcery | U | — | Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage. | Chains across a wounded board, and rewards having pinged before | conditional each-damaged | ✅ |
+| 26 | **Smart Rounds** | 3 | Sorcery | U | — | Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage. | Chains across a wounded board, and rewards having pinged before | ✓ implemented | ✅ |
 | 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | ✓ implemented | ✅ |
 | 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | ✓ implemented | ✅ |
-| 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | Equip + damage prevention | ✅ |
-| 30 | **Neon Executioner** | 6 | Creature: Construct | R | 4/6 | Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | damage-dealt trigger | ✅ |
+| 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | ✓ implemented | ✅ |
+| 30 | **Neon Executioner** | 6 | Creature: Construct | R | 4/6 | Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2

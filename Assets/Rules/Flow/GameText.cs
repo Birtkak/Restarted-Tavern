@@ -161,6 +161,7 @@ namespace RestartedTavern.Rules
                         if (def.XGoldExtraCost) sb.Append("  [X=").Append(a.X).Append(" Gold]");
                     }
                     if (a.Invest) sb.Append("  +INVEST");
+                    if (!a.Sacrifice.IsNone) sb.Append("  [sacrifice ").Append(Name(state, a.Sacrifice)).Append(']');
                     return sb.ToString();
                 }
                 default: return a.ToString();

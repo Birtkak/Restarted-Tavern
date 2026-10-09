@@ -113,9 +113,13 @@ namespace RestartedTavern.Rules.AI
             }
             else
             {
-                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card, a.X);
+                var victim = a.Sacrifice.IsNone ? null : s.FindOnBattlefield(a.Sacrifice);
+                int x = victim != null ? Stats(s, victim).Power : a.X;
+                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card, x);
+                if (victim != null) value -= Worth(s, victim) + 0.5;
             }
             if (def.XGoldExtraCost) value -= a.X * GoldUnitValue(s, p);
+            if (def.ExtraLifeCost > 0) value -= LifeLossValue(p, def.ExtraLifeCost);
 
             if (a.Invest) value += EffectValue(s, me, def.InvestEffects, a.Targets, a.Card) + 0.1;
 
@@ -209,6 +213,7 @@ namespace RestartedTavern.Rules.AI
                 if (mod.Grants.HasFlag(Keyword.Flying)) v += 1.5;
                 if (mod.Grants.HasFlag(Keyword.Trample)) v += 0.6;
                 v += 1.2 * (mod.Triggers.Count + mod.Abilities.Count);
+                if (mod.MaxDamageEachTurn > 0) v += 1.5;
             }
             var st = Stats(s, creature);
             // Bigger, healthy creatures carry Equipment better; a creature about to die doesn't.
@@ -239,7 +244,7 @@ namespace RestartedTavern.Rules.AI
         }
 
         /// <summary>How good these effects are for <paramref name="me"/> with these targets.</summary>
-        /// <summary><paramref name="x"/>: the X paid, or a trigger's event amount ("heal that much").</summary>
+        /// <summary><paramref name="x"/>: the X paid, a trigger's event amount ("heal that much"), or a sacrificed creature's Power.</summary>
         private double EffectValue(GameState s, PlayerId me, List<Effect> effects, IReadOnlyList<Target> targets, ObjectId source,
             int x = 0)
         {
@@ -252,9 +257,29 @@ namespace RestartedTavern.Rules.AI
                 switch (e)
                 {
                     case DealDamageEffect d when d.EachTarget:
-                        foreach (var t in targets) v += DamageValue(s, me, d.Amount, t);
+                        foreach (var t in targets) v += DamageValue(s, me, DamageAmount(s, d, t, x), t);
                         break;
-                    case DealDamageEffect d: v += DamageValue(s, me, d.Amount, target); break;
+                    case DealDamageEffect d: v += DamageValue(s, me, DamageAmount(s, d, target, x), target); break;
+                    case DealDamageToEachCreatureEffect d:
+                        foreach (var p in s.Players)
+                            foreach (var c in p.Battlefield)
+                                if (Db.Get(c.DefinitionId).IsCreature && !(d.ExcludeSource && c.Id == source))
+                                    v += DamageValue(s, me, d.Amount, Target.ForObject(c.Id));
+                        break;
+                    case DamageTargetThenEachDamagedEffect d:
+                        v += DamageValue(s, me, d.Amount, target);
+                        foreach (var p in s.Players)
+                            foreach (var c in p.Battlefield)
+                                if (Db.Get(c.DefinitionId).IsCreature && c.Damage > 0 && Target.ForObject(c.Id) != target)
+                                    v += DamageValue(s, me, d.Amount, Target.ForObject(c.Id));
+                        break;
+                    case HealOrCountersEffect ho:
+                    {
+                        var c = Creature(s, target);
+                        if (c != null && c.Damage > 0) v += HealValue(s, me, ho.Amount, target);
+                        else v += CreatureOwnerSign(s, me, target) * 2.0 * ho.CountersIfUndamaged;
+                        break;
+                    }
                     case DealDamageToEachOpponentEffect d: v += 0.6 * d.Amount; break;
                     case DealDamageToEachEnemyCreatureEffect d:
                         foreach (var p in s.Players)
@@ -364,18 +389,40 @@ namespace RestartedTavern.Rules.AI
             return v;
         }
 
-        /// <summary>A Curse is worth what its -X/-Y does to the creature it's attached to.</summary>
+        /// <summary>A Curse is worth what its -X/-Y does to the creature it's attached to, plus its other drawbacks.</summary>
         private double CurseValue(GameState s, PlayerId me, CardDefinition curse, Target? target)
         {
             var c = Creature(s, target);
             if (c == null) return 2 * curse.Cost; // a Curse on a player: count it as a normal permanent
-            double v = 0;
-            foreach (var st in curse.Statics.OfType<AttachedCreatureModifier>())
+            int power = 0, health = 0;
+            var asIfAttached = new CardInstance { Controller = me, AttachedToObject = c.Id };
+            foreach (var st in curse.Statics)
             {
-                bool kills = -st.Health >= Stats(s, c).RemainingHealth;
-                v += kills ? Worth(s, c) + 1 : -(st.Power + st.Health) * 0.7;
+                if (st is AttachedCreatureModifier m) { power += m.Power; health += m.Health; }
+                if (st is AttachedScalingModifier sc)
+                {
+                    int n = sc.Count(s, Db, asIfAttached);
+                    power += sc.PowerPer * n;
+                    health += sc.HealthPer * n;
+                }
             }
+            bool kills = -health >= Stats(s, c).RemainingHealth;
+            double v = kills ? Worth(s, c) + 1 : -(power + health) * 0.7;
+            if (curse.Statics.OfType<CantBeHealedAbility>().Any()) v += 1 + 0.3 * c.Damage + 0.1 * Worth(s, c);
+            v += 0.8 * curse.Triggers.Count;
             return c.Controller == me ? -v : v;
+        }
+
+        /// <summary>A DealDamageEffect's amount for this target (Kick 'Em: more if damaged; Fling the Runt: the sacrificed Power).</summary>
+        private static int DamageAmount(GameState s, DealDamageEffect d, Target? target, int x)
+        {
+            if (d.AmountIsSacrificedPower) return x;
+            if (d.AmountIfDamaged.HasValue && target.HasValue && !target.Value.IsPlayer)
+            {
+                var c = s.FindOnBattlefield(target.Value.Object);
+                if (c != null && c.Damage > 0) return d.AmountIfDamaged.Value;
+            }
+            return d.Amount;
         }
 
         private static CardInstance Creature(GameState s, Target? t) =>

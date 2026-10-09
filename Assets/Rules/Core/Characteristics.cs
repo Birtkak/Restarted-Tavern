@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace RestartedTavern.Rules
@@ -37,6 +38,9 @@ namespace RestartedTavern.Rules
 
         /// <summary>Layer 6: activated abilities this gives <paramref name="affected"/>.</summary>
         public virtual List<ActivatedAbility> GrantedAbilities(GameState state, CardInstance source, CardInstance affected) => null;
+
+        /// <summary>"[It] can't be healed" (GAME_DESIGN §11.1): Heal effects remove no damage from <paramref name="affected"/>.</summary>
+        public virtual bool PreventsHealing(GameState state, CardDatabase db, CardInstance source, CardInstance affected) => false;
     }
 
     /// <summary>
@@ -93,8 +97,10 @@ namespace RestartedTavern.Rules
         public Keyword Grants { get; set; }
         public List<TriggeredAbility> Triggers { get; set; } = new List<TriggeredAbility>();
         public List<ActivatedAbility> Abilities { get; set; } = new List<ActivatedAbility>();
+        /// <summary>"Equipped creature can't be dealt more than N damage each turn" (Hardlight Aegis). 0 = no limit.</summary>
+        public int MaxDamageEachTurn { get; set; }
 
-        private static bool Affects(CardInstance source, CardInstance affected) =>
+        internal static bool Affects(CardInstance source, CardInstance affected) =>
             !source.AttachedToObject.IsNone && affected.Id == source.AttachedToObject;
 
         public override Keyword GrantsKeywords(GameState state, CardDatabase db, CardInstance source, CardInstance affected) =>
@@ -113,6 +119,50 @@ namespace RestartedTavern.Rules
 
         public override List<ActivatedAbility> GrantedAbilities(GameState state, CardInstance source, CardInstance affected) =>
             Abilities.Count > 0 && Affects(source, affected) ? Abilities : null;
+    }
+
+    /// <summary>
+    /// "Enchanted creature gets -1/-1 for each creature card in your graveyard (up to -4/-4)" (Hex of
+    /// Hollow Bones). Layer 7c, recomputed all the time. Lowering max Health is a real penalty, so it can kill (§7.3).
+    /// </summary>
+    public sealed class AttachedScalingModifier : StaticAbility
+    {
+        public int PowerPer { get; set; }
+        public int HealthPer { get; set; }
+        /// <summary>How many times to apply PowerPer/HealthPer. Gets the state, the database and the source (the Curse).</summary>
+        public Func<GameState, CardDatabase, CardInstance, int> Count { get; set; }
+
+        public override void ModifyPowerHealth(GameState state, CardDatabase db, CardInstance source, CardInstance affected,
+            Keyword keywords, ref int power, ref int health)
+        {
+            if (!AttachedCreatureModifier.Affects(source, affected)) return;
+            int n = Count(state, db, source);
+            power += PowerPer * n;
+            health += HealthPer * n;
+        }
+    }
+
+    /// <summary>"This gets +1/+0 for each damage on it" (Scarred Veteran).</summary>
+    public sealed class PowerPerDamageAbility : StaticAbility
+    {
+        public override void ModifyPowerHealth(GameState state, CardDatabase db, CardInstance source, CardInstance affected,
+            Keyword keywords, ref int power, ref int health)
+        {
+            if (affected.Id == source.Id) power += affected.Damage;
+        }
+    }
+
+    /// <summary>
+    /// "It can't be healed" on the creature a Curse is attached to (Hex of Festering), or "creatures they
+    /// control can't be healed" for the player a Curse is attached to (Curse of Rot). GAME_DESIGN §11.1.
+    /// </summary>
+    public sealed class CantBeHealedAbility : StaticAbility
+    {
+        public override bool PreventsHealing(GameState state, CardDatabase db, CardInstance source, CardInstance affected)
+        {
+            if (!source.AttachedToObject.IsNone) return affected.Id == source.AttachedToObject;
+            return source.AttachedToPlayer.HasValue && affected.Controller == source.AttachedToPlayer.Value;
+        }
     }
 
     /// <summary>
@@ -233,6 +283,30 @@ namespace RestartedTavern.Rules
         {
             var statics = db.Get(source.DefinitionId).Statics;
             for (int i = 0; i < statics.Count; i++) statics[i].ModifyPowerHealth(state, db, source, card, keywords, ref power, ref health);
+        }
+
+        /// <summary>"Can't be healed" (§11.1): does any permanent stop Heal effects on this creature?</summary>
+        public static bool CantBeHealed(GameState state, CardDatabase db, CardInstance creature)
+        {
+            foreach (var p in state.Players)
+                foreach (var source in p.Battlefield)
+                    foreach (var st in db.Get(source.DefinitionId).Statics)
+                        if (st.PreventsHealing(state, db, source, creature)) return true;
+            return false;
+        }
+
+        /// <summary>"Can't be dealt more than N damage each turn" (Hardlight Aegis): the lowest N, or int.MaxValue.</summary>
+        public static int MaxDamageEachTurn(GameState state, CardDatabase db, CardInstance creature)
+        {
+            int cap = int.MaxValue;
+            foreach (var p in state.Players)
+                foreach (var source in p.Battlefield)
+                {
+                    if (source.AttachedToObject != creature.Id) continue;
+                    foreach (var st in db.Get(source.DefinitionId).Statics)
+                        if (st is AttachedCreatureModifier m && m.MaxDamageEachTurn > 0) cap = Math.Min(cap, m.MaxDamageEachTurn);
+                }
+            return cap;
         }
 
         /// <summary>Is an Equipment attached to this creature?</summary>

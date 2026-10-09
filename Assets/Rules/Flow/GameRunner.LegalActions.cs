@@ -48,7 +48,7 @@ namespace RestartedTavern.Rules
 
                 case DecisionKind.ChooseTriggerTarget:
                     var trigger = S.Pending.Trigger;
-                    foreach (var t in EnumerateTargets(player, trigger.Ability.Target,
+                    foreach (var t in EnumerateTargets(player, trigger.Ability.Slot,
                                  trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None))
                         result.Add(PlayerAction.ChooseTarget(player, t));
                     if (trigger.Ability.TargetOptional) // "you may": decline
@@ -106,9 +106,23 @@ namespace RestartedTavern.Rules
                 bool instant = def.Type == CardType.Instant;
                 if (!instant && !sorcerySpeed) continue;
                 if (!Payment.CanPay(S, Db, p, def)) continue;
+                if (def.ExtraLifeCost > p.Life) continue; // MTG 119.4: you can only pay life you have
 
                 var targetChoices = EnumerateTargetChoices(player, def.SpellTargets);
                 if (targetChoices.Count == 0) continue;
+
+                // "As an extra cost, sacrifice a creature": one action per creature you could sacrifice.
+                var sacrifices = new List<ObjectId>();
+                if (def.SacrificeCreatureCost)
+                {
+                    foreach (var c in p.Battlefield)
+                        if (Def(c).IsCreature) sacrifices.Add(c.Id);
+                    if (sacrifices.Count == 0) continue;
+                }
+                else
+                {
+                    sacrifices.Add(ObjectId.None);
+                }
 
                 bool canInvest = Payment.CanInvest(S, Db, p, def);
                 int goldForCost = Payment.GoldNeeded(S, Db, p, def);
@@ -120,7 +134,14 @@ namespace RestartedTavern.Rules
                         : 0;
                     for (int x = 0; x <= maxX; x++)
                         foreach (var targets in targetChoices)
-                            result.Add(PlayerAction.Play(player, card.Id, targets, invest == 1, x));
+                            foreach (var sacrifice in sacrifices)
+                            {
+                                // Targeting the creature you sacrifice would only make the spell fizzle.
+                                if (!sacrifice.IsNone && Array.IndexOf(targets, Target.ForObject(sacrifice)) >= 0) continue;
+                                var play = PlayerAction.Play(player, card.Id, targets, invest == 1, x);
+                                play.Sacrifice = sacrifice;
+                                result.Add(play);
+                            }
                 }
             }
         }

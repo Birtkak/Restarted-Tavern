@@ -8,17 +8,32 @@ namespace RestartedTavern.Rules
         public int Amount { get; set; }
         /// <summary>"Deal 1 damage to each of up to three target creatures" (Chain Zap).</summary>
         public bool EachTarget { get; set; }
+        /// <summary>"If it was already damaged, deal N instead" (Kick 'Em While They're Down).</summary>
+        public int? AmountIfDamaged { get; set; }
+        /// <summary>"Deal damage equal to its Power": the creature sacrificed as an extra cost (Fling the Runt).</summary>
+        public bool AmountIsSacrificedPower { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
             if (!EachTarget)
             {
                 var t = ctx.TargetAt(TargetIndex);
-                if (t.HasValue) ctx.DealDamage(t.Value, Amount);
+                if (t.HasValue) ctx.DealDamage(t.Value, AmountFor(ctx, t.Value));
                 return;
             }
             foreach (var t in new List<Target?>(ctx.Targets))
-                if (t.HasValue) ctx.DealDamage(t.Value, Amount);
+                if (t.HasValue) ctx.DealDamage(t.Value, AmountFor(ctx, t.Value));
+        }
+
+        public int AmountFor(EffectContext ctx, Target t)
+        {
+            if (AmountIsSacrificedPower) return ctx.SacrificedPower;
+            if (AmountIfDamaged.HasValue && !t.IsPlayer)
+            {
+                var c = ctx.State.FindOnBattlefield(t.Object);
+                if (c != null && c.Damage > 0) return AmountIfDamaged.Value;
+            }
+            return Amount;
         }
     }
 
