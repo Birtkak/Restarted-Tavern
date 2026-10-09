@@ -16,7 +16,9 @@ namespace RestartedTavern.Client
     /// Click a card to show only the actions that involve it; click an action to do it.
     /// Either player can be handed to the GreedyBot. Undo keeps the last 200 states.
     ///
-    /// Command line (for automated checks): -seed N, -bot1, -bot2, -autoplay N (bots play N
+    /// The deck buttons in the top bar pick each seat's deck for the next New game.
+    ///
+    /// Command line (for automated checks): -seed N, -bot1, -bot2, -deck1/-deck2 N, -autoplay N (bots play N
     /// actions at startup), -autoshot path.png (take a screenshot, then quit).
     /// </summary>
     public sealed class DebugTable : MonoBehaviour
@@ -27,7 +29,16 @@ namespace RestartedTavern.Client
         private const int MaxUndo = 200;
         private const int MaxLog = 400;
 
-        private static readonly string[] DeckNames = { "Goober Mob", "Jungle Stampede" };
+        private static readonly string[] DeckNames = { "Goober Mob", "Jungle Stampede", "Zoo Patrol" };
+        private static readonly Func<List<string>>[] Decks =
+        {
+            PrototypeCards.GooberMobDeck, PrototypeCards.JungleStampedeDeck, PrototypeCards.ZooPatrolDeck,
+        };
+
+        /// <summary>Deck choice per seat (index into <see cref="Decks"/>). Applies from the next new game.</summary>
+        private readonly int[] _deckChoice = { 0, 1 };
+        /// <summary>The decks of the game being played (the choice may have changed since).</summary>
+        private readonly int[] _deckInPlay = { 0, 1 };
 
         private GameEngine _engine;
         private GameState _state;
@@ -61,6 +72,8 @@ namespace RestartedTavern.Client
                     case "-seed": ulong.TryParse(next, out _seed); break;
                     case "-bot1": _bot[0] = true; break;
                     case "-bot2": _bot[1] = true; break;
+                    case "-deck1": int.TryParse(next, out _deckChoice[0]); break;
+                    case "-deck2": int.TryParse(next, out _deckChoice[1]); break;
                     case "-autoplay": int.TryParse(next, out _autoplay); break;
                     case "-autoshot": _autoshot = next; break;
                 }
@@ -83,12 +96,14 @@ namespace RestartedTavern.Client
             _undo.Clear();
             _log.Clear();
             _focus = ObjectId.None;
+            _deckInPlay[0] = _deckChoice[0];
+            _deckInPlay[1] = _deckChoice[1];
 
             var events = new List<GameEvent>();
             _state = _engine.CreateGame(FormatConfig.Standard(), new[]
             {
-                new PlayerSetup { Deck = PrototypeCards.GooberMobDeck() },
-                new PlayerSetup { Deck = PrototypeCards.JungleStampedeDeck() },
+                new PlayerSetup { Deck = Decks[_deckChoice[0]]() },
+                new PlayerSetup { Deck = Decks[_deckChoice[1]]() },
             }, seed, events);
             _text.Remember(_state, events);
             AddToLog(events);
@@ -227,6 +242,9 @@ namespace RestartedTavern.Client
             _showAllHands = GUILayout.Toggle(_showAllHands, " Show all hands", GUILayout.Width(125));
             _bot[0] = GUILayout.Toggle(_bot[0], " P1 bot", GUILayout.Width(70));
             _bot[1] = GUILayout.Toggle(_bot[1], " P2 bot", GUILayout.Width(70));
+            for (int seat = 0; seat < 2; seat++)
+                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(150)))
+                    _deckChoice[seat] = (_deckChoice[seat] + 1) % Decks.Length; // used by the next New game
 
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
@@ -261,7 +279,7 @@ namespace RestartedTavern.Client
         {
             var waiting = _engine.WaitingOn(_state);
             string marker = p.Id == _state.ActivePlayer ? ">> " : "";
-            string header = marker + p.Id + " " + DeckNames[p.Seat] + (_bot[p.Seat] ? " (bot)" : "")
+            string header = marker + p.Id + " " + DeckNames[_deckInPlay[p.Seat]] + (_bot[p.Seat] ? " (bot)" : "")
                             + "    Life " + p.Life + "    Mana " + p.Mana + "/" + p.MaxMana + "    Gold " + p.Gold
                             + "    Deck " + p.Deck.Count + "    Hand " + p.Hand.Count + "    Graveyard " + p.Graveyard.Count
                             + (p.HasLost ? "    LOST" : "");

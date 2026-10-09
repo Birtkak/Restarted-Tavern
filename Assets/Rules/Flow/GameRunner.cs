@@ -97,7 +97,7 @@ namespace RestartedTavern.Rules
             }
 
             S.Pending = null;
-            // GAME_DESIGN §3: the second player starts with 1 Gold (1v1 only; 0 in multiplayer formats).
+            // Going-second compensation (§3) is the first-turn mana bonus in EnterStep(Start); these are experiment switches.
             var second = S.Players[(S.StartingPlayerIndex + 1) % S.Players.Count];
             if (S.Format.SecondPlayerStartingGold > 0) ChangeGold(second.Id, S.Format.SecondPlayerStartingGold);
             if (S.Format.SecondPlayerExtraCards > 0) Draw(second.Id, S.Format.SecondPlayerExtraCards);

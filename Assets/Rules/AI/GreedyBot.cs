@@ -34,8 +34,8 @@ namespace RestartedTavern.Rules.AI
                 case DecisionKind.DeclareBlockers: return ChooseBlock(s, me, legal);
                 case DecisionKind.ChooseTriggerTarget:
                 {
-                    var effects = s.Pending.Trigger.Ability.Effects;
-                    return legal.OrderByDescending(a => EffectValue(s, me, effects, a.Target)).First();
+                    var trigger = s.Pending.Trigger;
+                    return legal.OrderByDescending(a => EffectValue(s, me, trigger.Ability.Effects, a.Targets, trigger.SourceId)).First();
                 }
             }
 
@@ -83,32 +83,58 @@ namespace RestartedTavern.Rules.AI
             }
             else
             {
-                value = EffectValue(s, me, def.SpellEffects, a.Target);
+                value = EffectValue(s, me, def.SpellEffects, a.Targets, a.Card);
             }
 
-            if (a.Overcharge) value += EffectValue(s, me, def.OverchargeEffects, a.Target) + 0.1;
+            if (a.Overcharge) value += EffectValue(s, me, def.OverchargeEffects, a.Targets, a.Card) + 0.1;
 
             // Gold is flexible (instant speed); spend mana first when it's our turn.
             if (s.ActivePlayer == me) value -= 0.4 * a.GoldPaid;
             return value;
         }
 
-        /// <summary>How good these effects are for <paramref name="me"/> with this target.</summary>
-        private double EffectValue(GameState s, PlayerId me, List<Effect> effects, Target? target)
+        /// <summary>How good these effects are for <paramref name="me"/> with these targets.</summary>
+        private double EffectValue(GameState s, PlayerId me, List<Effect> effects, IReadOnlyList<Target> targets, ObjectId source)
         {
+            Target? T(int i) => i < targets.Count ? targets[i] : (Target?)null;
+            var pumps = new Dictionary<int, (int power, int health)>(); // "+2/+2, then it fights"
             double v = 0;
             foreach (var e in effects)
             {
+                var target = T(e.TargetIndex);
                 switch (e)
                 {
+                    case DealDamageEffect d when d.EachTarget:
+                        foreach (var t in targets) v += DamageValue(s, me, d.Amount, t);
+                        break;
                     case DealDamageEffect d: v += DamageValue(s, me, d.Amount, target); break;
                     case DealDamageToEachOpponentEffect d: v += 0.6 * d.Amount; break;
+                    case DealDamageToEachEnemyCreatureEffect d:
+                        foreach (var p in s.Players)
+                            if (s.AreOpponents(me, p.Id))
+                                foreach (var c in p.Battlefield)
+                                    if (Db.Get(c.DefinitionId).IsCreature) v += DamageValue(s, me, d.Amount, Target.ForObject(c.Id));
+                        if (d.AlsoOpponents) v += 0.6 * d.Amount;
+                        break;
                     case HealEffect h: v += HealValue(s, me, h.Fully ? 99 : h.Amount, target); break;
+                    case HealOtherCreaturesYouControlEffect h:
+                        foreach (var c in s.GetPlayer(me).Battlefield)
+                            if (c.Id != source && Db.Get(c.DefinitionId).IsCreature) v += HealValue(s, me, h.Fully ? 99 : h.Amount, Target.ForObject(c.Id));
+                        break;
+                    case FightEffect f:
+                        var first = f.SourceFights ? s.FindOnBattlefield(source) : Creature(s, T(f.TargetIndex));
+                        var second = Creature(s, T(f.SourceFights ? f.TargetIndex : f.TargetIndex + 1));
+                        pumps.TryGetValue(f.SourceFights ? -1 : f.TargetIndex, out var bonus);
+                        v += FightValue(s, me, first, second, bonus.power, bonus.health);
+                        break;
                     case DrawCardsEffect d: v += 2.0 * d.Count; break;
                     case GainGoldEffect g: v += 0.5 * g.Amount; break;
                     case CreateTokensEffect t: v += 2.0 * t.Count; break;
                     case AddCountersEffect c: v += CreatureOwnerSign(s, me, target) * 2.0 * c.Count; break;
-                    case PumpTargetEffect pt: v += CreatureOwnerSign(s, me, target) * (pt.Power + pt.Health) * 0.5; break;
+                    case PumpTargetEffect pt:
+                        v += CreatureOwnerSign(s, me, target) * (pt.Power + pt.Health) * 0.5;
+                        pumps[pt.TargetIndex] = (pt.Power, pt.Health);
+                        break;
                     case PumpYourCreaturesEffect pump:
                         // Only worth it right before combat, scaled by how many creatures can attack.
                         if (s.Step == Step.Main1 && s.ActivePlayer == me)
@@ -124,6 +150,26 @@ namespace RestartedTavern.Rules.AI
             }
             return v;
         }
+
+        private static CardInstance Creature(GameState s, Target? t) =>
+            t.HasValue && !t.Value.IsPlayer ? s.FindOnBattlefield(t.Value.Object) : null;
+
+        /// <summary>Value of <paramref name="mine"/> (with a temporary bonus) fighting <paramref name="theirs"/>.</summary>
+        private double FightValue(GameState s, PlayerId me, CardInstance mine, CardInstance theirs, int bonusPower, int bonusHealth)
+        {
+            if (mine == null || theirs == null || mine.Controller != me || theirs.Controller == me) return -1;
+            var a = Stats(s, mine);
+            var b = Stats(s, theirs);
+            int myPower = a.Power + bonusPower, myRemaining = a.RemainingHealth + bonusHealth;
+            bool kills = myPower >= b.RemainingHealth;
+            bool dies = b.Power >= myRemaining;
+            double gain = kills ? Worth(s, theirs) + 1 : 0.4 * myPower;     // wounds stick (§7.3)
+            double loss = dies ? Worth(s, mine) : 0.4 * b.Power;
+            return gain - loss;
+        }
+
+        private double Worth(GameState s, CardInstance c) =>
+            2 * Db.Get(c.DefinitionId).Cost + Stats(s, c).Power + (c.IsToken ? -1 : 0);
 
         private double CreatureOwnerSign(GameState s, PlayerId me, Target? target)
         {
@@ -144,10 +190,9 @@ namespace RestartedTavern.Rules.AI
             }
             var c = s.FindOnBattlefield(t.Object);
             if (c == null) return 0;
-            var def = Db.Get(c.DefinitionId);
             var st = Stats(s, c);
             bool kills = amount >= st.RemainingHealth;
-            double worth = 2 * def.Cost + st.Power + (c.IsToken ? -1 : 0);
+            double worth = Worth(s, c);
             if (c.Controller == me) return kills ? -worth - 2 : -amount;
             // Chip damage sticks (§7.3), so it has some value even when it doesn't kill.
             return kills ? worth + 1 : 0.4 * amount;

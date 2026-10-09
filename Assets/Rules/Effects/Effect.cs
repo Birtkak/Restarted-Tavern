@@ -9,6 +9,9 @@ namespace RestartedTavern.Rules
     /// </summary>
     public abstract class Effect
     {
+        /// <summary>Which of the spell's targets this effect uses (0 = the first "target").</summary>
+        public int TargetIndex { get; set; }
+
         public abstract void Resolve(EffectContext ctx);
     }
 
@@ -17,7 +20,7 @@ namespace RestartedTavern.Rules
     {
         private readonly GameRunner _runner;
 
-        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target> targets)
+        internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets)
         {
             _runner = runner;
             Controller = controller;
@@ -30,8 +33,17 @@ namespace RestartedTavern.Rules
         public PlayerId Controller { get; }
         /// <summary>The spell or the permanent the ability came from (it may have left the battlefield).</summary>
         public ObjectId Source { get; }
-        public IReadOnlyList<Target> Targets { get; }
-        public Target? Target => Targets.Count > 0 ? Targets[0] : (Target?)null;
+        /// <summary>Chosen targets in slot order; null where a target became illegal (MTG 608.2b).</summary>
+        public IReadOnlyList<Target?> Targets { get; }
+        public Target? Target => TargetAt(0);
+        public Target? TargetAt(int index) => index >= 0 && index < Targets.Count ? Targets[index] : null;
+
+        /// <summary>A creature target that is still on the battlefield, or null.</summary>
+        public CardInstance CreatureAt(int index)
+        {
+            var t = TargetAt(index);
+            return t.HasValue && !t.Value.IsPlayer ? State.FindOnBattlefield(t.Value.Object) : null;
+        }
 
         public void DealDamage(Target target, int amount) => _runner.DealDamage(Source, target, amount, false);
         public void Heal(Target target, int amount) => _runner.Heal(target, amount);
@@ -41,6 +53,8 @@ namespace RestartedTavern.Rules
         public CardInstance CreateToken(PlayerId controller, string definitionId) => _runner.CreateToken(controller, definitionId);
         public void AddCounters(ObjectId creature, int count) => _runner.AddCounters(creature, count);
 
+        public void Fight(CardInstance a, CardInstance b) => _runner.Fight(a, b);
+
         public void ModifyUntilEndOfTurn(ObjectId creature, int power, int health, Keyword grants) =>
             _runner.ModifyUntilEndOfTurn(creature, power, health, grants);
 
@@ -48,6 +62,16 @@ namespace RestartedTavern.Rules
         {
             foreach (var p in State.LivingPlayersFrom(Controller))
                 if (State.AreOpponents(Controller, p.Id)) yield return p;
+        }
+
+        /// <summary>Creatures controlled by opponents, as a snapshot (safe to damage while iterating).</summary>
+        public List<CardInstance> EnemyCreatures()
+        {
+            var list = new List<CardInstance>();
+            foreach (var p in Opponents())
+                foreach (var c in p.Battlefield)
+                    if (Cards.Get(c.DefinitionId).IsCreature) list.Add(c);
+            return list;
         }
 
         public Characteristics GetCharacteristics(CardInstance card) =>

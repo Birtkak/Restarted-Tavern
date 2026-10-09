@@ -32,7 +32,7 @@ This game only **deviates** from MTG in these areas:
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
 | *Deck identity* | Colors (Commander uses a command zone) | A **Patron** in the Patron zone sets the factions and acts as the player's face, with a Gold-paid Power (§9). It works like a commander that never enters the battlefield |
-| *Going second* | Only the first player skips their draw | Also, in 1v1 the second player starts with 1 Gold (this is part of the mana system) |
+| *Going second* | Only the first player skips their draw | Also, in 1v1 the second player has **+1 mana on their first turn** |
 
 Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
 
@@ -64,7 +64,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Maximum hand size | 7 (discard down to 7 at the end of your turn) | 🔒 |
 | Mulligan | **London mulligan**: shuffle and draw 7, then put 1 card on the bottom for each mulligan taken | 🔒 |
 | Who goes first | Random | 🟡 |
-| Going-second compensation | The first player skips their turn-1 draw; the second player starts with **1 Gold** | 🔒 |
+| Going-second compensation | The first player skips their turn-1 draw; the second player has **+1 mana on their first turn** (2 instead of 1; unspent, it becomes Gold as usual). This replaced "starts with 1 Gold" on 2026-10-09 after bot simulations (playtest/PLAYTEST.md): Gold can't pay for creatures, so it barely helped | 🔒 |
 
 ---
 
@@ -109,7 +109,7 @@ Unused mana is not lost.
 - It removes the bad feeling of "I held up mana for a trick and the opponent didn't attack". The mana is banked instead of wasted.
 - It creates a real choice each turn: develop the board now, or bank for reactions later.
 - It works naturally in multiplayer: Gold is how you interact on other players' turns.
-- It gives a clean way to compensate the player who goes second (start with 1 Gold).
+- ~~It gives a clean way to compensate the player who goes second (start with 1 Gold).~~ Simulations showed starting Gold barely helps, because Gold can't buy creatures. The second player gets first-turn mana instead (§3).
 
 **Alternatives considered**
 - **B. Gold can pay for anything, but converts at a 2:1 ratio.** Simpler, but it turns into generic ramp.
@@ -291,6 +291,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-09 | **Going second**: the 1 starting Gold is replaced by **+1 mana on the second player's first turn** (§3). In bot mirrors the first-player win rate dropped from 73–67% to 66–60%. Next card work: more Glitterworld and Wild cards (pings, fights), so permanent damage shows up in tests. |
 | 2026-10-09 | **Losing a buff can't kill** (§7.3): when a Health buff ends, damage is capped so the creature keeps 1 Health. This deviates from MTG. |
 | 2026-10-09 | Tech: Unity 6000.6.4f1 + C#, PC (Windows) first, local first with online later. The rules engine is a Unity assembly with no engine references (DEVELOPMENT §0). |
 | 2026-10-09 | **First set v0.1 complete**: 5 factions × 20 cards, 10 Neutral cards, 10 Patrons (docs/cards/). |

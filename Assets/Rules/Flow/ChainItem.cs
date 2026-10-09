@@ -25,8 +25,11 @@ namespace RestartedTavern.Rules
         public ObjectId SourceId { get; set; }
         public string SourceDefinitionId { get; set; }
 
-        public TargetSpec TargetSpec { get; set; }
+        /// <summary>What each chosen target had to be. Targets[i] was chosen for TargetSlots[i].</summary>
+        public List<TargetSlot> TargetSlots { get; set; } = new List<TargetSlot>();
         public List<Target> Targets { get; set; } = new List<Target>();
+        /// <summary>The source can't be its own target ("another creature").</summary>
+        public bool TargetsExcludeSource { get; set; }
 
         /// <summary>Shared, immutable references into the card definition.</summary>
         public List<Effect> Effects { get; set; } = new List<Effect>();

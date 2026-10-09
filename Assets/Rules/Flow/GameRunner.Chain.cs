@@ -78,16 +78,16 @@ namespace RestartedTavern.Rules
                 Card = onChain,
                 SourceId = onChain.Id,
                 SourceDefinitionId = def.Id,
-                TargetSpec = def.SpellTarget,
+                TargetSlots = def.SpellTargets,
                 Effects = effects,
                 Overcharged = a.Overcharge,
             };
-            if (a.Target.HasValue) item.Targets.Add(a.Target.Value);
+            item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
 
             Emit(new SpellCastEvent
             {
-                Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Target = a.Target,
+                Player = a.Player, Card = onChain.Id, DefinitionId = def.Id, Targets = a.Targets,
                 ManaPaid = manaPaid, GoldPaid = goldPaid, Overcharged = a.Overcharge,
             });
 
@@ -100,9 +100,18 @@ namespace RestartedTavern.Rules
             var item = S.Chain[S.Chain.Count - 1];
             S.Chain.RemoveAt(S.Chain.Count - 1);
 
-            // §8 / MTG 608.2b: a spell or ability whose target is no longer legal fizzles.
-            if (item.TargetSpec != TargetSpec.None &&
-                (item.Targets.Count == 0 || !IsLegalTarget(item.Controller, item.TargetSpec, item.Targets[0])))
+            // §8 / MTG 608.2b: targets that became illegal are ignored; if every target is
+            // illegal, the spell or ability fizzles and does nothing.
+            var targets = new List<Target?>(item.Targets.Count);
+            bool anyLegal = false;
+            var excluded = item.TargetsExcludeSource ? item.SourceId : ObjectId.None;
+            for (int i = 0; i < item.Targets.Count; i++)
+            {
+                bool legal = IsLegalTarget(item.Controller, item.TargetSlots[i].Spec, item.Targets[i], excluded);
+                targets.Add(legal ? item.Targets[i] : (Target?)null);
+                anyLegal |= legal;
+            }
+            if (item.Targets.Count > 0 && !anyLegal)
             {
                 Emit(new FizzledEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
                 if (item.Card != null) MoveCard(item.Card, Zone.Graveyard);
@@ -115,30 +124,31 @@ namespace RestartedTavern.Rules
                 if (def.IsPermanent)
                 {
                     var permanent = MoveCard(item.Card, Zone.Battlefield, item.Controller);
-                    if (def.Type == CardType.Curse && item.Targets.Count > 0)
+                    if (def.Type == CardType.Curse && targets.Count > 0 && targets[0].HasValue)
                     {
-                        var t = item.Targets[0];
+                        var t = targets[0].Value;
                         if (t.IsPlayer) permanent.AttachedToPlayer = t.Player;
                         else permanent.AttachedToObject = t.Object;
                     }
                     if (item.Overcharged)
-                        RunEffects(def.OverchargeEffects, item.Controller, permanent.Id, item.Targets);
+                        RunEffects(def.OverchargeEffects, item.Controller, permanent.Id, targets);
                 }
                 else
                 {
-                    RunEffects(item.Effects, item.Controller, item.SourceId, item.Targets);
+                    RunEffects(item.Effects, item.Controller, item.SourceId, targets);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
             else
             {
-                RunEffects(item.Effects, item.Controller, item.SourceId, item.Targets);
+                RunEffects(item.Effects, item.Controller, item.SourceId, targets);
             }
 
             Emit(new ChainItemResolvedEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
         }
 
-        private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target> targets)
+        /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
+        private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets)
         {
             var ctx = new EffectContext(this, controller, source, targets);
             foreach (var e in effects)
@@ -193,7 +203,8 @@ namespace RestartedTavern.Rules
 
                 if (trigger.Ability.Target != TargetSpec.None)
                 {
-                    var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Target);
+                    var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Target,
+                        trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None);
                     if (targets.Count == 0) continue; // MTG 603.3d: no legal target → removed
                     if (targets.Count > 1)
                     {
@@ -231,9 +242,10 @@ namespace RestartedTavern.Rules
                 Controller = t.Controller,
                 SourceId = t.SourceId,
                 SourceDefinitionId = t.SourceDefinitionId,
-                TargetSpec = t.Ability.Target,
                 Effects = t.Ability.Effects,
+                TargetsExcludeSource = t.Ability.TargetNotSelf,
             };
+            if (t.Ability.Target != TargetSpec.None) item.TargetSlots.Add(TargetSlot.Of(t.Ability.Target));
             if (target.HasValue) item.Targets.Add(target.Value);
             S.Chain.Add(item);
             Emit(new AbilityTriggeredEvent
@@ -251,7 +263,8 @@ namespace RestartedTavern.Rules
 
         // ------------------------------------------------------------------ targeting
 
-        internal List<Target> EnumerateTargets(PlayerId controller, TargetSpec spec)
+        /// <summary>Every legal choice for one target slot. <paramref name="exclude"/>: an object that can't be chosen ("another creature").</summary>
+        internal List<Target> EnumerateTargets(PlayerId controller, TargetSpec spec, ObjectId exclude = default)
         {
             var result = new List<Target>();
             if (spec == TargetSpec.None) return result;
@@ -279,7 +292,7 @@ namespace RestartedTavern.Rules
             {
                 foreach (var c in p.Battlefield)
                 {
-                    if (!Def(c).IsCreature) continue;
+                    if (!Def(c).IsCreature || c.Id == exclude) continue;
                     bool ok;
                     switch (spec)
                     {
@@ -302,7 +315,41 @@ namespace RestartedTavern.Rules
             return result;
         }
 
-        private bool IsLegalTarget(PlayerId controller, TargetSpec spec, Target target) =>
-            EnumerateTargets(controller, spec).Contains(target);
+        private bool IsLegalTarget(PlayerId controller, TargetSpec spec, Target target, ObjectId exclude = default) =>
+            EnumerateTargets(controller, spec, exclude).Contains(target);
+
+        /// <summary>
+        /// Every way to fill a spell's target slots (distinct targets; optional slots may stay empty).
+        /// Slots with the same spec are filled in enumeration order, so {A,B} and {B,A} aren't both listed.
+        /// No slots: one empty choice. A required slot without candidates: no choices.
+        /// </summary>
+        internal List<Target[]> EnumerateTargetChoices(PlayerId controller, List<TargetSlot> slots)
+        {
+            var result = new List<Target[]>();
+            var chosen = new List<Target>();
+            var candidates = new List<List<Target>>();
+            foreach (var slot in slots) candidates.Add(EnumerateTargets(controller, slot.Spec));
+            Fill(0, -1);
+            return result;
+
+            void Fill(int slot, int previousIndex)
+            {
+                if (slot == slots.Count)
+                {
+                    result.Add(chosen.ToArray());
+                    return;
+                }
+                if (slots[slot].Optional) result.Add(chosen.ToArray()); // stop here: later optional slots stay empty
+                bool sameAsPrevious = slot > 0 && slots[slot].Spec == slots[slot - 1].Spec;
+                var options = candidates[slot];
+                for (int i = sameAsPrevious ? previousIndex + 1 : 0; i < options.Count; i++)
+                {
+                    if (chosen.Contains(options[i])) continue;
+                    chosen.Add(options[i]);
+                    Fill(slot + 1, i);
+                    chosen.RemoveAt(chosen.Count - 1);
+                }
+            }
+        }
     }
 }

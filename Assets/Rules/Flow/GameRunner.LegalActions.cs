@@ -42,7 +42,9 @@ namespace RestartedTavern.Rules
                     break;
 
                 case DecisionKind.ChooseTriggerTarget:
-                    foreach (var t in EnumerateTargets(player, S.Pending.Trigger.Ability.Target))
+                    var trigger = S.Pending.Trigger;
+                    foreach (var t in EnumerateTargets(player, trigger.Ability.Target,
+                                 trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None))
                         result.Add(PlayerAction.ChooseTarget(player, t));
                     break;
 
@@ -95,8 +97,8 @@ namespace RestartedTavern.Rules
                 bool instant = def.Type == CardType.Instant;
                 if (!instant && !sorcerySpeed) continue;
 
-                var targets = def.SpellTarget == TargetSpec.None ? null : EnumerateTargets(player, def.SpellTarget);
-                if (targets != null && targets.Count == 0) continue;
+                var targetChoices = EnumerateTargetChoices(player, def.SpellTargets);
+                if (targetChoices.Count == 0) continue;
 
                 int maxGold = instant ? Math.Min(p.Gold, def.Cost) : 0;
                 for (int gold = 0; gold <= maxGold; gold++)
@@ -104,17 +106,8 @@ namespace RestartedTavern.Rules
                     if (def.Cost - gold > p.Mana) continue;
                     bool canOvercharge = def.OverchargeCost.HasValue && p.Gold - gold >= def.OverchargeCost.Value;
                     for (int oc = 0; oc <= (canOvercharge ? 1 : 0); oc++)
-                    {
-                        if (targets == null)
-                        {
-                            result.Add(PlayerAction.Play(player, card.Id, null, gold, oc == 1));
-                        }
-                        else
-                        {
-                            foreach (var t in targets)
-                                result.Add(PlayerAction.Play(player, card.Id, t, gold, oc == 1));
-                        }
-                    }
+                        foreach (var targets in targetChoices)
+                            result.Add(PlayerAction.Play(player, card.Id, targets, gold, oc == 1));
                 }
             }
         }

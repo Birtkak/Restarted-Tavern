@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RestartedTavern.Rules
@@ -126,10 +127,11 @@ namespace RestartedTavern.Rules
                 case ActionKind.PlayCard:
                 {
                     var sb = new StringBuilder("Play ").Append(Name(state, a.Card));
-                    if (a.Target.HasValue) sb.Append(" -> ").Append(Name(state, a.Target.Value));
-                    if (a.Target.HasValue && !a.Target.Value.IsPlayer)
+                    for (int i = 0; i < a.Targets.Length; i++)
                     {
-                        var t = state.FindObject(a.Target.Value.Object);
+                        var target = a.Targets[i];
+                        sb.Append(i == 0 ? " -> " : ", ").Append(Name(state, target));
+                        var t = target.IsPlayer ? null : state.FindObject(target.Object);
                         if (t != null) sb.Append(" (").Append(t.Controller).Append(')');
                     }
                     if (a.GoldPaid > 0) sb.Append("  [").Append(a.GoldPaid).Append(" Gold]");
@@ -150,7 +152,7 @@ namespace RestartedTavern.Rules
                     return viewer == null || viewer == d.Player ? d.Player + " draws " + Name(d.DefinitionId) : d.Player + " draws a card";
                 case SpellCastEvent s:
                     return s.Player + " casts " + Name(s.DefinitionId)
-                           + (s.Target.HasValue ? " -> " + Name(state, s.Target.Value) : "")
+                           + (s.Targets != null && s.Targets.Length > 0 ? " -> " + string.Join(", ", s.Targets.Select(t => Name(state, t))) : "")
                            + (s.Overcharged ? " (Overcharged)" : "");
                 case AbilityTriggeredEvent t:
                     return Name(t.SourceDefinitionId) + " triggers (" + t.When + ")"

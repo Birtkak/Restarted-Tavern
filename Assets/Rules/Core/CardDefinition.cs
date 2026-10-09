@@ -23,8 +23,15 @@ namespace RestartedTavern.Rules
         public string Text { get; set; } = "";
         public bool IsToken { get; set; }
 
-        /// <summary>Target for an Instant/Sorcery (or the attach target of a Curse).</summary>
-        public TargetSpec SpellTarget { get; set; } = TargetSpec.None;
+        /// <summary>Targets of an Instant/Sorcery (or the attach target of a Curse), in text order.</summary>
+        public List<TargetSlot> SpellTargets { get; set; } = new List<TargetSlot>();
+
+        /// <summary>Shorthand for a spell with exactly one required target.</summary>
+        public TargetSpec SpellTarget
+        {
+            get => SpellTargets.Count > 0 ? SpellTargets[0].Spec : TargetSpec.None;
+            set => SpellTargets = value == TargetSpec.None ? new List<TargetSlot>() : new List<TargetSlot> { TargetSlot.Of(value) };
+        }
         /// <summary>What an Instant or Sorcery does when it resolves.</summary>
         public List<Effect> SpellEffects { get; set; } = new List<Effect>();
 
@@ -68,6 +75,8 @@ namespace RestartedTavern.Rules
     {
         public TriggerEvent When { get; set; }
         public TargetSpec Target { get; set; } = TargetSpec.None;
+        /// <summary>"another creature": the source itself can't be the target.</summary>
+        public bool TargetNotSelf { get; set; }
         public List<Effect> Effects { get; set; } = new List<Effect>();
         public string Text { get; set; } = "";
     }

@@ -19,17 +19,17 @@ namespace RestartedTavern.Rules
         /// <summary>1v1: the first player skips their turn-1 draw (§3). Multiplayer: everyone draws (§13).</summary>
         public bool FirstPlayerSkipsDraw { get; set; } = true;
 
-        /// <summary>1v1: the second player starts with 1 Gold (§3). Multiplayer: no compensation (§13).</summary>
-        public int SecondPlayerStartingGold { get; set; } = 1;
+        /// <summary>Gold the second player starts with. 0 since 2026-10-09 (replaced by the first-turn mana bonus); kept for experiments.</summary>
+        public int SecondPlayerStartingGold { get; set; }
 
         /// <summary>Experiment switch (going-second compensation): extra cards the second player draws before the first turn.</summary>
         public int SecondPlayerExtraCards { get; set; }
 
         /// <summary>
-        /// Experiment switch (going-second compensation, like Hearthstone's Coin): extra mana for the
-        /// second player's first turn only. Unspent, it becomes Gold as usual.
+        /// 1v1 (§3): the second player has +1 mana on their first turn only (like Hearthstone's Coin).
+        /// Unspent, it becomes Gold as usual. Multiplayer: no compensation (§13).
         /// </summary>
-        public int SecondPlayerFirstTurnBonusMana { get; set; }
+        public int SecondPlayerFirstTurnBonusMana { get; set; } = 1;
 
         /// <summary>
         /// Experiment switch, not a real rule: when true, damage on creatures is removed in the
@@ -49,7 +49,7 @@ namespace RestartedTavern.Rules
             MaxPlayers = 4,
             StartingLife = 40,
             FirstPlayerSkipsDraw = false,
-            SecondPlayerStartingGold = 0,
+            SecondPlayerFirstTurnBonusMana = 0,
         };
 
         public FormatConfig Clone() => (FormatConfig)MemberwiseClone();

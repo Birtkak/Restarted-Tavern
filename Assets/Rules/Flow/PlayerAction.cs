@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 
 namespace RestartedTavern.Rules
@@ -33,7 +34,10 @@ namespace RestartedTavern.Rules
         public ObjectId BlockedAttacker { get; set; }
         /// <summary>DeclareAttacker: the player being attacked.</summary>
         public PlayerId Defender { get; set; }
-        public Target? Target { get; set; }
+        /// <summary>Chosen targets, in the order of the card's target slots. Empty when there are none.</summary>
+        public Target[] Targets { get; set; } = Array.Empty<Target>();
+        /// <summary>The first target, if any.</summary>
+        public Target? Target => Targets.Length > 0 ? Targets[0] : (Target?)null;
         /// <summary>PlayCard (Instants): how much of the cost is paid with Gold instead of mana.</summary>
         public int GoldPaid { get; set; }
         /// <summary>PlayCard: also pay the Overcharge cost (Gold only).</summary>
@@ -46,10 +50,13 @@ namespace RestartedTavern.Rules
         public static PlayerAction Discard(PlayerId p, ObjectId card) => new PlayerAction { Kind = ActionKind.Discard, Player = p, Card = card };
         public static PlayerAction FinishAttacks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishAttacks, Player = p };
         public static PlayerAction FinishBlocks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishBlocks, Player = p };
-        public static PlayerAction ChooseTarget(PlayerId p, Target t) => new PlayerAction { Kind = ActionKind.ChooseTarget, Player = p, Target = t };
+        public static PlayerAction ChooseTarget(PlayerId p, Target t) => new PlayerAction { Kind = ActionKind.ChooseTarget, Player = p, Targets = new[] { t } };
 
         public static PlayerAction Play(PlayerId p, ObjectId card, Target? target = null, int goldPaid = 0, bool overcharge = false) =>
-            new PlayerAction { Kind = ActionKind.PlayCard, Player = p, Card = card, Target = target, GoldPaid = goldPaid, Overcharge = overcharge };
+            Play(p, card, target.HasValue ? new[] { target.Value } : Array.Empty<Target>(), goldPaid, overcharge);
+
+        public static PlayerAction Play(PlayerId p, ObjectId card, Target[] targets, int goldPaid = 0, bool overcharge = false) =>
+            new PlayerAction { Kind = ActionKind.PlayCard, Player = p, Card = card, Targets = targets, GoldPaid = goldPaid, Overcharge = overcharge };
 
         public static PlayerAction Attack(PlayerId p, ObjectId attacker, PlayerId defender) =>
             new PlayerAction { Kind = ActionKind.DeclareAttacker, Player = p, Card = attacker, Defender = defender };
@@ -62,7 +69,7 @@ namespace RestartedTavern.Rules
             if (other is null) return false;
             return Kind == other.Kind && Player == other.Player && Card == other.Card
                 && BlockedAttacker == other.BlockedAttacker && Defender == other.Defender
-                && Nullable.Equals(Target, other.Target) && GoldPaid == other.GoldPaid
+                && Targets.SequenceEqual(other.Targets) && GoldPaid == other.GoldPaid
                 && Overcharge == other.Overcharge;
         }
 
@@ -77,7 +84,7 @@ namespace RestartedTavern.Rules
                 h = h * 31 + Card.Value;
                 h = h * 31 + BlockedAttacker.Value;
                 h = h * 31 + Defender.Value;
-                h = h * 31 + (Target?.GetHashCode() ?? 0);
+                foreach (var t in Targets) h = h * 31 + t.GetHashCode();
                 h = h * 31 + GoldPaid;
                 h = h * 31 + (Overcharge ? 1 : 0);
                 return h;
@@ -91,7 +98,7 @@ namespace RestartedTavern.Rules
             if (!Card.IsNone) sb.Append(' ').Append(Card);
             if (Kind == ActionKind.DeclareAttacker) sb.Append(" -> ").Append(Defender);
             if (Kind == ActionKind.DeclareBlocker) sb.Append(" blocks ").Append(BlockedAttacker);
-            if (Target.HasValue) sb.Append(" @").Append(Target.Value);
+            if (Targets.Length > 0) sb.Append(" @").Append(string.Join(",", Targets));
             if (GoldPaid > 0) sb.Append(" gold=").Append(GoldPaid);
             if (Overcharge) sb.Append(" overcharge");
             return sb.ToString();

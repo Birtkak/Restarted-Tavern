@@ -22,11 +22,13 @@ namespace RestartedTavern.Rules.AI
 
         private const string Goobers = "Goober Mob";
         private const string Jungle = "Jungle Stampede";
+        private const string Zoo = "Zoo Patrol";
 
         public static List<Section> Build(int games)
         {
             var g = PrototypeCards.GooberMobDeck();
             var j = PrototypeCards.JungleStampedeDeck();
+            var z = PrototypeCards.ZooPatrolDeck();
             var sections = new List<Section>();
 
             MatchConfig M(string name, string an, List<string> a, string bn, List<string> b, Action<FormatConfig> tweak = null)
@@ -44,23 +46,25 @@ namespace RestartedTavern.Rules.AI
             baseline.Configs.Add(M("Goober Mob vs Jungle Stampede", Goobers, g, Jungle, j));
             baseline.Configs.Add(M("Goober Mob mirror", Goobers, g, Goobers, g));
             baseline.Configs.Add(M("Jungle Stampede mirror", Jungle, j, Jungle, j));
+            baseline.Configs.Add(M("Zoo Patrol vs Goober Mob", Zoo, z, Goobers, g));
+            baseline.Configs.Add(M("Zoo Patrol vs Jungle Stampede", Zoo, z, Jungle, j));
+            baseline.Configs.Add(M("Zoo Patrol mirror", Zoo, z, Zoo, z));
             sections.Add(baseline);
 
             var second = new Section
             {
                 Title = "Going-second compensation (GAME_DESIGN §3)",
                 Question = "How much should going second be compensated? Look at the first-player win rate in mirrors (50% is fair). "
-                           + "Current rule: the first player skips their first draw, and the second player starts with 1 Gold.",
+                           + "Current rule (since 2026-10-09): the first player skips their first draw, and the second player has +1 mana on their first turn.",
             };
             var options = new (string label, Action<FormatConfig> tweak)[]
             {
-                ("no compensation besides the draw skip", f => f.SecondPlayerStartingGold = 0),
-                ("1 Gold (current rule)", f => { }),
-                ("2 Gold", f => f.SecondPlayerStartingGold = 2),
-                ("+1 card, no Gold", f => { f.SecondPlayerStartingGold = 0; f.SecondPlayerExtraCards = 1; }),
-                ("+1 card and 1 Gold", f => f.SecondPlayerExtraCards = 1),
-                ("+1 mana on first turn (Coin), no Gold", f => { f.SecondPlayerStartingGold = 0; f.SecondPlayerFirstTurnBonusMana = 1; }),
-                ("+1 card and +1 mana on first turn", f => { f.SecondPlayerStartingGold = 0; f.SecondPlayerExtraCards = 1; f.SecondPlayerFirstTurnBonusMana = 1; }),
+                ("no compensation besides the draw skip", f => f.SecondPlayerFirstTurnBonusMana = 0),
+                ("1 starting Gold (old rule)", f => { f.SecondPlayerFirstTurnBonusMana = 0; f.SecondPlayerStartingGold = 1; }),
+                ("+1 mana on first turn (current rule)", f => { }),
+                ("+1 mana on first turn and 1 Gold", f => f.SecondPlayerStartingGold = 1),
+                ("+2 mana on first turn", f => f.SecondPlayerFirstTurnBonusMana = 2),
+                ("+1 card and +1 mana on first turn", f => f.SecondPlayerExtraCards = 1),
             };
             foreach (var (label, tweak) in options)
             {
@@ -89,6 +93,8 @@ namespace RestartedTavern.Rules.AI
                 damage.Configs.Add(M("Goober Mob vs Jungle Stampede, " + label, Goobers, g, Jungle, j, f => f.DamageWearsOff = wearsOff));
                 damage.Configs.Add(M("Goober mirror, " + label, Goobers, g, Goobers, g, f => f.DamageWearsOff = wearsOff));
                 damage.Configs.Add(M("Jungle mirror, " + label, Jungle, j, Jungle, j, f => f.DamageWearsOff = wearsOff));
+                damage.Configs.Add(M("Zoo Patrol vs Jungle Stampede, " + label, Zoo, z, Jungle, j, f => f.DamageWearsOff = wearsOff));
+                damage.Configs.Add(M("Zoo Patrol mirror, " + label, Zoo, z, Zoo, z, f => f.DamageWearsOff = wearsOff));
             }
             sections.Add(damage);
             return sections;

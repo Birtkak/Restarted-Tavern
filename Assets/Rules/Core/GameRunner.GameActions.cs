@@ -133,6 +133,19 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
+        /// Fight (§11.1): each creature deals damage equal to its Power to the other, at the same
+        /// time. Not combat, so no Trample. If either isn't on the battlefield, nothing happens (MTG 701.14b).
+        /// </summary>
+        internal void Fight(CardInstance a, CardInstance b)
+        {
+            if (a == null || b == null || a.Id == b.Id) return;
+            if (S.FindOnBattlefield(a.Id) == null || S.FindOnBattlefield(b.Id) == null) return;
+            int powerA = Stats(a).Power, powerB = Stats(b).Power;
+            DealDamage(a.Id, Target.ForObject(b.Id), powerA, false);
+            DealDamage(b.Id, Target.ForObject(a.Id), powerB, false);
+        }
+
+        /// <summary>
         /// Heal X (§11.1): remove up to X damage from a creature, or restore a player's life up
         /// to the starting life total.
         /// </summary>

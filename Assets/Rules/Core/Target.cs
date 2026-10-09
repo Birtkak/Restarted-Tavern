@@ -2,7 +2,7 @@ using System;
 
 namespace RestartedTavern.Rules
 {
-    /// <summary>What a spell or ability may target. One target per spell/ability for now.</summary>
+    /// <summary>What a spell or ability may target.</summary>
     public enum TargetSpec
     {
         None,
@@ -17,6 +17,19 @@ namespace RestartedTavern.Rules
         Opponent,
         /// <summary>Curses: an enemy creature or an opponent (GAME_DESIGN §10).</summary>
         EnemyCreatureOrOpponent,
+    }
+
+    /// <summary>
+    /// One "target" in a card's text. A spell can have several (Primal Clash: "target creature you
+    /// control fights target creature you don't control"). The same object can't be chosen twice.
+    /// Optional slots ("up to three target creatures") must come last.
+    /// </summary>
+    public sealed class TargetSlot
+    {
+        public TargetSpec Spec { get; set; }
+        public bool Optional { get; set; }
+
+        public static TargetSlot Of(TargetSpec spec, bool optional = false) => new TargetSlot { Spec = spec, Optional = optional };
     }
 
     /// <summary>A chosen target: either a player or a game object.</summary>

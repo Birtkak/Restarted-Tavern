@@ -30,6 +30,7 @@ namespace RestartedTavern.Rules.Tests
             var target = g.AddToBattlefield(g.Other, "hired_sellsword", damage: 1); // 2/3, 2 left
             var snot = g.AddToHand(g.Active, "spark_snot");
             var remedy = g.AddToHand(g.Other, "jungle_remedy");
+            g.P(g.Other).Gold = 1;
 
             g.Do(PlayerAction.Play(g.Active, snot.Id, Target.ForObject(target.Id)));
             g.Pass(); // active passes, other may respond

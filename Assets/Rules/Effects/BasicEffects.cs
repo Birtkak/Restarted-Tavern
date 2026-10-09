@@ -2,14 +2,23 @@ using System.Collections.Generic;
 
 namespace RestartedTavern.Rules
 {
-    /// <summary>"Deal N damage to [the target]." Damage is permanent (GAME_DESIGN §7.3).</summary>
+    /// <summary>"Deal N damage to [target]", or to each chosen target. Damage is permanent (GAME_DESIGN §7.3).</summary>
     public sealed class DealDamageEffect : Effect
     {
         public int Amount { get; set; }
+        /// <summary>"Deal 1 damage to each of up to three target creatures" (Chain Zap).</summary>
+        public bool EachTarget { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
-            if (ctx.Target.HasValue) ctx.DealDamage(ctx.Target.Value, Amount);
+            if (!EachTarget)
+            {
+                var t = ctx.TargetAt(TargetIndex);
+                if (t.HasValue) ctx.DealDamage(t.Value, Amount);
+                return;
+            }
+            foreach (var t in new List<Target?>(ctx.Targets))
+                if (t.HasValue) ctx.DealDamage(t.Value, Amount);
         }
     }
 
@@ -21,11 +30,27 @@ namespace RestartedTavern.Rules
         public override void Resolve(EffectContext ctx)
         {
             foreach (var p in new List<PlayerState>(ctx.Opponents()))
-                ctx.DealDamage(Rules.Target.ForPlayer(p.Id), Amount);
+                ctx.DealDamage(Target.ForPlayer(p.Id), Amount);
         }
     }
 
-    /// <summary>"Heal N from [the target]" (GAME_DESIGN §11.1).</summary>
+    /// <summary>"Deal N damage to each enemy creature [and each opponent]" (Riot Suppressor, Orbital Strike Network).</summary>
+    public sealed class DealDamageToEachEnemyCreatureEffect : Effect
+    {
+        public int Amount { get; set; }
+        public bool AlsoOpponents { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            foreach (var c in ctx.EnemyCreatures())
+                ctx.DealDamage(Target.ForObject(c.Id), Amount);
+            if (AlsoOpponents)
+                foreach (var p in new List<PlayerState>(ctx.Opponents()))
+                    ctx.DealDamage(Target.ForPlayer(p.Id), Amount);
+        }
+    }
+
+    /// <summary>"Heal N from [target]" (GAME_DESIGN §11.1).</summary>
     public sealed class HealEffect : Effect
     {
         public int Amount { get; set; }
@@ -33,7 +58,48 @@ namespace RestartedTavern.Rules
 
         public override void Resolve(EffectContext ctx)
         {
-            if (ctx.Target.HasValue) ctx.Heal(ctx.Target.Value, Fully ? int.MaxValue : Amount);
+            var t = ctx.TargetAt(TargetIndex);
+            if (t.HasValue) ctx.Heal(t.Value, Fully ? int.MaxValue : Amount);
+        }
+    }
+
+    /// <summary>"Heal N from this [creature]" / "heal this creature fully" (Mossback Tortoise, Apex of the Green Deep).</summary>
+    public sealed class HealSelfEffect : Effect
+    {
+        public int Amount { get; set; }
+        public bool Fully { get; set; }
+
+        public override void Resolve(EffectContext ctx) =>
+            ctx.Heal(Target.ForObject(ctx.Source), Fully ? int.MaxValue : Amount);
+    }
+
+    /// <summary>"Heal all other creatures you control fully" (Primeval Behemoth).</summary>
+    public sealed class HealOtherCreaturesYouControlEffect : Effect
+    {
+        public int Amount { get; set; }
+        public bool Fully { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            foreach (var c in new List<CardInstance>(ctx.State.GetPlayer(ctx.Controller).Battlefield))
+                if (c.Id != ctx.Source && ctx.Cards.Get(c.DefinitionId).IsCreature)
+                    ctx.Heal(Target.ForObject(c.Id), Fully ? int.MaxValue : Amount);
+        }
+    }
+
+    /// <summary>
+    /// "[Target 0] fights [target 1]", or "this fights [target]" with <see cref="SourceFights"/>
+    /// (GAME_DESIGN §11.1). If either creature is gone, no damage is dealt (MTG 701.14b).
+    /// </summary>
+    public sealed class FightEffect : Effect
+    {
+        public bool SourceFights { get; set; }
+
+        public override void Resolve(EffectContext ctx)
+        {
+            var first = SourceFights ? ctx.State.FindOnBattlefield(ctx.Source) : ctx.CreatureAt(TargetIndex);
+            var second = ctx.CreatureAt(SourceFights ? TargetIndex : TargetIndex + 1);
+            ctx.Fight(first, second);
         }
     }
 
@@ -71,7 +137,7 @@ namespace RestartedTavern.Rules
         }
     }
 
-    /// <summary>"[The target] gets +P/+H [and Keyword] until end of turn."</summary>
+    /// <summary>"[Target] gets +P/+H [and Keyword] until end of turn."</summary>
     public sealed class PumpTargetEffect : Effect
     {
         public int Power { get; set; }
@@ -80,8 +146,8 @@ namespace RestartedTavern.Rules
 
         public override void Resolve(EffectContext ctx)
         {
-            if (ctx.Target.HasValue && !ctx.Target.Value.IsPlayer)
-                ctx.ModifyUntilEndOfTurn(ctx.Target.Value.Object, Power, Health, Grants);
+            var c = ctx.CreatureAt(TargetIndex);
+            if (c != null) ctx.ModifyUntilEndOfTurn(c.Id, Power, Health, Grants);
         }
     }
 
@@ -104,15 +170,15 @@ namespace RestartedTavern.Rules
         }
     }
 
-    /// <summary>"Put N +1/+1 counters on [the target]."</summary>
+    /// <summary>"Put N +1/+1 counters on [target]."</summary>
     public sealed class AddCountersEffect : Effect
     {
         public int Count { get; set; } = 1;
 
         public override void Resolve(EffectContext ctx)
         {
-            if (ctx.Target.HasValue && !ctx.Target.Value.IsPlayer)
-                ctx.AddCounters(ctx.Target.Value.Object, Count);
+            var c = ctx.CreatureAt(TargetIndex);
+            if (c != null) ctx.AddCounters(c.Id, Count);
         }
     }
 }

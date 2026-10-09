@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 50 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
+**Status:** engine prototype. The first card set (v0.1) is designed, and the rules engine skeleton runs with 62 passing EditMode tests. A hot-seat **debug table** in Unity can play it (§7).
 
 ---
 
@@ -146,20 +146,21 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - Turn structure (§6): Start, Draw, Main 1, the combat steps, Main 2, End, and Cleanup (discard down to 7, then unspent mana becomes Gold capped at 5, then "until end of turn" effects end).
 - Mana and Gold (§5): mana is only available on your own turn. Instants can be paid with any mix of mana and Gold. Overcharge is paid with Gold only.
 - **The Chain** (§8): LIFO; the caster keeps priority; it resolves when every living player passes in a row; spells fizzle when their target is illegal; the fixed priority windows; auto-pass for players who have no other option (`GameState.AutoPass`).
+- **Multiple targets** (MTG 115, 608.2b): a spell has a list of target slots (optional slots for "up to N"). Targets are distinct, and illegal targets are skipped at resolution; the spell only fizzles when every target is gone. **Fight** (§11.1).
 - Triggers: Arrival, Last Breath, Attacks, Start/End of your turn. They use APNAP order and a target choice when they're put on the Chain. A trigger with no legal target is removed.
 - Combat (§7): attackers and blockers are declared one creature at a time, and every attacker picks which opponent it attacks. Also implemented: summoning sickness and Haste, Flying/Reach, Can't block, Trample, Lifelink, and multiple blockers.
 - **Permanent damage**, with Heal capped at max Health or starting life. Losing a buff can't kill (§7.3).
 - State-based actions (MTG 704): 0 life, drawing from an empty deck, lethal damage, the Legendary rule, illegal Curses, unattaching Equipment, and the game ending when one team is left.
 - Continuous effects: static anthems/lords, +1/+1 counters and until-end-of-turn modifiers, applied in MTG layer order.
 - New object ids on every zone change. Tokens stop existing when they leave the battlefield.
-- 22 prototype cards (Goobers, Evergrowing Wild, Neutral) in `Assets/Rules/Cards/PrototypeCards.cs`.
+- 37 prototype cards (Goobers, Evergrowing Wild, Glitterworld without Equipment, Neutral) and three legal 60-card decks (Goober Mob, Jungle Stampede, Zoo Patrol) in `Assets/Rules/Cards/PrototypeCards.cs`.
 
-**Tests** (`Assets/Rules.Tests`, 50 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 62 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
 
-**Debug table** (`Assets/Client/DebugTable.cs`, scene `Assets/Scenes/DebugTable.unity`). This is a hot-seat IMGUI table for 1v1 with the two prototype decks, *Goober Mob* and *Jungle Stampede* (`PrototypeCards`). Both are legal 60-card decks.
+**Debug table** (`Assets/Client/DebugTable.cs`, scene `Assets/Scenes/DebugTable.unity`). This is a hot-seat IMGUI table for 1v1 with the three prototype decks (`PrototypeCards`); the P1/P2 deck buttons choose them for the next game.
 - Waiting on someone: the top bar names them and their header turns green.
 - Your options: their legal actions are listed as buttons. Cards they can act with are tinted green, and clicking a card filters the list to the actions that involve it.
 - What's on the table: the board shows Power/Health, damage, keywords, and tapped/sick/attacking/blocking states, plus the Chain (top first) and the current combat.
@@ -177,7 +178,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - Activated abilities (Tap: …, Pay X Gold: …) and **Patron powers and passives**.
 - Equip, and casting Curses/Relics with real cards (the rules support exists, but no cards use it yet).
 - Player choices that are currently automatic: how an attacker splits damage among several blockers (§7.2), which Legendary to keep, and ordering your own simultaneous triggers.
-- Divided or multiple targets ("deal 3 damage divided as you choose"), X costs, "may" choices, and rummaging.
+- Divided damage ("deal 3 damage divided as you choose"), X costs, "may" choices, rummaging, and "whenever this is dealt damage" triggers (Worldroot Hydra).
 - Replacement effects, control-changing effects, and filtering events by hidden information.
 - Loading card data from JSON (see §0.1).
 

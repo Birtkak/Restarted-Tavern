@@ -17,7 +17,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(7, g.P(g.Active).Hand.Count, "first player skips the turn-1 draw");
             Assert.AreEqual(7, g.P(g.Other).Hand.Count);
             Assert.AreEqual(0, g.P(g.Active).Gold);
-            Assert.AreEqual(1, g.P(g.Other).Gold, "second player starts with 1 Gold");
+            Assert.AreEqual(0, g.P(g.Other).Gold, "no starting Gold since 2026-10-09");
             Assert.AreEqual(1, g.P(g.Active).MaxMana);
             Assert.AreEqual(1, g.P(g.Active).Mana);
         }
@@ -41,6 +41,21 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(20 - 6, state.GetPlayer(first).Deck.Count);
             Assert.AreEqual(DecisionKind.Mulligan, state.Pending.Kind);
             Assert.AreNotEqual(first, state.Pending.Player, "next player decides");
+        }
+
+        [Test]
+        public void SecondPlayer_GetsOneExtraMana_OnTheirFirstTurnOnly()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var first = g.Active;
+            var second = g.Other;
+            g.PassToStep(Step.Main1, second);
+            Assert.AreEqual(1, g.P(second).MaxMana);
+            Assert.AreEqual(2, g.P(second).Mana, "§3: +1 mana on the first turn");
+            g.PassToStep(Step.Main1, first);
+            g.PassToStep(Step.Main1, second);
+            Assert.AreEqual(2, g.P(second).MaxMana);
+            Assert.AreEqual(2, g.P(second).Mana, "no bonus after the first turn");
         }
 
         [Test]
@@ -109,7 +124,8 @@ namespace RestartedTavern.Rules.Tests
         {
             var g = TestGame.AtFirstMainPhase();
             var creature = g.AddToBattlefield(g.Active, "hired_sellsword");
-            var snot = g.AddToHand(g.Other, "spark_snot"); // the other player has 1 Gold, no mana
+            var snot = g.AddToHand(g.Other, "spark_snot");
+            g.P(g.Other).Gold = 1; // the other player has no mana on this turn, only Gold
 
             g.Pass(); // active passes in main phase 1 → other gets priority
             Assert.AreEqual(g.Other, g.State.PriorityPlayer);
