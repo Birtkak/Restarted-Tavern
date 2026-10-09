@@ -28,8 +28,9 @@ namespace RestartedTavern.SimRunner
             bool runeterra = Arg("-rules", "runeterra") != "classic";
             int games = int.Parse(Arg("-simGames", "500"));
 
-            if (args.Contains("-trace")) return Trace(Arg("-decks", "0,1"), ulong.Parse(Arg("-seed", "1")), runeterra, Arg("-out"), Arg("-pass", "0,0"));
+            if (args.Contains("-trace")) return Trace(Arg("-decks", "0,1"), ulong.Parse(Arg("-seed", "1")), runeterra, Arg("-out"), Arg("-pass", "0,0"), Arg("-swap"));
             if (args.Contains("-h2h")) return HeadToHead(games, runeterra, Arg("-off"));
+            if (args.Contains("-tweaks")) return TweakTest(games, runeterra);
             if (args.Contains("-decktest")) return args.Contains("-singles") ? SwapTest(games, runeterra) : DeckTest(games, runeterra);
             return Report(games, Arg("-simSections")?.ToLowerInvariant().Split(','), Arg("-out"));
         }
@@ -85,18 +86,11 @@ namespace RestartedTavern.SimRunner
         }
 
         /// <summary>Candidate deck lists: each deck swaps whole cards (all four copies) for others. Used by -decktest.</summary>
-        private static readonly Dictionary<string, (string[] Out, string[] In)> DeckPass = new Dictionary<string, (string[], string[])>
-        {
-            // Revised after the single-swap test: only swaps that held their own (about 50% or better against the old list).
-            ["Goober Mob"] = (new[] { "overrun_the_gates" }, new[] { "goober_avalanche" }),
-            ["Jungle Stampede"] = (new[] { "titanback_colossus", "brawling_runt", "kick_em_while_theyre_down" },
-                                   new[] { "rampaging_titan", "mossgut_grower", "gift_of_the_grove" }),
-            ["Zoo Patrol"] = (new[] { "primal_clash", "chain_zap" }, new[] { "arc_cascade", "overclocked_analyst" }),
-            ["Vesper's Ledger"] = (new[] { "apprentice_forger", "compound_interest" }, new[] { "final_broadcast", "seance_hotline" }),
-            ["Sparkwrench Scrappers"] = (new[] { "goober_rascal", "chain_zap", "scrap_collector" },
-                                         new[] { "market_data_feed", "orbital_laser", "goober_bookie" }),
-            ["Auditor's Arsenal"] = (new[] { "hardlight_aegis" }, new[] { "eviction_notice" }),
-        };
+        /// <summary>
+        /// Candidate deck lists for -decktest / -singles / trace -pass: each deck swaps whole cards (all four copies).
+        /// The v0.3 deck pass was approved and applied on 2026-10-09, so this is empty until the next one.
+        /// </summary>
+        private static readonly Dictionary<string, (string[] Out, string[] In)> DeckPass = new Dictionary<string, (string[], string[])>();
 
         private static List<string> Swap(List<string> deck, (string[] Out, string[] In) pass)
         {
@@ -116,6 +110,7 @@ namespace RestartedTavern.SimRunner
             var configs = new List<MatchConfig>();
             foreach (var d in Experiments.PrototypeDecks())
             {
+                if (!DeckPass.ContainsKey(d.Name)) continue;
                 var nu = Swap(d.Cards, DeckPass[d.Name]);
                 DeckValidator.Validate(db, FormatConfig.Standard(), nu, d.TavernDweller);
                 MatchConfig M(string name, List<string> a, List<string> b) => new MatchConfig
@@ -146,7 +141,7 @@ namespace RestartedTavern.SimRunner
             var configs = new List<MatchConfig>();
             foreach (var d in Experiments.PrototypeDecks())
             {
-                var pass = DeckPass[d.Name];
+                if (!DeckPass.TryGetValue(d.Name, out var pass)) continue;
                 for (int i = 0; i < pass.Out.Length; i++)
                 {
                     var nu = Swap(d.Cards, (new[] { pass.Out[i] }, new[] { pass.In[i] }));
@@ -163,8 +158,58 @@ namespace RestartedTavern.SimRunner
             return 0;
         }
 
+        /// <summary>
+        /// Card tuning: each weak card, swapped into a deck as printed and with a proposed change, against the current list
+        /// (50% = as good as the card it replaces).
+        /// </summary>
+        private static int TweakTest(int games, bool runeterra)
+        {
+            var tests = new (string Deck, string Out, string In, string Change, Action<CardDefinition> Tweak)[]
+            {
+                ("Vesper's Ledger", "hired_enforcer", "insider_trading", "X+1, no Gold for opponents", d =>
+                {
+                    d.Cost = 1;
+                    d.SpellEffects.RemoveAll(e => e is GainGoldEffect);
+                }),
+                ("Sparkwrench Scrappers", "brawling_runt", "turret_rig", "+1/+1, Equip 1, ping (1)", d =>
+                {
+                    d.Abilities[0].Cost = 1;
+                    var bonus = (AttachedCreatureModifier)d.Statics[0];
+                    bonus.Power = 1;
+                    bonus.Health = 1;
+                    bonus.Abilities[0].Cost = 1;
+                }),
+                ("Auditor's Arsenal", "retainer_mage", "loan_shark", "cost 6 -> 5", d => d.Cost = 5),
+                ("Goober Mob", "pickpocket_boss", "big_boom", "Sorcery -> Instant", d => d.Type = CardType.Instant),
+                ("Jungle Stampede", "reckless_charge", "call_of_the_deep", "cost X+2 -> X+1", d => d.Cost = 1),
+                ("Goober Mob", "brawling_runt", "fireworks_stand", "ability (3) -> (2)", d => d.Abilities[0].Cost = 2),
+            };
+            var plain = CardPool.CreateDatabase();
+            var tweakedCards = CardPool.All().ToList();
+            foreach (var t in tests) t.Tweak(tweakedCards.First(c => c.Id == t.In));
+            var tweaked = new CardDatabase(tweakedCards);
+
+            var decks = Experiments.PrototypeDecks().ToDictionary(d => d.Name);
+            List<MatchConfig> Configs() => tests.Select(t =>
+            {
+                var d = decks[t.Deck];
+                return new MatchConfig
+                {
+                    Name = t.Deck + ": " + t.Out + " -> " + t.In, Format = Rules(runeterra), Games = games,
+                    DeckAName = d.Name, DeckA = Swap(d.Cards, (new[] { t.Out }, new[] { t.In })), TavernDwellerA = d.TavernDweller,
+                    DeckBName = d.Name, DeckB = d.Cards, TavernDwellerB = d.TavernDweller,
+                };
+            }).ToList();
+            var before = MatchRunner.RunAll(Configs(), plain);
+            var after = MatchRunner.RunAll(Configs(), tweaked);
+            Console.WriteLine($"Card tweaks, {games} games each (A = with the swap; 50% = as good as the card it replaces).");
+            for (int i = 0; i < tests.Length; i++)
+                Console.WriteLine($"  {before[i].Config.Name,-58} as printed {before[i].WinRateA,6:P1}   {tests[i].Change,-30} {after[i].WinRateA,6:P1}");
+            return 0;
+        }
+
         /// <summary>One game between two GreedyBots, written out turn by turn with the board at each turn start.</summary>
-        private static int Trace(string deckArg, ulong seed, bool runeterra, string output, string passArg)
+        private static int Trace(string deckArg, ulong seed, bool runeterra, string output, string passArg, string swapArg)
         {
             var decks = Experiments.PrototypeDecks();
             var pick = deckArg.Split(',').Select(int.Parse).ToArray();
@@ -176,6 +221,16 @@ namespace RestartedTavern.SimRunner
                     Name = decks[pick[i]].Name + " (new)", Cards = Swap(decks[pick[i]].Cards, DeckPass[decks[pick[i]].Name]),
                     TavernDweller = decks[pick[i]].TavernDweller,
                 };
+            // -swap out:in replaces a card (all copies) in P1's deck.
+            if (swapArg != null)
+            {
+                var parts = swapArg.Split(':');
+                decks[pick[0]] = new Experiments.Deck
+                {
+                    Name = decks[pick[0]].Name + " (" + parts[1] + ")", Cards = Swap(decks[pick[0]].Cards, (new[] { parts[0] }, new[] { parts[1] })),
+                    TavernDweller = decks[pick[0]].TavernDweller,
+                };
+            }
             var db = CardPool.CreateDatabase();
             var engine = new GameEngine(db);
             var text = new GameText(db);

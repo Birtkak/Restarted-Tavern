@@ -25,6 +25,14 @@ Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact o
 
 ---
 
+## Set v0.3 deck pass (approved 2026-10-09)
+
+The 36 v0.3 cards (mana scarcity) went into the decks only where they held their own against the card they replace (`SimRunner -decktest -singles`, 2,000 games per swap):
+Goober: Overrun the Gates → Goober Avalanche · Jungle: Titanback Colossus → Rampaging Titan, Brawling Runt → Mossgut Grower, Kick 'Em → Gift of the Grove · Zoo: Primal Clash → Arc Cascade, Chain Zap → Overclocked Analyst · Vesper: Apprentice Forger → Final Broadcast, Compound Interest → Séance Hotline · Sparkwrench: Goober Rascal → Market Data Feed, Chain Zap → Orbital Laser, Scrap Collector → Goober Bookie · Auditor: Hardlight Aegis → Eviction Notice.
+
+Result (Runeterra rules): the new lists beat the old ones 54-67%, and mana left unspent per turn dropped (Zoo 1.87 → 0.70, Sparkwrench 1.50 → 0.50, Vesper 0.62 → 0.37, Jungle 0.75 → 0.61).
+Weaker in this test (they replaced creatures in creature decks): Insider Trading 31%, Turret Rig 34%, Fireworks Stand 39-42%, Big Boom 42%, Call of the Deep 42%, Loan Shark 43%. Stronger versions only partly help (Turret Rig with +1/+1, Equip 1 and a (1) ping: 40%; Insider Trading at X+1 without the Gold: 35%), so this mostly says "not a creature replacement", not "broken".
+
 ## Bot iteration under Runeterra-style mana (2026-10-09)
 
 Method: read single bot games (`SimRunner -trace`), fix what looks wrong behind a `BotStyle` switch, then measure head-to-head (`SimRunner -h2h`: the current bot against `BotStyle.Baseline()`, or with `-off Switch` against itself minus one switch), 2,000-3,000 games per mirror, seats swapped.

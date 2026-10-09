@@ -19,41 +19,41 @@ namespace RestartedTavern.Rules.Cards
         /// </summary>
         public static List<string> GooberMobDeck() => FourOfEach(
             "goober_rascal", "spark_snot", "fuse_goober", "gob_gang", "brawling_runt", "goober_warchief",
-            "hog_rider", "mob_rush", "barrel_bomber", "gold_tooth_bruiser", "overrun_the_gates", "pit_champion",
+            "hog_rider", "mob_rush", "barrel_bomber", "gold_tooth_bruiser", "goober_avalanche", "pit_champion",
             "crypt_usher", "pickpocket_boss", "fling_the_runt");
 
         /// <summary>Legal Standard deck: Evergrowing Wild + big Goobers (the Mukk the Grub King pair). Trample everywhere for Mukk.</summary>
         public static List<string> JungleStampedeDeck() => FourOfEach(
             "jungle_remedy", "vine_spider", "razorhide_boar", "ironbark_grizzly", "thornback_ravager",
             "tusked_mammoth", "hog_rider", "pit_fighter", "pit_champion", "spark_snot",
-            "reckless_charge", "kick_em_while_theyre_down", "gold_tooth_bruiser", "titanback_colossus", "brawling_runt");
+            "reckless_charge", "gift_of_the_grove", "gold_tooth_bruiser", "rampaging_titan", "mossgut_grower");
 
         /// <summary>Legal Standard deck: Wild + Glitterworld (the Keeper Z-00 pair). Pings, fights and healing, so permanent damage shows up.</summary>
         public static List<string> ZooPatrolDeck() => FourOfEach(
-            "static_shock", "spark_drone", "chain_zap", "ambush_predator", "riot_suppressor", "grid_overload",
+            "static_shock", "spark_drone", "overclocked_analyst", "ambush_predator", "riot_suppressor", "grid_overload",
             "neon_executioner", "orbital_strike_network",
-            "finisher_protocol", "mossback_tortoise", "primal_clash", "overflowing_spring", "apex_instinct",
+            "finisher_protocol", "mossback_tortoise", "arc_cascade", "overflowing_spring", "apex_instinct",
             "sabretooth_prowler", "primeval_behemoth");
 
         /// <summary>Legal Standard deck: Wizards + Sensationalists (the Madame Vesper pair). Lifelink, drains, removal, flyers: a slower deck.</summary>
         public static List<string> VespersLedgerDeck() => FourOfEach(
-            "gilded_rat", "candle_cultist", "hex_of_frailty", "apprentice_forger", "candlelit_acolyte",
+            "gilded_rat", "candle_cultist", "hex_of_frailty", "final_broadcast", "candlelit_acolyte",
             "blood_price", "fatal_rumor", "hungry_shade", "ritual_slaughter", "hired_enforcer",
-            "wraith_swarm", "the_grand_ledger", "hush_money", "body_snatcher", "compound_interest");
+            "wraith_swarm", "the_grand_ledger", "hush_money", "body_snatcher", "seance_hotline");
 
         /// <summary>
         /// Legal Standard deck: Goobers + Glitterworld (the Sparkwrench pair). Burn and pings, plus cheap
         /// Equipment for Sparkwrench's discount and Power (added 2026-10-09).
         /// </summary>
         public static List<string> SparkwrenchScrappersDeck() => FourOfEach(
-            "goober_rascal", "spark_snot", "fuse_goober", "brawling_runt", "goober_warchief", "hog_rider",
-            "barrel_bomber", "marksman_scope", "static_shock", "spark_drone", "chain_zap", "scrap_collector",
+            "market_data_feed", "spark_snot", "fuse_goober", "brawling_runt", "goober_warchief", "hog_rider",
+            "barrel_bomber", "marksman_scope", "static_shock", "spark_drone", "orbital_laser", "goober_bookie",
             "riot_suppressor", "gilded_knuckles", "gold_tooth_bruiser");
 
         /// <summary>Legal Standard deck: Wizards + Glitterworld (the Auditor Prime pair). The Equipment deck: Equip costs are a Gold sink.</summary>
         public static List<string> AuditorsArsenalDeck() => FourOfEach(
             "neon_shiv", "courier_bot", "marksman_scope", "pulse_blade", "back_street_mechanic", "alley_tinker",
-            "scrap_collector", "overclock_rig", "retainer_mage", "arc_welder", "rail_cannon", "hardlight_aegis",
+            "scrap_collector", "overclock_rig", "retainer_mage", "arc_welder", "rail_cannon", "eviction_notice",
             "megacorp_exosuit", "patrol_captain", "titan_frame_guardian");
 
         /// <summary>The Tavern Dweller each prototype deck is built around (GAME_DESIGN §9).</summary>
