@@ -12,8 +12,10 @@ namespace RestartedTavern.SimRunner
     /// <summary>
     /// The simulation report outside Unity (same code as SimulationMenu.RunReport, faster runtime), plus bot tools.
     ///   (default)  the report. [-simGames N] [-simSections "round,cap"] [-out path]
-    ///   -trace     one bot game, readable, turn by turn. [-decks "0,1"] [-seed N] [-rules runeterra|classic] [-out path]
-    ///   -h2h       the current GreedyBot against BotStyle.Baseline() in every mirror (A = current). [-simGames N] [-rules ...]
+    ///   -trace     one bot game, readable, turn by turn. [-decks "0,1"] [-seed N] [-rules standard|mtg|rotation|classic] [-out path]
+    ///   -h2h       the current GreedyBot against BotStyle.Baseline() in every mirror (A = current). [-simGames N] [-rules ...] [-off Switch]
+    ///   -balance   every deck against every deck: win-rate matrix, spread, mirror first-player win%. [-simGames N] [-rules ...] [-out file]
+    ///   -goingfirst  first-player win% per turn-structure variant (-rules standard: Runeterra rounds variants; -rules mtg: MTG-turn compensations)
     /// Decks are indexes into Experiments.PrototypeDecks(): 0 Goober, 1 Jungle, 2 Zoo, 3 Vesper, 4 Sparkwrench, 5 Auditor.
     /// </summary>
     internal static class Program
@@ -92,7 +94,7 @@ namespace RestartedTavern.SimRunner
             }).ToList();
             var watch = Stopwatch.StartNew();
             var results = MatchRunner.RunAll(configs, CardPool.CreateDatabase());
-            Console.WriteLine($"Head-to-head, {(runeterra ? "Runeterra" : "classic")} rules, {games} games per mirror ({watch.Elapsed.TotalSeconds:0}s). A = current bot, B = {B().Name}.");
+            Console.WriteLine($"Head-to-head, {RulesName} rules, {games} games per mirror ({watch.Elapsed.TotalSeconds:0}s). A = current bot, B = {B().Name}.");
             foreach (var r in results)
                 Console.WriteLine($"  {r.Config.Name,-22} current wins {r.WinRateA,6:P1}   1st {r.FirstPlayerWinRate,6:P1}   {r.AvgTurns,5:0.0} turns   off-turn {r.PerGame(r.InstantsOnOpponentsTurn + r.AbilitiesOnOpponentsTurn),4:0.0}   wasted {r.GoldWastedShare,6:P1}   discards {r.PerGame(r.Discards),4:0.0}   draws {r.Draws}");
             Console.WriteLine($"  {"ALL",-22} current wins {results.Sum(r => r.WinsA) / (double)results.Sum(r => r.Games),6:P1}");
@@ -138,7 +140,7 @@ namespace RestartedTavern.SimRunner
             }
             var watch = Stopwatch.StartNew();
             var results = MatchRunner.RunAll(configs, db);
-            Console.WriteLine($"Deck pass test, {(runeterra ? "Runeterra" : "classic")} rules, {games} games per row ({watch.Elapsed.TotalSeconds:0}s).");
+            Console.WriteLine($"Deck pass test, {RulesName} rules, {games} games per row ({watch.Elapsed.TotalSeconds:0}s).");
             Console.WriteLine("  unspent = mana left at the end of a turn or round, per turn; wasted = share of it lost to the Gold cap");
             foreach (var r in results)
             {
@@ -256,7 +258,7 @@ namespace RestartedTavern.SimRunner
             string Short(string name) => name.Split(' ')[0].Replace("'s", "");
             var lines = new List<string>
             {
-                $"Balance, {(runeterra ? "Runeterra" : "classic")} rules, {games} games per pairing ({watch.Elapsed.TotalSeconds:0}s). Row deck's win% against the column deck.",
+                $"Balance, {RulesName} rules, {games} games per pairing ({watch.Elapsed.TotalSeconds:0}s). Row deck's win% against the column deck.",
                 "            " + string.Join(" ", decks.Select(d => Short(d.Name).PadLeft(7))) + "   avg vs field",
             };
             double spread = 0, worst = 0;
@@ -415,7 +417,7 @@ namespace RestartedTavern.SimRunner
             var bot = new GreedyBot(engine);
             var lines = new List<string>
             {
-                $"Trace: {decks[pick[0]].Name} (P1) vs {decks[pick[1]].Name} (P2), seed {seed}, {(runeterra ? "Runeterra" : "classic")} rules. First player: {state.ActivePlayer}",
+                $"Trace: {decks[pick[0]].Name} (P1) vs {decks[pick[1]].Name} (P2), seed {seed}, {RulesName} rules. First player: {state.ActivePlayer}",
             };
             text.Remember(state, events);
             int turn = -1;
@@ -425,7 +427,7 @@ namespace RestartedTavern.SimRunner
                 {
                     turn = state.TurnNumber;
                     lines.Add("");
-                    lines.Add($"=== Turn {turn}, round {state.RoundNumber}, {state.ActivePlayer} active" + (runeterra ? $", attack token {state.Players[state.RoundLeaderSeat].Id}" : ""));
+                    lines.Add($"=== Turn {turn}, round {state.RoundNumber}, {state.ActivePlayer} active" + (state.Format.AttackToken ? $", attack token {state.Players[state.RoundLeaderSeat].Id}" : ""));
                     foreach (var p in state.Players)
                     {
                         lines.Add($"  {p.Id}: life {p.Life}, mana {p.Mana}/{p.MaxMana}, Gold {p.Gold}, hand {p.Hand.Count}: "

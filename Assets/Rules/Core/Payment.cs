@@ -42,7 +42,7 @@ namespace RestartedTavern.Rules
         {
             if (p.PaysGoldFirst && goldAllowed)
             {
-                // Gold first, then mana (FormatConfig.GoldFirstOffTurn).
+                // Gold first, then mana (FormatConfig.GoldFirstAlways).
                 int spare = p.Gold - goldOnly;
                 if (spare < 0) return -1;
                 int fromGold = Math.Min(spare, Math.Max(0, generic));

@@ -10,7 +10,7 @@ Severity: 🔴 fundamental (affects every game), 🟠 significant (affects a cor
 
 | Issue | Decision |
 |---|---|
-| 1. Going first | **MTG default**: the first player skips their turn-1 draw, no other compensation. Judge it in human playtests (bots race more than people). ⚠ This is the variant with the biggest first-player edge in the bot runs: Greedy-bot mirrors at 500 games give Goober 79%, Jungle 70%, Zoo 68%, Sparkwrench 62% and Vesper 58%. If playtests confirm the edge, the best variant measured was "everyone draws + 2nd player +1 mana and 1 Gold" (Goober 66%, Jungle 53%). |
+| 1. Going first | *(Superseded 2026-10-10 by Runeterra rounds, see below.)* **MTG default**: the first player skips their turn-1 draw, no other compensation. Judge it in human playtests (bots race more than people). ⚠ This is the variant with the biggest first-player edge in the bot runs: Greedy-bot mirrors at 500 games give Goober 79%, Jungle 70%, Zoo 68%, Sparkwrench 62% and Vesper 58%. If playtests confirm the edge, the best variant measured was "everyone draws + 2nd player +1 mana and 1 Gold" (Goober 66%, Jungle 53%). |
 | 2. Gold sits unused | **Tavern Dweller Powers** are the universal Gold sink. *Implemented and re-measured (PLAYTEST.md, "Findings: Tavern Dwellers and abilities"): always-useful Powers (Keeper Z-00, Skabba) cut wasted mana by half or more; situational ones (Mukk, Sparkwrench, Auditor Prime) don't. The cap now changes waste but still not outcomes.* |
 | 3. Long, stalled games | **No new rule.** Add late-game sinks and finishers through cards, re-measure, and decide later. *Re-measured: the Zoo mirror's long games dropped from 34% to 13% with Keeper Z-00. Some remaining stalls are the bot never alpha-striking (PLAYTEST.md).* |
 | 4. Chip damage outside ping decks | Card-pool work: every faction needs some chip damage and some payoff for it (v0.2 already adds some). |
@@ -189,7 +189,7 @@ Golden Handshake ("up to 5 Gold"), Everything Has a Price ("gains 5 Gold") and H
 
 ## 🟡 R10. Temporary Health buffs are repeatable damage shields
 
-"Losing a buff can't kill" (§7.3) plus repeatable buffs: Old Mossbank's "(2) +2/+2" can be used once each turn, so twice in a row across the double turn.
+"Losing a buff can't kill" (§7.3) plus repeatable buffs: Old Mossbank's "(2) +2/+2" can be used once each turn. Under Runeterra rounds that is once each round, as a response, so it's a damage shield in every combat.
 
 ## ✅ R11. Weak Tavern Dwellers (solved 2026-10-10)
 

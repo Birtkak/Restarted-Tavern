@@ -124,9 +124,9 @@ Unused mana is not lost.
 
 **Why this works**
 - It removes the bad feeling of "I held up mana for a trick and the opponent didn't attack". The mana is banked instead of wasted.
-- It creates a real choice each turn: develop the board now, or bank for reactions later.
-- It works naturally in multiplayer: Gold is how you interact on other players' turns.
-- ~~It gives a clean way to compensate the player who goes second (start with 1 Gold).~~ Simulations showed starting Gold barely helps, because Gold can't buy creatures. The second player gets first-turn mana instead (§3).
+- It creates a real choice each round: develop the board now, or bank for answers later.
+- It works naturally with alternating actions (§6): Gold is spell mana for answering the opponent's actions.
+- ~~It gives a clean way to compensate the player who goes second (start with 1 Gold).~~ Simulations showed starting Gold barely helps, because Gold can't buy creatures. Going first is now evened out by the rounds (§3, §6).
 
 **Alternatives considered**
 - **B. Gold can pay for anything, but converts at a 2:1 ratio.** Simpler, but it turns into generic ramp.
@@ -270,7 +270,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | Keyword | Meaning | Status |
 |---|---|---|
 | **Trample** | Combat damage beyond what's needed to kill the blockers goes to the attacked player | 🔒 |
-| **Haste** | Can attack the turn it enters | 🟡 |
+| **Haste** | Can attack the turn it enters. ❓ No effect under the Standard rules (no summoning sickness, §7.4) | ❓ |
 | **Flying** | Can only be blocked by Flying / Reach | 🟡 |
 | **Lifelink** | Damage dealt also heals its controller | 🟡 |
 | **Invest X: …** | Optional extra cost, paid only with Gold, for a bonus effect | 🔒 |
@@ -291,7 +291,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Destroys a creature in combat** (Champion's Belt): it dealt combat damage to that creature, and the creature now has lethal damage. It triggers once for each creature destroyed, even if both creatures die.
 - **"Can't be dealt more than N damage each turn"** (Hardlight Aegis): damage over the limit is prevented, so it isn't dealt (no Lifelink, no "is dealt damage" triggers). Damage the creature took earlier in the same turn counts, even if the effect started later (MTG). Trample still assigns lethal damage as if nothing were prevented (MTG 702.19c).
 - **Counter** (MTG 701.5): a countered spell goes to its owner's graveyard without resolving; a countered ability does nothing. A countered "once each turn" ability or Tavern Dweller Power still counts as used. A tax ("unless its controller pays 3") is paid with mana first, then Gold (§5.2), and Gold paid this way is spent.
-- **Gain control** (MTG): the permanent keeps its damage and counters. A creature can't attack or use Tap abilities until its new controller's next turn, unless it has Haste (MTG 302.6), and a creature that changes controller leaves combat. "Until end of turn" control ends in the cleanup step. When a player leaves the game, what they controlled but didn't own goes back to its owner.
+- **Gain control** (MTG): the permanent keeps its damage and counters. With summoning sickness (MTG turns), a creature can't attack or use Tap abilities until its new controller's next turn, unless it has Haste (MTG 302.6); the Standard rules have none (§7.4). A creature that changes controller leaves combat. "Until end of turn" control ends in the cleanup step. When a player leaves the game, what they controlled but didn't own goes back to its owner.
 - **Return to hand** (bounce): the card comes back as a new object, so its damage is gone. A token stops existing.
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
 - **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with Gold first, then mana (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means as one of your actions, with an empty Chain (§6).

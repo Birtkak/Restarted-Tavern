@@ -2,6 +2,8 @@
 
 Goal (DEVELOPMENT §5): tune the **Gold cap**, the **curve**, and the **impact of permanent damage** before the full set gets built. Two sources feed this:
 
+> Sections are dated. Since 2026-10-10 the Standard rules are **Legends of Runeterra rounds** (GAME_DESIGN §6); sections about turns, the attack token or "the opponent's turn" from before that describe earlier rules.
+
 1. **Bot simulations**: thousands of `GreedyBot` games per rules variant. They give fast, repeatable answers to "what does this rule change?", but the bot is a careful beginner, so they're hints, not balance. Full tables: [SIMULATION_REPORT.md](SIMULATION_REPORT.md).
 2. **Human playtests** on the debug table. These decide. Use the template at the bottom.
 

@@ -171,7 +171,7 @@ namespace RestartedTavern.Rules
             S.ActionInProgress = false;
             S.AttackedThisRound = 0;
             foreach (var p in S.Players)
-                p.PaysGoldFirst = S.Format.GoldFirstAlways || (S.Format.GoldFirstOffTurn && p.Id != S.ActivePlayer);
+                p.PaysGoldFirst = S.Format.GoldFirstAlways;
             Emit(new TurnStartedEvent { Player = S.ActivePlayer, Turn = S.TurnNumber });
             EnterStep(Step.Start);
         }
@@ -378,10 +378,8 @@ namespace RestartedTavern.Rules
 
         private void RefillMana(PlayerState p)
         {
-            bool skip = S.Format.FirstPlayerSkipsFirstMana && S.TurnNumber == 1 && p.Seat == S.StartingPlayerIndex;
-            if (!skip) p.MaxMana = Math.Min(S.Format.ManaCap, p.MaxMana + 1);
+            p.MaxMana = Math.Min(S.Format.ManaCap, p.MaxMana + 1);
             p.Mana = p.MaxMana;
-            if (S.Format.FirstPlayerNoManaFirstRound && S.TurnNumber == 1 && p.Seat == S.StartingPlayerIndex) p.Mana = 0;
             Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
         }
 

@@ -35,7 +35,8 @@ Starting values for the budget, to be tuned in playtesting.
 
 | Ability | Cost in stat points |
 |---|---|
-| Haste, Flying, Trample, Lifelink | ~1 each |
+| Flying, Trample, Lifelink | ~1 each |
+| Haste | 0 under the Standard rules (no summoning sickness, GAME_DESIGN §7.4) ❓ |
 | Small Arrival effect (1 damage, draw if X, +1/+1 to another) | ~2 |
 | Card draw (1 card) | ~2–3 |
 | Removal on a creature (kills something) | most of the budget |
@@ -47,7 +48,7 @@ Starting values for the budget, to be tuned in playtesting.
 - **Pings** (1 damage) are strong here: they leave lasting damage. Price them higher than in Hearthstone.
 - **Healing** cards should be efficient. Healing is card-only, so an overcosted heal is never played.
 - **Top-end exception**: Legendary creatures costing 7+ may go about 3 points over budget. They are the payoff for surviving to 10 mana.
-- **Gold is worth less than mana**: it has a cap (3) and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold. A player already at the cap gains nothing, so "gains N Gold" downsides are smaller than they look (❓ see the 2026-10-10 design review in docs/handoff/NEXT_DESIGN_FLAWS.md, flaw 9).
+- **Gold is worth less than mana**: it has a cap (3) and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold. A player already at the cap gains nothing, so "gains N Gold" downsides are smaller than they look (❓ see playtest/RULES_REVIEW.md, design review 2026-10-10, R9).
 - **Spells and abilities are effectively cheaper**: Instants, Sorceries, Equip and activated abilities spend banked Gold first (GAME_DESIGN §5.2). That's up to 3 extra "mana" on a burst turn. Permanents can't use Gold, so a creature-heavy turn can't be stretched. Price spells, Equip costs and abilities with that in mind.
 
 ---

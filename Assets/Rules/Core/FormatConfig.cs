@@ -68,9 +68,6 @@ namespace RestartedTavern.Rules
         /// </summary>
         public bool ManaUntilYourNextTurn { get; set; }
 
-        /// <summary>Pay Gold first only on other players' turns (an earlier experiment; GoldFirstAlways replaced it).</summary>
-        public bool GoldFirstOffTurn { get; set; }
-
         /// <summary>Gold the second player starts with (going-second experiments).</summary>
         public int SecondPlayerStartingGold { get; set; }
 
@@ -82,12 +79,6 @@ namespace RestartedTavern.Rules
 
         /// <summary>Extra mana for the second player's first turn(s) (going-second experiments, MTG turns).</summary>
         public int SecondPlayerFirstTurnBonusMana { get; set; }
-
-        /// <summary>The first player has no mana in the first round; max mana still goes up, so they catch up on turn 3 (going-second experiment).</summary>
-        public bool FirstPlayerNoManaFirstRound { get; set; }
-
-        /// <summary>The first player gets no max mana on their first turn, so they stay one behind all game (going-second experiment).</summary>
-        public bool FirstPlayerSkipsFirstMana { get; set; }
 
         /// <summary>Damage on creatures is removed in the cleanup step like in MTG. Used to measure what permanent damage (§7.3) changes.</summary>
         public bool DamageWearsOff { get; set; }
@@ -125,15 +116,6 @@ namespace RestartedTavern.Rules
             f.Name = "Runeterra rotation";
             f.RotateRoundLeader = true;
             f.AttackToken = true;
-            return f;
-        }
-
-        /// <summary>Standard with a different Gold cap or summoning sickness (experiments).</summary>
-        public static FormatConfig Runeterra(int goldCap = 3, bool summoningSickness = false)
-        {
-            var f = Standard();
-            f.GoldCap = goldCap;
-            f.NoSummoningSickness = !summoningSickness;
             return f;
         }
 

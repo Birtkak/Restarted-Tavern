@@ -292,7 +292,7 @@ namespace RestartedTavern.Rules.Tests
             };
             foreach (var id in ids) Assert.IsTrue(db.Contains(id), id);
             var deck = ids.Concat(ids).Take(60).ToList();
-            var format = FormatConfig.Runeterra();
+            var format = FormatConfig.Standard();
             format.EnforceDeckRules = false;
             var bot = new GreedyBot(engine);
             for (ulong seed = 1; seed <= 6; seed++)
