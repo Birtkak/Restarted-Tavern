@@ -42,6 +42,8 @@ namespace RestartedTavern.Client.Table
         private static readonly Color GlowTarget = Ui.Hex("#FF5050");
         private static readonly Color GlowCombat = Ui.Hex("#FFB020");
         private static readonly Color GlowSelected = Ui.Hex("#FFFFFF");
+        /// <summary>Your card whose triggered ability is going off (playtest 2026-10-10_141453), and its Chain bubble.</summary>
+        private static readonly Color GlowTrigger = Ui.Hex("#40E060");
         private static readonly Color ButtonColor = Ui.Hex("#7A4E22");
         private static readonly Color ContextOn = Ui.Hex("#C08A2A");
         private static readonly Color ContextOff = Ui.Hex("#4A4038");
@@ -77,11 +79,15 @@ namespace RestartedTavern.Client.Table
         private float _shotAt = -1f;
         /// <summary>-zoom chain|dweller: pin that zoom for the -autoshot (hover can't be automated).</summary>
         private string _zoomShot;
+        /// <summary>-hover &lt;card id&gt;: the screenshot hovers that card in hand (lifted, full size).</summary>
+        private string _hoverShot;
         private float _shotStart;
 
         private Camera _camera;
         private RectTransform _root, _dynamic, _dragLayer, _zoomLayer, _overlay;
-        private Image _arrow, _arrowHead;
+        private readonly List<Image> _arrowBody = new List<Image>();
+        private Image _arrowHead;
+        private const int ArrowSegments = 22;
         private readonly List<CardWidget> _widgets = new List<CardWidget>();
         private CardWidget _dragging;
         private ObjectId _selectedBlocker = ObjectId.None;
@@ -95,6 +101,7 @@ namespace RestartedTavern.Client.Table
 
         // Highlights for the current refresh.
         private HashSet<ObjectId> _sources = new HashSet<ObjectId>();
+        private HashSet<ObjectId> _triggerSources = new HashSet<ObjectId>();
         private HashSet<Target> _targets = new HashSet<Target>();
         private HashSet<ObjectId> _combatCandidates = new HashSet<ObjectId>();
 
@@ -120,6 +127,7 @@ namespace RestartedTavern.Client.Table
                     case "-autopick": _autopick = true; break;
                     case "-autoshot": _autoshot = next; break;
                     case "-zoom": _zoomShot = next; break;
+                    case "-hover": _hoverShot = next; break;
                     case "-shotat": float.TryParse(next, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _shotAt); break;
                     case "-until": _until = next; break;
                     case "-board": int.TryParse(next, out _board); break;
@@ -244,13 +252,20 @@ namespace RestartedTavern.Client.Table
             _overlay = Ui.Fill(_root, "Overlay");
             _dragLayer = Ui.Fill(_root, "Drag");
 
-            _arrow = Ui.Panel(_dragLayer, "Arrow", 0, 0, 10, 10, new Color(1f, 0.35f, 0.3f, 0.85f));
-            _arrow.rectTransform.anchorMin = _arrow.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            _arrow.rectTransform.pivot = new Vector2(0f, 0.5f);
-            _arrowHead = Ui.Panel(_dragLayer, "ArrowHead", 0, 0, 26, 26, new Color(1f, 0.35f, 0.3f, 0.95f));
+            for (int i = 0; i < ArrowSegments; i++)
+            {
+                var seg = Ui.Panel(_dragLayer, "Arrow", 0, 0, 10, 10, Color.white);
+                seg.rectTransform.anchorMin = seg.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                seg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                Ui.AddOutline(seg.gameObject, new Color(0f, 0f, 0f, 0.55f), 1.5f);
+                seg.gameObject.SetActive(false);
+                _arrowBody.Add(seg);
+            }
+            _arrowHead = Ui.Panel(_dragLayer, "ArrowHead", 0, 0, 46, 40, Color.white);
+            _arrowHead.sprite = Ui.TriangleSprite;
             _arrowHead.rectTransform.anchorMin = _arrowHead.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            _arrowHead.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _arrow.gameObject.SetActive(false);
+            _arrowHead.rectTransform.pivot = new Vector2(0.3f, 0.5f);
+            Ui.AddOutline(_arrowHead.gameObject, new Color(0f, 0f, 0f, 0.6f), 2f);
             _arrowHead.gameObject.SetActive(false);
         }
 
@@ -339,6 +354,12 @@ namespace RestartedTavern.Client.Table
                     _zoomShot = null;
                     if (pin != null) { _pinnedZoom = pin.Id; ShowZoom(pin); }
                 }
+                if (_hoverShot != null && _snap != null)
+                {
+                    var card = _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.HandCard && x.View?.DefinitionId == _hoverShot);
+                    _hoverShot = null;
+                    if (card != null) OnHover(card, true);
+                }
                 _shotFrame++;
                 if (_shotAt >= 0f)
                 {
@@ -425,6 +446,13 @@ namespace RestartedTavern.Client.Table
             else if (myCall)
                 foreach (var a in _picker.Legal.Where(a => a.Kind == ActionKind.ChooseTarget && a.Targets.Length > 0)) _targets.Add(a.Targets[0]);
             _combatCandidates = myCall && _stage != null ? _stage.Candidates() : new HashSet<ObjectId>();
+            _triggerSources = new HashSet<ObjectId>();
+            if (_snap.Decision == DecisionKind.ChooseTriggerTarget && myCall && !_snap.DecisionSource.IsNone) _triggerSources.Add(_snap.DecisionSource);
+            foreach (var item in _snap.Chain.Where(i => i.Kind == ChainItemKind.TriggeredAbility && i.Controller == _snap.Viewer))
+            {
+                _triggerSources.Add(item.ObjectId);
+                if (!item.Source.IsNone) _triggerSources.Add(item.Source);
+            }
             if (_stage != null && _stage.IsBlocking && !_selectedBlocker.IsNone)
                 foreach (var a in _stage.BlockableBy(_selectedBlocker)) _targets.Add(Target.ForObject(a));
 
@@ -481,6 +509,7 @@ namespace RestartedTavern.Client.Table
             bool target = (!id.IsNone && _targets.Contains(Target.ForObject(id)))
                           || (w.Kind == WidgetKind.TavernDweller && _targets.Contains(Target.ForPlayer(w.Player)));
             if (!id.IsNone && id == _picker.Source || !_selectedBlocker.IsNone && id == _selectedBlocker) w.SetGlow(GlowSelected);
+            else if (_triggerSources.Contains(id)) w.SetGlow(GlowTrigger); // over red: it may target itself, the arrow starts here
             else if (target) w.SetGlow(GlowTarget);
             else if (_combatCandidates.Contains(id)) w.SetGlow(GlowCombat);
             else if (_sources.Contains(id) && w.Kind != WidgetKind.TavernDweller) w.SetGlow(GlowSource);
@@ -1163,7 +1192,11 @@ namespace RestartedTavern.Client.Table
             float cx = center.x + Ui.Width / 2f, cy = Ui.Height / 2f - center.y;
             const float zw = 300f, zh = 420f;
             float halfW = Mathf.Abs(corners[2].x - corners[0].x) / 2f / _root.lossyScale.x; // wider when tapped
-            float x = cx < Ui.Width / 2f ? cx + halfW + 28f : cx - halfW - 28f - zw;
+            bool right = cx < Ui.Width / 2f;
+            // A host with its gear fanned out (towards the middle): the zoom goes to the other side, not over the gear
+            // (playtest 2026-10-10_140818).
+            if (w.Id == _fanHost && _tucked.ContainsKey(w.Id)) right = !right;
+            float x = Mathf.Clamp(right ? cx + halfW + 28f : cx - halfW - 28f - zw, 10f, Ui.Width - zw - 10f);
             float y = Mathf.Clamp(cy - zh / 2f, 10f, Ui.Height - zh - 10f);
             var rt = Ui.Rect(_zoomLayer, "Zoom", x, y, zw, zh);
             CardFaces.Build(rt, w.View, FaceStyle.Zoom);
@@ -1370,27 +1403,68 @@ namespace RestartedTavern.Client.Table
 
         private Camera CanvasCamera => _camera;
 
-        /// <summary>LoR / MTGA targeting arrow from the source to the pointer while a target is being chosen.</summary>
+        private static readonly Color ArrowAim = Ui.Hex("#FF6A3A");
+        private static readonly Color ArrowLocked = Ui.Hex("#FFD040");
+
+        /// <summary>
+        /// MTG Arena targeting arrow while a target is being chosen (a spell or ability you're casting, or your trigger
+        /// picking its target, playtest 2026-10-10_141453): it bends up from the source to the pointer and snaps onto a
+        /// legal target under it (gold). Once chosen, the Chain bubble's target lines show the pick.
+        /// </summary>
         private void UpdateArrow()
         {
-            bool show = _picker != null && _picker.IsPicking && _picker.Prompt != null && _picker.Prompt.Targets.Any();
-            var source = show ? _widgets.FirstOrDefault(x => x != null && x.Id == _picker.Source) : null;
-            if (source == null
+            CardWidget source = null;
+            if (_picker != null && _picker.IsPicking && _picker.Prompt != null && _picker.Prompt.Targets.Any())
+                source = SourceWidget(_picker.Source);
+            else if (_snap != null && _s.HumanToAct && _snap.Decision == DecisionKind.ChooseTriggerTarget && _targets.Count > 0)
+                source = SourceWidget(_snap.DecisionSource);
+            if (source == null || _dragging != null
                 || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_dragLayer, Input.mousePosition, CanvasCamera, out var to))
             {
-                _arrow.gameObject.SetActive(false);
+                foreach (var seg in _arrowBody) seg.gameObject.SetActive(false);
                 _arrowHead.gameObject.SetActive(false);
                 return;
             }
             Vector2 from = _dragLayer.InverseTransformPoint(source.transform.position);
+            var locked = _widgets.FirstOrDefault(x => x != null && x != source && TargetsOf(x).Any(_targets.Contains)
+                && RectTransformUtility.RectangleContainsScreenPoint(x.Rect, Input.mousePosition, CanvasCamera));
+            if (locked != null) to = _dragLayer.InverseTransformPoint(locked.transform.position);
+            var color = locked != null ? ArrowLocked : ArrowAim;
+
+            // A quadratic curve bowed upwards, ending short so the head sits on the end point.
             var d = to - from;
-            _arrow.gameObject.SetActive(true);
+            float len = d.magnitude;
+            var normal = len > 1f ? new Vector2(-d.y, d.x) / len : Vector2.up;
+            if (normal.y < 0f) normal = -normal;
+            var ctrl = (from + to) / 2f + normal * Mathf.Min(160f, len * 0.25f);
+            Vector2 Point(float t) => (1 - t) * (1 - t) * from + 2 * (1 - t) * t * ctrl + t * t * to;
+            const float headLen = 30f;
+            float tEnd = len > headLen ? 1f - headLen / len : 0.01f;
+            for (int i = 0; i < ArrowSegments; i++)
+            {
+                float t0 = tEnd * i / ArrowSegments, t1 = tEnd * (i + 0.8f) / ArrowSegments; // small gaps: a segmented body
+                Vector2 a = Point(t0), b = Point(t1), seg = b - a;
+                var img = _arrowBody[i];
+                img.gameObject.SetActive(len > 20f);
+                img.color = new Color(color.r, color.g, color.b, Mathf.Lerp(0.35f, 0.95f, (float)i / ArrowSegments));
+                img.rectTransform.anchoredPosition = (a + b) / 2f;
+                img.rectTransform.sizeDelta = new Vector2(seg.magnitude + 1f, Mathf.Lerp(7f, 16f, (float)i / ArrowSegments));
+                img.rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(seg.y, seg.x) * Mathf.Rad2Deg);
+                img.transform.SetAsLastSibling();
+            }
+            var tip = to - Point(tEnd);
             _arrowHead.gameObject.SetActive(true);
-            _arrow.rectTransform.anchoredPosition = from;
-            _arrow.rectTransform.sizeDelta = new Vector2(d.magnitude, 10f);
-            _arrow.rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
-            _arrowHead.rectTransform.anchoredPosition = to;
-            _arrowHead.rectTransform.localEulerAngles = new Vector3(0, 0, 45f);
+            _arrowHead.color = color;
+            _arrowHead.rectTransform.anchoredPosition = Point(tEnd);
+            _arrowHead.rectTransform.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(tip.y, tip.x) * Mathf.Rad2Deg);
+            _arrowHead.transform.SetAsLastSibling();
+        }
+
+        /// <summary>The widget a targeting arrow starts from: the card on the table, its Chain bubble or hand card, or a Tavern Dweller.</summary>
+        private CardWidget SourceWidget(ObjectId id)
+        {
+            if (id.IsNone) return null;
+            return _widgets.FirstOrDefault(x => x != null && x.Id == id && x.Kind != WidgetKind.History);
         }
     }
 }

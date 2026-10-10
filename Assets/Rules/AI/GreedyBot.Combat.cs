@@ -161,8 +161,10 @@ namespace RestartedTavern.Rules.AI
             if (through >= defender.Life) return 1000 + through;
             score += through * LifePointValue(defender.Life) * _style.AttackTokenUrgency;
 
-            var home = mine.Battlefield.Where(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped && !plan.Contains(c)
-                                                   && !fixedIds.Contains(c.Id)).Select(c => ToFighter(s, c)).ToList();
+            // Attackers stay tapped through the crack-back (Decision Log 2026-10-10), except with Vigilance.
+            var home = mine.Battlefield.Where(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped
+                                                   && (!plan.Contains(c) && !fixedIds.Contains(c.Id) || _style.TapRuleAware && Stats(s, c).Has(Keyword.Vigilance)))
+                .Select(c => ToFighter(s, c)).ToList();
             // Control keeps a share of the opponent's creature count home as blockers.
             if (_style.KeepBackShare > 0 && plan.Count > 0 && home.Count < Math.Ceiling(theirs.Count * _style.KeepBackShare))
                 return double.NegativeInfinity;
@@ -173,7 +175,7 @@ namespace RestartedTavern.Rules.AI
                 theirNext.Add(new Fighter { Power = Math.Min(s.Format.ManaCap, defender.MaxMana + 1), Health = defender.MaxMana + 2 });
             int back = MinDamageThrough(theirNext, home);
             if (back >= mine.Life) score -= 500;
-            else score -= 0.5 * back * LifePointValue(mine.Life);
+            else score -= _style.CrackBackWeight * back * LifePointValue(mine.Life);
             return score;
         }
 

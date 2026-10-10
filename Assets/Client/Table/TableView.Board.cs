@@ -187,15 +187,30 @@ namespace RestartedTavern.Client.Table
             }
         }
 
-        /// <summary>The fan closes once the mouse is over neither the host nor any of its attachments.</summary>
+        /// <summary>
+        /// The fan closes once the mouse leaves the area around the host and its attachments (one box around them all,
+        /// with a margin: crossing the gap between the host and its gear must not close it, playtest 2026-10-10_140818).
+        /// </summary>
         private void UpdateFan()
         {
             if (_fanHost.IsNone) return;
             var host = WidgetFor(_fanHost);
-            bool over = host != null && RectTransformUtility.RectangleContainsScreenPoint(host.Rect, Input.mousePosition, CanvasCamera);
-            if (!over && _tucked.TryGetValue(_fanHost, out var group))
-                over = group.Any(a => a != null && RectTransformUtility.RectangleContainsScreenPoint(a.Rect, Input.mousePosition, CanvasCamera));
-            if (!over) Fan(_fanHost, false);
+            if (host == null || !_tucked.TryGetValue(_fanHost, out var group)) { Fan(_fanHost, false); return; }
+            var corners = new Vector3[4];
+            Vector2 min = new Vector2(float.MaxValue, float.MaxValue), max = new Vector2(float.MinValue, float.MinValue);
+            foreach (var r in group.Where(a => a != null).Select(a => a.Rect).Append(host.Rect))
+            {
+                r.GetWorldCorners(corners);
+                foreach (var c in corners)
+                {
+                    var sp = RectTransformUtility.WorldToScreenPoint(CanvasCamera, c);
+                    min = Vector2.Min(min, sp);
+                    max = Vector2.Max(max, sp);
+                }
+            }
+            float pad = 16f * Screen.height / Ui.Height;
+            Vector2 m = Input.mousePosition;
+            if (m.x < min.x - pad || m.x > max.x + pad || m.y < min.y - pad || m.y > max.y + pad) Fan(_fanHost, false);
         }
 
         // ------------------------------------------------------------------ -board N (layout screenshots)

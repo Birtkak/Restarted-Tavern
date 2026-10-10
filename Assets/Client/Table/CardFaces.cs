@@ -88,7 +88,7 @@ namespace RestartedTavern.Client.Table
             bool dweller = v.Type == CardType.TavernDweller;
 
             // Art window: a portrait crop for units, the upper half for full cards.
-            float artTop = unit ? 6f * k : 8f * k, artH = unit ? h - 6f * k - 70f * k : h * 0.42f;
+            float artTop = unit ? 6f * k : 8f * k, artH = unit ? h - 6f * k - 70f * k : FullCardArtHeight(v, w, h, k, creature);
             var art = Ui.Rect(root, "Art", 8f * k, artTop, w - 16f * k, artH);
             BuildArt(art, v, fs);
 
@@ -135,6 +135,29 @@ namespace RestartedTavern.Client.Table
 
             if (v.Tapped)
                 Ui.FillPanel(root, "Tapped", new Color(0f, 0f, 0f, 0.18f)); // light: it also lies sideways on the table
+        }
+
+        /// <summary>
+        /// The art window of a full card: 42% of the height, smaller when the rules text would not fit at a readable
+        /// size (playtest 2026-10-10_141545: Archon Lumen's text was cut off in hand).
+        /// </summary>
+        private static float FullCardArtHeight(CardView v, float w, float h, float k, bool creature)
+        {
+            string text = CardText(v);
+            var gen = new TextGenerator();
+            int readable = Mathf.Max(6, Mathf.RoundToInt(11 * k));
+            var settings = new TextGenerationSettings
+            {
+                font = Ui.Font, fontSize = readable, fontStyle = FontStyle.Normal, lineSpacing = 1f, richText = true,
+                scaleFactor = 1f, textAnchor = TextAnchor.UpperLeft, horizontalOverflow = HorizontalWrapMode.Wrap,
+                verticalOverflow = VerticalWrapMode.Overflow, generationExtents = new Vector2(w - 24f * k, 0f),
+                color = Color.black, updateBounds = false,
+            };
+            float need = gen.GetPreferredHeight(text, settings) + 8f * k;
+            float below = 8f * k + 2f * k + 42f * k + (creature ? 34f * k : 10f * k); // art top, name, type line, gems
+            foreach (float frac in new[] { 0.42f, 0.36f, 0.30f, 0.25f })
+                if (h - h * frac - below >= need) return h * frac;
+            return h * 0.25f;
         }
 
         private static void Gem(RectTransform root, string name, float x, float y, float size, Color color, string text, Color textColor, float k, bool dark = false)

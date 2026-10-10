@@ -108,6 +108,8 @@ namespace RestartedTavern.Client.Logic
         /// <summary>The decision being made (mulligan, blocks, a trigger target...), or null for a normal action.</summary>
         public DecisionKind? Decision;
         public string DecisionPrompt;
+        /// <summary>ChooseTriggerTarget: the permanent (or Tavern Dweller) whose trigger is choosing its target.</summary>
+        public ObjectId DecisionSource = ObjectId.None;
         /// <summary>Who leads the round (takes the first action; holds the attack token when the format has one).</summary>
         public PlayerId RoundLeader;
         /// <summary>The attack token was used this round.</summary>
@@ -142,6 +144,7 @@ namespace RestartedTavern.Client.Logic
                 WaitingOn = waiting,
                 Decision = state.Pending?.Kind,
                 DecisionPrompt = state.Pending?.Prompt,
+                DecisionSource = state.Pending?.Trigger?.SourceId ?? ObjectId.None,
                 AttackUsed = state.AttackedThisRound > 0,
             };
             // The engine's rule (GameRunner.RoundLeader): the first living player from the round leader's seat.

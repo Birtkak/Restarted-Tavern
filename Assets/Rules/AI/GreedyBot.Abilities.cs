@@ -51,18 +51,43 @@ namespace RestartedTavern.Rules.AI
 
         private int GoldCap(GameState s, PlayerState p) => GoldRules.Cap(s, Db, p.Id);
 
-        /// <summary>A tapped creature can't attack, and stays tapped until the next round (no blocking).</summary>
+        /// <summary>
+        /// A tapped creature can't attack, and it stays tapped until our next attack round (only the attack token holder
+        /// untaps, Decision Log 2026-10-10), so it can't block the opponent's next attack either. Tapping is free only
+        /// in the opponent's attack round once their attack is blocked or over: we untap next round.
+        /// </summary>
         private double TapPenalty(GameState s, PlayerId me, CardInstance creature)
         {
             int power = Stats(s, creature).Power;
+            if (!_style.TapRuleAware) return OldTapPenalty(s, me, power);
+            var holder = AttackTokenHolder(s);
+            double penalty = 0;
+            if (holder.Id == me)
+            {
+                if (!AttackedThisRound(s, holder) && s.Step != Step.End) penalty += 0.5 + 0.5 * power; // our attack
+                penalty += 0.3 + 0.3 * power; // their attack next round, before we untap
+                return penalty;
+            }
+            bool blocksDone = s.Combat != null && (s.Step > Step.DeclareBlockers || (s.Step == Step.DeclareBlockers && s.Pending == null));
+            bool theirAttackComing = s.Combat != null ? !blocksDone : !AttackedThisRound(s, holder) && s.Step != Step.End;
+            return theirAttackComing ? 0.3 + 0.3 * power : 0;
+        }
+
+        /// <summary>The penalty from before the untap rule (everything untapped each round): BotStyle.Baseline().</summary>
+        private static double OldTapPenalty(GameState s, PlayerId me, int power)
+        {
             if (s.ActivePlayer == me)
             {
                 bool beforeAttacks = s.Step == Step.Main1 || s.Step == Step.BeginCombat;
                 return beforeAttacks ? 0.5 + 0.5 * power : 0.3 + 0.2 * power;
             }
             bool beforeBlocks = s.Step < Step.DeclareBlockers || (s.Step == Step.DeclareBlockers && s.Pending != null);
-            return beforeBlocks ? 0.3 + 0.3 * power : 0; // after combat it untaps in our untap step anyway
+            return beforeBlocks ? 0.3 + 0.3 * power : 0;
         }
+
+        private static PlayerState AttackTokenHolder(GameState s) => s.LivingPlayersFrom(s.Players[s.RoundLeaderSeat].Id)[0];
+
+        private static bool AttackedThisRound(GameState s, PlayerState p) => (s.AttackedThisRound & (1 << p.Seat)) != 0;
 
         private double LifeLossValue(PlayerState p, int amount)
         {

@@ -217,8 +217,10 @@ namespace RestartedTavern.Client.Logic.Tests
                     var chosen = bot.Choose(session.State, session.Viewer);
                     int round = session.State.RoundNumber;
                     var stepBefore = session.State.Step;
-                    session.Submit(chosen);
-                    if (chosen.Equals(button.Action) && button.Mode == ButtonMode.Pass)
+                    var passEvents = session.Submit(chosen);
+                    // Unless the opponent could only pass (the engine passes for them; the button doesn't reveal that they have no plays).
+                    bool theyAutoPassed = passEvents.OfType<PriorityPassedEvent>().Any(e => e.Automatic && e.Player != chosen.Player);
+                    if (chosen.Equals(button.Action) && button.Mode == ButtonMode.Pass && !theyAutoPassed)
                         Assert.AreEqual(round, session.State.RoundNumber, "Pass must not end the round");
                     if (chosen.Equals(button.Action) && button.Mode == ButtonMode.EndRound)
                     {

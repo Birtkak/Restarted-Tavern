@@ -45,6 +45,15 @@ namespace RestartedTavern.Rules.AI
         /// <summary>Attack as the first action of the round instead of after developing.</summary>
         public bool AttackFirstInRound { get; set; }
 
+        /// <summary>
+        /// Only the attack token holder untaps (Decision Log 2026-10-10): a Tap ability also costs the blocks until our
+        /// next attack round, and Vigilance attackers still count as blockers for the crack-back.
+        /// </summary>
+        public bool TapRuleAware { get; set; } = true;
+
+        /// <summary>How much the damage the opponent's crack-back gets through counts against an attack (per point of life).</summary>
+        public double CrackBackWeight { get; set; } = 0.5;
+
         /// <summary>The original bot: develops, races, blocks only good or even trades.</summary>
         public static BotStyle Greedy() => new BotStyle { Name = "Greedy" };
 
@@ -55,7 +64,7 @@ namespace RestartedTavern.Rules.AI
         public static BotStyle Baseline() => new BotStyle
         {
             Name = "Baseline", AvoidOverdraw = false, AttackTokenUrgency = 1, CrackBackCountsTheirBuildTurn = false,
-            ValueArrivalDamage = false,
+            ValueArrivalDamage = false, TapRuleAware = false, CrackBackWeight = 0.5,
         };
 
         /// <summary>Defensive: holds blockers back, blocks freely, trades up, values chip damage and keeps Gold for answers.</summary>

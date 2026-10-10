@@ -76,11 +76,17 @@ after every change; the events of the change then animate on top (FLIP slides + 
   the top, rows of units above and below the combat lane, MTGA fanned hand at the bottom (lift + grow on hover), piles
   (deck / graveyard / exile, click to browse) and mana column + 3 Gold diamonds + attack token on the right, the Chain
   above the context button (top item largest).
-- **Glows**: blue = can be used, red = legal target, orange = can attack / block, white = picked.
+- **Glows**: blue = can be used, red = legal target, orange = can attack / block, white = picked, green = your card
+  whose triggered ability is going off (choosing its target, or on the Chain) and its Chain bubble; green wins over
+  red when it may target itself.
 - **Playing**: click a glowing card (or drag it from the hand above the hand line) → `ActionPicker`; targets are
-  clicked on the table (or the card is dropped straight onto one), with a targeting arrow from the source. Real
+  clicked on the table (or the card is dropped straight onto one), with an MTG Arena targeting arrow from the source (also from your trigger's card while it picks a target): a
+  segmented curve to the pointer that snaps onto a legal target under it and turns gold. Once picked, the Chain
+  bubble's target lines show the choice. Real
   choices (modes, X, Invest, options, mulligan, off-table targets) appear in a box in the middle of the lane; "No more
   targets" and Cancel sit beside the prompt bar. Right-click or Esc cancels.
+- **Hand cards**: the art window shrinks (42% down to 25% of the card) when the rules text wouldn't fit at a readable
+  size.
 - **Combat**: drag units into the lane (or click a unit that has no ability) to stage attackers, drag them out to
   unstage; to block, drag a unit onto an attacker (or click the blocker, then the attacker). The context button
   commits (`CommitCombat`).
@@ -103,7 +109,7 @@ after every change; the events of the change then animate on top (FLIP slides + 
 - **Command line**: `-menu`, `-debug`, `-reveal`, `-bugreport note`, `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
   everyone, `MatchSession.AutoStep`), `-until attack|block` (stop there and stage everything), `-autopick`,
   `-autoshot file.png` (use an absolute path), `-shotat seconds` (shoot that long after the table is drawn, to catch the
-  beats), `-board N` (N permanents on each side, some tapped or equipped, to check the board layout).
+  beats), `-board N` (N permanents on each side, some tapped or equipped, to check the board layout), `-hover <card id>` (the screenshot hovers that card in hand).
 - **Board** (`TableView.Board.cs`, MTG Arena style, Decision Log 2026-10-10): tapped units sideways, attachments tucked
   behind their host and fanned out on hover, each side scaled to fit. See LOR_PRESENTATION §6.
 

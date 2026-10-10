@@ -132,6 +132,31 @@ namespace RestartedTavern.Client.Table
             }
         }
 
+        private static Sprite _triangle;
+
+        /// <summary>A white triangle pointing right (+x), for arrow heads.</summary>
+        public static Sprite TriangleSprite
+        {
+            get
+            {
+                if (_triangle != null) return _triangle;
+                const int n = 64;
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+                var px = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        // Inside when |y - centre| <= half-height * (1 - x / n): the tip at the right edge.
+                        float half = (n / 2f) * (1f - (x + 0.5f) / n);
+                        float d = half - Mathf.Abs(y + 0.5f - n / 2f);
+                        px[y * n + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(d + 0.5f) * 255f));
+                    }
+                tex.SetPixels32(px);
+                tex.Apply();
+                return _triangle = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f);
+            }
+        }
+
         /// <summary>A disc of the given colour (top-left x/y like <see cref="Panel"/>). Raycasts follow the round shape.</summary>
         public static Image Circle(Transform parent, string name, float x, float y, float size, Color color, bool raycast = false) =>
             Circle(parent, name, x, y, size, size, color, raycast);
