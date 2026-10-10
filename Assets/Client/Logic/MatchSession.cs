@@ -32,6 +32,43 @@ namespace RestartedTavern.Client.Logic
                 Seed = seed,
             };
         }
+
+        /// <summary>
+        /// 1v1 with two prototype decks, each played with a chosen Tavern Dweller (null = the deck's own). The Tavern
+        /// Dweller must be one of <see cref="TavernDwellersFor"/>.
+        /// </summary>
+        public static MatchSetup Duel(int deck1, string tavernDweller1, int deck2, string tavernDweller2,
+            SeatKind seat1, SeatKind seat2, ulong seed)
+        {
+            var decks = CardPool.PrototypeDecks();
+            return new MatchSetup
+            {
+                Decks = { WithTavernDweller(decks[deck1], tavernDweller1), WithTavernDweller(decks[deck2], tavernDweller2) },
+                Seats = { seat1, seat2 },
+                Seed = seed,
+            };
+        }
+
+        private static CardPool.DeckList WithTavernDweller(CardPool.DeckList deck, string tavernDweller) =>
+            tavernDweller == null || tavernDweller == deck.TavernDweller ? deck : new CardPool.DeckList
+            {
+                Id = deck.Id, Name = deck.Name, TavernDweller = tavernDweller, Description = deck.Description,
+                Cards = new List<string>(deck.Cards),
+            };
+
+        /// <summary>
+        /// The Tavern Dwellers that can lead this deck: their factions cover every non-neutral card in it
+        /// (the deck rule in GameEngine.CreateGame). The deck's own Tavern Dweller comes first.
+        /// </summary>
+        public static List<string> TavernDwellersFor(CardPool.DeckList deck, CardDatabase db)
+        {
+            var factions = deck.Cards.Select(id => db.Get(id).Faction).Where(f => f != "neutral").Distinct().ToList();
+            return CardPool.All()
+                .Where(d => d.IsTavernDweller && factions.All(f => d.TavernDwellerFactions.Contains(f)))
+                .Select(d => d.Id)
+                .OrderBy(id => id == deck.TavernDweller ? 0 : 1)
+                .ToList();
+        }
     }
 
     /// <summary>
@@ -48,6 +85,9 @@ namespace RestartedTavern.Client.Logic
         private const int MaxUndo = 200;
 
         private readonly List<GameState> _undo = new List<GameState>();
+        /// <summary>For each undo state: how long the history was then.</summary>
+        private readonly List<int> _undoHistory = new List<int>();
+        private readonly List<PlayerAction> _history = new List<PlayerAction>();
         private readonly GreedyBot _bot;
 
         public GameEngine Engine { get; }
@@ -58,6 +98,12 @@ namespace RestartedTavern.Client.Logic
         /// <summary>The player whose hand and choices the screen shows.</summary>
         public PlayerId Viewer { get; private set; }
         public bool HandoffPending { get; private set; }
+
+        /// <summary>
+        /// Every action sent to the engine since the start, in order (undone ones removed). Replaying them on a new game
+        /// with the same setup and seed gives the same state (bug reports).
+        /// </summary>
+        public IReadOnlyList<PlayerAction> History => _history;
 
         /// <summary>Raised with every batch of events (game start, each action), in order.</summary>
         public event Action<IReadOnlyList<GameEvent>> EventsApplied;
@@ -132,6 +178,9 @@ namespace RestartedTavern.Client.Logic
             if (_undo.Count == 0) return;
             State = _undo[_undo.Count - 1];
             _undo.RemoveAt(_undo.Count - 1);
+            int keep = _undoHistory[_undoHistory.Count - 1];
+            _undoHistory.RemoveAt(_undoHistory.Count - 1);
+            _history.RemoveRange(keep, _history.Count - keep);
             _combat = null;
             UpdateViewer();
             HandoffPending = false;
@@ -209,11 +258,17 @@ namespace RestartedTavern.Client.Logic
         private void KeepUndo()
         {
             _undo.Add(State.Clone());
-            if (_undo.Count > MaxUndo) _undo.RemoveAt(0);
+            _undoHistory.Add(_history.Count);
+            if (_undo.Count > MaxUndo)
+            {
+                _undo.RemoveAt(0);
+                _undoHistory.RemoveAt(0);
+            }
         }
 
         private List<GameEvent> ApplyToEngine(PlayerAction action)
         {
+            _history.Add(action);
             var events = Engine.Apply(State, action);
             Text.Remember(State, events);
             return events;

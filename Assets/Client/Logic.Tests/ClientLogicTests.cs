@@ -242,6 +242,45 @@ namespace RestartedTavern.Client.Logic.Tests
         }
 
         [Test]
+        public void Setup_EveryLegalTavernDweller_StartsAGame()
+        {
+            var db = RestartedTavern.Rules.Cards.CardPool.CreateDatabase();
+            var decks = RestartedTavern.Rules.Cards.CardPool.PrototypeDecks();
+            int games = 0;
+            for (int d = 0; d < decks.Count; d++)
+            {
+                var dwellers = MatchSetup.TavernDwellersFor(decks[d], db);
+                Assert.AreEqual(decks[d].TavernDweller, dwellers[0], "The deck's own Tavern Dweller comes first.");
+                foreach (var td in dwellers)
+                {
+                    var session = new MatchSession(MatchSetup.Duel(d, td, (d + 1) % decks.Count, null, SeatKind.Human, SeatKind.Bot, 1));
+                    Assert.AreEqual(td, session.Snapshot().Players[0].TavernDweller.DefinitionId);
+                    games++;
+                }
+            }
+            Assert.GreaterOrEqual(games, decks.Count);
+        }
+
+        [Test]
+        public void Session_History_ReplaysToTheSameState()
+        {
+            var setup = MatchSetup.Duel(1, 3, SeatKind.Human, SeatKind.Bot, seed: 21);
+            var session = new MatchSession(setup);
+            for (int i = 0; i < 120 && session.WaitingOn != null; i++)
+            {
+                session.AutoStep();
+                if (i == 40 && session.HumanToAct)
+                {
+                    session.Submit(session.LegalForViewer()[0]);
+                    session.Undo();
+                }
+            }
+            var replay = new MatchSession(setup);
+            foreach (var a in session.History) replay.Engine.Apply(replay.State, a);
+            Assert.AreEqual(session.State.Fingerprint(), replay.State.Fingerprint());
+        }
+
+        [Test]
         public void Session_AutoStep_PlaysForHumansToo()
         {
             var session = new MatchSession(MatchSetup.Duel(2, 4, SeatKind.Human, SeatKind.Human, seed: 9));

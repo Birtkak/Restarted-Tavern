@@ -89,7 +89,18 @@ after every change (no animations yet).
 - **Placeholder frames** (`CardFaces`): faction colour + accent, emblem text in the art window, cost / Power /
   Health gems, rarity pip, text box; units show no cost, buffs in green, damage in red, keyword tags. Art drops in
   from `Resources/CardArt/<card id>.png` with no code change. Faction colours are a proposal (still to confirm).
-- **Command line**: `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
+- **Start-up** (user request 2026-10-10): no Unity splash, a short loading screen, then the **main menu**: per
+  player Human / Bot, one of the prototype decks and a Tavern Dweller that can lead it (the deck rule: its factions
+  must cover the deck, so today each deck has only its own), then **Battle**. Menu button in game, Rematch / Main
+  menu at game over. Random seed unless `-seed` (shown bottom left). The table is a fixed 1920x1080 area scaled to
+  fit the window (CanvasScaler Expand), so it never crops.
+- **Debug** (F1 / Debug button, `TableView.Debug.cs`): engine and table state, every legal action as a button, the
+  event log, reveal the opponent's hand, "bot moves for me", errors shown on screen, playtest logs saved to
+  `Playtests/` next to the exe (automatically at game over).
+- **Report bug** (`TableView.BugReport.cs`): the player types what went wrong; `BugReports/<time>/` next to the exe
+  gets `screenshot.png` (without the dialog) and `report.txt` (note, setup, seed, both players' full state, Chain,
+  legal actions, picker / combat stage, errors, log, and `MatchSession.History`, which replays the game exactly).
+- **Command line**: `-menu`, `-debug`, `-reveal`, `-bugreport note`, `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
   everyone, `MatchSession.AutoStep`), `-until attack|block` (stop there and stage everything), `-autopick`,
   `-autoshot file.png`.
 

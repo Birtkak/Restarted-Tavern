@@ -56,6 +56,9 @@ namespace RestartedTavern.Client.Editor
         public static void BuildWindows()
         {
             if (!File.Exists(ScenePath)) CreateScene(); // the menu item recreates it when this script changes
+            // No "Made with Unity" intro: the game opens on its own loading screen (user request 2026-10-10).
+            PlayerSettings.SplashScreen.show = false;
+            PlayerSettings.SplashScreen.showUnityLogo = false;
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { ScenePath },
