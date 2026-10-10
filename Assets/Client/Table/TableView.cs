@@ -65,6 +65,7 @@ namespace RestartedTavern.Client.Table
         private CardDatabase _db;
         /// <summary>The main menu (decks, Tavern Dwellers, human / bot, Battle) is open.</summary>
         private bool _menuOpen;
+        private bool _editorAtStart; // -editor: open the deck editor (screenshots)
         private GameObject _loading;
         private readonly SeatKind[] _seats = { SeatKind.Human, SeatKind.Bot };
         private ulong _seed; // 0 = a random seed at startup
@@ -132,6 +133,7 @@ namespace RestartedTavern.Client.Table
                     case "-until": _until = next; break;
                     case "-board": int.TryParse(next, out _board); break;
                     case "-menu": _menuOpen = true; break;
+                    case "-editor": _menuOpen = true; _editorAtStart = true; break;
                     case "-debug": _debugOpen = true; break;
                     case "-reveal": _revealHands = true; break;
                     case "-bugreport": _bugNote = next ?? ""; _autoBugReport = true; break;
@@ -150,11 +152,13 @@ namespace RestartedTavern.Client.Table
                 yield return null;
             }
             _db = CardPool.CreateDatabase();
+            CardPool.CustomDecksFile = System.IO.Path.Combine(Application.persistentDataPath, "custom_decks.json"); // the deck editor's
             CardPool.PrototypeDecks();
             bool menu = _menuOpen; // -menu (NewGame closes the menu)
             NewGame(_seed);
             if (_board > 0) { FillBoard(_board); OnSessionChanged(); }
             _menuOpen = menu;
+            if (_editorAtStart) OpenEditor(CardPool.PrototypeDecks()[_deck[0]]);
             if (interactive)
             {
                 while (Time.realtimeSinceStartup - shown < 1.2f) yield return null;
@@ -475,7 +479,8 @@ namespace RestartedTavern.Client.Table
             if (_browsing != null) DrawBrowser();
             if (!_pinnedZoom.IsNone) ShowZoom(_widgets.FirstOrDefault(w => w.Id == _pinnedZoom));
 
-            if (_menuOpen) DrawMenu();
+            if (_menuOpen && _editorOpen) DrawEditor();
+            else if (_menuOpen) DrawMenu();
             else if (_snap.IsGameOver) DrawGameOver();
             else if (_s.HandoffPending) DrawHandoff();
             DrawDebug();
@@ -697,9 +702,13 @@ namespace RestartedTavern.Client.Table
             DrawRow(opp.Battlefield.Where(c => !inLane.Contains(c.Id) && !tucked.Contains(c.Id)).ToList(), OppRowY, false);
             DrawRow(me.Battlefield.Where(c => !inLane.Contains(c.Id) && !tucked.Contains(c.Id)).ToList(), MyRowY, true);
 
-            // Attackers in a row across the lane, sideways once declared (attacking taps them); each blocker stands in
-            // front of its attacker. Staged attackers stay upright until the attack is confirmed.
-            float step = Math.Min(UnitH + 16f, (CenterRight - CenterLeft - 40f) / Math.Max(1, laneAttackers.Count));
+            // Attackers in a row across the lane, tilted once declared (attacking taps them, but lying sideways took too
+            // much room, playtest 2026-10-10_144700); each blocker stands in front of its attacker. Staged attackers stay
+            // upright until the attack is confirmed. A crowded lane shrinks the cards until they fit (down to half size).
+            float laneW = CenterRight - CenterLeft - 40f;
+            int laneCount = Math.Max(1, laneAttackers.Count);
+            float laneScale = Mathf.Clamp(laneW / (laneCount * (UnitW + 16f)), 0.5f, 1f);
+            float step = Math.Min((UnitW + 16f) * laneScale, laneW / laneCount);
             float x0 = CenterX - step * (laneAttackers.Count - 1) / 2f;
             var attackerX = new Dictionary<ObjectId, float>();
             for (int i = 0; i < laneAttackers.Count; i++)
@@ -708,9 +717,9 @@ namespace RestartedTavern.Client.Table
                 float x = x0 + i * step;
                 attackerX[c.Id] = x;
                 bool mine = c.Controller == _snap.Viewer;
-                bool sideways = c.IsAttacking && c.Tapped;
-                float half = (sideways ? UnitW : UnitH) / 2f;
-                var w = DrawPermanent(c, x, mine ? LaneMid + 6 + half : LaneMid - 6 - half, 1f, sideways);
+                float tilt = c.IsAttacking && c.Tapped ? (mine ? -12f : 12f) : 0f;
+                float half = UnitH * laneScale / 2f;
+                var w = DrawPermanent(c, x, mine ? LaneMid + 6 + half : LaneMid - 6 - half, laneScale, false, tilt);
                 if (_stage != null && _stage.Staged.Any(st => st.Creature == c.Id)) Tag(w, "staged");
             }
             var perAttacker = new Dictionary<ObjectId, int>();
@@ -718,9 +727,10 @@ namespace RestartedTavern.Client.Table
             {
                 perAttacker.TryGetValue(blocks, out int n);
                 perAttacker[blocks] = n + 1;
-                float x = (attackerX.TryGetValue(blocks, out var ax) ? ax : CenterX) + n * 34f;
+                float x = (attackerX.TryGetValue(blocks, out var ax) ? ax : CenterX) + n * 34f * laneScale;
                 bool mine = unit.Controller == _snap.Viewer;
-                DrawPermanent(unit, x, mine ? LaneMid + 6 + UnitH / 2f : LaneMid - 6 - UnitH / 2f, 1f, false);
+                float half = UnitH * laneScale / 2f;
+                DrawPermanent(unit, x, mine ? LaneMid + 6 + half : LaneMid - 6 - half, laneScale, false);
             }
         }
 
@@ -1119,6 +1129,7 @@ namespace RestartedTavern.Client.Table
             for (int seat = 0; seat < 2; seat++)
             {
                 int s = seat;
+                _deck[s] = Mathf.Clamp(_deck[s], 0, decks.Count - 1);
                 float x = 110 + s * 870;
                 var deck = decks[_deck[s]];
                 Ui.Panel(_overlay, "Column", x - 20, 100, 840, 840, new Color(0, 0, 0, 0.25f));
@@ -1167,6 +1178,13 @@ namespace RestartedTavern.Client.Table
             }
             var battle = Ui.Button(_overlay, "BATTLE", Ui.Width / 2f - 170, 958, 340, 92, ContextOn, () =>
             {
+                // A deck from the editor may not be legal yet (60 cards, copies, factions).
+                for (int s = 0; s < 2; s++)
+                {
+                    var d = decks[_deck[s]];
+                    try { DeckValidator.Validate(_db, FormatConfig.Standard(), d.Cards, _dweller[s] ?? d.TavernDweller); }
+                    catch (ArgumentException e) { ShowToast("Player " + (s + 1) + "'s deck " + d.Name + ": " + e.Message); return; }
+                }
                 _battleStarted = true;
                 NewGame(_seed + 1);
             }, 44);
@@ -1178,6 +1196,7 @@ namespace RestartedTavern.Client.Table
                     _dirty = true;
                 }, 20);
             Ui.Button(_overlay, "Quit", Ui.Width / 2f - 460, 978, 260, 54, Ui.Hex("#5A2A20"), Application.Quit, 20);
+            Ui.Button(_overlay, "Deck editor", Ui.Width / 2f - 740, 978, 260, 54, Mine, () => OpenEditor(decks[_deck[0]]), 20);
         }
 
         // ------------------------------------------------------------------ zoom

@@ -10,13 +10,14 @@ namespace RestartedTavern.Client.Table
     /// <summary>
     /// The battlefield rows, MTG Arena style (docs/handoff/NEXT_ARENA.md):
     /// - tapped units lie sideways (attackers too, once declared)
-    /// - Equipment and Curses on a creature are tucked behind it, title bars peeking out above; hovering the host fans them out
+    /// - Equipment and Curses on a creature are tucked behind it, stacked up and to the right so a corner peeks out; hovering
+    ///   the host fans them out beside it (hovering a fanned one zooms it)
     /// - each side shrinks as it fills up, down to two half-size lines before cards overlap.
     /// </summary>
     public sealed partial class TableView
     {
         private const float TappedAngle = -90f;      // a quarter turn clockwise
-        private const float TuckStep = 22f;          // how far each tucked attachment peeks out
+        private const float TuckStepX = 10f, TuckStepY = 12f; // how far each tucked attachment peeks out (right, up)
         private const float OneLineMinScale = 0.5f;  // below this, the side splits into two lines
         private const float TwoLineScale = 0.5f;
         private const float RowGap = 12f;
@@ -101,20 +102,20 @@ namespace RestartedTavern.Client.Table
 
         /// <summary>
         /// A permanent on the table with its tucked attachments behind it (drawn first, so they're under it), each one
-        /// TuckStep higher. Player Curses ("on Player 2") keep their tag.
+        /// a step further up and to the right. Player Curses ("on Player 2") keep their tag.
         /// </summary>
-        private CardWidget DrawPermanent(CardView c, float cx, float cy, float scale, bool sideways)
+        private CardWidget DrawPermanent(CardView c, float cx, float cy, float scale, bool sideways, float? tilt = null)
         {
             bool creature = c.Type == CardType.Creature;
             float w = creature ? UnitW : UnitW * 0.95f, h = creature ? UnitH : UnitW * 0.95f * 1.4f;
-            float angle = sideways ? TappedAngle : 0f;
+            float angle = tilt ?? (sideways ? TappedAngle : 0f);
             List<CardWidget> tucked = null;
             if (_attachments.TryGetValue(c.Id, out var gear))
             {
                 tucked = new List<CardWidget>();
                 for (int k = gear.Count - 1; k >= 0; k--) // the furthest one first: the nearest is drawn last, just under the host
                 {
-                    var a = MakeWidget(_dynamic, WidgetKind.HandCard, gear[k], cx, cy - (k + 1) * TuckStep * scale, UnitW, UnitH, angle);
+                    var a = MakeWidget(_dynamic, WidgetKind.HandCard, gear[k], cx + (k + 1) * TuckStepX * scale, cy - (k + 1) * TuckStepY * scale, UnitW, UnitH, angle);
                     a.Kind = WidgetKind.Unit;
                     SetHomeScale(a, scale);
                     a.HomeSibling = a.transform.GetSiblingIndex();
@@ -164,9 +165,9 @@ namespace RestartedTavern.Client.Table
             var hostWidget = WidgetFor(host);
             if (hostWidget == null || !_tucked.TryGetValue(host, out var group)) return;
             float s = hostWidget.HomeScale;
-            float hostHalf = Footprint(Mathf.Abs(hostWidget.HomeRotation) > 1f) * s / 2f;
+            float hostHalf = Footprint(Mathf.Abs(hostWidget.HomeRotation) > 45f) * s / 2f;
             float dir = hostWidget.HomePosition.x < CenterX ? 1f : -1f; // fan towards the middle of the table
-            for (int i = 0; i < group.Count; i++)
+            for (int i = open ? 0 : group.Count - 1; open ? i < group.Count : i >= 0; i += open ? 1 : -1)
             {
                 var a = group[i];
                 if (a == null) continue;
@@ -182,7 +183,9 @@ namespace RestartedTavern.Client.Table
                 {
                     a.Rect.anchoredPosition = a.HomePosition;
                     a.Rect.localEulerAngles = new Vector3(0, 0, a.HomeRotation);
-                    a.transform.SetSiblingIndex(a.HomeSibling);
+                    // Back under the host (its index now, not the one it was drawn at: hovering other cards moves
+                    // siblings around, and a stale index put the gear on top of the creature). Furthest first.
+                    a.transform.SetSiblingIndex(hostWidget.transform.GetSiblingIndex());
                 }
             }
         }

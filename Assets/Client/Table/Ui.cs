@@ -157,6 +157,35 @@ namespace RestartedTavern.Client.Table
             }
         }
 
+        private static Sprite _dome;
+
+        /// <summary>
+        /// A white dome for token units: a half circle as wide as the card on top, straight sides and a flat underside,
+        /// in a unit's 124 x 166 proportions.
+        /// </summary>
+        public static Sprite DomeSprite
+        {
+            get
+            {
+                if (_dome != null) return _dome;
+                const int w = 124, h = 166;
+                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+                var px = new Color32[w * h];
+                float r = w / 2f, cy = h - r; // texture y runs up: the arc's centre is r below the top
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        float fx = x + 0.5f, fy = y + 0.5f, d;
+                        if (fy <= cy) d = Mathf.Min(fx, w - fx);
+                        else d = r - Mathf.Sqrt((fx - r) * (fx - r) + (fy - cy) * (fy - cy));
+                        px[y * w + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(d + 0.5f) * 255f));
+                    }
+                tex.SetPixels32(px);
+                tex.Apply();
+                return _dome = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+            }
+        }
+
         /// <summary>A disc of the given colour (top-left x/y like <see cref="Panel"/>). Raycasts follow the round shape.</summary>
         public static Image Circle(Transform parent, string name, float x, float y, float size, Color color, bool raycast = false) =>
             Circle(parent, name, x, y, size, size, color, raycast);

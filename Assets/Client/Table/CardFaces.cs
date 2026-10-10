@@ -79,16 +79,31 @@ namespace RestartedTavern.Client.Table
             float w = root.rect.width, h = root.rect.height;
             float k = h / 210f; // scale relative to a 150×210 hand card
 
-            Ui.FillPanel(root, "Frame", fs.Frame, 0f, raycast: true);
-            Ui.FillPanel(root, "Edge", fs.Accent * new Color(1f, 1f, 1f, 0.5f), 3f * k);
-            Ui.FillPanel(root, "Body", fs.Frame * 0.85f + new Color(0, 0, 0, 0.15f), 5f * k);
-
             bool unit = style == FaceStyle.Unit;
             bool creature = v.Type == CardType.Creature;
             bool dweller = v.Type == CardType.TavernDweller;
+            // Token units on the table are domes, a half circle with a flat underside (playtest 2026-10-10_144700).
+            bool dome = unit && creature && v.IsToken;
 
-            // Art window: a portrait crop for units, the upper half for full cards.
+            var frame = Ui.FillPanel(root, "Frame", fs.Frame, 0f, raycast: true);
+            var edge = Ui.FillPanel(root, "Edge", fs.Accent * new Color(1f, 1f, 1f, 0.5f), 3f * k);
+            var body = Ui.FillPanel(root, "Body", fs.Frame * 0.85f + new Color(0, 0, 0, 0.15f), 5f * k);
+            if (dome)
+            {
+                foreach (var img in new[] { frame, edge, body }) img.sprite = Ui.DomeSprite;
+                frame.alphaHitTestMinimumThreshold = 0.5f;
+            }
+
+            // Art window: a portrait crop for units, the upper half for full cards. In a dome it starts where the arc is
+            // as wide as the art, so its corners stay inside.
             float artTop = unit ? 6f * k : 8f * k, artH = unit ? h - 6f * k - 70f * k : FullCardArtHeight(v, w, h, k, creature);
+            if (dome)
+            {
+                float r = w / 2f, half = r - 8f * k;
+                float top = r - Mathf.Sqrt(r * r - half * half);
+                artH -= top - artTop;
+                artTop = top;
+            }
             var art = Ui.Rect(root, "Art", 8f * k, artTop, w - 16f * k, artH);
             BuildArt(art, v, fs);
 
@@ -130,11 +145,14 @@ namespace RestartedTavern.Client.Table
                 var hColor = v.Damage > 0 ? Damaged : v.MaxHealth > v.PrintedHealth ? Buffed : Color.white;
                 Gem(root, "Power", 0f, h - g, g, PowerColor, v.Power.ToString(), pColor, k * (unit ? 1.25f : 1f), dark: true);
                 Gem(root, "Health", w - g, h - g, g, HealthColor, v.RemainingHealth.ToString(), hColor, k * (unit ? 1.25f : 1f), dark: true);
-                if (unit) Keywords(root, v, k);
+                if (unit) Keywords(root, v, k, dome ? artTop : 6f * k);
             }
 
             if (v.Tapped)
-                Ui.FillPanel(root, "Tapped", new Color(0f, 0f, 0f, 0.18f)); // light: it also lies sideways on the table
+            {
+                var shade = Ui.FillPanel(root, "Tapped", new Color(0f, 0f, 0f, 0.18f));
+                if (dome) shade.sprite = Ui.DomeSprite;
+            } // light: it also lies sideways on the table
         }
 
         /// <summary>
@@ -168,7 +186,7 @@ namespace RestartedTavern.Client.Table
             if (dark || textColor != Color.white) Ui.AddOutline(t.gameObject, new Color(0, 0, 0, 0.9f), 1.5f);
         }
 
-        private static void Keywords(RectTransform root, CardView v, float k)
+        private static void Keywords(RectTransform root, CardView v, float k, float top)
         {
             var icons = new List<string>();
             if ((v.Keywords & Keyword.Flying) != 0) icons.Add("FLY");
@@ -181,7 +199,7 @@ namespace RestartedTavern.Client.Table
             float s = 26f * k, x = root.rect.width - s - 4f * k;
             for (int i = 0; i < icons.Count; i++)
             {
-                var icon = Ui.Panel(root, "Keyword", x, 6f * k + i * (s + 3f * k), s, s * 0.8f, new Color(0f, 0f, 0f, 0.7f));
+                var icon = Ui.Panel(root, "Keyword", x, top + i * (s + 3f * k), s, s * 0.8f, new Color(0f, 0f, 0f, 0.7f));
                 Ui.FillLabel(icon.transform, icons[i], Mathf.RoundToInt(11 * k), Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
             }
         }
