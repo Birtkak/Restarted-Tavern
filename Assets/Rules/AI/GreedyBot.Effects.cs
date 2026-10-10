@@ -336,7 +336,7 @@ namespace RestartedTavern.Rules.AI
                 if (st is AttachedCreatureModifier m) { power += m.Power; health += m.Health; }
                 if (st is AttachedScalingModifier sc)
                 {
-                    int n = sc.Count(s, Db, asIfAttached);
+                    int n = sc.Count.Of(s, Db, asIfAttached);
                     power += sc.PowerPer * n;
                     health += sc.HealthPer * n;
                 }

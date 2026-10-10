@@ -318,6 +318,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Cards are data**: every card and the prototype decks live in JSON files (`Assets/StreamingAssets/Cards`, `Decks`), built from the engine's building blocks (DEVELOPMENT §3). Changing a card no longer needs code. |
 | 2026-10-10 | **Replacement effects are in the engine** (§8.1, MTG 614–616): dying, damage, entering, drawing, gaining life and gaining Gold can be replaced. Self-replacement effects first, then oldest first; each applies once per event. MTG's "the affected player chooses the order" is not asked yet (noted as open). No card uses them yet except Keeper Z-00, whose counter now goes through them. |
 | 2026-10-10 | **"Choose" without "target" is chosen on resolution** (MTG 608.2d). Snik pays X on activation and chooses up to X other Goobers when the ability resolves, one at a time, and may stop early; a Goober that left in response just can't be chosen. |
 | 2026-10-10 | **New Powers for three Tavern Dwellers** that sims showed were barely used (cards/tavern_dwellers.md): **Mukk** (3) a creature you control with Trample fights a creature you don't control; **Sparkwrench** (2) attach up to one target Equipment you control to target creature you control, and if none became attached, it gets +1/+1 until end of turn; **Auditor Prime** (2) draw a card, activate only if you have 3 or more Gold (checked before paying, MTG "activate only if"). |

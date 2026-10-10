@@ -1,0 +1,293 @@
+[
+  {
+    "id": "grizzle_coinflick",
+    "name": "Grizzle Coinflick",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["shadow_money_wizards", "goobers"],
+    "text": "Whenever you cast a spell that costs 5 or more, create a 1/1 Goober. Power (2): Deal 1 damage to any target.",
+    "triggers": [
+      {
+        "when": "SpellCast",
+        "effects": [
+          {"$type": "CreateTokensEffect", "tokenId": "goober_token"}
+        ],
+        "subject": "You",
+        "minCost": 5
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "AnyTarget"}
+        ],
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 1}
+        ],
+        "text": "(2) Deal 1 damage to any target."
+      }
+    ]
+  },
+  {
+    "id": "madame_vesper",
+    "name": "Madame Vesper",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["shadow_money_wizards", "sensationalists"],
+    "text": "Whenever a creature an opponent controls dies, gain 1 Gold. Power (3): Draw a card and lose 2 life.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1}
+        ],
+        "subject": "Opponents"
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "isTavernDwellerPower": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"},
+          {"$type": "LoseLifeEffect", "amount": 2}
+        ],
+        "text": "(3) Draw a card and lose 2 life."
+      }
+    ]
+  },
+  {
+    "id": "old_mossbank",
+    "name": "Old Mossbank",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["shadow_money_wizards", "evergrowing_wild"],
+    "text": "Your spells and creatures that cost 6 or more cost 1 less. Power (2): Give a creature +2/+2 until end of turn.",
+    "statics": [
+      {"$type": "CostModifierAbility", "minPrintedCost": 6, "reduction": 1}
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "Creature"}
+        ],
+        "effects": [
+          {"$type": "PumpTargetEffect", "power": 2, "health": 2}
+        ],
+        "text": "(2) Give a creature +2/+2 until end of turn."
+      }
+    ]
+  },
+  {
+    "id": "auditor_prime",
+    "name": "Auditor Prime",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["shadow_money_wizards", "glitterworld"],
+    "text": "Your Invest and Equip costs are 1 lower (minimum 1). Power (2): Draw a card. Activate only if you have 3 or more Gold.",
+    "statics": [
+      {"$type": "CostModifierAbility", "kind": "Invest", "reduction": 1, "notBelowOne": true},
+      {"$type": "CostModifierAbility", "kind": "Equip", "reduction": 1, "notBelowOne": true}
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "activateOnlyWithGold": 3,
+        "isTavernDwellerPower": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "text": "(2) Draw a card. Activate only if you have 3 or more Gold."
+      }
+    ]
+  },
+  {
+    "id": "skabba",
+    "name": "Skabba",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["goobers", "sensationalists"],
+    "text": "Whenever one of your creatures dies, deal 1 damage to each opponent. This triggers at most 3 times each turn. Power (1), sacrifice a creature: Draw a card.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "DealDamageToEachOpponentEffect", "amount": 1}
+        ],
+        "subject": "You",
+        "maxPerTurn": 3
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 1,
+        "sacrificeCreatureCost": true,
+        "isTavernDwellerPower": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "text": "(1) Sacrifice a creature: Draw a card."
+      }
+    ]
+  },
+  {
+    "id": "mukk_the_grub_king",
+    "name": "Mukk the Grub King",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["goobers", "evergrowing_wild"],
+    "text": "Your creatures with Trample get +1/+0. Power (3): Target creature you control with Trample fights target creature you don't control.",
+    "statics": [
+      {"$type": "AnthemAbility", "requiresKeyword": "Trample", "power": 1}
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "CreatureYouControl", "keyword": "Trample"},
+          {"spec": "CreatureYouDontControl"}
+        ],
+        "effects": [
+          {"$type": "FightEffect"}
+        ],
+        "text": "(3) Target creature you control with Trample fights target creature you don't control."
+      }
+    ]
+  },
+  {
+    "id": "sparkwrench",
+    "name": "Sparkwrench",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["goobers", "glitterworld"],
+    "text": "Your Equipment spells cost 1 less. Power (2): Attach up to one target Equipment you control to target creature you control. If no Equipment became attached, that creature gets +1/+1 until end of turn.",
+    "statics": [
+      {"$type": "CostModifierAbility", "onlyType": "Equipment", "reduction": 1}
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "CreatureYouControl"},
+          {"spec": "EquipmentYouControl", "optional": true}
+        ],
+        "effects": [
+          {"$type": "AttachEquipmentOrPumpEffect"}
+        ],
+        "text": "(2) Attach up to one target Equipment you control to target creature you control. If none became attached, it gets +1/+1 until end of turn."
+      }
+    ]
+  },
+  {
+    "id": "the_rotmother",
+    "name": "The Rotmother",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["sensationalists", "evergrowing_wild"],
+    "text": "Whenever a creature with 5 or more Power you control dies, create a 2/2 Spawn. Power (3): Return a creature card from your graveyard to your hand, then lose 3 life.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "CreateTokensEffect", "tokenId": "spawn_token"}
+        ],
+        "subject": "You",
+        "minPower": 5
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "CreatureCardInYourGraveyard"}
+        ],
+        "effects": [
+          {"$type": "ReturnToHandFromGraveyardEffect"},
+          {"$type": "LoseLifeEffect", "amount": 3}
+        ],
+        "text": "(3) Return a creature card from your graveyard to your hand, then lose 3 life."
+      }
+    ]
+  },
+  {
+    "id": "vox_nocturne",
+    "name": "Vox Nocturne",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["sensationalists", "glitterworld"],
+    "text": "Whenever a creature an opponent controls dies, you gain 1 life. Power (2): Deal 1 damage to a creature. If it dies, draw a card.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "GainLifeEffect", "amount": 1}
+        ],
+        "subject": "Opponents"
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "Creature"}
+        ],
+        "effects": [
+          {"$type": "DamageThenDrawIfLethalEffect"}
+        ],
+        "text": "(2) Deal 1 damage to a creature. If it dies, draw a card."
+      }
+    ]
+  },
+  {
+    "id": "keeper_z00",
+    "name": "Keeper Z-00",
+    "type": "TavernDweller",
+    "cost": 0,
+    "rarity": "Legendary",
+    "faction": "neutral",
+    "tavernDwellerFactions": ["evergrowing_wild", "glitterworld"],
+    "text": "Your creatures with 5 or more Health enter with a +1/+1 counter. Power (2): Heal 3 from a creature.",
+    "statics": [
+      {"$type": "ReplacementAbility", "event": "Enters", "affects": "You", "minHealth": 5, "counters": 1}
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isTavernDwellerPower": true,
+        "targets": [
+          {"spec": "Creature"}
+        ],
+        "effects": [
+          {"$type": "HealEffect", "amount": 3}
+        ],
+        "text": "(2) Heal 3 from a creature."
+      }
+    ]
+  }
+]

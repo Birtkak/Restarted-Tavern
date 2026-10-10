@@ -1,0 +1,856 @@
+[
+  {
+    "id": "static_shock",
+    "name": "Static Shock",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Deal 1 damage to target creature. Draw a card.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amount": 1},
+      {"$type": "DrawCardsEffect"}
+    ]
+  },
+  {
+    "id": "spark_drone",
+    "name": "Spark Drone",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 1,
+    "keywords": "Flying",
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Flying. Arrival: Deal 1 damage to a creature.",
+    "triggers": [
+      {
+        "target": "Creature",
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "chain_zap",
+    "name": "Chain Zap",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Deal 1 damage to each of up to three target creatures.",
+    "spellTargets": [
+      {"spec": "Creature", "optional": true},
+      {"spec": "Creature", "optional": true},
+      {"spec": "Creature", "optional": true}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amount": 1, "eachTarget": true}
+    ]
+  },
+  {
+    "id": "sky_patrol_drone",
+    "name": "Sky Patrol Drone",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "keywords": "Flying",
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Flying."
+  },
+  {
+    "id": "riot_suppressor",
+    "name": "Riot Suppressor",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 3,
+    "subtypes": ["Construct"],
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Arrival: Deal 1 damage to each enemy creature.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "grid_overload",
+    "name": "Grid Overload",
+    "type": "Sorcery",
+    "cost": 4,
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "Deal 1 damage to each enemy creature three times.",
+    "spellEffects": [
+      {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1},
+      {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1},
+      {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1}
+    ]
+  },
+  {
+    "id": "hover_tank",
+    "name": "Hover Tank",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 5,
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Arrival: Deal 1 damage to a creature.",
+    "triggers": [
+      {
+        "target": "Creature",
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "orbital_strike_network",
+    "name": "Orbital Strike Network",
+    "type": "Relic",
+    "cost": 6,
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "At the start of your turn, deal 1 damage to each enemy creature and each opponent.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1, "alsoOpponents": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "drone_token",
+    "name": "Drone",
+    "type": "Creature",
+    "power": 1,
+    "health": 1,
+    "keywords": "Flying",
+    "subtypes": ["Construct"],
+    "faction": "glitterworld",
+    "isToken": true
+  },
+  {
+    "id": "scrap_plating_token",
+    "name": "Scrap Plating",
+    "type": "Equipment",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +0/+2. Equip 1.",
+    "isToken": true,
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "health": 2}
+    ],
+    "abilities": [
+      {
+        "cost": 1,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 1"
+      }
+    ]
+  },
+  {
+    "id": "neon_shiv",
+    "name": "Neon Shiv",
+    "type": "Equipment",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +1/+1. Equip 1.",
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "power": 1, "health": 1}
+    ],
+    "abilities": [
+      {
+        "cost": 1,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 1"
+      }
+    ]
+  },
+  {
+    "id": "pulse_blade",
+    "name": "Pulse Blade",
+    "type": "Equipment",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +1/+1 and has \"Whenever this creature attacks, deal 1 damage to a creature.\" Equip 2.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "power": 1,
+        "health": 1,
+        "triggers": [
+          {
+            "when": "Attacks",
+            "target": "Creature",
+            "effects": [
+              {"$type": "DealDamageEffect", "amount": 1}
+            ],
+            "text": "Whenever this creature attacks, deal 1 damage to a creature."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 2"
+      }
+    ]
+  },
+  {
+    "id": "overclock_rig",
+    "name": "Overclock Rig",
+    "type": "Equipment",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +2/+1 and has \"Tap: Deal 1 damage to any target.\" Equip 2.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "power": 2,
+        "health": 1,
+        "abilities": [
+          {
+            "tapCost": true,
+            "targets": [
+              {"spec": "AnyTarget"}
+            ],
+            "effects": [
+              {"$type": "DealDamageEffect", "amount": 1}
+            ],
+            "text": "Tap: Deal 1 damage to any target."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 2"
+      }
+    ]
+  },
+  {
+    "id": "rail_cannon",
+    "name": "Rail Cannon",
+    "type": "Equipment",
+    "cost": 4,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +3/+0 and has \"Whenever this creature attacks, deal 1 damage to a creature.\" Equip 3.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "power": 3,
+        "triggers": [
+          {
+            "when": "Attacks",
+            "target": "Creature",
+            "effects": [
+              {"$type": "DealDamageEffect", "amount": 1}
+            ],
+            "text": "Whenever this creature attacks, deal 1 damage to a creature."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 3"
+      }
+    ]
+  },
+  {
+    "id": "megacorp_exosuit",
+    "name": "Megacorp Exosuit",
+    "type": "Equipment",
+    "cost": 5,
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +3/+3 and has Flying and Trample. Equip 3.",
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "power": 3, "health": 3, "grants": "Trample, Flying"}
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 3"
+      }
+    ]
+  },
+  {
+    "id": "gilded_knuckles",
+    "name": "Gilded Knuckles",
+    "type": "Equipment",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +2/+0. Equip 1.",
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "power": 2}
+    ],
+    "abilities": [
+      {
+        "cost": 1,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 1"
+      }
+    ]
+  },
+  {
+    "id": "marksman_scope",
+    "name": "Marksman Scope",
+    "type": "Equipment",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +1/+0 and has \"Whenever this deals combat damage to a player, deal 1 damage to a creature.\" Equip 1.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "power": 1,
+        "triggers": [
+          {
+            "when": "DealsCombatDamageToPlayer",
+            "target": "Creature",
+            "effects": [
+              {"$type": "DealDamageEffect", "amount": 1}
+            ],
+            "text": "Whenever this deals combat damage to a player, deal 1 damage to a creature."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 1,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 1"
+      }
+    ]
+  },
+  {
+    "id": "drone_launcher",
+    "name": "Drone Launcher",
+    "type": "Equipment",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Equipped creature has \"Whenever this attacks, create a 1/1 Drone with Flying.\" Equip 2.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "triggers": [
+          {
+            "when": "Attacks",
+            "effects": [
+              {"$type": "CreateTokensEffect", "tokenId": "drone_token"}
+            ],
+            "text": "Whenever this attacks, create a 1/1 Drone with Flying."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 2"
+      }
+    ]
+  },
+  {
+    "id": "courier_bot",
+    "name": "Courier Bot",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Arrival: You may attach target Equipment you control to this.",
+    "triggers": [
+      {
+        "target": "EquipmentYouControl",
+        "targetOptional": true,
+        "effects": [
+          {"$type": "AttachTargetEquipmentEffect", "toSource": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "back_street_mechanic",
+    "name": "Back-Street Mechanic",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Citizen"],
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Tap: Heal 2 from target Construct or equipped creature.",
+    "abilities": [
+      {
+        "tapCost": true,
+        "targets": [
+          {"spec": "ConstructOrEquippedCreature"}
+        ],
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ],
+        "text": "Tap: Heal 2 from target Construct or equipped creature."
+      }
+    ]
+  },
+  {
+    "id": "alley_tinker",
+    "name": "Alley Tinker",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Citizen"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Arrival: Create a Scrap Plating Equipment token with \"Equipped creature gets +0/+2. Equip 1.\"",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "CreateTokensEffect", "tokenId": "scrap_plating_token"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arc_welder",
+    "name": "Arc Welder",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Citizen"],
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Whenever you pay an Equip cost, deal 1 damage to any target.",
+    "triggers": [
+      {
+        "when": "EquipActivated",
+        "target": "AnyTarget",
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 1}
+        ],
+        "subject": "You"
+      }
+    ]
+  },
+  {
+    "id": "patrol_captain",
+    "name": "Patrol Captain",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 5,
+    "subtypes": ["Citizen"],
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Equipped creatures you control get +1/+1.",
+    "statics": [
+      {"$type": "AnthemAbility", "requiresEquipped": true, "power": 1, "health": 1}
+    ]
+  },
+  {
+    "id": "titan_frame_guardian",
+    "name": "Titan-Frame Guardian",
+    "type": "Creature",
+    "cost": 6,
+    "power": 5,
+    "health": 7,
+    "subtypes": ["Construct"],
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "Whenever an Equipment becomes attached to this, heal it fully and draw a card.",
+    "triggers": [
+      {
+        "when": "EquipmentAttachedToThis",
+        "effects": [
+          {"$type": "HealSelfEffect", "fully": true},
+          {"$type": "DrawCardsEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "archon_lumen",
+    "name": "Archon Lumen, Mind of the City",
+    "type": "Creature",
+    "cost": 7,
+    "power": 5,
+    "health": 7,
+    "keywords": "Flying",
+    "subtypes": ["Construct"],
+    "rarity": "Legendary",
+    "faction": "glitterworld",
+    "text": "Flying. Your Equip costs are 0. At the end of your turn, deal 1 damage to any target for each Equipment you control.",
+    "triggers": [
+      {
+        "when": "EndOfYourTurn",
+        "target": "AnyTarget",
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 1}
+        ],
+        "repeatCount": {"kind": "EquipmentYouControl"}
+      }
+    ],
+    "statics": [
+      {"$type": "CostModifierAbility", "kind": "Equip", "setToZero": true}
+    ]
+  },
+  {
+    "id": "patch_up_drone",
+    "name": "Patch-Up Drone",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 1,
+    "keywords": "Flying",
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Flying. Arrival: Heal 2 from target Construct or equipped creature.",
+    "triggers": [
+      {
+        "target": "ConstructOrEquippedCreature",
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "scrap_collector",
+    "name": "Scrap Collector",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Whenever an Equipment you control becomes unattached, gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "EquipmentUnattached",
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1}
+        ],
+        "subject": "You"
+      }
+    ]
+  },
+  {
+    "id": "repair_bay",
+    "name": "Repair Bay",
+    "type": "Relic",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "At the start of your turn, heal 1 from each Construct and each equipped creature you control.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {"$type": "HealYourMachinesEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "finisher_protocol",
+    "name": "Finisher Protocol",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Destroy target creature with 2 or less Health remaining.",
+    "spellTargets": [
+      {"spec": "Creature", "maxRemainingHealth": 2}
+    ],
+    "spellEffects": [
+      {"$type": "DestroyEffect"}
+    ]
+  },
+  {
+    "id": "smart_rounds",
+    "name": "Smart Rounds",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "DamageTargetThenEachDamagedEffect"}
+    ]
+  },
+  {
+    "id": "hardlight_aegis",
+    "name": "Hardlight Aegis",
+    "type": "Equipment",
+    "cost": 4,
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2.",
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "health": 3, "maxDamageEachTurn": 2}
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 2"
+      }
+    ]
+  },
+  {
+    "id": "neon_executioner",
+    "name": "Neon Executioner",
+    "type": "Creature",
+    "cost": 6,
+    "power": 4,
+    "health": 6,
+    "subtypes": ["Construct"],
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it.",
+    "triggers": [
+      {
+        "when": "CreatureDealtDamage",
+        "effects": [
+          {"$type": "DestroyEventCreatureEffect", "maxRemainingHealth": 2}
+        ],
+        "subject": "Opponents",
+        "maxRemainingHealth": 2
+      }
+    ]
+  },
+  {
+    "id": "market_data_feed",
+    "name": "Market Data Feed",
+    "type": "Relic",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Whenever an Equipment becomes attached to a creature you control, draw a card. This triggers at most once each turn.",
+    "triggers": [
+      {
+        "when": "EquipmentAttached",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "maxPerTurn": 1
+      }
+    ]
+  },
+  {
+    "id": "overclocked_analyst",
+    "name": "Overclocked Analyst",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Construct"],
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "(3), Tap: Draw a card, then discard a card.",
+    "abilities": [
+      {
+        "cost": 3,
+        "tapCost": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"},
+          {"$type": "DiscardCardsEffect"}
+        ],
+        "text": "(3), Tap: Draw a card, then discard a card."
+      }
+    ]
+  },
+  {
+    "id": "arc_cascade",
+    "name": "Arc Cascade",
+    "type": "Sorcery",
+    "cost": 1,
+    "rarity": "Uncommon",
+    "faction": "glitterworld",
+    "text": "Deal X damage divided as you choose among any number of creatures and/or opponents.",
+    "spellEffects": [
+      {"$type": "DivideXDamageEffect"}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "turret_rig",
+    "name": "Turret Rig",
+    "type": "Equipment",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "glitterworld",
+    "text": "Equipped creature has \"(2), Tap: Deal 1 damage to any target.\" Equip 2.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "abilities": [
+          {
+            "cost": 2,
+            "tapCost": true,
+            "targets": [
+              {"spec": "AnyTarget"}
+            ],
+            "effects": [
+              {"$type": "DealDamageEffect", "amount": 1}
+            ],
+            "text": "(2), Tap: Deal 1 damage to any target."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 2"
+      }
+    ]
+  },
+  {
+    "id": "orbital_laser",
+    "name": "Orbital Laser",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "Deal X damage to any target. If X is 5 or more, also deal 1 damage to each enemy creature.",
+    "spellTargets": [
+      {"spec": "AnyTarget"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amountIsX": true},
+      {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1, "minX": 5}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "satellite_uplink",
+    "name": "Satellite Uplink",
+    "type": "Relic",
+    "cost": 6,
+    "rarity": "Rare",
+    "faction": "glitterworld",
+    "text": "(3), Tap: Deal 2 damage to each opponent.",
+    "abilities": [
+      {
+        "cost": 3,
+        "tapCost": true,
+        "effects": [
+          {"$type": "DealDamageToEachOpponentEffect", "amount": 2}
+        ],
+        "text": "(3), Tap: Deal 2 damage to each opponent."
+      }
+    ]
+  }
+]

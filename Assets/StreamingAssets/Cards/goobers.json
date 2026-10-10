@@ -1,0 +1,653 @@
+[
+  {
+    "id": "goober_token",
+    "name": "Goober",
+    "type": "Creature",
+    "power": 1,
+    "health": 1,
+    "subtypes": ["Goober"],
+    "faction": "goobers",
+    "isToken": true
+  },
+  {
+    "id": "goober_rascal",
+    "name": "Goober Rascal",
+    "type": "Creature",
+    "cost": 1,
+    "power": 2,
+    "health": 1,
+    "keywords": "Haste, CantBlock",
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Haste. Can't block."
+  },
+  {
+    "id": "spark_snot",
+    "name": "Spark Snot",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Deal 2 damage to a creature.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amount": 2}
+    ]
+  },
+  {
+    "id": "fuse_goober",
+    "name": "Fuse Goober",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Last Breath: Deal 2 damage to any target.",
+    "triggers": [
+      {
+        "when": "LastBreath",
+        "target": "AnyTarget",
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gob_gang",
+    "name": "Gob Gang",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Create two 1/1 Goobers.",
+    "spellEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "goober_token", "count": 2}
+    ]
+  },
+  {
+    "id": "brawling_runt",
+    "name": "Brawling Runt",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "keywords": "Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Haste."
+  },
+  {
+    "id": "goober_warchief",
+    "name": "Goober Warchief",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Goober"],
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Your other Goobers get +1/+0.",
+    "statics": [
+      {"$type": "AnthemAbility", "subtype": "Goober", "othersOnly": true, "power": 1}
+    ]
+  },
+  {
+    "id": "hog_rider",
+    "name": "Hog-Rider",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 3,
+    "keywords": "Trample",
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Trample."
+  },
+  {
+    "id": "mob_rush",
+    "name": "Mob Rush",
+    "type": "Sorcery",
+    "cost": 4,
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Create three 1/1 Goobers with Haste. Your creatures get +1/+0 until end of turn.",
+    "spellEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "goober_token", "count": 3, "grantUntilEndOfTurn": "Haste"},
+      {"$type": "PumpYourCreaturesEffect", "power": 1}
+    ]
+  },
+  {
+    "id": "barrel_bomber",
+    "name": "Barrel Bomber",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 3,
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Arrival: Deal 2 damage to any target.",
+    "triggers": [
+      {
+        "target": "AnyTarget",
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pit_fighter",
+    "name": "Pit-Fighter",
+    "type": "Creature",
+    "cost": 4,
+    "power": 4,
+    "health": 4,
+    "keywords": "Trample",
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Trample."
+  },
+  {
+    "id": "overrun_the_gates",
+    "name": "Overrun the Gates",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Your creatures get +2/+0 and Trample until end of turn.",
+    "spellEffects": [
+      {"$type": "PumpYourCreaturesEffect", "power": 2, "grants": "Trample"}
+    ]
+  },
+  {
+    "id": "pit_champion",
+    "name": "Pit Champion",
+    "type": "Creature",
+    "cost": 6,
+    "power": 6,
+    "health": 5,
+    "keywords": "Trample, Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Haste. Trample."
+  },
+  {
+    "id": "snik",
+    "name": "Snik, the Goober Doubler",
+    "type": "Creature",
+    "cost": 4,
+    "power": 2,
+    "health": 4,
+    "subtypes": ["Goober"],
+    "rarity": "Legendary",
+    "faction": "goobers",
+    "text": "X, Tap: Choose up to X other Goobers you control. For each one, create a token copy of it. The copies gain Haste until end of turn.",
+    "abilities": [
+      {
+        "hasX": true,
+        "tapCost": true,
+        "effects": [
+          {
+            "$type": "ChooseUpToXYourCreaturesEffect",
+            "subtype": "Goober",
+            "then": [
+              {"$type": "CreateTokenCopiesEffect", "grantUntilEndOfTurn": "Haste"}
+            ]
+          }
+        ],
+        "text": "X, Tap: Copy up to X other Goobers you control. The copies gain Haste until end of turn."
+      }
+    ]
+  },
+  {
+    "id": "loot_splitter",
+    "name": "Loot Splitter",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Invest 2: Create a 1/1 Goober.",
+    "investCost": 2,
+    "investEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "goober_token"}
+    ]
+  },
+  {
+    "id": "goober_sapper",
+    "name": "Goober Sapper",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 2,
+    "keywords": "Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Haste. Last Breath: Deal 1 damage to each enemy creature.",
+    "triggers": [
+      {
+        "when": "LastBreath",
+        "effects": [
+          {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kick_em_while_theyre_down",
+    "name": "Kick 'Em While They're Down",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Deal 2 damage to target creature. If it was already damaged, deal 4 damage instead.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amount": 2, "amountIfDamaged": 4}
+    ]
+  },
+  {
+    "id": "fling_the_runt",
+    "name": "Fling the Runt",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "As an extra cost, sacrifice a creature. Deal damage equal to its Power to any target.",
+    "spellTargets": [
+      {"spec": "AnyTarget"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amountIsSacrificedPower": true}
+    ],
+    "sacrificeCreatureCost": true
+  },
+  {
+    "id": "chaos_engine",
+    "name": "Chaos Engine",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 4,
+    "keywords": "Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Haste. At the start of your turn, deal 1 damage to each other creature.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {"$type": "DealDamageToEachCreatureEffect", "amount": 1, "excludeSource": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gold_tooth_bruiser",
+    "name": "Gold-Tooth Bruiser",
+    "type": "Creature",
+    "cost": 4,
+    "power": 4,
+    "health": 3,
+    "keywords": "Trample",
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Trample. Whenever this deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "DealsCombatDamageToPlayer",
+        "effects": [
+          {"$type": "DrainGoldEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pickpocket_boss",
+    "name": "Pickpocket Boss",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Goober"],
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Whenever another Goober you control deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "CreatureDealsCombatDamageToPlayer",
+        "effects": [
+          {"$type": "DrainGoldEffect"}
+        ],
+        "subject": "You",
+        "othersOnly": true,
+        "subjectSubtype": "Goober"
+      }
+    ]
+  },
+  {
+    "id": "rally_drummer",
+    "name": "Rally Drummer",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Goober"],
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Whenever you attack with three or more creatures, attacking creatures you control get +1/+0 until end of turn.",
+    "triggers": [
+      {
+        "when": "PlayerAttacks",
+        "effects": [
+          {"$type": "PumpAttackingCreaturesEffect", "power": 1}
+        ],
+        "subject": "You",
+        "minAmount": 3
+      }
+    ]
+  },
+  {
+    "id": "reckless_charge",
+    "name": "Reckless Charge",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Target creature gets +2/+0 and Trample until end of turn. Invest 1: Your other Goobers get +1/+0 until end of turn.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "power": 2, "grants": "Trample"}
+    ],
+    "investCost": 1,
+    "investEffects": [
+      {"$type": "PumpYourCreaturesEffect", "power": 1, "subtype": "Goober", "othersThanTarget": true}
+    ]
+  },
+  {
+    "id": "grand_heist",
+    "name": "Grand Heist",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Each opponent loses all their Gold. Gain that much Gold. Invest 2: Create a 1/1 Goober for each Gold you gained this way.",
+    "spellEffects": [
+      {"$type": "StealAllGoldEffect"}
+    ],
+    "investCost": 2,
+    "investEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "goober_token", "countFromRemembered": true}
+    ]
+  },
+  {
+    "id": "grubby_pickpocket",
+    "name": "Grubby Pickpocket",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Goober"],
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Whenever this attacks, the defending player loses 1 Gold and you gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "Attacks",
+        "effects": [
+          {"$type": "DrainGoldEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gold_snatcher_crew",
+    "name": "Gold-Snatcher Crew",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 2,
+    "keywords": "Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Haste. Whenever this deals combat damage to a player, that player loses up to 2 Gold and you gain that much.",
+    "triggers": [
+      {
+        "when": "DealsCombatDamageToPlayer",
+        "effects": [
+          {"$type": "StealGoldEffect", "amount": 2, "fromEventPlayer": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "goober_demolisher",
+    "name": "Goober Demolisher",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 5,
+    "keywords": "Trample",
+    "subtypes": ["Goober"],
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Trample. Whenever another Goober you control dies, deal 1 damage to each opponent.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "DealDamageToEachOpponentEffect", "amount": 1}
+        ],
+        "subject": "You",
+        "othersOnly": true,
+        "subjectSubtype": "Goober"
+      }
+    ]
+  },
+  {
+    "id": "scrapheap_inferno",
+    "name": "Scrapheap Inferno",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Deal X damage to any target, where X is 2 plus the number of Goobers you control.",
+    "spellTargets": [
+      {"spec": "AnyTarget"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amount": 2, "plusOnePerYourCreatureOfSubtype": "Goober"}
+    ]
+  },
+  {
+    "id": "grakka_queen_of_the_rabble",
+    "name": "Grakka, Queen of the Rabble",
+    "type": "Creature",
+    "cost": 7,
+    "power": 5,
+    "health": 6,
+    "keywords": "Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Legendary",
+    "faction": "goobers",
+    "text": "Haste. Your Goobers get +1/+1. Whenever you attack, create a 1/1 Goober that's tapped and attacking.",
+    "triggers": [
+      {
+        "when": "PlayerAttacks",
+        "effects": [
+          {"$type": "CreateAttackingTokenEffect", "tokenId": "goober_token"}
+        ],
+        "subject": "You"
+      }
+    ],
+    "statics": [
+      {"$type": "AnthemAbility", "subtype": "Goober", "power": 1, "health": 1}
+    ]
+  },
+  {
+    "id": "goober_shaman",
+    "name": "Goober Shaman",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Goober"],
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Arrival: You may discard a card. If you do, draw a card.",
+    "triggers": [
+      {
+        "effects": [
+          {
+            "$type": "DiscardChoiceEffect",
+            "then": [
+              {"$type": "DrawCardsEffect"}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "firecracker_volley",
+    "name": "Firecracker Volley",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Deal 3 damage divided as you choose among any number of creatures and/or players.",
+    "spellTargets": [
+      {"spec": "AnyTarget"},
+      {"spec": "AnyTarget", "optional": true},
+      {"spec": "AnyTarget", "optional": true}
+    ],
+    "spellEffects": [
+      {"$type": "DealDividedDamageEffect"}
+    ],
+    "dividedDamage": 3
+  },
+  {
+    "id": "dumpster_dive",
+    "name": "Dumpster Dive",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "Discard any number of cards, then draw that many cards plus one.",
+    "spellEffects": [
+      {"$type": "RummageAnyEffect"}
+    ]
+  },
+  {
+    "id": "goober_bookie",
+    "name": "Goober Bookie",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "keywords": "Haste",
+    "subtypes": ["Goober"],
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Haste. Whenever this attacks, you may discard a card. If you do, draw two cards.",
+    "triggers": [
+      {
+        "when": "Attacks",
+        "effects": [
+          {
+            "$type": "DiscardChoiceEffect",
+            "then": [
+              {"$type": "DrawCardsEffect", "count": 2}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "goober_avalanche",
+    "name": "Goober Avalanche",
+    "type": "Sorcery",
+    "cost": 1,
+    "rarity": "Uncommon",
+    "faction": "goobers",
+    "text": "Create X 1/1 Goobers with Haste.",
+    "spellEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "goober_token", "grantUntilEndOfTurn": "Haste", "countIsX": true}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "fireworks_stand",
+    "name": "Fireworks Stand",
+    "type": "Relic",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "goobers",
+    "text": "(3), Sacrifice a creature: Deal 2 damage to any target.",
+    "abilities": [
+      {
+        "cost": 3,
+        "sacrificeCreatureCost": true,
+        "targets": [
+          {"spec": "AnyTarget"}
+        ],
+        "effects": [
+          {"$type": "DealDamageEffect", "amount": 2}
+        ],
+        "text": "(3), Sacrifice a creature: Deal 2 damage to any target."
+      }
+    ]
+  },
+  {
+    "id": "big_boom",
+    "name": "Big Boom",
+    "type": "Sorcery",
+    "cost": 1,
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Deal X damage to any target.",
+    "spellTargets": [
+      {"spec": "AnyTarget"}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amountIsX": true}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "grand_finale",
+    "name": "Grand Finale",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Rare",
+    "faction": "goobers",
+    "text": "Deal X damage to each opponent and 1 damage to each creature.",
+    "spellEffects": [
+      {"$type": "DealDamageToEachOpponentEffect", "amountIsX": true},
+      {"$type": "DealDamageToEachCreatureEffect", "amount": 1}
+    ],
+    "xCost": true
+  }
+]

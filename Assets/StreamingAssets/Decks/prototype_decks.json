@@ -1,0 +1,140 @@
+[
+  {
+    "id": "goober_mob",
+    "name": "Goober Mob",
+    "tavernDweller": "skabba",
+    "description": "Legal Standard deck (60, max 4): Goobers + Sensationalists (the Skabba pair). Wide boards, deaths that feed Skabba, a sacrifice outlet (Fling the Runt) and Gold theft. v0.2 cards added 2026-10-09.",
+    "cards": {
+      "goober_rascal": 4,
+      "spark_snot": 4,
+      "fuse_goober": 4,
+      "gob_gang": 4,
+      "brawling_runt": 4,
+      "goober_warchief": 4,
+      "hog_rider": 4,
+      "mob_rush": 4,
+      "barrel_bomber": 4,
+      "gold_tooth_bruiser": 4,
+      "goober_avalanche": 4,
+      "pit_champion": 4,
+      "crypt_usher": 4,
+      "pickpocket_boss": 4,
+      "fling_the_runt": 4
+    }
+  },
+  {
+    "id": "jungle_stampede",
+    "name": "Jungle Stampede",
+    "tavernDweller": "mukk_the_grub_king",
+    "description": "Legal Standard deck: Evergrowing Wild + big Goobers (the Mukk the Grub King pair). Trample everywhere for Mukk.",
+    "cards": {
+      "jungle_remedy": 4,
+      "vine_spider": 4,
+      "razorhide_boar": 4,
+      "ironbark_grizzly": 4,
+      "thornback_ravager": 4,
+      "tusked_mammoth": 4,
+      "hog_rider": 4,
+      "pit_fighter": 4,
+      "pit_champion": 4,
+      "spark_snot": 4,
+      "reckless_charge": 4,
+      "gift_of_the_grove": 4,
+      "gold_tooth_bruiser": 4,
+      "rampaging_titan": 4,
+      "mossgut_grower": 4
+    }
+  },
+  {
+    "id": "zoo_patrol",
+    "name": "Zoo Patrol",
+    "tavernDweller": "keeper_z00",
+    "description": "Legal Standard deck: Wild + Glitterworld (the Keeper Z-00 pair). Pings, fights and healing, so permanent damage shows up.",
+    "cards": {
+      "static_shock": 4,
+      "spark_drone": 4,
+      "overclocked_analyst": 4,
+      "ambush_predator": 4,
+      "riot_suppressor": 4,
+      "grid_overload": 4,
+      "neon_executioner": 4,
+      "orbital_strike_network": 4,
+      "finisher_protocol": 4,
+      "mossback_tortoise": 4,
+      "arc_cascade": 4,
+      "overflowing_spring": 4,
+      "apex_instinct": 4,
+      "sabretooth_prowler": 4,
+      "primeval_behemoth": 4
+    }
+  },
+  {
+    "id": "vespers_ledger",
+    "name": "Vesper's Ledger",
+    "tavernDweller": "madame_vesper",
+    "description": "Legal Standard deck: Wizards + Sensationalists (the Madame Vesper pair). Lifelink, drains, removal, flyers: a slower deck.",
+    "cards": {
+      "gilded_rat": 4,
+      "candle_cultist": 4,
+      "hex_of_frailty": 4,
+      "final_broadcast": 4,
+      "candlelit_acolyte": 4,
+      "blood_price": 4,
+      "fatal_rumor": 4,
+      "hungry_shade": 4,
+      "ritual_slaughter": 4,
+      "hired_enforcer": 4,
+      "wraith_swarm": 4,
+      "the_grand_ledger": 4,
+      "hush_money": 4,
+      "body_snatcher": 4,
+      "seance_hotline": 4
+    }
+  },
+  {
+    "id": "sparkwrench_scrappers",
+    "name": "Sparkwrench Scrappers",
+    "tavernDweller": "sparkwrench",
+    "description": "Legal Standard deck: Goobers + Glitterworld (the Sparkwrench pair). Burn and pings, plus cheap Equipment for Sparkwrench's discount and Power (added 2026-10-09).",
+    "cards": {
+      "market_data_feed": 4,
+      "spark_snot": 4,
+      "fuse_goober": 4,
+      "brawling_runt": 4,
+      "goober_warchief": 4,
+      "hog_rider": 4,
+      "barrel_bomber": 4,
+      "marksman_scope": 4,
+      "static_shock": 4,
+      "spark_drone": 4,
+      "orbital_laser": 4,
+      "goober_bookie": 4,
+      "riot_suppressor": 4,
+      "gilded_knuckles": 4,
+      "gold_tooth_bruiser": 4
+    }
+  },
+  {
+    "id": "auditors_arsenal",
+    "name": "Auditor's Arsenal",
+    "tavernDweller": "auditor_prime",
+    "description": "Legal Standard deck: Wizards + Glitterworld (the Auditor Prime pair). The Equipment deck: Equip costs are a Gold sink.",
+    "cards": {
+      "neon_shiv": 4,
+      "courier_bot": 4,
+      "marksman_scope": 4,
+      "pulse_blade": 4,
+      "back_street_mechanic": 4,
+      "alley_tinker": 4,
+      "scrap_collector": 4,
+      "overclock_rig": 4,
+      "retainer_mage": 4,
+      "arc_welder": 4,
+      "rail_cannon": 4,
+      "eviction_notice": 4,
+      "megacorp_exosuit": 4,
+      "patrol_captain": 4,
+      "titan_frame_guardian": 4
+    }
+  }
+]

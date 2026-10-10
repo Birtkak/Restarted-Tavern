@@ -38,8 +38,6 @@ namespace RestartedTavern.Rules
         public List<TargetSlot> Targets { get; set; } = new List<TargetSlot>();
         /// <summary>The source can't be one of its own targets.</summary>
         public bool TargetsExcludeSource { get; set; }
-        /// <summary>Extra legality check for a whole target combination (e.g. "another creature").</summary>
-        public Func<GameState, CardInstance, Target[], bool> TargetsAllowed { get; set; }
 
         public List<Effect> Effects { get; set; } = new List<Effect>();
         public string Text { get; set; } = "";

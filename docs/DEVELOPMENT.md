@@ -27,17 +27,19 @@ Restarted-Tavern/
 │  │   ├─ Combat/                 attackers, blockers, damage, Trample
 │  │   ├─ Effects/                effect building blocks (damage, heal, draw, create token...)
 │  │   ├─ StateBasedActions/      deaths, life loss, Legendary rule, detached Curses
-│  │   ├─ Cards/                  CardPool*.cs: every card and the six prototype decks, in C# until the data format is settled
+│  │   ├─ Core/Data/              Json (reader/writer) and CardJson (card files <-> CardDefinition)
+│  │   ├─ Cards/                  CardPool.cs: loads the card and deck files
 │  │   └─ AI/                     GreedyBot (rule-based player), MatchRunner + Experiments (bot-vs-bot simulations)
 │  ├─ Rules.Tests/                RestartedTavern.Rules.Tests.asmdef (EditMode, NUnit)
-│  ├─ Cards/          (later)     card data (JSON) + rare custom card scripts
+│  ├─ StreamingAssets/Cards/      card data: one JSON file per faction + tavern_dwellers.json (§3)
+│  ├─ StreamingAssets/Decks/      prototype_decks.json
 │  ├─ Client/                     RestartedTavern.Client.asmdef: DebugTable.cs (IMGUI debug table); Editor/ builds the scene and the exe
 │  └─ Scenes/                     DebugTable.unity
 └─ Server/  (later)               a .NET host that compiles the same Assets/Rules source files
 ```
 - `noEngineReferences: true` on the Rules assembly **enforces** at compile time that rules code can't touch `UnityEngine`. This keeps it portable to a server and fast to test.
-- The Rules assembly targets the C# subset that Unity 6 supports (C# 9), and avoids reflection-heavy libraries, so it can also compile as a plain .NET library later.
-- 🟡 Card data is stored as **JSON**. YAML stays possible later. ❓ Unity's built-in `JsonUtility` lives in `UnityEngine`, so the Rules assembly can't use it. Options: the Client loads the JSON and hands `CardDefinition`s to the engine, or the Rules assembly gets its own small JSON reader (also needed for the server).
+- The Rules assembly targets the C# subset that Unity 6 supports (C# 9), and avoids outside libraries, so it also compiles as a plain .NET library (Tools/SimRunner does).
+- 🔒 Card data is stored as **JSON** (§3), read by the Rules assembly's own small JSON reader. `Assets/link.xml` keeps the building-block classes from being stripped in builds, since they're created by reflection.
 
 
 ---
@@ -90,25 +92,53 @@ CardInstance   { objectId, definitionId, owner, controller,
 
 ---
 
-## 3. Card Data Format 🟡
+## 3. Card Data Format 🔒 (JSON, since 2026-10-10)
 
-Cards are written in a text data file (JSON or YAML), one entry per card. Example:
+Every card lives in a data file, not in code: `Assets/StreamingAssets/Cards/<faction>.json` (one per faction, tokens included)
+and `tavern_dwellers.json`. The prototype decks are in `Assets/StreamingAssets/Decks/prototype_decks.json`
+(`{"card_id": copies}`). StreamingAssets ships with builds, so a built debug table reads the same files.
 
-```yaml
-id: tavern_brawler
-name: Tavern Brawler
-type: creature
-cost: 3
-power: 3
-health: 4
-keywords: [armor_1]
-abilities:
-  - trigger: arrival
-    effect: { deal_damage: { amount: 1, target: any_creature } }
-text: "Armor 1. Arrival: Deal 1 damage to any creature."
+A card is a JSON object whose fields are the `CardDefinition` properties in camelCase. Abilities are made of the
+engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageEffect`), statics (`AnthemAbility`,
+`CostModifierAbility`, `ReplacementAbility`...), triggers (`TriggeredAbility`) and activated abilities
+(`ActivatedAbility`). A building block names its class in `"$type"`:
+
+```json
+{
+  "id": "barrel_bomber",
+  "name": "Barrel Bomber",
+  "type": "Creature",
+  "cost": 4,
+  "power": 3,
+  "health": 3,
+  "subtypes": ["Goober"],
+  "rarity": "Common",
+  "faction": "goobers",
+  "text": "Arrival: Deal 2 damage to any target.",
+  "triggers": [
+    {
+      "when": "Arrival",
+      "target": "AnyTarget",
+      "effects": [
+        {"$type": "DealDamageEffect", "amount": 2}
+      ]
+    }
+  ]
+}
 ```
 
-🟡 The rules `text` should eventually be *generated* from `abilities`, so the text and the behavior can never disagree.
+- **Loading**: `CardPool.All()` / `CreateDatabase()` read the files once (`CardPool.DataRoot` finds `Assets/StreamingAssets`
+  from the working directory; the debug table sets it to `Application.streamingAssetsPath`). `Data/CardJson.cs` maps JSON to
+  the classes by reflection; `Data/Json.cs` is a small JSON reader/writer (the rules assembly can't use `UnityEngine`).
+- **Fails loudly**: an unknown field, building block or enum name stops loading with the file, card id and field.
+- **Canonical form**: values equal to the class default are left out (except the fields every card shows: type, cost,
+  rarity, faction, text, and Power/Health for creatures). `CardDataTests` checks every file reads and writes back
+  byte-for-byte, so hand edits must keep the format (2-space indent, field order as in the classes).
+- **Changing a card** is a data edit: change the numbers or swap building blocks, then run the tests. A card that needs
+  something new still needs a new building block in C# first (a new effect class or a new field).
+- Conditions and counts are data too: `TriggerCondition` (`SourceHasNoDamage`, `YouHaveGoldAtLeast`,
+  `EachOpponentHasLifeAtMost`) and `DynamicCount` (`EquipmentYouControl`, `CreatureCardsInYourGraveyard`).
+- 🟡 The rules `text` is still written by hand. Generating it from the abilities would keep text and behavior from disagreeing.
 
 ---
 
@@ -159,7 +189,7 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 - **Layers**: `CharacteristicsCalculator` applies layer 6 (keywords) before layer 7c (Power/Health), so "creatures with Trample get +1/+0" sees granted Trample.
 - **Tavern Dwellers** (§9): a `CardType.TavernDweller` card in the public Tavern Dweller zone (`PlayerState.TavernDwellerZone`). Passives are triggered abilities (new watcher triggers: a creature dies, a spell is cast, Equip is paid, Equipment becomes unattached; with "you / opponents", min Power/cost and "at most N times each turn"), statics (anthems that work from the Tavern Dweller zone), cost modifiers (`CostModifierAbility`: spells, Invest, Equip) and "enters with a counter". The Power is an activated ability, once each turn, at instant speed. Deck validation checks that every card is from the Tavern Dweller's factions or Neutral. `FormatConfig.TavernDwellersEnabled` is an experiment switch.
 - Other new mechanics: optional ("you may") trigger targets, triggers that fire once per Equipment (Archon Lumen), combat-damage-to-a-player triggers, token copies, graveyard targets, and a mid-resolution choice (`DecisionKind.TopOrBottom`, `ActionKind.ChooseOption`).
-- **Cards** (`Assets/Rules/Cards/CardPool*.cs`): every card in docs/cards (sets v0.1 and v0.2), all 10 Tavern Dwellers and the tokens, split by set and batch. Six legal decks, each with its Tavern Dweller: Goober Mob (Skabba), Jungle Stampede (Mukk), Zoo Patrol (Keeper Z-00), Vesper's Ledger (Madame Vesper), Sparkwrench Scrappers (Sparkwrench) and Auditor's Arsenal (Auditor Prime, the Equipment deck). On 2026-10-09 each deck swapped 4 cards for v0.2 cards (user-approved).
+- **Cards** (`Assets/StreamingAssets/Cards/*.json`, loaded by `CardPool`, §3): every card in docs/cards (sets v0.1, v0.2 and v0.3), all 10 Tavern Dwellers and the tokens. Six legal decks, each with its Tavern Dweller: Goober Mob (Skabba), Jungle Stampede (Mukk), Zoo Patrol (Keeper Z-00), Vesper's Ledger (Madame Vesper), Sparkwrench Scrappers (Sparkwrench) and Auditor's Arsenal (Auditor Prime, the Equipment deck). On 2026-10-09 each deck swapped 4 cards for v0.2 cards (user-approved).
 - **Gold economy (set v0.2, batch A)**: the **per-player Gold cap** (`GoldCapAbility`, `GoldRules.Cap`; Gold above a lowered cap is lost as a state-based action); **bank triggers** (`TriggerEvent.GoldBanked`, with `MinAmount` for "2 or more"): they go on the Chain in the cleanup step, players get priority, and the cleanup step repeats (MTG 514.3a); **spend-Gold triggers** (`TriggerEvent.GoldSpent`, once per payment of a spell, ability, Invest or X); trigger amounts reach effects as `EffectContext.EventAmount` ("heal that much"); **"pay any amount of Gold (X)"** on spells (`CardDefinition.XGoldExtraCost`, `PlayerAction.X`); a mid-resolution discard (`DecisionKind.DiscardCards`); Tap effects.
 - **Damage and healing (set v0.2, batch B)**: target filters on `TargetSlot` (**damaged**, **Health remaining**, attacking or blocking), also for triggers (`TriggeredAbility.TargetDamaged`); **can't be healed** (`CantBeHealedAbility`, on an enchanted creature or every creature of an enchanted player); **damage prevention** (`AttachedCreatureModifier.MaxDamageEachTurn`; damage per creature per turn is tracked in `UsesThisTurn`); damage to each creature (`DealDamageToEachCreatureEffect`); damage-based and scaling stats (`PowerPerDamageAbility`, `AttachedScalingModifier`); new watcher triggers `CreatureDealtDamage` (with "only the attached creature" and an intervening "if N or less Health remaining"), `CreatureHealed` (who healed), `CreatureEnters` ("another", min Power); `DestroysCreatureInCombat`; Curse triggers at the start of the enchanted player's turn. Triggers carry the event's object and player (`EffectContext.EventObject/EventPlayer`). **Extra costs on spells**: pay life (`ExtraLifeCost`) and sacrifice a creature (`SacrificeCreatureCost`, `PlayerAction.Sacrifice`, last known Power in `EffectContext.SacrificedPower`).
 - **The Chain and control (set v0.2, batch C)**: everything on the Chain has an object id (`ChainItem.ObjectId`), so spells and abilities can be targeted (`TargetSpec.SpellOnChain`, `SpellOrAbilityOnChain`, `TargetSlot.MaxCost`); **counterspells** (`GameRunner.Counter`, `CounterTargetEffect`) and **taxes** (`DecisionKind.PayTax`, mana first, then Gold); **bounce** (`ReturnToHandEffect`, `ReturnAllCreaturesEffect`); **control change** (`GainControlEffect`, permanent or until end of turn via `GameState.ControlUntilEndOfTurn`; summoning sick, leaves combat; control returns when a player leaves the game); destroy all creatures; creature cards in any graveyard as targets.
@@ -195,5 +225,4 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 **Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))
 - A Tavern Dweller zone that can be targeted or removed (v0.1: it can't), and Tavern Dwellers in multiplayer politics.
 - Filtering events by hidden information. The affected player choosing the order of replacement effects (GAME_DESIGN §8.1).
-- Loading card data from JSON (see §0.1).
 

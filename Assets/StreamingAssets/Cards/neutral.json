@@ -1,0 +1,673 @@
+[
+  {
+    "id": "barkeeps_tonic",
+    "name": "Barkeep's Tonic",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Heal 3 from a creature or your Tavern Dweller. Invest 1: Draw a card.",
+    "spellTargets": [
+      {"spec": "CreatureOrYou"}
+    ],
+    "spellEffects": [
+      {"$type": "HealEffect", "amount": 3}
+    ],
+    "investCost": 1,
+    "investEffects": [
+      {"$type": "DrawCardsEffect"}
+    ]
+  },
+  {
+    "id": "hired_sellsword",
+    "name": "Hired Sellsword",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": ""
+  },
+  {
+    "id": "tavern_bouncer",
+    "name": "Tavern Bouncer",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 5,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": ""
+  },
+  {
+    "id": "wandering_adventurer",
+    "name": "Wandering Adventurer",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 4,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Arrival: Draw a card.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mercenary_token",
+    "name": "Mercenary",
+    "type": "Creature",
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Human"],
+    "faction": "neutral",
+    "isToken": true
+  },
+  {
+    "id": "spawn_token",
+    "name": "Spawn",
+    "type": "Creature",
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Spawn"],
+    "faction": "neutral",
+    "isToken": true
+  },
+  {
+    "id": "mercenary_contract",
+    "name": "Mercenary Contract",
+    "type": "Relic",
+    "cost": 4,
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "Pay 2 Gold: Create a 2/2 Mercenary. Activate only once each turn and only as a sorcery.",
+    "abilities": [
+      {
+        "goldCost": 2,
+        "sorcerySpeed": true,
+        "oncePerTurn": true,
+        "effects": [
+          {"$type": "CreateTokensEffect", "tokenId": "mercenary_token"}
+        ],
+        "text": "Pay 2 Gold: Create a 2/2 Mercenary."
+      }
+    ]
+  },
+  {
+    "id": "tip_jar",
+    "name": "Tip Jar",
+    "type": "Relic",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Pay 3 Gold: Draw a card. Activate only once each turn.",
+    "abilities": [
+      {
+        "goldCost": 3,
+        "oncePerTurn": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "text": "Pay 3 Gold: Draw a card."
+      }
+    ]
+  },
+  {
+    "id": "hired_muscle",
+    "name": "Hired Muscle",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Pay 2 Gold: This gets +2/+0 until end of turn. Activate only once each turn.",
+    "abilities": [
+      {
+        "goldCost": 2,
+        "oncePerTurn": true,
+        "effects": [
+          {"$type": "PumpSourceEffect", "power": 2}
+        ],
+        "text": "Pay 2 Gold: This gets +2/+0 until end of turn."
+      }
+    ]
+  },
+  {
+    "id": "wound_dresser",
+    "name": "Wound Dresser",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Pay 2 Gold: Heal 2 from target creature. Activate only once each turn.",
+    "abilities": [
+      {
+        "goldCost": 2,
+        "oncePerTurn": true,
+        "targets": [
+          {"spec": "Creature"}
+        ],
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ],
+        "text": "Pay 2 Gold: Heal 2 from target creature."
+      }
+    ]
+  },
+  {
+    "id": "cellar_rat",
+    "name": "Cellar Rat",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Rat"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Last Breath: Gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "LastBreath",
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spilled_drink",
+    "name": "Spilled Drink",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Tap target creature. Invest 1: Draw a card.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "TapTargetEffect"}
+    ],
+    "investCost": 1,
+    "investEffects": [
+      {"$type": "DrawCardsEffect"}
+    ]
+  },
+  {
+    "id": "field_medic",
+    "name": "Field Medic",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Arrival: Heal 2 from target creature.",
+    "triggers": [
+      {
+        "target": "Creature",
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "house_special",
+    "name": "House Special",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Draw a card. Invest 3: Draw two more cards.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect"}
+    ],
+    "investCost": 3,
+    "investEffects": [
+      {"$type": "DrawCardsEffect", "count": 2}
+    ]
+  },
+  {
+    "id": "tavern_recruiter",
+    "name": "Tavern Recruiter",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Invest 2: Create a 2/2 Mercenary.",
+    "investCost": 2,
+    "investEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "mercenary_token"}
+    ]
+  },
+  {
+    "id": "doorman",
+    "name": "Doorman",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 5,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Arrival: Gain 1 Gold.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "caravan_guard",
+    "name": "Caravan Guard",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 6,
+    "keywords": "Reach",
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Reach."
+  },
+  {
+    "id": "traveling_bard",
+    "name": "Traveling Bard",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Whenever you spend 3 or more Gold on a single spell or ability, draw a card.",
+    "triggers": [
+      {
+        "when": "GoldSpent",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "minAmount": 3
+      }
+    ]
+  },
+  {
+    "id": "settle_the_tab",
+    "name": "Settle the Tab",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "As an extra cost, pay any amount of Gold (X). Draw X cards, then discard a card.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect", "countIsX": true},
+      {"$type": "DiscardCardsEffect"}
+    ],
+    "xGoldExtraCost": true
+  },
+  {
+    "id": "grizzled_innkeeper",
+    "name": "Grizzled Innkeeper",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 5,
+    "subtypes": ["Human"],
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "Whenever you bank Gold, heal that much from target creature you control.",
+    "triggers": [
+      {
+        "when": "GoldBanked",
+        "target": "CreatureYouControl",
+        "effects": [
+          {"$type": "HealEffect", "amountFromEvent": true}
+        ],
+        "subject": "You"
+      }
+    ]
+  },
+  {
+    "id": "called_shot",
+    "name": "Called Shot",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Deal 2 damage to target attacking or blocking creature.",
+    "spellTargets": [
+      {"spec": "Creature", "attackingOrBlocking": true}
+    ],
+    "spellEffects": [
+      {"$type": "DealDamageEffect", "amount": 2}
+    ]
+  },
+  {
+    "id": "bar_brawl",
+    "name": "Bar Brawl",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Deal 1 damage to each creature.",
+    "spellEffects": [
+      {"$type": "DealDamageToEachCreatureEffect", "amount": 1}
+    ]
+  },
+  {
+    "id": "scarred_veteran",
+    "name": "Scarred Veteran",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 4,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "This gets +1/+0 for each damage on it.",
+    "statics": [
+      {"$type": "PowerPerDamageAbility"}
+    ]
+  },
+  {
+    "id": "tavern_brawl_night",
+    "name": "Tavern Brawl Night",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "Deal 2 damage to each creature. Then heal 2 from each creature you control.",
+    "spellEffects": [
+      {"$type": "DealDamageToEachCreatureEffect", "amount": 2},
+      {"$type": "HealOtherCreaturesYouControlEffect", "amount": 2}
+    ]
+  },
+  {
+    "id": "champions_belt",
+    "name": "Champion's Belt",
+    "type": "Equipment",
+    "cost": 3,
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "Equipped creature gets +2/+2. Whenever equipped creature destroys a creature in combat, heal it fully. Equip 3.",
+    "statics": [
+      {
+        "$type": "AttachedCreatureModifier",
+        "power": 2,
+        "health": 2,
+        "triggers": [
+          {
+            "when": "DestroysCreatureInCombat",
+            "effects": [
+              {"$type": "HealSelfEffect", "fully": true}
+            ],
+            "text": "Whenever this destroys a creature in combat, heal it fully."
+          }
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "isEquip": true,
+        "targets": [
+          {"spec": "CreatureYouControl"}
+        ],
+        "effects": [
+          {"$type": "AttachSourceEffect"}
+        ],
+        "text": "Equip 3"
+      }
+    ]
+  },
+  {
+    "id": "shady_moneylender",
+    "name": "Shady Moneylender",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "You may spend Gold as though it were mana to cast creature spells. Whenever you do, each opponent gains 1 Gold.",
+    "triggers": [
+      {
+        "when": "GoldPaidForCreatureSpell",
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1, "eachOpponent": true}
+        ],
+        "subject": "You"
+      }
+    ],
+    "statics": [
+      {"$type": "PaymentRuleAbility", "goldForCreatureSpells": true}
+    ]
+  },
+  {
+    "id": "dice_game",
+    "name": "Dice Game",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Each player may pay any amount of Gold. The player who paid the most draws two cards. If players tie for the most, each of them draws one card.",
+    "spellEffects": [
+      {"$type": "DiceGameEffect"}
+    ]
+  },
+  {
+    "id": "pot_boy",
+    "name": "Pot Boy",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Arrival: Heal 1 from a creature.",
+    "triggers": [
+      {
+        "target": "Creature",
+        "effects": [
+          {"$type": "HealEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "last_call",
+    "name": "Last Call",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Destroy target Equipment, Relic or Curse.",
+    "spellTargets": [
+      {"spec": "EquipmentRelicOrCurse"}
+    ],
+    "spellEffects": [
+      {"$type": "DestroyEffect"}
+    ]
+  },
+  {
+    "id": "round_on_the_house",
+    "name": "Round on the House",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Each player draws a card. Then you draw a card.",
+    "spellEffects": [
+      {"$type": "EachPlayerDrawsEffect"},
+      {"$type": "DrawCardsEffect"}
+    ]
+  },
+  {
+    "id": "old_tavern_keeper",
+    "name": "Old Tavern Keeper",
+    "type": "Creature",
+    "cost": 4,
+    "power": 2,
+    "health": 5,
+    "subtypes": ["Human"],
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "At the end of your turn, heal 2 from each other creature you control.",
+    "triggers": [
+      {
+        "when": "EndOfYourTurn",
+        "effects": [
+          {"$type": "HealOtherCreaturesYouControlEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "retired_champion",
+    "name": "Retired Champion",
+    "type": "Creature",
+    "cost": 5,
+    "power": 5,
+    "health": 6,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Can block an additional creature each combat.",
+    "extraBlocks": 1
+  },
+  {
+    "id": "last_orders",
+    "name": "Last Orders",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "Draw two cards, then discard a card.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect", "count": 2},
+      {"$type": "DiscardCardsEffect"}
+    ]
+  },
+  {
+    "id": "night_shift_barkeep",
+    "name": "Night Shift Barkeep",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 4,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "neutral",
+    "text": "(4): Draw a card. Activate only once each turn.",
+    "abilities": [
+      {
+        "cost": 4,
+        "oncePerTurn": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "text": "(4): Draw a card."
+      }
+    ]
+  },
+  {
+    "id": "tavern_brawl_champion",
+    "name": "Tavern Brawl Champion",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 4,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "(2): This gets +1/+0 until end of turn.",
+    "abilities": [
+      {
+        "cost": 2,
+        "effects": [
+          {"$type": "PumpSourceEffect", "power": 1}
+        ],
+        "text": "(2): This gets +1/+0 until end of turn."
+      }
+    ]
+  },
+  {
+    "id": "gilded_mercenary",
+    "name": "Gilded Mercenary",
+    "type": "Creature",
+    "cost": 4,
+    "power": 4,
+    "health": 4,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "neutral",
+    "text": "Invest 3: This enters with two +1/+1 counters and Trample.",
+    "investCost": 3,
+    "investEffects": [
+      {"$type": "AddCountersToSourceEffect", "count": 2},
+      {"$type": "GrantKeywordToSourceEffect", "keyword": "Trample"}
+    ]
+  },
+  {
+    "id": "tavern_legend",
+    "name": "Tavern Legend",
+    "type": "Creature",
+    "cost": 6,
+    "power": 5,
+    "health": 6,
+    "subtypes": ["Human"],
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "(X): This gets +X/+0 and Trample until end of turn.",
+    "abilities": [
+      {
+        "hasX": true,
+        "effects": [
+          {"$type": "PumpSourceEffect", "grants": "Trample", "powerPerX": 1}
+        ],
+        "text": "(X): This gets +X/+0 and Trample until end of turn."
+      }
+    ]
+  },
+  {
+    "id": "closing_bell",
+    "name": "Closing Bell",
+    "type": "Relic",
+    "cost": 3,
+    "rarity": "Rare",
+    "faction": "neutral",
+    "text": "At the start of your turn, if each opponent has 10 or less life, each opponent loses 2 life.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "condition": {"kind": "EachOpponentHasLifeAtMost", "amount": 10},
+        "effects": [
+          {"$type": "EachOpponentLosesLifeEffect", "amount": 2}
+        ]
+      }
+    ]
+  }
+]

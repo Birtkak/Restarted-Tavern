@@ -1,0 +1,637 @@
+[
+  {
+    "id": "apprentice_forger",
+    "name": "Apprentice Forger",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 2,
+    "keywords": "Flying",
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Flying. Arrival: Gain 1 Gold.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gilded_rat",
+    "name": "Gilded Rat",
+    "type": "Creature",
+    "cost": 1,
+    "power": 2,
+    "health": 1,
+    "subtypes": ["Rat"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Last Breath: Gain 2 Gold.",
+    "triggers": [
+      {
+        "when": "LastBreath",
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sticky_fingers",
+    "name": "Sticky Fingers",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Target creature gets -3/-0 until end of turn. Invest 1: Draw a card.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "power": -3}
+    ],
+    "investCost": 1,
+    "investEffects": [
+      {"$type": "DrawCardsEffect"}
+    ]
+  },
+  {
+    "id": "hired_enforcer",
+    "name": "Hired Enforcer",
+    "type": "Creature",
+    "cost": 5,
+    "power": 5,
+    "health": 4,
+    "keywords": "Flying",
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Flying. Arrival: Each opponent gains 2 Gold.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 2, "eachOpponent": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "the_grand_ledger",
+    "name": "The Grand Ledger",
+    "type": "Sorcery",
+    "cost": 7,
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Draw 4 cards. Invest 3: Draw 2 more and gain 3 life.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect", "count": 4}
+    ],
+    "investCost": 3,
+    "investEffects": [
+      {"$type": "DrawCardsEffect", "count": 2},
+      {"$type": "GainLifeEffect", "amount": 3}
+    ]
+  },
+  {
+    "id": "coin_juggler",
+    "name": "Coin Juggler",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 3,
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Whenever you spend Gold, this gets +1/+0 until end of turn.",
+    "triggers": [
+      {
+        "when": "GoldSpent",
+        "effects": [
+          {"$type": "PumpSourceEffect", "power": 1}
+        ],
+        "subject": "You"
+      }
+    ]
+  },
+  {
+    "id": "interest_broker",
+    "name": "Interest Broker",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 3,
+    "subtypes": ["Wizard"],
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Whenever you bank 2 or more Gold, draw a card.",
+    "triggers": [
+      {
+        "when": "GoldBanked",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "minAmount": 2
+      }
+    ]
+  },
+  {
+    "id": "offshore_account",
+    "name": "Offshore Account",
+    "type": "Relic",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Your Gold cap is 8.",
+    "statics": [
+      {"$type": "GoldCapAbility", "cap": 8}
+    ]
+  },
+  {
+    "id": "fee_collector",
+    "name": "Fee Collector",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Whenever an opponent spends Gold, you gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "GoldSpent",
+        "effects": [
+          {"$type": "GainGoldEffect", "amount": 1}
+        ],
+        "subject": "Opponents"
+      }
+    ]
+  },
+  {
+    "id": "compound_interest",
+    "name": "Compound Interest",
+    "type": "Sorcery",
+    "cost": 4,
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Draw two cards. If 3 or more Gold was spent to cast it, draw three instead.",
+    "spellEffects": [
+      {"$type": "DrawIfGoldEffect", "count": 2, "goldAtLeast": 3, "countIfGold": 3}
+    ]
+  },
+  {
+    "id": "hush_money",
+    "name": "Hush Money",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Counter target spell unless its controller pays 3. If they pay, you gain 2 Gold.",
+    "spellTargets": [
+      {"spec": "SpellOnChain"}
+    ],
+    "spellEffects": [
+      {"$type": "CounterUnlessPaysEffect", "amount": 3, "rewardGoldIfPaid": 2}
+    ]
+  },
+  {
+    "id": "counterfeit_coin",
+    "name": "Counterfeit Coin",
+    "type": "Instant",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Counter target spell with cost 4 or less. Its controller gains Gold equal to its cost.",
+    "spellTargets": [
+      {"spec": "SpellOnChain", "maxCost": 4}
+    ],
+    "spellEffects": [
+      {"$type": "CounterTargetEffect", "itsControllerGainsGoldEqualToCost": true}
+    ]
+  },
+  {
+    "id": "bribe_the_referee",
+    "name": "Bribe the Referee",
+    "type": "Instant",
+    "cost": 4,
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Counter target spell or ability. Its controller gains 3 Gold and draws a card.",
+    "spellTargets": [
+      {"spec": "SpellOrAbilityOnChain"}
+    ],
+    "spellEffects": [
+      {"$type": "CounterTargetEffect", "itsControllerGainsGold": 3, "itsControllerDraws": 1}
+    ]
+  },
+  {
+    "id": "bounced_check",
+    "name": "Bounced Check",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Return target creature with cost 3 or less to its owner's hand. Its controller gains 1 Gold.",
+    "spellTargets": [
+      {"spec": "Creature", "maxCost": 3}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnToHandEffect", "itsControllerGainsGold": 1}
+    ]
+  },
+  {
+    "id": "golden_parachute",
+    "name": "Golden Parachute",
+    "type": "Instant",
+    "cost": 3,
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Return target creature you control to your hand. Gain Gold equal to its cost.",
+    "spellTargets": [
+      {"spec": "CreatureYouControl"}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnToHandEffect", "itsControllerGainsGoldEqualToCost": true}
+    ]
+  },
+  {
+    "id": "golden_handshake",
+    "name": "Golden Handshake",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Return target creature to its owner's hand. Its controller gains Gold equal to its cost.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnToHandEffect", "itsControllerGainsGoldEqualToCost": true}
+    ]
+  },
+  {
+    "id": "grand_illusion",
+    "name": "Grand Illusion",
+    "type": "Sorcery",
+    "cost": 6,
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Return all creatures to their owners' hands. Draw a card for each creature you owned that was returned.",
+    "spellEffects": [
+      {"$type": "ReturnAllCreaturesEffect", "drawPerCreatureYouOwned": 1}
+    ]
+  },
+  {
+    "id": "silver_tongued_deal",
+    "name": "Silver-Tongued Deal",
+    "type": "Instant",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Gain control of target creature until end of turn. Untap it. It gains Haste. Each opponent gains 2 Gold.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "GainControlEffect", "untilEndOfTurn": true, "untap": true, "gainsHaste": true},
+      {"$type": "GainGoldEffect", "amount": 2, "eachOpponent": true}
+    ]
+  },
+  {
+    "id": "hostile_takeover",
+    "name": "Hostile Takeover",
+    "type": "Sorcery",
+    "cost": 6,
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Gain control of target creature. Its controller gains Gold equal to its cost and draws a card.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "GainControlEffect", "previousControllerGainsGoldEqualToCost": true, "previousControllerDraws": 1}
+    ]
+  },
+  {
+    "id": "retainer_mage",
+    "name": "Retainer Mage",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "keywords": "Flying",
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Flying. You may cast this whenever you could cast an Instant. If you do, you may pay for it with Gold.",
+    "flash": true,
+    "goldMayPay": true
+  },
+  {
+    "id": "silent_partner",
+    "name": "Silent Partner",
+    "type": "Creature",
+    "cost": 4,
+    "power": 2,
+    "health": 5,
+    "subtypes": ["Wizard"],
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "You may pay Invest costs with mana as well as Gold.",
+    "statics": [
+      {"$type": "PaymentRuleAbility", "investWithMana": true}
+    ]
+  },
+  {
+    "id": "crooked_accountant",
+    "name": "Crooked Accountant",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Whenever you cast a spell that costs 5 or more, draw a card.",
+    "triggers": [
+      {
+        "when": "SpellCast",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "minCost": 5
+      }
+    ]
+  },
+  {
+    "id": "velvet_embezzler",
+    "name": "Velvet Embezzler",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 3,
+    "keywords": "Flying",
+    "subtypes": ["Wizard"],
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Flying. At the end of your turn, if you have 3 or more Gold, draw a card.",
+    "triggers": [
+      {
+        "when": "EndOfYourTurn",
+        "condition": {"kind": "YouHaveGoldAtLeast", "amount": 3},
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pocket_change",
+    "name": "Pocket Change",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Look at the top 2 cards of your deck. Put one in your hand and the other on the bottom. Invest 1: Put both in your hand.",
+    "spellEffects": [
+      {"$type": "LookAtTopPutOneInHandRestOnBottomEffect", "allToHandIfInvested": true}
+    ],
+    "investCost": 1
+  },
+  {
+    "id": "debt_collector",
+    "name": "Debt Collector",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 4,
+    "subtypes": ["Wizard"],
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Arrival: Each opponent loses up to 2 Gold. You gain that much Gold.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "StealGoldEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "card_shark",
+    "name": "Card Shark",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 3,
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Whenever you cast your second spell each turn, draw a card.",
+    "triggers": [
+      {
+        "when": "SpellCast",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "nthSpellThisTurn": 2
+      }
+    ]
+  },
+  {
+    "id": "tax_office",
+    "name": "Tax Office",
+    "type": "Relic",
+    "cost": 5,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Whenever an opponent casts a spell, they lose 1 Gold. If they couldn't, you gain 1 Gold.",
+    "triggers": [
+      {
+        "when": "SpellCast",
+        "effects": [
+          {"$type": "TaxOfficeEffect"}
+        ],
+        "subject": "Opponents"
+      }
+    ]
+  },
+  {
+    "id": "ledger_imp",
+    "name": "Ledger Imp",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Imp"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Arrival: You may lose 2 life. If you do, gain 1 Gold.",
+    "triggers": [
+      {
+        "effects": [
+          {
+            "$type": "YouMayEffect",
+            "prompt": "Lose 2 life to gain 1 Gold?",
+            "then": [
+              {"$type": "LoseLifeEffect", "amount": 2},
+              {"$type": "GainGoldEffect", "amount": 1}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "the_dealer",
+    "name": "The Dealer",
+    "type": "Creature",
+    "cost": 6,
+    "power": 4,
+    "health": 6,
+    "keywords": "Flying",
+    "subtypes": ["Wizard"],
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Flying. At the start of your turn, each opponent may give you 2 Gold. For each one who doesn't, draw a card.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {
+            "$type": "EachOpponentMayPayGoldEffect",
+            "ifNot": [
+              {"$type": "DrawCardsEffect"}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "everything_has_a_price",
+    "name": "Everything Has a Price",
+    "type": "Sorcery",
+    "cost": 9,
+    "rarity": "Legendary",
+    "faction": "shadow_money_wizards",
+    "text": "For each opponent, gain control of the creature they control with the highest cost. That player gains 5 Gold and draws 2 cards.",
+    "spellEffects": [
+      {"$type": "EverythingHasAPriceEffect"}
+    ]
+  },
+  {
+    "id": "ledger_clerk",
+    "name": "Ledger Clerk",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 3,
+    "subtypes": ["Wizard"],
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "(3), Tap: Draw a card.",
+    "abilities": [
+      {
+        "cost": 3,
+        "tapCost": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "text": "(3), Tap: Draw a card."
+      }
+    ]
+  },
+  {
+    "id": "insider_trading",
+    "name": "Insider Trading",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Draw X cards. Each opponent gains 1 Gold.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect", "countIsX": true},
+      {"$type": "GainGoldEffect", "amount": 1, "eachOpponent": true}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "eviction_notice",
+    "name": "Eviction Notice",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "shadow_money_wizards",
+    "text": "Return target creature with cost X or less to its owner's hand. Draw a card.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnToHandEffect"},
+      {"$type": "DrawCardsEffect"}
+    ],
+    "xCost": true,
+    "targetMaxCostIsX": true
+  },
+  {
+    "id": "audit_the_books",
+    "name": "Audit the Books",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "shadow_money_wizards",
+    "text": "Return target creature with cost 4 or less to its owner's hand. Invest 3: Draw two cards.",
+    "spellTargets": [
+      {"spec": "Creature", "maxCost": 4}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnToHandEffect"}
+    ],
+    "investCost": 3,
+    "investEffects": [
+      {"$type": "DrawCardsEffect", "count": 2}
+    ]
+  },
+  {
+    "id": "foreclosure",
+    "name": "Foreclosure",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Each opponent loses X life. You gain X Gold.",
+    "spellEffects": [
+      {"$type": "EachOpponentLosesLifeEffect", "amountIsX": true},
+      {"$type": "GainGoldEffect", "amountIsX": true}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "loan_shark",
+    "name": "Loan Shark",
+    "type": "Creature",
+    "cost": 6,
+    "power": 3,
+    "health": 5,
+    "keywords": "Flying",
+    "subtypes": ["Wizard"],
+    "rarity": "Rare",
+    "faction": "shadow_money_wizards",
+    "text": "Flying. At the end of your turn, each opponent loses life equal to the Gold you have.",
+    "triggers": [
+      {
+        "when": "EndOfYourTurn",
+        "effects": [
+          {"$type": "EachOpponentLosesLifeEqualToYourGoldEffect"}
+        ]
+      }
+    ]
+  }
+]

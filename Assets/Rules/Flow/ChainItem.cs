@@ -55,7 +55,7 @@ namespace RestartedTavern.Rules
         /// <summary>Divided damage: the amount for each target (MTG 601.2d).</summary>
         public int[] Division { get; set; } = System.Array.Empty<int>();
         /// <summary>Triggered abilities: the intervening "if", checked again on resolution (MTG 603.4).</summary>
-        public System.Func<GameState, CardDatabase, PlayerId, ObjectId, bool> Condition { get; set; }
+        public TriggerCondition Condition { get; set; }
         /// <summary>Abilities: the ability's rules text (for UIs and logs).</summary>
         public string Text { get; set; } = "";
         /// <summary>A Tavern Dweller Power (GAME_DESIGN §9.1).</summary>

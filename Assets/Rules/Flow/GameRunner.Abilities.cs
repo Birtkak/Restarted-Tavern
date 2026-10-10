@@ -107,7 +107,8 @@ namespace RestartedTavern.Rules
                     while (Payment.GoldNeeded(p, generic + maxX + 1, true, ab.GoldCost) >= 0) maxX++;
                 foreach (var targets in choices)
                 {
-                    if (ab.TargetsAllowed != null && !ab.TargetsAllowed(S, source, targets)) continue;
+                    // Equip: re-equipping to the creature it's already on does nothing, so it isn't offered.
+                    if (ab.IsEquip && targets.Length > 0 && targets[0].Object == source.AttachedToObject) continue;
                     foreach (var sacrifice in sacrifices)
                     {
                         if (!sacrifice.IsNone && System.Array.IndexOf(targets, Target.ForObject(sacrifice)) >= 0) continue;

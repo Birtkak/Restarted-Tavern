@@ -1,0 +1,679 @@
+[
+  {
+    "id": "jungle_remedy",
+    "name": "Jungle Remedy",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Heal 4 from a creature. Invest 1: Put a +1/+1 counter on it.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "HealEffect", "amount": 4}
+    ],
+    "investCost": 1,
+    "investEffects": [
+      {"$type": "AddCountersEffect"}
+    ]
+  },
+  {
+    "id": "vine_spider",
+    "name": "Vine Spider",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 3,
+    "keywords": "Reach",
+    "subtypes": ["Spider"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Reach."
+  },
+  {
+    "id": "razorhide_boar",
+    "name": "Razorhide Boar",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 3,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Trample."
+  },
+  {
+    "id": "ironbark_grizzly",
+    "name": "Ironbark Grizzly",
+    "type": "Creature",
+    "cost": 4,
+    "power": 4,
+    "health": 5,
+    "subtypes": ["Beast"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": ""
+  },
+  {
+    "id": "thornback_ravager",
+    "name": "Thornback Ravager",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 4,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Trample. Arrival: Draw a card.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tusked_mammoth",
+    "name": "Tusked Mammoth",
+    "type": "Creature",
+    "cost": 5,
+    "power": 5,
+    "health": 5,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Trample."
+  },
+  {
+    "id": "canopy_critter",
+    "name": "Canopy Critter",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 1,
+    "subtypes": ["Critter"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Arrival: Heal 2 from another creature.",
+    "triggers": [
+      {
+        "target": "Creature",
+        "targetNotSelf": true,
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mossback_tortoise",
+    "name": "Mossback Tortoise",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 4,
+    "subtypes": ["Turtle"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "At the start of your turn, heal 1 from this.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {"$type": "HealSelfEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primal_clash",
+    "name": "Primal Clash",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Target creature you control fights target creature you don't control.",
+    "spellTargets": [
+      {"spec": "CreatureYouControl"},
+      {"spec": "CreatureYouDontControl"}
+    ],
+    "spellEffects": [
+      {"$type": "FightEffect"}
+    ]
+  },
+  {
+    "id": "growth_spurt",
+    "name": "Growth Spurt",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Put two +1/+1 counters on target creature. Heal 2 from it.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "AddCountersEffect", "count": 2},
+      {"$type": "HealEffect", "amount": 2}
+    ]
+  },
+  {
+    "id": "apex_instinct",
+    "name": "Apex Instinct",
+    "type": "Instant",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Target creature you control gets +2/+2 until end of turn, then it fights target creature you don't control.",
+    "spellTargets": [
+      {"spec": "CreatureYouControl"},
+      {"spec": "CreatureYouDontControl"}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "power": 2, "health": 2},
+      {"$type": "FightEffect"}
+    ]
+  },
+  {
+    "id": "sabretooth_prowler",
+    "name": "Sabretooth Prowler",
+    "type": "Creature",
+    "cost": 4,
+    "power": 4,
+    "health": 4,
+    "keywords": "Trample",
+    "subtypes": ["Cat"],
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Trample. Arrival: This fights up to one target creature you don't control.",
+    "triggers": [
+      {
+        "target": "CreatureYouDontControl",
+        "effects": [
+          {"$type": "FightEffect", "sourceFights": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primeval_behemoth",
+    "name": "Primeval Behemoth",
+    "type": "Creature",
+    "cost": 6,
+    "power": 6,
+    "health": 6,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Trample. Arrival: Heal all other creatures you control fully.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "HealOtherCreaturesYouControlEffect", "fully": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "grove_elder",
+    "name": "Grove Elder",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Shaman"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Tap: Heal 2 from target creature.",
+    "abilities": [
+      {
+        "tapCost": true,
+        "targets": [
+          {"spec": "Creature"}
+        ],
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ],
+        "text": "Tap: Heal 2 from target creature."
+      }
+    ]
+  },
+  {
+    "id": "critter_token",
+    "name": "Critter",
+    "type": "Creature",
+    "power": 1,
+    "health": 1,
+    "subtypes": ["Critter"],
+    "faction": "evergrowing_wild",
+    "isToken": true
+  },
+  {
+    "id": "bark_skin",
+    "name": "Bark Skin",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Target creature gets +0/+3 until end of turn. Put a +1/+1 counter on it.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "health": 3},
+      {"$type": "AddCountersEffect"}
+    ]
+  },
+  {
+    "id": "critter_burrow",
+    "name": "Critter Burrow",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Create three 1/1 Critters.",
+    "spellEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "critter_token", "count": 3}
+    ]
+  },
+  {
+    "id": "regrowth_rain",
+    "name": "Regrowth Rain",
+    "type": "Instant",
+    "cost": 3,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Heal 3 from each creature you control.",
+    "spellEffects": [
+      {"$type": "HealOtherCreaturesYouControlEffect", "amount": 3}
+    ]
+  },
+  {
+    "id": "mudwallow_hippo",
+    "name": "Mudwallow Hippo",
+    "type": "Creature",
+    "cost": 5,
+    "power": 3,
+    "health": 7,
+    "subtypes": ["Beast"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "At the end of your turn, heal 2 from this.",
+    "triggers": [
+      {
+        "when": "EndOfYourTurn",
+        "effects": [
+          {"$type": "HealSelfEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stampede_of_the_deep",
+    "name": "Stampede of the Deep",
+    "type": "Sorcery",
+    "cost": 6,
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Creatures you control get +2/+2 and Trample until end of turn. Heal them fully.",
+    "spellEffects": [
+      {"$type": "PumpYourCreaturesEffect", "power": 2, "health": 2, "grants": "Trample"},
+      {"$type": "HealOtherCreaturesYouControlEffect", "fully": true}
+    ]
+  },
+  {
+    "id": "titanback_colossus",
+    "name": "Titanback Colossus",
+    "type": "Creature",
+    "cost": 8,
+    "power": 8,
+    "health": 8,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Trample. Whenever this attacks, heal it fully.",
+    "triggers": [
+      {
+        "when": "Attacks",
+        "effects": [
+          {"$type": "HealSelfEffect", "fully": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "overflowing_spring",
+    "name": "Overflowing Spring",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Heal 4 from target creature. If it had no damage, put two +1/+1 counters on it instead.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "HealOrCountersEffect", "amount": 4, "countersIfUndamaged": 2}
+    ]
+  },
+  {
+    "id": "sap_mender",
+    "name": "Sap Mender",
+    "type": "Creature",
+    "cost": 2,
+    "power": 1,
+    "health": 3,
+    "subtypes": ["Plant"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Whenever you heal a creature, put a +1/+1 counter on it.",
+    "triggers": [
+      {
+        "when": "CreatureHealed",
+        "effects": [
+          {"$type": "AddCountersToEventCreatureEffect"}
+        ],
+        "subject": "You"
+      }
+    ]
+  },
+  {
+    "id": "ambush_predator",
+    "name": "Ambush Predator",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 2,
+    "subtypes": ["Cat"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Arrival: This fights up to one target damaged creature you don't control.",
+    "triggers": [
+      {
+        "target": "CreatureYouDontControl",
+        "targetOptional": true,
+        "targetDamaged": true,
+        "effects": [
+          {"$type": "FightEffect", "sourceFights": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "herd_matriarch",
+    "name": "Herd Matriarch",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 5,
+    "subtypes": ["Beast"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Whenever another creature with 5 or more Power enters the battlefield under your control, put two +1/+1 counters on it.",
+    "triggers": [
+      {
+        "when": "CreatureEnters",
+        "effects": [
+          {"$type": "AddCountersToEventCreatureEffect", "count": 2}
+        ],
+        "subject": "You",
+        "minPower": 5,
+        "othersOnly": true
+      }
+    ]
+  },
+  {
+    "id": "sproutling",
+    "name": "Sproutling",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 2,
+    "subtypes": ["Plant"],
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "At the end of your turn, if this has no damage, put a +1/+1 counter on it.",
+    "triggers": [
+      {
+        "when": "EndOfYourTurn",
+        "condition": {"kind": "SourceHasNoDamage"},
+        "effects": [
+          {"$type": "AddCountersToSourceEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "den_mother",
+    "name": "Den Mother",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 4,
+    "subtypes": ["Beast"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Whenever another creature with 5 or more Power enters under your control, draw a card.",
+    "triggers": [
+      {
+        "when": "CreatureEnters",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "minPower": 5,
+        "othersOnly": true
+      }
+    ]
+  },
+  {
+    "id": "grove_warden",
+    "name": "Grove Warden",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 5,
+    "subtypes": ["Treefolk"],
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Your other creatures have \"At the start of your turn, heal 1 from this.\"",
+    "statics": [
+      {
+        "$type": "GrantTriggerToYourCreaturesAbility",
+        "othersOnly": true,
+        "triggers": [
+          {
+            "when": "StartOfYourTurn",
+            "effects": [
+              {"$type": "HealSelfEffect", "amount": 1}
+            ],
+            "text": "At the start of your turn, heal 1 from this."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "call_of_the_deep_jungle",
+    "name": "Call of the Deep Jungle",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Reveal cards from the top of your deck until you reveal a creature card with cost 5 or more. Put it onto the battlefield. Put the other revealed cards on the bottom of your deck in a random order.",
+    "spellEffects": [
+      {"$type": "RevealUntilCreatureEffect", "minCost": 5}
+    ]
+  },
+  {
+    "id": "worldroot_hydra",
+    "name": "Worldroot Hydra",
+    "type": "Creature",
+    "cost": 6,
+    "power": 5,
+    "health": 5,
+    "subtypes": ["Hydra"],
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Whenever this is dealt damage and survives, put a +1/+1 counter on it.",
+    "triggers": [
+      {
+        "when": "CreatureDealtDamage",
+        "effects": [
+          {"$type": "AddCountersToSourceEffect"}
+        ],
+        "onlySelf": true,
+        "onlyIfSurvives": true
+      }
+    ]
+  },
+  {
+    "id": "apex_of_the_green_deep",
+    "name": "Apex of the Green Deep",
+    "type": "Creature",
+    "cost": 10,
+    "power": 12,
+    "health": 12,
+    "keywords": "Trample",
+    "subtypes": ["Leviathan"],
+    "rarity": "Legendary",
+    "faction": "evergrowing_wild",
+    "text": "Trample. At the start of your turn, heal this creature fully.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {"$type": "HealSelfEffect", "fully": true}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gift_of_the_grove",
+    "name": "Gift of the Grove",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Draw a card for each creature with 5 or more Power you control (at least one).",
+    "spellEffects": [
+      {"$type": "DrawPerBigCreatureEffect"}
+    ]
+  },
+  {
+    "id": "watering_hole",
+    "name": "Watering Hole",
+    "type": "Relic",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Whenever a creature with 5 or more Power enters under your control, draw a card. (2): Heal 2 from a creature.",
+    "triggers": [
+      {
+        "when": "CreatureEnters",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You",
+        "minPower": 5
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 2,
+        "targets": [
+          {"spec": "Creature"}
+        ],
+        "effects": [
+          {"$type": "HealEffect", "amount": 2}
+        ],
+        "text": "(2): Heal 2 from a creature."
+      }
+    ]
+  },
+  {
+    "id": "overgrowth",
+    "name": "Overgrowth",
+    "type": "Sorcery",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "evergrowing_wild",
+    "text": "Put X +1/+1 counters on target creature you control.",
+    "spellTargets": [
+      {"spec": "CreatureYouControl"}
+    ],
+    "spellEffects": [
+      {"$type": "AddCountersEffect", "countIsX": true}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "mossgut_grower",
+    "name": "Mossgut Grower",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Uncommon",
+    "faction": "evergrowing_wild",
+    "text": "Trample. (3): Put a +1/+1 counter on this creature.",
+    "abilities": [
+      {
+        "cost": 3,
+        "effects": [
+          {"$type": "AddCountersToSourceEffect"}
+        ],
+        "text": "(3): Put a +1/+1 counter on this creature."
+      }
+    ]
+  },
+  {
+    "id": "call_of_the_deep",
+    "name": "Call of the Deep",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Target creature you control gets +X/+X and Trample until end of turn. Then it fights up to one target creature you don't control.",
+    "spellTargets": [
+      {"spec": "CreatureYouControl"},
+      {"spec": "CreatureYouDontControl", "optional": true}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "grants": "Trample", "powerPerX": 1, "healthPerX": 1},
+      {"$type": "FightEffect"}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "rampaging_titan",
+    "name": "Rampaging Titan",
+    "type": "Creature",
+    "cost": 7,
+    "power": 7,
+    "health": 7,
+    "keywords": "Trample",
+    "subtypes": ["Beast"],
+    "rarity": "Rare",
+    "faction": "evergrowing_wild",
+    "text": "Trample. (X): This gets +X/+0 until end of turn.",
+    "abilities": [
+      {
+        "hasX": true,
+        "effects": [
+          {"$type": "PumpSourceEffect", "powerPerX": 1}
+        ],
+        "text": "(X): This gets +X/+0 until end of turn."
+      }
+    ]
+  }
+]

@@ -129,14 +129,14 @@ namespace RestartedTavern.Rules
     {
         public int PowerPer { get; set; }
         public int HealthPer { get; set; }
-        /// <summary>How many times to apply PowerPer/HealthPer. Gets the state, the database and the source (the Curse).</summary>
-        public Func<GameState, CardDatabase, CardInstance, int> Count { get; set; }
+        /// <summary>How many times to apply PowerPer/HealthPer, counted for the source (the Curse).</summary>
+        public DynamicCount Count { get; set; }
 
         public override void ModifyPowerHealth(GameState state, CardDatabase db, CardInstance source, CardInstance affected,
             Keyword keywords, ref int power, ref int health)
         {
             if (!AttachedCreatureModifier.Affects(source, affected)) return;
-            int n = Count(state, db, source);
+            int n = Count.Of(state, db, source);
             power += PowerPer * n;
             health += HealthPer * n;
         }

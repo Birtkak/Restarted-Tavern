@@ -1,0 +1,4 @@
+<linker>
+  <!-- Card files name the rules' effect and ability classes, which are created by reflection (CardJson). Keep them all. -->
+  <assembly fullname="RestartedTavern.Rules" preserve="all" />
+</linker>

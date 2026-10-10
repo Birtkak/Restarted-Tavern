@@ -1,0 +1,667 @@
+[
+  {
+    "id": "spirit_token",
+    "name": "Spirit",
+    "type": "Creature",
+    "power": 1,
+    "health": 1,
+    "keywords": "Flying",
+    "subtypes": ["Spirit"],
+    "faction": "sensationalists",
+    "isToken": true
+  },
+  {
+    "id": "candle_cultist",
+    "name": "Candle Cultist",
+    "type": "Creature",
+    "cost": 1,
+    "power": 1,
+    "health": 1,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Last Breath: Each opponent loses 1 life and you gain 1 life.",
+    "triggers": [
+      {
+        "when": "LastBreath",
+        "effects": [
+          {"$type": "DrainEffect", "amount": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hex_of_frailty",
+    "name": "Hex of Frailty",
+    "type": "Curse",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Attach to an enemy creature. It gets -1/-1.",
+    "spellTargets": [
+      {"spec": "CreatureYouDontControl"}
+    ],
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "power": -1, "health": -1}
+    ]
+  },
+  {
+    "id": "candlelit_acolyte",
+    "name": "Candlelit Acolyte",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "keywords": "Lifelink",
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Lifelink."
+  },
+  {
+    "id": "fatal_rumor",
+    "name": "Fatal Rumor",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Target creature gets -2/-2 until end of turn.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "power": -2, "health": -2}
+    ]
+  },
+  {
+    "id": "hungry_shade",
+    "name": "Hungry Shade",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 2,
+    "keywords": "Flying, Lifelink",
+    "subtypes": ["Spirit"],
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Flying. Lifelink."
+  },
+  {
+    "id": "ritual_slaughter",
+    "name": "Ritual Slaughter",
+    "type": "Instant",
+    "cost": 4,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Destroy target creature. You lose 2 life.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "DestroyEffect"},
+      {"$type": "LoseLifeEffect", "amount": 2}
+    ]
+  },
+  {
+    "id": "wraith_swarm",
+    "name": "Wraith Swarm",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Create three 1/1 Spirits with Flying.",
+    "spellEffects": [
+      {"$type": "CreateTokensEffect", "tokenId": "spirit_token", "count": 3}
+    ]
+  },
+  {
+    "id": "crypt_usher",
+    "name": "Crypt Usher",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 2,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Last Breath: Create a 1/1 Spirit with Flying.",
+    "triggers": [
+      {
+        "when": "LastBreath",
+        "effects": [
+          {"$type": "CreateTokensEffect", "tokenId": "spirit_token"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hex_of_festering",
+    "name": "Hex of Festering",
+    "type": "Curse",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Attach to an enemy creature. It can't be healed. Whenever it's dealt damage, its controller loses 1 life.",
+    "spellTargets": [
+      {"spec": "CreatureYouDontControl"}
+    ],
+    "triggers": [
+      {
+        "when": "CreatureDealtDamage",
+        "effects": [
+          {"$type": "EventPlayerLosesLifeEffect"}
+        ],
+        "onlyAttachedCreature": true
+      }
+    ],
+    "statics": [
+      {"$type": "CantBeHealedAbility"}
+    ]
+  },
+  {
+    "id": "blood_price",
+    "name": "Blood Price",
+    "type": "Instant",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "As an extra cost, pay 3 life. Destroy target damaged creature.",
+    "spellTargets": [
+      {"spec": "Creature", "damaged": true}
+    ],
+    "spellEffects": [
+      {"$type": "DestroyEffect"}
+    ],
+    "extraLifeCost": 3
+  },
+  {
+    "id": "hex_of_hollow_bones",
+    "name": "Hex of Hollow Bones",
+    "type": "Curse",
+    "cost": 4,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Attach to an enemy creature. It gets -1/-1 for each creature card in your graveyard (up to -4/-4).",
+    "spellTargets": [
+      {"spec": "CreatureYouDontControl"}
+    ],
+    "statics": [
+      {
+        "$type": "AttachedScalingModifier",
+        "powerPer": -1,
+        "healthPer": -1,
+        "count": {"kind": "CreatureCardsInYourGraveyard", "max": 4}
+      }
+    ]
+  },
+  {
+    "id": "curse_of_rot",
+    "name": "Curse of Rot",
+    "type": "Curse",
+    "cost": 5,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Attach to an opponent. At the start of that player's turn, deal 1 damage to each creature they control. Creatures they control can't be healed.",
+    "spellTargets": [
+      {"spec": "Opponent"}
+    ],
+    "triggers": [
+      {
+        "when": "StartOfEnchantedPlayersTurn",
+        "effects": [
+          {"$type": "DealDamageToEachCreatureEffect", "amount": 1, "onlyEventPlayer": true}
+        ]
+      }
+    ],
+    "statics": [
+      {"$type": "CantBeHealedAbility"}
+    ]
+  },
+  {
+    "id": "body_snatcher",
+    "name": "Body Snatcher",
+    "type": "Creature",
+    "cost": 3,
+    "power": 3,
+    "health": 3,
+    "subtypes": ["Horror"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Arrival: Exile a creature card from a graveyard. If you do, gain 2 life.",
+    "triggers": [
+      {
+        "target": "CreatureCardInAGraveyard",
+        "effects": [
+          {"$type": "ExileTargetCardEffect"},
+          {"$type": "GainLifeEffect", "amount": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "the_final_act",
+    "name": "The Final Act",
+    "type": "Sorcery",
+    "cost": 7,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Destroy all creatures. Each opponent loses 1 life and you gain 1 life for each creature that died this way.",
+    "spellEffects": [
+      {"$type": "DestroyAllCreaturesEffect", "drainPerCreature": 1}
+    ]
+  },
+  {
+    "id": "grave_gossip",
+    "name": "Grave Gossip",
+    "type": "Sorcery",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Look at the top three cards of your deck. Put one into your hand and the rest into your graveyard. You lose 1 life.",
+    "spellEffects": [
+      {"$type": "LoseLifeEffect", "amount": 1},
+      {"$type": "LookAtTopPutOneInHandEffect"}
+    ]
+  },
+  {
+    "id": "stage_medium",
+    "name": "Stage Medium",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 4,
+    "keywords": "Lifelink",
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Lifelink. Whenever a Curse you control is put into a graveyard from the battlefield, draw a card.",
+    "triggers": [
+      {
+        "when": "CurseToGraveyard",
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "subject": "You"
+      }
+    ]
+  },
+  {
+    "id": "encore_from_beyond",
+    "name": "Encore From Beyond",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Return target creature card from your graveyard to the battlefield. It gains Haste. At the end of your turn, exile it.",
+    "spellTargets": [
+      {"spec": "CreatureCardInYourGraveyard"}
+    ],
+    "spellEffects": [
+      {"$type": "ReanimateEffect", "gainsHaste": true, "exileAtEndOfTurn": true}
+    ]
+  },
+  {
+    "id": "ghoulish_onlooker",
+    "name": "Ghoulish Onlooker",
+    "type": "Creature",
+    "cost": 2,
+    "power": 2,
+    "health": 1,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Whenever another creature dies, put a +1/+1 counter on this.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "AddCountersToSourceEffect"}
+        ],
+        "othersOnly": true
+      }
+    ]
+  },
+  {
+    "id": "seance",
+    "name": "Séance",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Return up to two creature cards with cost 3 or less from your graveyard to your hand.",
+    "spellTargets": [
+      {"spec": "CreatureCardInYourGraveyard", "optional": true, "maxCost": 3},
+      {"spec": "CreatureCardInYourGraveyard", "optional": true, "maxCost": 3}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnToHandFromGraveyardEffect"},
+      {"$type": "ReturnToHandFromGraveyardEffect", "targetIndex": 1}
+    ]
+  },
+  {
+    "id": "hex_of_withering",
+    "name": "Hex of Withering",
+    "type": "Curse",
+    "cost": 3,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Attach to an enemy creature. It gets -2/-0. At the start of its controller's turn, deal 1 damage to it.",
+    "spellTargets": [
+      {"spec": "CreatureYouDontControl"}
+    ],
+    "triggers": [
+      {
+        "when": "StartOfEnchantedCreatureControllersTurn",
+        "effects": [
+          {"$type": "DealDamageToEventCreatureEffect"}
+        ]
+      }
+    ],
+    "statics": [
+      {"$type": "AttachedCreatureModifier", "power": -2}
+    ]
+  },
+  {
+    "id": "bone_medium",
+    "name": "Bone Medium",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Arrival: Return a creature card with cost 2 or less from your graveyard to your hand.",
+    "triggers": [
+      {
+        "target": "CreatureCardInYourGraveyard",
+        "targetMaxCost": 2,
+        "effects": [
+          {"$type": "ReturnToHandFromGraveyardEffect"}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cult_choirmaster",
+    "name": "Cult Choirmaster",
+    "type": "Creature",
+    "cost": 4,
+    "power": 3,
+    "health": 4,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Whenever another creature you control dies, each opponent loses 1 life and you gain 1 life.",
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "DrainEffect", "amount": 1}
+        ],
+        "subject": "You",
+        "othersOnly": true
+      }
+    ]
+  },
+  {
+    "id": "curse_of_the_spotlight",
+    "name": "Curse of the Spotlight",
+    "type": "Curse",
+    "cost": 4,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Attach to an opponent. Whenever a creature that player controls dies, they lose 2 life and you draw a card.",
+    "spellTargets": [
+      {"spec": "Opponent"}
+    ],
+    "triggers": [
+      {
+        "when": "CreatureDies",
+        "effects": [
+          {"$type": "EventPlayerLosesLifeEffect", "amount": 2},
+          {"$type": "DrawCardsEffect"}
+        ],
+        "onlyEnchantedPlayer": true
+      }
+    ]
+  },
+  {
+    "id": "mass_hysteria",
+    "name": "Mass Hysteria",
+    "type": "Sorcery",
+    "cost": 6,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "All creatures get -3/-3 until end of turn. You gain 1 life for each creature that dies this way.",
+    "spellEffects": [
+      {"$type": "AllCreaturesGetEffect", "power": -3, "health": -3, "gainLifePerDeath": 1}
+    ]
+  },
+  {
+    "id": "madame_morbida",
+    "name": "Madame Morbida, Star of the Séance",
+    "type": "Creature",
+    "cost": 8,
+    "power": 6,
+    "health": 7,
+    "keywords": "Flying, Lifelink",
+    "subtypes": ["Human"],
+    "rarity": "Legendary",
+    "faction": "sensationalists",
+    "text": "Flying. Lifelink. Arrival: Return all creature cards with cost 3 or less from your graveyard to the battlefield.",
+    "triggers": [
+      {
+        "effects": [
+          {"$type": "ReturnAllFromGraveyardToBattlefieldEffect", "maxCost": 3}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "midnight_ritual",
+    "name": "Midnight Ritual",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "As an extra cost, sacrifice a creature. Draw 2 cards. Invest 2: Return a creature card with cost 3 or less from your graveyard to the battlefield.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect", "count": 2}
+    ],
+    "investCost": 2,
+    "investEffects": [
+      {"$type": "ChooseCreatureCardToBattlefieldEffect", "onlyYourGraveyard": true, "maxCost": 3}
+    ],
+    "sacrificeCreatureCost": true
+  },
+  {
+    "id": "spectacle_of_blood",
+    "name": "Spectacle of Blood",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Each opponent sacrifices a creature.",
+    "spellEffects": [
+      {"$type": "SacrificeChoiceEffect", "who": "EachOpponent"}
+    ]
+  },
+  {
+    "id": "midnight_ringmaster",
+    "name": "Midnight Ringmaster",
+    "type": "Creature",
+    "cost": 5,
+    "power": 4,
+    "health": 5,
+    "keywords": "Lifelink",
+    "subtypes": ["Human"],
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Lifelink. Arrival: You may sacrifice another creature. If you do, draw 2 cards.",
+    "triggers": [
+      {
+        "effects": [
+          {
+            "$type": "SacrificeChoiceEffect",
+            "othersOnly": true,
+            "optional": true,
+            "then": [
+              {"$type": "DrawCardsEffect", "count": 2}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "exhumation_broadcast",
+    "name": "Exhumation Broadcast",
+    "type": "Sorcery",
+    "cost": 5,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Choose a creature card in each graveyard. Put them onto the battlefield under your control.",
+    "spellEffects": [
+      {"$type": "ChooseCreatureCardToBattlefieldEffect"}
+    ]
+  },
+  {
+    "id": "abyssal_headliner",
+    "name": "Abyssal Headliner",
+    "type": "Creature",
+    "cost": 6,
+    "power": 6,
+    "health": 6,
+    "keywords": "Flying",
+    "subtypes": ["Horror"],
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Flying. At the start of your turn, sacrifice another creature or lose 3 life.",
+    "triggers": [
+      {
+        "when": "StartOfYourTurn",
+        "effects": [
+          {
+            "$type": "SacrificeChoiceEffect",
+            "othersOnly": true,
+            "optional": true,
+            "else": [
+              {"$type": "LoseLifeEffect", "amount": 3}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blood_oath",
+    "name": "Blood Oath",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Draw two cards. You lose 2 life.",
+    "spellEffects": [
+      {"$type": "DrawCardsEffect", "count": 2},
+      {"$type": "LoseLifeEffect", "amount": 2}
+    ]
+  },
+  {
+    "id": "seance_hotline",
+    "name": "Séance Hotline",
+    "type": "Creature",
+    "cost": 3,
+    "power": 2,
+    "health": 3,
+    "subtypes": ["Human"],
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "(2), Pay 1 life: Draw a card. Activate only once each turn.",
+    "abilities": [
+      {
+        "cost": 2,
+        "lifeCost": 1,
+        "oncePerTurn": true,
+        "effects": [
+          {"$type": "DrawCardsEffect"}
+        ],
+        "text": "(2), Pay 1 life: Draw a card."
+      }
+    ]
+  },
+  {
+    "id": "wither_away",
+    "name": "Wither Away",
+    "type": "Instant",
+    "cost": 1,
+    "rarity": "Common",
+    "faction": "sensationalists",
+    "text": "Target creature gets -X/-X until end of turn.",
+    "spellTargets": [
+      {"spec": "Creature"}
+    ],
+    "spellEffects": [
+      {"$type": "PumpTargetEffect", "powerPerX": -1, "healthPerX": -1}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "open_casket",
+    "name": "Open Casket",
+    "type": "Sorcery",
+    "cost": 3,
+    "rarity": "Uncommon",
+    "faction": "sensationalists",
+    "text": "Return a creature card with cost 3 or less from your graveyard to your hand. Invest 3: Put it onto the battlefield instead.",
+    "spellTargets": [
+      {"spec": "CreatureCardInYourGraveyard", "maxCost": 3}
+    ],
+    "spellEffects": [
+      {"$type": "ReturnGraveyardCreatureEffect", "toBattlefieldIfInvested": true}
+    ],
+    "investCost": 3
+  },
+  {
+    "id": "final_broadcast",
+    "name": "Final Broadcast",
+    "type": "Sorcery",
+    "cost": 2,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Each opponent loses X life and you gain X life.",
+    "spellEffects": [
+      {"$type": "DrainEffect", "amountIsX": true}
+    ],
+    "xCost": true
+  },
+  {
+    "id": "curse_of_prime_time",
+    "name": "Curse of Prime Time",
+    "type": "Curse",
+    "cost": 4,
+    "rarity": "Rare",
+    "faction": "sensationalists",
+    "text": "Attach to an opponent. At the start of that player's turn, they lose 1 life. (3): That player loses 1 life and you gain 1 life.",
+    "spellTargets": [
+      {"spec": "Opponent"}
+    ],
+    "triggers": [
+      {
+        "when": "StartOfEnchantedPlayersTurn",
+        "effects": [
+          {"$type": "EventPlayerLosesLifeEffect"}
+        ]
+      }
+    ],
+    "abilities": [
+      {
+        "cost": 3,
+        "effects": [
+          {"$type": "AttachedPlayerLosesLifeEffect", "youGainLife": true}
+        ],
+        "text": "(3): That player loses 1 life and you gain 1 life."
+      }
+    ]
+  }
+]

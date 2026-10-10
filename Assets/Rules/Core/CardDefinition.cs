@@ -31,6 +31,7 @@ namespace RestartedTavern.Rules
         public List<TargetSlot> SpellTargets { get; set; } = new List<TargetSlot>();
 
         /// <summary>Shorthand for a spell with exactly one required target.</summary>
+        [NotCardData]
         public TargetSpec SpellTarget
         {
             get => SpellTargets.Count > 0 ? SpellTargets[0].Spec : TargetSpec.None;
@@ -200,10 +201,10 @@ namespace RestartedTavern.Rules
         public TargetSlot Slot => new TargetSlot { Spec = Target, Damaged = TargetDamaged, MaxCost = TargetMaxCost };
 
         /// <summary>
-        /// An intervening "if" (MTG 603.4): "At the end of your turn, if you have 5 or more Gold, ...". Checked
-        /// when it would trigger and again when it resolves. Gets the state, the cards, the controller and the source id.
+        /// An intervening "if" (MTG 603.4): "At the end of your turn, if you have 3 or more Gold, ...". Checked
+        /// when it would trigger and again when it resolves. Null = none.
         /// </summary>
-        public Func<GameState, CardDatabase, PlayerId, ObjectId, bool> Condition { get; set; }
+        public TriggerCondition Condition { get; set; }
         public List<Effect> Effects { get; set; } = new List<Effect>();
         public string Text { get; set; } = "";
 
@@ -241,6 +242,6 @@ namespace RestartedTavern.Rules
         /// Triggers this many times at once, each with its own target (Archon Lumen: one ping per
         /// Equipment you control). Null = once.
         /// </summary>
-        public Func<GameState, CardDatabase, CardInstance, int> RepeatCount { get; set; }
+        public DynamicCount RepeatCount { get; set; }
     }
 }

@@ -32,18 +32,8 @@ namespace RestartedTavern.Client
         private const int MaxUndo = 200;
         private const int MaxLog = 400;
 
-        private static readonly string[] DeckNames =
-            { "Goober Mob", "Jungle Stampede", "Zoo Patrol", "Vesper's Ledger", "Sparkwrench Scrappers", "Auditor's Arsenal" };
-        private static readonly Func<List<string>>[] Decks =
-        {
-            CardPool.GooberMobDeck, CardPool.JungleStampedeDeck, CardPool.ZooPatrolDeck,
-            CardPool.VespersLedgerDeck, CardPool.SparkwrenchScrappersDeck, CardPool.AuditorsArsenalDeck,
-        };
-        private static readonly string[] TavernDwellers =
-        {
-            CardPool.GooberMobTavernDweller, CardPool.JungleStampedeTavernDweller, CardPool.ZooPatrolTavernDweller,
-            CardPool.VespersLedgerTavernDweller, CardPool.SparkwrenchScrappersTavernDweller, CardPool.AuditorsArsenalTavernDweller,
-        };
+        /// <summary>The prototype decks from the data files (Decks/prototype_decks.json).</summary>
+        private static IReadOnlyList<CardPool.DeckList> Decks => CardPool.PrototypeDecks();
 
         /// <summary>Deck choice per seat (index into <see cref="Decks"/>). Applies from the next new game.</summary>
         private readonly int[] _deckChoice = { 0, 1 };
@@ -92,6 +82,7 @@ namespace RestartedTavern.Client
 
         private void Start()
         {
+            CardPool.DataRoot = Application.streamingAssetsPath; // card and deck files (Assets/StreamingAssets in the editor)
             var args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
@@ -137,8 +128,8 @@ namespace RestartedTavern.Client
             var events = new List<GameEvent>();
             _state = _engine.CreateGame(Format(_rulesInPlay), new[]
             {
-                new PlayerSetup { Deck = Decks[_deckChoice[0]](), TavernDwellerId = TavernDwellers[_deckChoice[0]] },
-                new PlayerSetup { Deck = Decks[_deckChoice[1]](), TavernDwellerId = TavernDwellers[_deckChoice[1]] },
+                new PlayerSetup { Deck = new List<string>(Decks[_deckChoice[0]].Cards), TavernDwellerId = Decks[_deckChoice[0]].TavernDweller },
+                new PlayerSetup { Deck = new List<string>(Decks[_deckChoice[1]].Cards), TavernDwellerId = Decks[_deckChoice[1]].TavernDweller },
             }, seed, events);
             _text.Remember(_state, events);
             AddToLog(events);
@@ -185,7 +176,7 @@ namespace RestartedTavern.Client
                     "Rules: " + RulesNames[_rulesInPlay],
                 };
                 for (int seat = 0; seat < 2; seat++)
-                    lines.Add("P" + (seat + 1) + ": " + DeckNames[_deckInPlay[seat]] + " (" + _text.Name(TavernDwellers[_deckInPlay[seat]]) + ")"
+                    lines.Add("P" + (seat + 1) + ": " + Decks[_deckInPlay[seat]].Name + " (" + _text.Name(Decks[_deckInPlay[seat]].TavernDweller) + ")"
                               + (_bot[seat] ? ", bot" : ", human") + (_state.Players[seat].Seat == _state.StartingPlayerIndex ? ", went first" : ""));
                 lines.Add("Result: " + (_state.IsGameOver ? "winner " + string.Join(", ", _state.Winners) : "not finished")
                           + " after turn " + _state.TurnNumber + " | life " + string.Join(" vs ", _state.Players.Select(p => p.Life)));
@@ -326,8 +317,8 @@ namespace RestartedTavern.Client
             if (GUILayout.Button(RulesNames[_rulesChoice], GUILayout.Width(145)))
                 _rulesChoice = (_rulesChoice + 1) % RulesNames.Length; // used by the next New game
             for (int seat = 0; seat < 2; seat++)
-                if (GUILayout.Button("P" + (seat + 1) + ": " + DeckNames[_deckChoice[seat]], GUILayout.Width(140)))
-                    _deckChoice[seat] = (_deckChoice[seat] + 1) % Decks.Length; // used by the next New game
+                if (GUILayout.Button("P" + (seat + 1) + ": " + Decks[_deckChoice[seat]].Name, GUILayout.Width(140)))
+                    _deckChoice[seat] = (_deckChoice[seat] + 1) % Decks.Count; // used by the next New game
 
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
@@ -362,7 +353,7 @@ namespace RestartedTavern.Client
         {
             var waiting = _engine.WaitingOn(_state);
             string marker = p.Id == _state.ActivePlayer ? ">> " : "";
-            string header = marker + p.Id + " " + DeckNames[_deckInPlay[p.Seat]] + (_bot[p.Seat] ? " (bot)" : "")
+            string header = marker + p.Id + " " + Decks[_deckInPlay[p.Seat]].Name + (_bot[p.Seat] ? " (bot)" : "")
                             + (Runeterra && p.Id == RoundLeaderId() ? "    [ATTACK TOKEN]" : "")
                             + "    Life " + p.Life + "    Mana " + p.Mana + "/" + p.MaxMana + "    Gold " + p.Gold + "/" + GoldRules.Cap(_state, _engine.Cards, p.Id)
                             + "    Deck " + p.Deck.Count + "    Hand " + p.Hand.Count + "    Graveyard " + p.Graveyard.Count

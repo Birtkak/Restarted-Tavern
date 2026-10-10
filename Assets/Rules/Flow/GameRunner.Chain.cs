@@ -176,7 +176,7 @@ namespace RestartedTavern.Rules
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
-            else if (item.Condition == null || item.Condition(S, Db, item.Controller, item.SourceId)) // MTG 603.4
+            else if (item.Condition == null || item.Condition.Holds(S, Db, item.Controller, item.SourceId)) // MTG 603.4
             {
                 RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount, item.EventObject, item.EventPlayer,
                     sourceDefinitionId: item.SourceDefinitionId);
@@ -273,8 +273,8 @@ namespace RestartedTavern.Rules
         private void QueueTrigger(TriggeredAbility ability, PlayerId controller, ObjectId sourceId, string sourceDefinitionId, CardInstance source,
             int amount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null)
         {
-            if (ability.Condition != null && !ability.Condition(S, Db, controller, sourceId)) return; // intervening "if" (MTG 603.4)
-            int times = ability.RepeatCount != null && source != null ? ability.RepeatCount(S, Db, source) : 1;
+            if (ability.Condition != null && !ability.Condition.Holds(S, Db, controller, sourceId)) return; // intervening "if" (MTG 603.4)
+            int times = ability.RepeatCount != null && source != null ? ability.RepeatCount.Of(S, Db, source) : 1;
             for (int n = 0; n < times; n++)
             {
                 S.PendingTriggers.Add(new PendingTrigger
