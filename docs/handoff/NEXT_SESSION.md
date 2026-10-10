@@ -7,12 +7,13 @@ Paste everything below the line into a new session.
 You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-card game.
 Repo: C:\Users\Birre\Desktop\Claude shizzle\Restarted-Tavern (GitHub: Birtkak/Restarted-Tavern, main).
 
-STATE AT THE END OF THE LAST SESSION (2026-10-10), 247 EditMode tests, all green:
+STATE AT THE END OF THE LAST SESSION (2026-10-10), 249 EditMode tests, all green:
 - **Standard rules = Runeterra-style mana** (GAME_DESIGN §5–6, §6.1): a round pool (everyone gains +1 max mana and
   refills when a round starts; mana lasts the round), unspent mana becomes Gold at the end of the round, Gold cap 3,
   spells and abilities pay **Gold first**, the round leader rotates (A B | B A) and only the round leader may attack
   (attack token). `FormatConfig.Classic()` keeps the old rules; `TestGame.Classic()` runs old card tests under them.
-- Gold first solved RULES_REVIEW #6 (the sequencing trap). Velvet Embezzler draws at 3+ Gold; Compound Interest checks
+- Gold first solved RULES_REVIEW #6 (the sequencing trap). Gold-only parts (Invest, "pay X Gold") are set aside
+  before the cost takes Gold (`Payment.TrySplit`). Velvet Embezzler draws at 3+ Gold; Compound Interest checks
   "if 3 or more Gold was spent to cast it".
 - New Powers: Mukk (3) a Trample creature you control fights a creature you don't control; Sparkwrench (2) attach up to
   one Equipment to a creature you control, else it gets +1/+1; Auditor Prime (2) draw a card, only with 3+ Gold.
@@ -26,6 +27,9 @@ STATE AT THE END OF THE LAST SESSION (2026-10-10), 247 EditMode tests, all green
 GOAL OF THIS SESSION: ask the user what's next (AskUserQuestion, multiple choice, recommended option first).
 
 CANDIDATE NEXT STEPS
+0. **The 2026-10-10 design review** (docs/handoff/NEXT_DESIGN_FLAWS.md, written by a parallel session): flaws 1–7, 9
+   and 10 are open design questions (double turns and the attack token, going first under rotation, multiplayer, Gold
+   cap waste, permanent damage, stalls, shady deals at cap 3, Health buffs). Offer it next to the visual client.
 1. **Visual client** (DEVELOPMENT §5 roadmap step 4, recommended; the user wanted the to-dos done first and they are):
    a real Unity hot-seat table for human playtests.
 2. Human playtests of the new Standard rules on the debug table (Going first stays the MTG default until

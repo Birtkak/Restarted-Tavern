@@ -2,6 +2,11 @@
 
 Paste everything below the line into a new session.
 
+> **Status update (2026-10-10, later session):** Runeterra mana was confirmed and locked by the user (Decision Log).
+> Done since this review: **flaw 8** (the Invest payment bug: Gold-only parts are now set aside first), **flaw 11**
+> (new Powers for Mukk, Sparkwrench and Auditor Prime), **flaw 12** (the doc contradictions, and NEXT_SESSION.md was
+> rewritten). Velvet Embezzler and Compound Interest now work at 3 Gold. Still open for the user: flaws 1–7, 9 and 10.
+
 ---
 
 You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-card game.
