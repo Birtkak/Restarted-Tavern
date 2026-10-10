@@ -121,7 +121,9 @@ namespace RestartedTavern.Rules
         public string SourceDefinitionId;
         public TriggerEvent When;
         public Target? Target;
-        public override string ToString() => SourceDefinitionId + Source + " triggers (" + When + ")";
+        /// <summary>Merged from this many events (one Chain item that does it this many times).</summary>
+        public int Times = 1;
+        public override string ToString() => SourceDefinitionId + Source + " triggers (" + When + ")" + (Times > 1 ? " x" + Times : "");
     }
 
     public sealed class ChainItemResolvedEvent : GameEvent
@@ -155,6 +157,19 @@ namespace RestartedTavern.Rules
         public int ItemId;
         public string SourceDefinitionId;
         public override string ToString() => SourceDefinitionId + " fizzles";
+    }
+
+    /// <summary>
+    /// A targeted trigger never went on the Chain: it had no legal target (MTG 603.3d), or it was a "may" and its controller
+    /// declined. Only so the table can say so (playtest 2026-10-10: Ambush Predator seemed to do nothing).
+    /// </summary>
+    public sealed class TriggerSkippedEvent : GameEvent
+    {
+        public ObjectId Source;
+        public string SourceDefinitionId;
+        public PlayerId Controller;
+        public bool Declined;
+        public override string ToString() => SourceDefinitionId + (Declined ? " declined" : " has no target");
     }
 
     public sealed class ManaChangedEvent : GameEvent

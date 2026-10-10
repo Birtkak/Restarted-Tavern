@@ -26,7 +26,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 10 | **Apex Instinct** | 3 | Instant | U | — | Target creature you control gets +2/+2 until end of turn, then it fights target creature you don't control. | Instant-speed fight | ✅ |
 | 11 | **Grove Elder** | 3 | Creature: Shaman | U | 2/3 | Tap: Heal 2 from target creature. | A repeatable healer | ✅ |
 | 12 | **Ironbark Grizzly** | 4 | Creature: Beast | C | 4/5 | — | Plain and sturdy | ✅ |
-| 13 | **Sabretooth Prowler** | 4 | Creature: Cat | R | 4/4 | Trample. Arrival: This fights up to one target creature you don't control. | Removal on a big body. It keeps the wounds from the fight | ✅ |
+| 13 | **Sabretooth Prowler** | 4 | Creature: Cat | R | 4/4 | Trample. Arrival: This may fight up to one target creature you don't control. | Removal on a big body. It keeps the wounds from the fight | ✅ |
 | 14 | **Grove Warden** | 4 | Creature: Treefolk | R | 3/5 | Your other creatures have "At the start of your turn, heal 1 from this." | A healing engine for the whole board | ✅ |
 | 15 | **Thornback Ravager** | 5 | Creature: Beast | U | 4/4 | Trample. Arrival: Draw a card. | From the samples | ✅ |
 | 16 | **Tusked Mammoth** | 5 | Creature: Beast | C | 5/5 | Trample. | Freljord-style beater | ✅ |
@@ -55,7 +55,7 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 22 | **Overflowing Spring** | 2 | Instant | U | — | Heal 4 from target creature. If it had no damage, put two +1/+1 counters on it instead. | Never a dead card: it heals when it's needed, and grows the creature when it's not | ✓ implemented | ✅ |
 | 23 | **Sap Mender** | 2 | Creature: Plant | U | 1/3 | Whenever you heal a creature, put a +1/+1 counter on it. | A healing payoff. Every heal also grows the creature | ✓ implemented | ✅ |
 | 24 | **Critter Burrow** | 3 | Sorcery | C | — | Create three 1/1 Critters. | Critter swarm (the faction's Critter token) | ✓ implemented | ✅ |
-| 25 | **Ambush Predator** | 3 | Creature: Cat | C | 3/2 | Arrival: This fights up to one target damaged creature you don't control. | Fight removal that only works once something is wounded. Pairs well with Glitterworld pings | ✓ implemented | ✅ |
+| 25 | **Ambush Predator** | 3 | Creature: Cat | C | 3/2 | Arrival: This may fight up to one target creature you don't control. | Fight removal on a cheap body. Playtest 2026-10-10: no longer needs a damaged target, and "may" (it can skip a bad fight) | ✓ implemented | ✅ |
 | 26 | **Regrowth Rain** | 3 | Instant | C | — | Heal 3 from each creature you control. | Mass repair at instant speed: heal after blocks | ✓ implemented | ✅ |
 | 27 | **Herd Matriarch** | 4 | Creature: Beast | U | 3/5 | Whenever another creature with 5 or more Power enters the battlefield under your control, put two +1/+1 counters on it. | Makes the big creatures bigger, which also lifts their max Health above chip-damage range | ✓ implemented | ✅ |
 | 28 | **Mudwallow Hippo** | 5 | Creature: Beast | C | 3/7 | At the end of your turn, heal 2 from this. | A wall that recovers. Chip damage doesn't stick to it | ✓ implemented | ✅ |

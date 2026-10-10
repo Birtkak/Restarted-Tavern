@@ -190,10 +190,11 @@
     "subtypes": ["Cat"],
     "rarity": "Rare",
     "faction": "evergrowing_wild",
-    "text": "Trample. Arrival: This fights up to one target creature you don't control.",
+    "text": "Trample. Arrival: This may fight up to one target creature you don't control.",
     "triggers": [
       {
         "target": "CreatureYouDontControl",
+        "targetOptional": true,
         "effects": [
           {"$type": "FightEffect", "sourceFights": true}
         ]
@@ -394,12 +395,11 @@
     "subtypes": ["Cat"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "Arrival: This fights up to one target damaged creature you don't control.",
+    "text": "Arrival: This may fight up to one target creature you don't control.",
     "triggers": [
       {
         "target": "CreatureYouDontControl",
         "targetOptional": true,
-        "targetDamaged": true,
         "effects": [
           {"$type": "FightEffect", "sourceFights": true}
         ]

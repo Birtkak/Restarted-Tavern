@@ -192,8 +192,14 @@ namespace RestartedTavern.Rules
         public bool TargetNotSelf { get; set; }
         /// <summary>"You may ...": the controller can choose no target, and then nothing happens.</summary>
         public bool TargetOptional { get; set; }
-        /// <summary>"target damaged creature" (Ambush Predator).</summary>
+        /// <summary>"target damaged creature".</summary>
         public bool TargetDamaged { get; set; }
+        /// <summary>
+        /// One Chain item per event, never merged: for cards built around trigger count (pinging, spell chains, storm;
+        /// GAME_DESIGN Decision Log 2026-10-10). By default the same ability of the same source triggering for several
+        /// events at once goes on the Chain as one item that does it once per event (PendingTrigger.More).
+        /// </summary>
+        public bool Separate { get; set; }
         /// <summary>"with cost 2 or less" on the target (Bone Medium). Null = any.</summary>
         public int? TargetMaxCost { get; set; }
 
@@ -240,10 +246,5 @@ namespace RestartedTavern.Rules
         /// <summary>"This triggers at most N times each turn" (Skabba). 0 = no limit.</summary>
         public int MaxPerTurn { get; set; }
 
-        /// <summary>
-        /// Triggers this many times at once, each with its own target (Archon Lumen: one ping per
-        /// Equipment you control). Null = once.
-        /// </summary>
-        public DynamicCount RepeatCount { get; set; }
     }
 }

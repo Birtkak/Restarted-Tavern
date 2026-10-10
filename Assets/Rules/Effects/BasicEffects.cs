@@ -16,6 +16,8 @@ namespace RestartedTavern.Rules
         public string PlusOnePerYourCreatureOfSubtype { get; set; }
         /// <summary>"Deal X damage" (Big Boom, Orbital Laser).</summary>
         public bool AmountIsX { get; set; }
+        /// <summary>"Deal X damage, where X is the number of Equipment you control" (Archon Lumen). Counted on resolution.</summary>
+        public DynamicCount AmountCount { get; set; }
 
         public override void Resolve(EffectContext ctx)
         {
@@ -32,6 +34,7 @@ namespace RestartedTavern.Rules
         public int AmountFor(EffectContext ctx, Target t)
         {
             if (AmountIsX) return ctx.X;
+            if (AmountCount != null) return AmountCount.Of(ctx.State, ctx.Cards, ctx.Controller);
             if (AmountIsSacrificedPower) return ctx.SacrificedPower;
             if (PlusOnePerYourCreatureOfSubtype != null)
             {

@@ -67,6 +67,8 @@ namespace RestartedTavern.Client.Table
         private readonly SeatKind[] _seats = { SeatKind.Human, SeatKind.Bot };
         private ulong _seed; // 0 = a random seed at startup
         private int _autoplay;
+        /// <summary>-board N: N permanents on each side at the start (layout screenshots).</summary>
+        private int _board;
         private bool _autopick;
         private string _autoshot;
         private string _until;
@@ -120,6 +122,7 @@ namespace RestartedTavern.Client.Table
                     case "-zoom": _zoomShot = next; break;
                     case "-shotat": float.TryParse(next, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _shotAt); break;
                     case "-until": _until = next; break;
+                    case "-board": int.TryParse(next, out _board); break;
                     case "-menu": _menuOpen = true; break;
                     case "-debug": _debugOpen = true; break;
                     case "-reveal": _revealHands = true; break;
@@ -142,6 +145,7 @@ namespace RestartedTavern.Client.Table
             CardPool.PrototypeDecks();
             bool menu = _menuOpen; // -menu (NewGame closes the menu)
             NewGame(_seed);
+            if (_board > 0) { FillBoard(_board); OnSessionChanged(); }
             _menuOpen = menu;
             if (interactive)
             {
@@ -379,6 +383,7 @@ namespace RestartedTavern.Client.Table
                 Ui.Clear(_zoomLayer);
             }
 
+            UpdateFan();
             UpdateBeats();
             if (_s.BotToAct && _dragging == null && !_menuOpen && !_bugOpen && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
             {
@@ -658,12 +663,14 @@ namespace RestartedTavern.Client.Table
                     else laneAttackers.Add(c);
                 }
             var inLane = new HashSet<ObjectId>(laneAttackers.Select(c => c.Id).Concat(laneBlockers.Select(b => b.unit.Id)));
+            var tucked = CollectAttachments(); // drawn behind their host, wherever it stands
 
-            DrawRow(opp.Battlefield.Where(c => !inLane.Contains(c.Id)).ToList(), OppRowY + UnitH / 2f);
-            DrawRow(me.Battlefield.Where(c => !inLane.Contains(c.Id)).ToList(), MyRowY + UnitH / 2f);
+            DrawRow(opp.Battlefield.Where(c => !inLane.Contains(c.Id) && !tucked.Contains(c.Id)).ToList(), OppRowY, false);
+            DrawRow(me.Battlefield.Where(c => !inLane.Contains(c.Id) && !tucked.Contains(c.Id)).ToList(), MyRowY, true);
 
-            // Attackers in a row across the lane; each blocker stands in front of its attacker.
-            float step = Math.Min(UnitW + 16f, (CenterRight - CenterLeft - 40f) / Math.Max(1, laneAttackers.Count));
+            // Attackers in a row across the lane, sideways once declared (attacking taps them); each blocker stands in
+            // front of its attacker. Staged attackers stay upright until the attack is confirmed.
+            float step = Math.Min(UnitH + 16f, (CenterRight - CenterLeft - 40f) / Math.Max(1, laneAttackers.Count));
             float x0 = CenterX - step * (laneAttackers.Count - 1) / 2f;
             var attackerX = new Dictionary<ObjectId, float>();
             for (int i = 0; i < laneAttackers.Count; i++)
@@ -672,7 +679,9 @@ namespace RestartedTavern.Client.Table
                 float x = x0 + i * step;
                 attackerX[c.Id] = x;
                 bool mine = c.Controller == _snap.Viewer;
-                var w = MakeWidget(_dynamic, WidgetKind.Unit, c, x, mine ? LaneMid + 6 + UnitH / 2f : LaneMid - 6 - UnitH / 2f, UnitW, UnitH);
+                bool sideways = c.IsAttacking && c.Tapped;
+                float half = (sideways ? UnitW : UnitH) / 2f;
+                var w = DrawPermanent(c, x, mine ? LaneMid + 6 + half : LaneMid - 6 - half, 1f, sideways);
                 if (_stage != null && _stage.Staged.Any(st => st.Creature == c.Id)) Tag(w, "staged");
             }
             var perAttacker = new Dictionary<ObjectId, int>();
@@ -682,7 +691,7 @@ namespace RestartedTavern.Client.Table
                 perAttacker[blocks] = n + 1;
                 float x = (attackerX.TryGetValue(blocks, out var ax) ? ax : CenterX) + n * 34f;
                 bool mine = unit.Controller == _snap.Viewer;
-                MakeWidget(_dynamic, WidgetKind.Unit, unit, x, mine ? LaneMid + 6 + UnitH / 2f : LaneMid - 6 - UnitH / 2f, UnitW, UnitH);
+                DrawPermanent(unit, x, mine ? LaneMid + 6 + UnitH / 2f : LaneMid - 6 - UnitH / 2f, 1f, false);
             }
         }
 
@@ -690,29 +699,6 @@ namespace RestartedTavern.Client.Table
         {
             var tag = Ui.Panel(w.transform, "Tag", 10, -20, UnitW - 20, 18, new Color(0, 0, 0, 0.7f));
             Ui.FillLabel(tag.transform, text, 12, GlowCombat, TextAnchor.MiddleCenter, FontStyle.Bold);
-        }
-
-        private void DrawRow(List<CardView> cards, float cy)
-        {
-            // Creatures first (LoR units), then Relics, Equipment and Curses.
-            var ordered = cards.Where(c => c.Type == CardType.Creature).Concat(cards.Where(c => c.Type != CardType.Creature)).ToList();
-            if (ordered.Count == 0) return;
-            float step = Math.Min(UnitW + 12f, (CenterRight - CenterLeft - UnitW) / Math.Max(1, ordered.Count - 1));
-            float x0 = CenterX - step * (ordered.Count - 1) / 2f;
-            for (int i = 0; i < ordered.Count; i++)
-            {
-                var c = ordered[i];
-                bool creature = c.Type == CardType.Creature;
-                var w = MakeWidget(_dynamic, creature ? WidgetKind.Unit : WidgetKind.HandCard, c, x0 + i * step, cy,
-                    creature ? UnitW : UnitW * 0.95f, creature ? UnitH : UnitW * 0.95f * 1.4f);
-                w.Kind = WidgetKind.Unit;
-                if (!c.AttachedTo.IsNone || c.AttachedToPlayer != null)
-                {
-                    string host = c.AttachedToPlayer != null ? c.AttachedToPlayer.ToString() : _snap.Find(c.AttachedTo)?.Name ?? "?";
-                    var tag = Ui.Panel(w.transform, "Attached", 4, UnitH - 4, UnitW - 8, 18, new Color(0, 0, 0, 0.75f));
-                    Ui.FillLabel(tag.transform, "on " + host, 12, Color.white);
-                }
-            }
         }
 
         private void DrawHand(PlayerView me)
@@ -824,6 +810,13 @@ namespace RestartedTavern.Client.Table
                 string kind = item.IsTavernDwellerPower ? "POWER" : item.Kind == ChainItemKind.TriggeredAbility ? "TRIGGER" : "ABILITY";
                 var tag = Ui.Panel(widget.transform, "Kind", d / 2f - 36, d - 14, 72, 18, Ui.Hex("#5A2A8A"));
                 Ui.FillLabel(tag.transform, kind, 11, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
+            if (item.Times > 1) // one merged trigger that does it N times (Decision Log 2026-10-10)
+            {
+                float bd = Mathf.Max(22f, d * 0.32f);
+                var badge = Ui.Circle(widget.transform, "Times", d - bd + 4, -4, bd, Ui.Hex("#FFD060"));
+                Ui.AddOutline(badge.gameObject, new Color(0, 0, 0, 0.8f), 1.5f);
+                Ui.FillLabel(badge.transform, "×" + item.Times, Mathf.RoundToInt(bd * 0.45f), Ui.Hex("#2A1A08"), TextAnchor.MiddleCenter, FontStyle.Bold);
             }
             if (small) return;
             float pillW = d + 56f;
@@ -1169,7 +1162,8 @@ namespace RestartedTavern.Client.Table
             var center = _root.InverseTransformPoint((corners[0] + corners[2]) / 2f);
             float cx = center.x + Ui.Width / 2f, cy = Ui.Height / 2f - center.y;
             const float zw = 300f, zh = 420f;
-            float x = cx < Ui.Width / 2f ? cx + 90f : cx - 90f - zw;
+            float halfW = Mathf.Abs(corners[2].x - corners[0].x) / 2f / _root.lossyScale.x; // wider when tapped
+            float x = cx < Ui.Width / 2f ? cx + halfW + 28f : cx - halfW - 28f - zw;
             float y = Mathf.Clamp(cy - zh / 2f, 10f, Ui.Height - zh - 10f);
             var rt = Ui.Rect(_zoomLayer, "Zoom", x, y, zw, zh);
             CardFaces.Build(rt, w.View, FaceStyle.Zoom);
@@ -1200,6 +1194,7 @@ namespace RestartedTavern.Client.Table
                 else w.transform.SetSiblingIndex(w.HomeSibling);
                 return;
             }
+            if (enter) FanOnHover(w);
             if (!_pinnedZoom.IsNone) return;
             if (enter) { _hovered = w; _hoverRect = null; ShowZoom(w); }
             else if (_hovered == w) { _hovered = null; Ui.Clear(_zoomLayer); }

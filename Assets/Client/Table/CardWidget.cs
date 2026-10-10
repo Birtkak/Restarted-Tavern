@@ -34,6 +34,8 @@ namespace RestartedTavern.Client.Table
 
         public Vector2 HomePosition;
         public float HomeRotation;
+        /// <summary>The board's scale for this card (a full side shrinks, TableView.Board.cs). 1 elsewhere.</summary>
+        public float HomeScale = 1f;
         public int HomeSibling;
 
         private Outline _glow;

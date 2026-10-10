@@ -188,8 +188,22 @@ namespace RestartedTavern.Rules
             }
             else if (item.Condition == null || item.Condition.Holds(S, Db, item.Controller, item.SourceId)) // MTG 603.4
             {
+                if (item.Kind == ChainItemKind.TriggeredAbility)
+                {
+                    // Exact, however it's shown: a merged trigger counts once per event (for later storm-style cards).
+                    string key = "triggers:" + item.Controller.Value;
+                    S.UsesThisTurn.TryGetValue(key, out int resolved);
+                    S.UsesThisTurn[key] = resolved + item.Times;
+                }
                 RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, item.EventAmount, item.EventObject, item.EventPlayer,
                     sourceDefinitionId: item.SourceDefinitionId);
+                if (item.More != null) // a merged trigger: once more for each other event
+                    foreach (var e in item.More)
+                    {
+                        if (S.IsGameOver) break;
+                        RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, e.Amount, e.EventObject, e.EventPlayer,
+                            sourceDefinitionId: item.SourceDefinitionId);
+                    }
             }
 
             Emit(new ChainItemResolvedEvent { ItemId = item.Id, SourceDefinitionId = item.SourceDefinitionId });
@@ -284,20 +298,16 @@ namespace RestartedTavern.Rules
             int amount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null)
         {
             if (ability.Condition != null && !ability.Condition.Holds(S, Db, controller, sourceId)) return; // intervening "if" (MTG 603.4)
-            int times = ability.RepeatCount != null && source != null ? ability.RepeatCount.Of(S, Db, source) : 1;
-            for (int n = 0; n < times; n++)
+            S.PendingTriggers.Add(new PendingTrigger
             {
-                S.PendingTriggers.Add(new PendingTrigger
-                {
-                    Ability = ability,
-                    Controller = controller,
-                    SourceId = sourceId,
-                    SourceDefinitionId = sourceDefinitionId,
-                    Amount = amount,
-                    EventObject = eventObject,
-                    EventPlayer = eventPlayer,
-                });
-            }
+                Ability = ability,
+                Controller = controller,
+                SourceId = sourceId,
+                SourceDefinitionId = sourceDefinitionId,
+                Amount = amount,
+                EventObject = eventObject,
+                EventPlayer = eventPlayer,
+            });
         }
 
         private void QueueTurnTriggers(TriggerEvent when)
@@ -352,6 +362,7 @@ namespace RestartedTavern.Rules
         /// </summary>
         private bool PutPendingTriggersOnChain()
         {
+            MergePendingTriggers();
             while (S.PendingTriggers.Count > 0 && S.Pending == null)
             {
                 int pick = 0;
@@ -392,6 +403,36 @@ namespace RestartedTavern.Rules
             return result;
         }
 
+        /// <summary>
+        /// One source doesn't flood the Chain with copies of the same trigger (GAME_DESIGN Decision Log 2026-10-10): the
+        /// same ability of the same object, triggered by several events before anyone gets priority, becomes one Chain
+        /// item that does it once per event. Not when it targets (each event gets its own target) or is marked
+        /// <see cref="TriggeredAbility.Separate"/>.
+        /// </summary>
+        private void MergePendingTriggers()
+        {
+            var list = S.PendingTriggers;
+            for (int i = 1; i < list.Count; i++)
+            {
+                var t = list[i];
+                if (t.Ability.Target != TargetSpec.None || t.Ability.Separate) continue;
+                for (int j = 0; j < i; j++)
+                {
+                    var into = list[j];
+                    if (!ReferenceEquals(into.Ability, t.Ability) || into.SourceId != t.SourceId || into.Controller != t.Controller) continue;
+                    var merged = into.Clone();
+                    merged.More = new List<TriggerEventInfo>(into.More ?? new List<TriggerEventInfo>())
+                    {
+                        new TriggerEventInfo { Amount = t.Amount, EventObject = t.EventObject, EventPlayer = t.EventPlayer },
+                    };
+                    if (t.More != null) merged.More.AddRange(t.More);
+                    list[j] = merged;
+                    list.RemoveAt(i--);
+                    break;
+                }
+            }
+        }
+
         private static bool SameTrigger(PendingTrigger a, PendingTrigger b) =>
             ReferenceEquals(a.Ability, b.Ability) && a.SourceDefinitionId == b.SourceDefinitionId;
 
@@ -413,7 +454,11 @@ namespace RestartedTavern.Rules
             {
                 var targets = EnumerateTargets(trigger.Controller, trigger.Ability.Slot,
                     trigger.Ability.TargetNotSelf ? trigger.SourceId : ObjectId.None);
-                if (targets.Count == 0) return true; // MTG 603.3d: no legal target → removed
+                if (targets.Count == 0) // MTG 603.3d: no legal target → removed
+                {
+                    Emit(new TriggerSkippedEvent { Source = trigger.SourceId, SourceDefinitionId = trigger.SourceDefinitionId, Controller = trigger.Controller });
+                    return true;
+                }
                 if (targets.Count > 1 || trigger.Ability.TargetOptional)
                 {
                     S.Pending = new PendingDecision
@@ -421,6 +466,9 @@ namespace RestartedTavern.Rules
                         Kind = DecisionKind.ChooseTriggerTarget,
                         Player = trigger.Controller,
                         Trigger = trigger,
+                        Prompt = trigger.Ability.TargetOptional
+                            ? "Use " + Db.Get(trigger.SourceDefinitionId).Name + "? Pick a target"
+                            : Db.Get(trigger.SourceDefinitionId).Name + ": pick a target",
                     };
                     return false;
                 }
@@ -438,6 +486,10 @@ namespace RestartedTavern.Rules
             var trigger = S.Pending.Trigger;
             S.Pending = null;
             if (target.HasValue) PushTrigger(trigger, target);
+            else Emit(new TriggerSkippedEvent
+            {
+                Source = trigger.SourceId, SourceDefinitionId = trigger.SourceDefinitionId, Controller = trigger.Controller, Declined = true,
+            });
             GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 
@@ -457,6 +509,7 @@ namespace RestartedTavern.Rules
                 EventObject = t.EventObject,
                 EventPlayer = t.EventPlayer,
                 Condition = t.Ability.Condition,
+                More = t.More,
             };
             if (t.Ability.Target != TargetSpec.None) item.TargetSlots.Add(t.Ability.Slot);
             if (target.HasValue) item.Targets.Add(target.Value);
@@ -464,7 +517,7 @@ namespace RestartedTavern.Rules
             Emit(new AbilityTriggeredEvent
             {
                 Controller = t.Controller, Source = t.SourceId, SourceDefinitionId = t.SourceDefinitionId,
-                When = t.Ability.When, Target = target,
+                When = t.Ability.When, Target = target, Times = item.Times,
             });
         }
 

@@ -102,7 +102,10 @@ after every change; the events of the change then animate on top (FLIP slides + 
   legal actions, picker / combat stage, errors, log, and `MatchSession.History`, which replays the game exactly).
 - **Command line**: `-menu`, `-debug`, `-reveal`, `-bugreport note`, `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
   everyone, `MatchSession.AutoStep`), `-until attack|block` (stop there and stage everything), `-autopick`,
-  `-autoshot file.png`, `-shotat seconds` (shoot that long after the table is drawn, to catch the beats).
+  `-autoshot file.png` (use an absolute path), `-shotat seconds` (shoot that long after the table is drawn, to catch the
+  beats), `-board N` (N permanents on each side, some tapped or equipped, to check the board layout).
+- **Board** (`TableView.Board.cs`, MTG Arena style, Decision Log 2026-10-10): tapped units sideways, attachments tucked
+  behind their host and fanned out on hover, each side scaled to fit. See LOR_PRESENTATION §6.
 
 ---
 

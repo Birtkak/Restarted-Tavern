@@ -269,6 +269,8 @@ namespace RestartedTavern.Rules
                         return "Deal 1 damage to " + Name(state, a.Target.Value) + "  (" + (state.Pending.Assigned.Count + 1) + " of " + state.Pending.Count + ")";
                     if (state.Pending?.Kind == DecisionKind.KeepLegendary)
                         return "Keep " + DescribeOneLine(state, a.Target.Value.Object) + " (the other copies go to the graveyard)";
+                    if (state.Pending?.Kind == DecisionKind.ChooseTriggerTarget && !a.Target.HasValue) // a "may" (Decision Log 2026-10-10)
+                        return "Don't use " + Name(state.Pending.Trigger.SourceDefinitionId);
                     return a.Target.HasValue ? "Target: " + Name(state, a.Target.Value) : "No target (decline)";
                 case ActionKind.ChooseOption:
                     if (state.Pending?.Kind == DecisionKind.TopOrBottom)
@@ -380,6 +382,7 @@ namespace RestartedTavern.Rules
                            + (t.Target.HasValue ? " -> " + Name(state, t.Target.Value) : "");
                 case ChainItemResolvedEvent r: return "Resolved: " + Name(r.SourceDefinitionId);
                 case FizzledEvent f: return Name(f.SourceDefinitionId) + " fizzles (target gone)";
+                case TriggerSkippedEvent k: return Name(k.SourceDefinitionId) + (k.Declined ? ": no target chosen" : ": no legal target");
                 case CounteredEvent c: return Name(c.SourceDefinitionId) + " is countered";
                 case ControlChangedEvent cc: return cc.To + " gains control of " + Name(cc.DefinitionId);
                 case DamageDealtEvent d:

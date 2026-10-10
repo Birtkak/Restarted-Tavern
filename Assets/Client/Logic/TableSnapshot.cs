@@ -87,6 +87,8 @@ namespace RestartedTavern.Client.Logic
         public string Text;
         public List<Target> Targets;
         public bool IsTavernDwellerPower;
+        /// <summary>A merged trigger does it this many times ("×3" badge).</summary>
+        public int Times = 1;
     }
 
     /// <summary>
@@ -181,6 +183,7 @@ namespace RestartedTavern.Client.Logic
                     SourceDefinitionId = item.SourceDefinitionId ?? item.Card?.DefinitionId,
                     Source = item.Card?.Id ?? item.SourceId,
                     Text = item.Text, Targets = item.Targets.ToList(), IsTavernDwellerPower = item.IsTavernDwellerPower,
+                    Times = item.Times,
                 });
             return snap;
         }

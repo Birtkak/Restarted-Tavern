@@ -60,6 +60,13 @@ namespace RestartedTavern.Rules
         public string Text { get; set; } = "";
         /// <summary>A Tavern Dweller Power (GAME_DESIGN §9.1).</summary>
         public bool IsTavernDwellerPower { get; set; }
+        /// <summary>
+        /// Triggered abilities merged from several events (Scrap Collector: three equipped creatures died at once): the
+        /// events after the first. The effects run once per event. Null = one event. Never changed after it's made.
+        /// </summary>
+        public List<TriggerEventInfo> More { get; set; }
+        /// <summary>How many times it does its thing ("×3" on the table).</summary>
+        public int Times => 1 + (More?.Count ?? 0);
 
         public ChainItem Clone()
         {
@@ -87,6 +94,14 @@ namespace RestartedTavern.Rules
         public DelayedTrigger Clone() => (DelayedTrigger)MemberwiseClone();
     }
 
+    /// <summary>One event a merged trigger is about: "that much", "it", "that player".</summary>
+    public sealed class TriggerEventInfo
+    {
+        public int Amount { get; set; }
+        public ObjectId EventObject { get; set; }
+        public PlayerId? EventPlayer { get; set; }
+    }
+
     /// <summary>A triggered ability that triggered but isn't on the Chain yet (MTG 603.3).</summary>
     public sealed class PendingTrigger
     {
@@ -100,6 +115,8 @@ namespace RestartedTavern.Rules
         public ObjectId EventObject { get; set; }
         /// <summary>The player the event was about.</summary>
         public PlayerId? EventPlayer { get; set; }
+        /// <summary>Events merged into this trigger after the first (see ChainItem.More). Replaced, never changed in place.</summary>
+        public List<TriggerEventInfo> More { get; set; }
 
         public PendingTrigger Clone() => (PendingTrigger)MemberwiseClone();
     }

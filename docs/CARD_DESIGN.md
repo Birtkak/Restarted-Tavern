@@ -48,7 +48,14 @@ Starting values for the budget, to be tuned in playtesting.
 - **Healing** cards should be efficient. Healing is card-only, so an overcosted heal is never played.
 - **Top-end exception**: Legendary creatures costing 7+ may go about 3 points over budget. They are the payoff for surviving to 10 mana.
 - **Gold is worth less than mana**: it has a cap (3) and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold. A player already at the cap gains nothing, so "gains N Gold" downsides are smaller than they look (❓ see playtest/RULES_REVIEW.md, design review 2026-10-10, R9).
+- **"May" means a choice** (Decision Log 2026-10-10): a card lets you choose only if its text says "may" or "up to". Otherwise it's forced: an Arrival or a spell's effect simply happens. Use "may" where skipping is a real choice (a fight that could kill your creature, paying life or Gold). `CardDataTests.MayInTheText_MatchesTheOptionalFlags` checks the text against the data.
 - **Spells and abilities are effectively cheaper**: Instants, Sorceries, Equip and activated abilities spend banked Gold first (GAME_DESIGN §5.2). That's up to 3 extra "mana" on a burst turn. Permanents can't use Gold, so a creature-heavy turn can't be stretched. Price spells, Equip costs and abilities with that in mind.
+
+### 2.3 Trigger count 🟡 (Decision Log 2026-10-10)
+- One source triggering for several things at once puts **one** item on the Chain that does it once per event (shown "×N"). So a sweeper into a death watcher is one trigger, not five.
+- Trigger count is a resource for future archetypes (pinging, "whenever you cast a spell" chains, storm). Those triggers get `"separate": true` and say "each" in the text. Keep the list short and deliberate.
+- Separate-trigger cards today: **none**. Targeted triggers are one per event anyway (each picks its own target).
+- Exact counts are kept for later payoffs: spells cast and triggers resolved per player per round.
 
 ---
 

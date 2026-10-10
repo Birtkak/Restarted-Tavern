@@ -175,7 +175,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void ArchonLumen_OnePingPerEquipment()
+        public void ArchonLumen_OneTriggerForXDamage()
         {
             var g = TestGame.AtFirstMainPhase();
             g.AddToBattlefield(g.Active, "archon_lumen");
@@ -187,14 +187,13 @@ namespace RestartedTavern.Rules.Tests
                 "Equip isn't free any more (balance 2026-10-10)");
 
             g.PassUntil(s => s.Step == Step.End && s.Pending != null);
-            for (int i = 0; i < 2; i++)
-            {
-                Assert.AreEqual(DecisionKind.ChooseTriggerTarget, g.State.Pending.Kind);
-                g.Do(PlayerAction.ChooseTarget(g.Active, Target.ForPlayer(g.Other)));
-            }
+            Assert.AreEqual(DecisionKind.ChooseTriggerTarget, g.State.Pending.Kind);
+            g.Do(PlayerAction.ChooseTarget(g.Active, Target.ForPlayer(g.Other)));
+            Assert.AreEqual(1, g.State.Chain.Count, "one trigger, not one per Equipment (playtest 2026-10-10)");
+            Assert.IsNull(g.State.Pending);
             g.PassRound();
             g.PassRound();
-            Assert.AreEqual(28, g.P(g.Other).Life, "two Equipment, two pings");
+            Assert.AreEqual(28, g.P(g.Other).Life, "two Equipment: 2 damage");
         }
 
         [Test]

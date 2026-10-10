@@ -86,6 +86,7 @@ namespace RestartedTavern.Client.Logic
                 case BlockerDeclaredEvent _:
                 case CounteredEvent _:
                 case FizzledEvent _:
+                case TriggerSkippedEvent _:
                 case ControlChangedEvent _:
                 case ChainItemResolvedEvent _:
                     return BeatWeight.Normal;

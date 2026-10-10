@@ -26,6 +26,32 @@ namespace RestartedTavern.Rules.Tests
             }
         }
 
+        /// <summary>
+        /// The "may" rule (Decision Log 2026-10-10): a card lets you choose only if its text says "may" or "up to"; anything
+        /// else is forced. So every optional flag or "you may" effect in the data has the word in the text, and text that
+        /// offers a choice ("may fight", "up to one target") has the flag. "Loses up to 2 Gold" is a cap, not a choice; "one, two or three targets" and "sacrifice
+        /// a creature or lose 3 life" are choices too.
+        /// </summary>
+        [Test]
+        public void MayInTheText_MatchesTheOptionalFlags()
+        {
+            var optional = new System.Text.RegularExpressions.Regex(
+                "\"(optional|targetOptional)\": true|YouMayEffect|DiscardChoiceEffect|EachOpponentMayPayGoldEffect|ChooseUpToX");
+            var saysChoice = new System.Text.RegularExpressions.Regex(@"\bmay\b|\bup to\b|\bone, two or three\b|\bor lose \d+ life\b",System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            var offersChoice = new System.Text.RegularExpressions.Regex(
+                @"\bmay (fight|attach|sacrifice|discard|lose|return)\b|\bup to (one|two|three|X) (target|other)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            var problems = new System.Collections.Generic.List<string>();
+            foreach (var file in Directory.GetFiles(CardsDir, "*.json"))
+                foreach (var card in CardJson.ReadCards(File.ReadAllText(file), Path.GetFileName(file)))
+                {
+                    string data = CardJson.WriteCards(new[] { card });
+                    bool flagged = optional.IsMatch(data);
+                    if (flagged && !saysChoice.IsMatch(card.Text)) problems.Add(card.Id + ": optional in the data, but the text has no \"may\" / \"up to\"");
+                    if (offersChoice.IsMatch(card.Text) && !flagged) problems.Add(card.Id + ": the text offers a choice, but the data forces it");
+                }
+            Assert.IsEmpty(problems, string.Join(Environment.NewLine, problems));
+        }
+
         [Test]
         public void CardIdsAreUnique_AndEveryReferencedCardExists()
         {

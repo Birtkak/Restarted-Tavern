@@ -217,9 +217,29 @@ namespace RestartedTavern.Rules.Tests
             g.SetMana(g.Active, 4);
             g.Do(PlayerAction.Play(g.Active, overload.Id));
             g.PassRound();
-            Assert.AreEqual(3, g.State.Chain.Count, "4 Goobers died, but only 3 triggers");
-            for (int i = 0; i < 3; i++) g.PassRound();
+            Assert.AreEqual(1, g.State.Chain.Count, "one Chain item, not one per Goober (Decision Log 2026-10-10)");
+            Assert.AreEqual(3, g.State.Chain[0].Times, "4 Goobers died, but it triggers only 3 times");
+            g.PassRound();
             Assert.AreEqual(27, g.P(g.Active).Life);
+        }
+
+        [Test]
+        public void SameTriggerFromOneSource_IsOneChainItem_ThatDoesItOncePerEvent()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var onlooker = g.AddToBattlefield(g.Active, "ghoulish_onlooker"); // "whenever another creature dies, +1/+1 counter on this"
+            for (int i = 0; i < 4; i++) g.AddToBattlefield(g.Other, CardPool.GooberToken);
+            var overload = g.AddToHand(g.Active, "grid_overload");
+            g.SetMana(g.Active, 4);
+            g.Do(PlayerAction.Play(g.Active, overload.Id));
+            g.PassRound();
+            Assert.AreEqual(1, g.State.Chain.Count);
+            Assert.AreEqual(4, g.State.Chain[0].Times);
+            Assert.AreEqual(4, g.Events.OfType<CreatureDiedEvent>().Count());
+            g.PassRound();
+            Assert.AreEqual(0, g.State.Chain.Count);
+            Assert.AreEqual(4, onlooker.PlusOneCounters, "exact count: one counter per death");
+            Assert.AreEqual(4, g.State.UsesThisTurn["triggers:" + g.Active.Value], "triggers resolved this turn: counted per event");
         }
 
         [Test]

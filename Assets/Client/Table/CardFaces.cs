@@ -134,7 +134,7 @@ namespace RestartedTavern.Client.Table
             }
 
             if (v.Tapped)
-                Ui.FillPanel(root, "Tapped", new Color(0f, 0f, 0f, 0.35f));
+                Ui.FillPanel(root, "Tapped", new Color(0f, 0f, 0f, 0.18f)); // light: it also lies sideways on the table
         }
 
         private static void Gem(RectTransform root, string name, float x, float y, float size, Color color, string text, Color textColor, float k, bool dark = false)

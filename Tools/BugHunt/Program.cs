@@ -202,6 +202,17 @@ static class BugHunt
             if (owned != s.Format.DeckSize) Fail(where, "cards created or lost");
             if (p.TavernDwellerZone.Count != 1) Fail(where, "Tavern Dweller zone count");
         }
+        // One source, one trigger (Decision Log 2026-10-10): while triggers are being put on the Chain (ordering them, choosing
+        // their targets) they're already merged, unless they target or are Separate.
+        bool puttingOnChain = s.Pending != null && (s.Pending.Kind == DecisionKind.OrderTriggers || s.Pending.Kind == DecisionKind.ChooseTriggerTarget);
+        for (int i = 0; puttingOnChain && i < s.PendingTriggers.Count; i++)
+            for (int j = 0; j < i; j++)
+            {
+                var a = s.PendingTriggers[i];
+                var b = s.PendingTriggers[j];
+                if (ReferenceEquals(a.Ability, b.Ability) && a.SourceId == b.SourceId && a.Ability.Target == TargetSpec.None && !a.Ability.Separate)
+                    Fail(where, "same trigger waiting twice, not merged (" + a.SourceDefinitionId + ")");
+            }
         if (s.PriorityPlayer.HasValue && !s.IsGameOver)
             foreach (var c in s.AllPermanents())
             {

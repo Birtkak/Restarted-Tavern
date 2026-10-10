@@ -106,7 +106,10 @@ namespace RestartedTavern.Rules.Tests
             var prowler = g.AddToHand(g.Active, "sabretooth_prowler");
             g.SetMana(g.Active, 4);
             g.Do(PlayerAction.Play(g.Active, prowler.Id));
-            g.PassRound(); // creature resolves; only one legal target, so the trigger goes straight on
+            g.PassRound(); // creature resolves; a "may": even one legal target asks
+            Assert.AreEqual(DecisionKind.ChooseTriggerTarget, g.State.Pending?.Kind);
+            Assert.AreEqual(2, g.Legal(g.Active).Count, "fight the Sellsword, or decline");
+            g.Do(g.Legal(g.Active).Single(a => a.Target.HasValue));
             g.PassRound();
             Assert.IsNull(g.State.FindOnBattlefield(sword.Id));
             Assert.AreEqual(2, g.OnBattlefield(g.Active, "sabretooth_prowler").Damage);

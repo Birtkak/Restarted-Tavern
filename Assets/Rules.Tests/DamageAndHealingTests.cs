@@ -340,18 +340,18 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void AmbushPredator_MayFightADamagedEnemy()
+        public void AmbushPredator_MayFightAnyEnemy()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
-            g.AddToBattlefield(g.Other, "tavern_bouncer");                    // not damaged
+            g.AddToBattlefield(g.Other, "tavern_bouncer");                    // undamaged: a target too now
             var hurt = g.AddToBattlefield(g.Other, "hired_sellsword", damage: 1); // 2/3, 2 left
             Cast(g, me, "ambush_predator");
             g.PassRound();
             Assert.AreEqual(DecisionKind.ChooseTriggerTarget, g.State.Pending?.Kind);
             var choices = g.Legal(me);
-            Assert.AreEqual(2, choices.Count, "the damaged creature, or no target");
-            g.Do(choices.Single(a => a.Target.HasValue));
+            Assert.AreEqual(3, choices.Count, "either creature, or no target ('may', playtest 2026-10-10)");
+            g.Do(choices.Single(a => a.Target == Target.ForObject(hurt.Id)));
             g.PassRound();
             Assert.IsNull(g.State.FindOnBattlefield(hurt.Id));
             Assert.IsNull(g.OnBattlefield(me, "ambush_predator"), "a fight: the 3/2 takes 2 back and dies too");

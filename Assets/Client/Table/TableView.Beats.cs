@@ -24,6 +24,7 @@ namespace RestartedTavern.Client.Table
         {
             public Vector2 Pos;
             public float Rotation;
+            public float Scale;
             public Vector2 Size;
             public CardView View;
         }
@@ -164,7 +165,7 @@ namespace RestartedTavern.Client.Table
                 _old[w.Id] = new Place
                 {
                     Pos = w.Kind == WidgetKind.HandCard ? w.HomePosition : w.Rect.anchoredPosition,
-                    Rotation = w.HomeRotation, Size = w.Rect.sizeDelta, View = w.View,
+                    Rotation = w.HomeRotation, Scale = w.HomeScale, Size = w.Rect.sizeDelta, View = w.View,
                 };
             }
             foreach (var kv in _dropped) _old[kv.Key] = kv.Value;
@@ -181,7 +182,7 @@ namespace RestartedTavern.Client.Table
             _dropped[w.Id] = new Place
             {
                 Pos = new Vector2(local.x + Ui.Width / 2f, local.y - Ui.Height / 2f),
-                Rotation = 0f, Size = w.Rect.sizeDelta, View = w.View,
+                Rotation = 0f, Scale = 1f, Size = w.Rect.sizeDelta, View = w.View,
             };
         }
 
@@ -215,6 +216,16 @@ namespace RestartedTavern.Client.Table
                              || origin.TryGetValue(w.Id, out var before) && _old.TryGetValue(before, out place);
                 if (found)
                 {
+                    // Tap / untap: a quarter turn (Arena). Untapping at a new round waits for the gems, before the draws.
+                    if (Mathf.Abs(Mathf.DeltaAngle(place.Rotation, w.HomeRotation)) > 1f && w.Kind == WidgetKind.Unit)
+                    {
+                        float turnDelay = drawDelay > 0f && Mathf.Abs(w.HomeRotation) < 1f ? 0.6f * k : 0f;
+                        w.Rect.localEulerAngles = new Vector3(0f, 0f, place.Rotation);
+                        Tween.Rotation(w.Rect, new Vector3(0f, 0f, place.Rotation), new Vector3(0f, 0f, w.HomeRotation), 0.25f * k, Ease.OutCubic,
+                            startDelay: turnDelay);
+                    }
+                    if (Mathf.Abs(place.Scale - w.HomeScale) > 0.01f && place.Scale > 0f)
+                        Tween.Scale(w.transform, place.Scale, w.HomeScale, 0.3f * k, Ease.OutCubic);
                     if ((place.Pos - home).sqrMagnitude < 4f) continue;
                     Slide(w, place.Pos, home, 0.3f * k);
                 }
@@ -224,16 +235,16 @@ namespace RestartedTavern.Client.Table
                     w.Rect.anchoredPosition = DeckPos(player);
                     w.transform.localScale = Vector3.one * 0.5f;
                     Tween.UIAnchoredPosition(w.Rect, DeckPos(player), home, 0.3f * k, Ease.OutCubic, startDelay: drawDelay);
-                    Tween.Scale(w.transform, 0.5f, 1f, 0.3f * k, Ease.OutCubic, startDelay: drawDelay);
+                    Tween.Scale(w.transform, 0.5f * w.HomeScale, w.HomeScale, 0.3f * k, Ease.OutCubic, startDelay: drawDelay);
                 }
                 else if (tokens.Contains(w.Id))
                 {
-                    Tween.Scale(w.transform, 0f, 1f, 0.3f * k, Ease.OutBack);
+                    Tween.Scale(w.transform, 0f, w.HomeScale, 0.3f * k, Ease.OutBack);
                 }
                 else if (cameFrom.TryGetValue(w.Id, out var src) && src == Zone.Chain && _oldChainTop != null)
                 {
                     Slide(w, _oldChainTop.Value, home, 0.3f * k);
-                    Tween.Scale(w.transform, 0.6f, 1f, 0.3f * k, Ease.OutCubic);
+                    Tween.Scale(w.transform, 0.6f * w.HomeScale, w.HomeScale, 0.3f * k, Ease.OutCubic);
                 }
             }
 
@@ -266,6 +277,11 @@ namespace RestartedTavern.Client.Table
                         break;
                     case CounteredEvent c:
                         ChainFlash(_s.Text.Name(c.SourceDefinitionId) + ": countered", Ui.Hex("#FF6060"), t, k);
+                        t += 0.4f * k;
+                        break;
+                    case TriggerSkippedEvent skip:
+                        ChainFlash(_s.Text.Name(skip.SourceDefinitionId) + (skip.Declined ? ": no target" : ": no legal target"), Ui.Hex("#B0B0B0"), t, k);
+                        Pop(WidgetFor(skip.Source), "–", Ui.Hex("#B0B0B0"), t, k);
                         t += 0.4f * k;
                         break;
                     case FizzledEvent f:

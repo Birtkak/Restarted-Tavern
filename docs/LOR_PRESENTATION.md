@@ -167,6 +167,15 @@ Bug-report fixes:
 - **Continue**: the end of the round.
 - **Opponent's turn**: greyed out, with a dimmed label, while they act.
 
+**MTG Arena board (user, 2026-10-10; `TableView.Board.cs`).**
+- Tapped units lie sideways (a quarter turn clockwise) with a light dim. The row makes room for the wider card.
+- Attacking taps: declared attackers lie sideways in the combat lane. Staged ones stay upright until you confirm.
+- Tapping animates as a quarter turn. Untapping at a new round waits until the gems have refilled, before the draws.
+- Equipment and Curses on a creature are tucked behind it, each strip 22 px higher, with a gold "E" pip on the host (with the count when 2+). Hovering the host or a strip fans them out beside it, upright. Hover zooms, click uses (Equip again). Equipping slides the card from the row to the host (FLIP).
+- Each side scales to fit: one line from full size down to half size, then two lines (creatures on the lane side), then overlap. Scale changes tween. Hover zoom is always full size, and sits beside the card whatever its width.
+- Merged triggers show a gold "×N" badge on their bubble. A trigger that found no target, or was declined, flashes "<card>: no target".
+- Player Curses still sit in the row with an "on Player" tag (not under the portrait yet).
+
 **Tavern Dweller spot, Hearthstone hero style (user, 2026-10-10).** It sits in LoR's Nexus place on the left edge.
 - An oval portrait in a gold frame, in the Tavern Dweller's two faction colours with its initials until the art arrives. A name ribbon runs across the bottom.
 - Life is a red gem at the bottom right; it turns bright red at 5 or less.

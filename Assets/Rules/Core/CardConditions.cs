@@ -11,6 +11,8 @@ namespace RestartedTavern.Rules
         YouHaveGoldAtLeast,
         /// <summary>"if each opponent has N or less life" (Closing Bell).</summary>
         EachOpponentHasLifeAtMost,
+        /// <summary>"if you control any Equipment" (Archon Lumen).</summary>
+        YouControlEquipment,
     }
 
     /// <summary>
@@ -34,6 +36,8 @@ namespace RestartedTavern.Rules
                     foreach (var p in s.Players)
                         if (!p.HasLost && s.AreOpponents(controller, p.Id) && p.Life > Amount) return false;
                     return true;
+                case ConditionKind.YouControlEquipment:
+                    return new DynamicCount { Kind = CountKind.EquipmentYouControl }.Of(s, db, controller) > 0;
                 case ConditionKind.None:
                     return true;
                 default:
@@ -58,9 +62,11 @@ namespace RestartedTavern.Rules
         /// <summary>The most it can be. 0 = no cap.</summary>
         public int Max { get; set; }
 
-        public int Of(GameState s, CardDatabase db, CardInstance source)
+        public int Of(GameState s, CardDatabase db, CardInstance source) => Of(s, db, source.Controller);
+
+        public int Of(GameState s, CardDatabase db, PlayerId controller)
         {
-            var p = s.GetPlayer(source.Controller);
+            var p = s.GetPlayer(controller);
             int n = 0;
             switch (Kind)
             {

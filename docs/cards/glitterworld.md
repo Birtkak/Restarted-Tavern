@@ -34,7 +34,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 17 | **Hover Tank** | 5 | Creature: Construct | C | 4/5 | Arrival: Deal 1 damage to target creature. | A sturdy body with a ping | ✅ |
 | 18 | **Orbital Strike Network** | 6 | Relic | R | — | At the start of your turn, deal 1 damage to each enemy creature and each opponent. | A ping engine that slowly grinds the opposing board down | ✅ |
 | 19 | **Titan-Frame Guardian** | 6 | Creature: Construct | R | 5/7 | Whenever an Equipment becomes attached to this, heal it fully and draw a card. | A huge Equipment carrier that repairs itself | ✅ |
-| 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of your turn, deal 1 damage to any target for each Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
+| 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 3 · 5: 3 · 6: 2 · 7+: 1 · Creatures: 11 · Equipment: 5 · Spells/Relics: 4

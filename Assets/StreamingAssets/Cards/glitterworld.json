@@ -570,15 +570,15 @@
     "subtypes": ["Construct"],
     "rarity": "Legendary",
     "faction": "glitterworld",
-    "text": "Flying. At the end of your turn, deal 1 damage to any target for each Equipment you control.",
+    "text": "Flying. At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control.",
     "triggers": [
       {
         "when": "EndOfYourTurn",
         "target": "AnyTarget",
+        "condition": {"kind": "YouControlEquipment"},
         "effects": [
-          {"$type": "DealDamageEffect", "amount": 1}
-        ],
-        "repeatCount": {"kind": "EquipmentYouControl"}
+          {"$type": "DealDamageEffect", "amountCount": {"kind": "EquipmentYouControl"}}
+        ]
       }
     ]
   },
