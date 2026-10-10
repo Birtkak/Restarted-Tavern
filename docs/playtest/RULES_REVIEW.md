@@ -113,6 +113,67 @@ Healing your Tavern Dweller stops at starting life (§11.1). Lifelink "heals". T
 
 ---
 
+# Design review (2026-10-10): Runeterra-style mana
+
+A read-through of the Standard rules after the switch to Runeterra-style mana (GAME_DESIGN §5–6.1), using the bot runs in [SIMULATION_REPORT.md](SIMULATION_REPORT.md) ("Runeterra-style mana") and [PLAYTEST.md](PLAYTEST.md). Numbers are from mirrors only; cross-faction games under these rules haven't been measured yet.
+
+## Decisions (2026-10-10 review)
+
+| Flaw | Decision |
+|---|---|
+| 8. Invest payment bug | ✅ Fixed: Gold-only parts are set aside before the cost takes Gold first (`Payment.TrySplit`, GAME_DESIGN §5.2). |
+| 11. Weak Tavern Dwellers | ✅ New Powers for Mukk, Sparkwrench and Auditor Prime (cards/tavern_dwellers.md). |
+| 12. Doc contradictions | ✅ Fixed; Runeterra mana confirmed and locked by the user (Decision Log). |
+
+## 🔴 R1. Double turns remove the opponent's sorcery-speed window
+
+Under A B | B A, each player's build turn is followed straight away by their own attack turn. Creatures played on the build turn attack next turn, and the opponent can only answer with Instants in between. Summoning sickness almost never matters, and Haste only matters on attack turns. (PLAYTEST.md's open question "does the double turn feel good?" is this.)
+
+## 🔴 R2. The attack token shifts card values without repricing
+
+- Goober Rascal (Haste, can't block) does nothing on build turns; Goobers' identity (go wide, attack every turn) is weakened most.
+- "Whenever you attack" cards trigger half as often (Grakka, Pulse Blade, Sparkwrench's attack triggers).
+- Encore From Beyond and Silver-Tongued Deal are dead cards on build turns.
+- "At the start of your turn" effects are worth twice as much per attack (Closing Bell, the Glitterworld pings, Wild heal-per-turn creatures).
+
+## 🔴 R3. The going-first rule is now backwards
+
+§3 still has the first player skip their turn-1 draw, but with rotation the **second** player gets the first real attack (plays turn 2, attacks turn 3; the first player's next attack is turn 5). The first player wins only 41–50% under Runeterra rules (Vesper 40.8%). Rotation without the draw skip was never measured.
+
+## 🔴 R4. The attack token breaks multiplayer
+
+With 4 players and a rotating token, each player attacks once every 4 rounds, and one round's mana pool covers 4 turns of Instants. §13 isn't updated for rounds or the token.
+
+## 🟠 R5. "Unused mana is not wasted" is false in long games
+
+35–65% of leftover mana is lost to Gold cap 3 (Jungle, Zoo, Vesper, Sparkwrench). The cap never changes who wins (3, 5 and 8 give the same results), so the cap only adds waste. Options: raise the cap, or have overflow mana become something else.
+
+## 🟠 R6. Permanent damage is invisible in 4 of 6 decks
+
+Making damage wear off like MTG changes win rates by about 1%. Only the ping decks (Zoo and Sparkwrench) feel it. (Same finding as #4 above, still true under the new mana.)
+
+## 🟠 R7. Stalls remain
+
+Runeterra mana made games 10–20% longer. The Vesper mirror has 21% of games over 25 turns and ~34 healing per game. No rule ends stalled games, and the v0.3 finishers aren't measured for this yet.
+
+## 🟠 R8. Gold first works against "hold Gold" payoffs
+
+Loan Shark, Velvet Embezzler, The Dealer and Invest reward holding Gold, but Gold is always spent first and the player can't choose. The engine bug in this area (the spell's cost eating the Invest Gold) is fixed; the design tension remains.
+
+## 🟠 R9. Gold cap 3 removes most of the shady-deal downside
+
+Golden Handshake ("up to 5 Gold"), Everything Has a Price ("gains 5 Gold") and Hostile Takeover give the opponent Gold, but an opponent already at the cap gets nothing. Everything Has a Price's text can't do what it says.
+
+## 🟡 R10. Temporary Health buffs are repeatable damage shields
+
+"Losing a buff can't kill" (§7.3) plus repeatable buffs: Old Mossbank's "(2) +2/+2" can be used once each turn, so twice in a row across the double turn.
+
+## ✅ R11. Weak Tavern Dwellers (solved 2026-10-10)
+
+Auditor Prime's Power was used 0–0.5 times per game; Mukk's and Sparkwrench's depended on the situation. With one Tavern Dweller per pair, a weak one weakens the whole pair. All three have new Powers.
+
+---
+
 ## Not a problem (checked)
 
 - **The Chain, priority, state-based actions, fizzling and multi-targets** behave like MTG in every test.
