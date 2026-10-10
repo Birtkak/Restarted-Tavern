@@ -202,7 +202,7 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 - **Replacement effects** (MTG 614–616, `Core/Replacement.cs`, `Flow/GameRunner.Replacements.cs`): `ReplacementAbility` (a static, all data: event, filters, outcome) for dying, damage, entering, drawing, gaining life and gaining Gold; temporary ones from `AddReplacementEffect` live in `GameState.Replacements` ("until end of turn", "the next time"). Self-replacement first, then oldest first; each applies once per event and the rest are re-checked. The affected player doesn't choose the order yet (game actions can't pause). Keeper Z-00 uses it.
 - `GameEngine.CacheLegalActions` (opt-in, used by `MatchRunner`): the bot's legal-action list is reused by `Apply`'s validation, so it isn't enumerated twice.
 
-**Tests** (`Assets/Rules.Tests`, 203 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests`, 247 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```

@@ -6,114 +6,60 @@ Paste everything below the line into a new session.
 
 You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-card game.
 Repo: C:\Users\Birre\Desktop\Claude shizzle\Restarted-Tavern (GitHub: Birtkak/Restarted-Tavern, main).
-State at the end of the previous session (2026-10-09): every v0.1 and v0.2 card is in the engine, and the
-choices the engine used to make automatically are now player choices: which Legendary to keep, how to divide
-combat damage among several creatures, and the order of your own simultaneous triggers. Then a housekeeping
-pass: PrototypeCards* was renamed to CardPool*, GreedyBot was split into partial files, the docs were refreshed.
-199 EditMode tests, all green. Later the same day: GreedyBot got a whole-attack planner
-(GreedyBot.Combat.cs: ChooseAttack / ScoreAttack), 203 tests.
 
-GOAL OF THIS SESSION: ask the user which of the next steps below to do (AskUserQuestion, multiple
-choice, recommended option first), then build it with tests.
+STATE AT THE END OF THE LAST SESSION (2026-10-10), 247 EditMode tests, all green:
+- **Standard rules = Runeterra-style mana** (GAME_DESIGN §5–6, §6.1): a round pool (everyone gains +1 max mana and
+  refills when a round starts; mana lasts the round), unspent mana becomes Gold at the end of the round, Gold cap 3,
+  spells and abilities pay **Gold first**, the round leader rotates (A B | B A) and only the round leader may attack
+  (attack token). `FormatConfig.Classic()` keeps the old rules; `TestGame.Classic()` runs old card tests under them.
+- Gold first solved RULES_REVIEW #6 (the sequencing trap). Velvet Embezzler draws at 3+ Gold; Compound Interest checks
+  "if 3 or more Gold was spent to cast it".
+- New Powers: Mukk (3) a Trample creature you control fights a creature you don't control; Sparkwrench (2) attach up to
+  one Equipment to a creature you control, else it gets +1/+1; Auditor Prime (2) draw a card, only with 3+ Gold.
+- Snik chooses its Goobers on resolution (`DecisionKind.ChooseUpTo`, MTG 608.2d).
+- **Replacement effects** (GAME_DESIGN §8.1, MTG 614–616): dying, damage, entering, drawing, gaining life / Gold.
+  Fixed order (self-replacement, then oldest first); the affected player doesn't choose yet.
+- **Cards are data**: every card is in `Assets/StreamingAssets/Cards/*.json`, the decks in
+  `Assets/StreamingAssets/Decks/prototype_decks.json` (DEVELOPMENT §3). C# only has the building blocks.
+  Editing a card = editing JSON, then run the tests (`CardDataTests` checks the canonical format).
+
+GOAL OF THIS SESSION: ask the user what's next (AskUserQuestion, multiple choice, recommended option first).
+
+CANDIDATE NEXT STEPS
+1. **Visual client** (DEVELOPMENT §5 roadmap step 4, recommended; the user wanted the to-dos done first and they are):
+   a real Unity hot-seat table for human playtests.
+2. Human playtests of the new Standard rules on the debug table (Going first stays the MTG default until
+   playtests judge it; RULES_REVIEW #1).
+3. Balance pass with the new Powers and the 3-Gold changes (only if the user asks for sims; see below).
+4. Smaller engine gaps (DEVELOPMENT §7 "Not yet implemented"): the affected player choosing the order of
+   replacement effects, filtering events by hidden information, a targetable Tavern Dweller zone (design question).
+5. Generate rules text from the card data, so text and behavior can't disagree (DEVELOPMENT §3).
 
 READ FIRST
-- docs/GAME_DESIGN.md: the rules. MTG Comprehensive Rules are the backbone (§1.1): anything not
-  covered there works like MTG. The Decision Log at the bottom is the source of truth.
-- docs/DEVELOPMENT.md §7: what the engine does today and the "Not yet implemented" list.
-- docs/cards/*.md: card lists (v0.1 and the approved v0.2 additions, all ✅). Every card is in the engine.
-- docs/cards/tavern_dwellers.md: the 10 Tavern Dwellers (source of truth).
-- docs/playtest/PLAYTEST.md ("Findings: Tavern Dwellers and abilities") and RULES_REVIEW.md.
+- docs/GAME_DESIGN.md: the rules. MTG Comprehensive Rules are the backbone (§1.1). The Decision Log is the source of truth.
+- docs/DEVELOPMENT.md §3 (card data) and §7 (engine status, "Not yet implemented").
+- docs/cards/*.md: the card lists (design docs). The engine's truth is the JSON in Assets/StreamingAssets/Cards.
+- docs/playtest/PLAYTEST.md and RULES_REVIEW.md.
 
-NAMING (decided 2026-10-09)
-- "Patron" was renamed **Tavern Dweller** everywhere. Write "Tavern Dweller" in rules text, docs and
-  UI, and `TavernDweller` in code (CardType.TavernDweller, PlayerState.TavernDwellerZone,
-  PlayerSetup.TavernDwellerId, ActivatedAbility.IsTavernDwellerPower, FormatConfig.TavernDwellersEnabled).
-  Never reintroduce "Patron".
-
-RULES DECIDED IN THE LAST SESSIONS (all in the Decision Log)
-- Tavern Dweller Power: once EACH turn (MTG), instant speed, on the Chain, paid mana first then Gold.
-- "Pay N Gold" costs are Gold only (like Invest). Generic ability costs (Equip, X, Powers) are mana
-  first, then Gold. Permanents are mana only (exceptions: Retainer Mage, Shady Moneylender).
-- "Whenever you spend Gold" triggers once per payment. A lowered Gold cap loses the excess at once.
-  "Gold equal to its cost" = printed cost. Bank triggers use cleanup-step priority (MTG 514.3a).
-- Gold-Tooth Bruiser / Pickpocket Boss: you gain 1 Gold even if they had none. Dice Game: open
-  choices in turn order (MTG 101.4). Retainer Mage: Gold can help pay whenever it's cast.
-- Every deck has one Tavern Dweller; every card is from its two factions or Neutral.
-- Player choices (MTG defaults): Legendary rule per controller, you pick which to keep; combat damage among
-  several creatures is divided freely (§7.2.6, Trample needs lethal on every blocker first), asked only when
-  the creature can't kill them all; each player orders their own simultaneous triggers (APNAP between players),
-  except triggers of the same ability of the same card.
-
-WHAT EXISTS (Assets/Rules, assembly RestartedTavern.Rules, noEngineReferences)
-- GameEngine: CreateGame / GetLegalActions / Apply / WaitingOn / GetAbilities. CacheLegalActions is an
-  opt-in speed-up used by MatchRunner. All work happens in the partial class GameRunner
-  (Flow/, Combat/, StateBasedActions/, Core/GameRunner.GameActions.cs).
-- Activated abilities: Core/ActivatedAbility.cs + Flow/GameRunner.Abilities.cs (costs, X, Tap and
-  summoning sickness, sacrifice, once each turn via GameState.UsesThisTurn, granted abilities).
-- Equip and Equipment bonuses: AttachedCreatureModifier (also grants triggers/abilities); layer 6
-  before 7c in CharacteristicsCalculator. Cost changes: CostModifierAbility + Core/Payment.cs (Costs).
-- Watcher triggers (TriggerEvent: CreatureDies, SpellCast, EquipActivated, EquipmentUnattached,
-  GoldBanked, GoldSpent, CreatureDealtDamage, CreatureHealed, CreatureEnters, CreatureDealsCombatDamageToPlayer,
-  PlayerAttacks, CurseToGraveyard, GoldPaidForCreatureSpell) with Subject / MinPower / MinCost / MinAmount /
-  OthersOnly / SubjectSubtype / OnlyAttachedCreature / MaxRemainingHealth / MaxPerTurn. Triggers carry
-  EventAmount / EventObject / EventPlayer. Delayed triggers (GameState.DelayedTriggers).
-- Mid-resolution choices: DecisionKind TopOrBottom, DiscardCards, PayTax, ChooseFromTop, PayAnyGold, ChooseObject,
-  YesNo. Rules choices: KeepLegendary (state-based actions), AssignCombatDamage (start of the combat damage
-  step, ActionKind.AssignCombatDamage with PlayerAction.Division), OrderTriggers (PutPendingTriggersOnChain).
-- Chain items have object ids (counterspells target them). Control change (permanent and until end of
-  turn), bounce, per-turn damage caps, "can't be healed", extra costs on spells (life, sacrifice, X Gold).
-- Cards: Cards/CardPool.cs (+ .Abilities.cs, .TavernDwellers.cs, .V01.cs, .V02.cs). Six decks, each with its
-  Tavern Dweller: Goober Mob (Skabba), Jungle Stampede (Mukk), Zoo Patrol (Keeper Z-00), Vesper's
-  Ledger (Madame Vesper), Sparkwrench Scrappers (Sparkwrench), Auditor's Arsenal (Auditor Prime).
-- AI/GreedyBot*.cs (partial class: decisions, .Abilities, .Effects, .Combat; values abilities, Equip and
-  Powers; saves Gold for the opponent's end step; answers the new choices),
-  AI/MatchRunner.cs + AI/Experiments.cs (report in docs/playtest/SIMULATION_REPORT.md).
-- Client/DebugTable.cs: hot-seat IMGUI table with the Tavern Dweller row.
-- 199 EditMode tests, all green. Every card in docs/cards is implemented (CardPool*.cs).
-
-CANDIDATE NEXT STEPS (offer these; the user picks)
-1. Going first (RULES_REVIEW #1): the user chose to keep the MTG default until human playtests judge it
-   (2026-10-09). Measured: a rotating first player (A B, B A...) brings mirrors to 41-53%; a round mana
-   pool alone doesn't help. The switches stay in FormatConfig. Don't push this again unless playtests
-   or the user bring it up.
-2. Payment order warning (RULES_REVIEW #6): mana is spent first, so casting a Sorcery before a creature can
-   strand the creature. The UI should warn or order plays.
-3. The weak Tavern Dwellers: Mukk, Sparkwrench and Auditor Prime barely used their Powers in sims.
-   Sparkwrench Scrappers now has some Equipment (deck pass), but nothing is measured yet. Option A:
-   decks built around them. Option B: Power changes — design question for the user, show options.
-4. Visual client (DEVELOPMENT §5 roadmap step 4, recommended): a real Unity hot-seat table for human playtests.
-5. Engine gaps (DEVELOPMENT §7 "Not yet implemented"): Snik copying by target with last known information,
-   replacement effects, loading card data from JSON instead of C#.
-(Done 2026-10-09: every v0.1 and v0.2 card is in the engine; player choices for the Legendary rule, combat
-damage division and trigger order; GreedyBot plans whole attacks (alpha strikes, crack-back); 203 tests.)
+NAMING: "Tavern Dweller" (never "Patron"); `TavernDweller` in code. Card text says "an opponent" / "each opponent".
 
 HOW TO WORK WITH THIS USER
-- The user has the vision and wants Claude to propose details. For design questions, use
-  AskUserQuestion with multiple-choice options, recommended option first, and show the MTG default
-  next to alternatives. Record every decision in the docs and the Decision Log.
-- **Don't run the simulation report or bot playtests unless the user asks** (said 2026-10-09). Unit
-  tests are fine and expected.
-- Commit when a piece of work is done; ask before pushing to GitHub. (gh is logged in as Birtkak;
-  the repo has a local git identity.)
-- Card text says "an opponent" / "each opponent", never "your opponent".
+- The user has the vision and wants Claude to propose details. For design questions, use AskUserQuestion with
+  multiple-choice options, recommended option first, and show the MTG default next to alternatives. Record every
+  decision in the docs and the Decision Log.
+- **Don't run the simulation report or bot playtests unless the user asks.** Unit tests are fine and expected.
+- Commit when a piece of work is done; ask before pushing to GitHub.
 
 PRACTICAL NOTES
-- Run tests headless (about 40 s):
-  "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics
-    -projectPath <repo> -runTests -testPlatform EditMode -testResults <file>.xml -logFile <log>
+- Run tests headless (~40 s): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics
+  -projectPath <repo> -runTests -testPlatform EditMode -testResults <file>.xml -logFile <log>
   Only one Unity instance can open the project at a time. Write results/logs outside the repo.
 - Build the debug table: -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
-  (output Builds/DebugTable/RestartedTavern.exe). Check the UI with
-  -bot1 -bot2 -deck1 N -deck2 N -autoplay N -autoshot <png> and look at the screenshot.
-- Simulation report (only when asked): build Tools/SimRunner with Unity's bundled SDK
-  ("C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build Tools/SimRunner -c Release),
-  then run Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-simGames 500] [-simSections "round,cap"].
-  The full suite takes ~15 s (inside Unity ~9 min: Mono barely scales across cores). Same results.
-  The same SDK could also run the unit tests outside Unity later (not set up).
-  Bot work: SimRunner.exe -trace -decks 2,2 -seed 4 [-out file] prints one game; -h2h [-off SwitchName] measures the
-  current bot against BotStyle.Baseline() (or against itself minus one switch). New bot ideas go behind a BotStyle switch.
-- Multi-line edits: a quoted Bash heredoc (python - <<'EOF') works, apostrophes included; or write the script
-  to the scratchpad and run it with python. Open files with newline='' when writing: otherwise Windows writes
-  CRLF, and the repo's .gitattributes keeps .cs/.md files as LF.
-- No standalone .NET SDK is installed; Unity compiles everything. New .cs files get .meta files on the
-  next Unity run: commit them together.
+  (Builds/DebugTable/RestartedTavern.exe; it reads the card files from RestartedTavern_Data/StreamingAssets).
+  `-autoshot <png>` takes a screenshot and quits.
+- SimRunner (only when asked): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build
+  Tools/SimRunner -c Release, then Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-balance] [-trace] [-h2h] ...
+  It finds the card files by walking up from the working directory to Assets/StreamingAssets.
+- Multi-line edits: write a Python script to the scratchpad and run it; open files with newline='' (the repo keeps
+  .cs/.md/.json as LF). Bash heredocs that contain apostrophes sometimes break in this shell.
+- New files get .meta files on the next Unity run: commit them together.
