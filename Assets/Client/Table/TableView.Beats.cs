@@ -250,8 +250,10 @@ namespace RestartedTavern.Client.Table
 
             // Effects, one after another.
             float t = 0f;
+            NextSoundBatch();
             foreach (var e in events)
             {
+                SoundFor(e, t);
                 switch (e)
                 {
                     case SpellCastEvent s when s.Player != _snap.Viewer:

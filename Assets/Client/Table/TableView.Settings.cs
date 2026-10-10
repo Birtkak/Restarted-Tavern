@@ -1,4 +1,5 @@
 using System;
+using RestartedTavern.Client.Logic;
 using UnityEngine;
 
 namespace RestartedTavern.Client.Table
@@ -23,6 +24,9 @@ namespace RestartedTavern.Client.Table
             _keywordHints = PlayerPrefs.GetInt("keywordHints", 1) == 1;
             _coinToss = PlayerPrefs.GetInt("coinToss", 1) == 1;
             QualitySettings.vSyncCount = PlayerPrefs.GetInt("vsync", 1);
+            _volume = PlayerPrefs.GetFloat("volume", 0.6f);
+            _passSound = PlayerPrefs.GetInt("passSound", 1) == 1;
+            _triggerSound = PlayerPrefs.GetInt("triggerSound", 1) == 1;
         }
 
         private void OpenSettings()
@@ -35,6 +39,7 @@ namespace RestartedTavern.Client.Table
         private void CloseSettings()
         {
             _settingsOpen = false;
+            _soundBoard = false;
             _nextBot = Time.unscaledTime + 0.4f / _speed;
             _dirty = true;
         }
@@ -50,8 +55,9 @@ namespace RestartedTavern.Client.Table
         private void DrawSettings()
         {
             if (!_settingsOpen) return;
+            if (_soundBoard) { DrawSoundBoard(); return; }
             Ui.FillPanel(_overlay, "SettingsDim", new Color(0, 0, 0, 0.6f), 0f, raycast: true);
-            const float w = 860f, h = 640f;
+            const float w = 860f, h = 830f;
             float x = (Ui.Width - w) / 2f, y = (Ui.Height - h) / 2f;
             var panel = Ui.Panel(_overlay, "Settings", x, y, w, h, CoachColor, raycast: true);
             panel.sprite = Ui.GradientSprite;
@@ -77,6 +83,23 @@ namespace RestartedTavern.Client.Table
                 row += 66f;
             }
 
+            Row("Sound", new[] { "Off", "Low", "Medium", "High" }, System.Array.FindIndex(Volumes, x => Mathf.Approximately(x, _volume)), i =>
+            {
+                SetVolume(Volumes[i]);
+                PlaySfx(SfxKind.Creature, "goobers");
+            });
+            Row("Pass sound", new[] { "On", "Off" }, _passSound ? 0 : 1, i =>
+            {
+                _passSound = i == 0;
+                PlayerPrefs.SetInt("passSound", _passSound ? 1 : 0);
+                PlaySfx(SfxKind.Pass, null);
+            });
+            Row("Trigger ticks", new[] { "On", "Off" }, _triggerSound ? 0 : 1, i =>
+            {
+                _triggerSound = i == 0;
+                PlayerPrefs.SetInt("triggerSound", _triggerSound ? 1 : 0);
+                PlaySfx(SfxKind.Trigger, "glitterworld");
+            });
             Row("Animation speed", new[] { "0.5x", "1x", "2x", "4x" }, Array.IndexOf(Speeds, _speed), i => SetSpeed(Speeds[i]));
             Row("Window", new[] { "Fullscreen", "Windowed" }, Screen.fullScreen ? 0 : 1, i =>
                 Screen.fullScreenMode = i == 0 ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed);
@@ -102,6 +125,7 @@ namespace RestartedTavern.Client.Table
             Ui.Tmp(t, "Esc: close  ·  F2: report a bug  ·  F3: guide", 50f, h - 78f, 360f, 52f, 16f, Ui.Cream * new Color(1, 1, 1, 0.45f), TextAnchor.MiddleLeft, FontStyle.Italic);
             bool inGame = !_menuOpen;
             Ui.Button(t, "Tavern Guide", 50f, h - 140f, 220f, 48f, Ui.Hex("#2A6A50"), () => OpenGuide(), 18);
+            Ui.Button(t, "Sound board", 290f, h - 140f, 220f, 48f, Ui.Hex("#2A5A6A"), () => { _soundBoard = true; _dirty = true; }, 18);
             if (inGame)
                 Ui.Button(t, "Main menu", w - 420f, h - 82f, 180f, 56f, ButtonColor, () =>
                 {
@@ -109,6 +133,71 @@ namespace RestartedTavern.Client.Table
                     OpenMenu();
                 }, 20);
             Ui.Button(t, inGame ? "Resume" : "Close", w - 220f, h - 82f, 180f, 56f, ContextOn, CloseSettings, 22);
+        }
+
+        // ------------------------------------------------------------------ sound board
+
+        /// <summary>Settings' sound board (user: "make it so you can listen to them yourself"): every sound, per faction.</summary>
+        private bool _soundBoard;
+
+        private static readonly (SfxKind Kind, string Label)[] BoardKinds =
+        {
+            (SfxKind.Creature, "Creature"), (SfxKind.Instant, "Instant"), (SfxKind.Sorcery, "Sorcery"), (SfxKind.Equipment, "Equipment"),
+            (SfxKind.Relic, "Relic"), (SfxKind.Curse, "Curse"), (SfxKind.Ability, "Ability"), (SfxKind.Power, "Power"), (SfxKind.Death, "Death"),
+        };
+
+        private static readonly (string Id, string Name)[] BoardFactions =
+        {
+            ("goobers", "Goobers"), ("evergrowing_wild", "Evergrowing Wild"), ("glitterworld", "Glitterworld"),
+            ("sensationalists", "Sensationalists"), ("shadow_money_wizards", "Shadow Money Wizards"), ("neutral", "Neutral"),
+        };
+
+        private void DrawSoundBoard()
+        {
+            Ui.FillPanel(_overlay, "SettingsDim", new Color(0, 0, 0, 0.6f), 0f, raycast: true);
+            const float w = 1500f, h = 760f;
+            float x = (Ui.Width - w) / 2f, y = (Ui.Height - h) / 2f;
+            var panel = Ui.Panel(_overlay, "SoundBoard", x, y, w, h, CoachColor, raycast: true);
+            panel.sprite = Ui.GradientSprite;
+            Ui.Frame(panel.transform, "ring", Ui.Gold, 22f).raycastTarget = false;
+            var t = panel.transform;
+            Ui.Tmp(t, "SOUND BOARD", 0f, 20f, w, 56f, 40f, Ui.Gold, TextAnchor.MiddleCenter, FontStyle.Bold, outline: true);
+            Ui.Tmp(t, _volume > 0f ? "Click to listen. Every card kind has its own sound, and each faction its own voice."
+                    : "Sound is off: set the volume in Settings first.", 0f, 74f, w, 30f, 18f,
+                _volume > 0f ? Ui.Cream * new Color(1, 1, 1, 0.7f) : Ui.Hex("#FF8060"), TextAnchor.MiddleCenter, FontStyle.Italic);
+
+            const float labelW = 260f, cellH = 50f;
+            float cellW = (w - 80f - labelW) / BoardKinds.Length, top = 124f;
+            for (int k = 0; k < BoardKinds.Length; k++)
+                Ui.Tmp(t, BoardKinds[k].Label.ToUpperInvariant(), 40f + labelW + k * cellW, top, cellW, 30f, 15f, Ui.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
+            float rowY = top + 36f;
+            foreach (var (id, name) in BoardFactions)
+            {
+                var style = CardFaces.Style(id);
+                var chip = Ui.Panel(t, "Faction", 40f, rowY, labelW - 12f, cellH - 6f, id == "neutral" ? ButtonColor : style.Frame);
+                chip.sprite = Ui.GradientSprite;
+                Ui.FillTmp(chip.transform, name, 17f, Ui.Cream, TextAnchor.MiddleCenter, FontStyle.Bold, 6f);
+                for (int k = 0; k < BoardKinds.Length; k++)
+                {
+                    var kind = BoardKinds[k].Kind;
+                    string faction = id;
+                    Ui.Button(t, "Play", 40f + labelW + k * cellW + 4f, rowY, cellW - 8f, cellH - 6f, ButtonColor, () => PlaySfx(kind, faction), 18);
+                }
+                rowY += cellH + 6f;
+            }
+
+            rowY += 14f;
+            Ui.Tmp(t, "SHARED", 40f, rowY, labelW, 44f, 17f, Ui.Gold, TextAnchor.MiddleLeft, FontStyle.Bold);
+            var shared = new[] { (SfxKind.Pass, "Pass"), (SfxKind.RoundStart, "Round start"), (SfxKind.Attack, "Attack"), (SfxKind.Block, "Block"),
+                (SfxKind.Equip, "Equip"), (SfxKind.Trigger, "Trigger"), (SfxKind.Countered, "Countered") };
+            float sw = (w - 80f - labelW) / shared.Length;
+            for (int i = 0; i < shared.Length; i++)
+            {
+                var kind = shared[i].Item1;
+                Ui.Button(t, shared[i].Item2, 40f + labelW + i * sw + 4f, rowY, sw - 8f, 44f, ButtonColor, () => PlaySfx(kind, null), 16);
+            }
+
+            Ui.Button(t, "Back", w - 220f, h - 82f, 180f, 56f, ContextOn, () => { _soundBoard = false; _dirty = true; }, 22);
         }
     }
 }

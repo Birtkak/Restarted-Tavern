@@ -44,7 +44,7 @@ SHOTS = {
     "curse":    (TUT + ["4", "-place", "ironbark_grizzly", "-placeopp", "hex_of_withering"], (680, 540, 1240, 855)),
     "curse2":   (TUT + ["4", "-place", "ironbark_grizzly", "-placeopp", "hex_of_withering", "-zoom", "ironbark_grizzly"], FULL),
     "editor":   (["-editor"], FULL),
-    "settings": (["-settings", "-seed", "7", "-autoplay", "4"], (480, 200, 1440, 880)),
+    "settings": (["-settings", "-seed", "7", "-autoplay", "4"], (480, 110, 1440, 970)),
     "bug":      (["-bugopen", "-seed", "7", "-autoplay", "4"], (560, 280, 1360, 660)),
 }
 

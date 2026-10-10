@@ -112,7 +112,7 @@ after every change; the events of the change then animate on top (FLIP slides + 
   P1's / P2's battlefield; `id*2` = 2 damage, `id!` = tapped; Equipment goes on the last creature of its side, a Curse
   on the last of the other side), `-gold N`, `-settle` (the bot and the tutorial's passes act until it's the viewer's
   decision), `-act <card id>` (the viewer takes that card's first legal action), `-stage` (stage every attacker or
-  blocker), `-nocoach` (hide the tutorial box), `-bugopen`, `-guide [page or search]`. Screenshots ignore the real mouse.
+  blocker), `-nocoach` (hide the tutorial box), `-bugopen`, `-guide [page or search]`, `-soundboard`. Screenshots ignore the real mouse.
 - **Command line**: `-menu`, `-settings`, `-debug`, `-reveal`, `-bugreport note`, `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
   everyone, `MatchSession.AutoStep`), `-until attack|block` (stop there and stage everything), `-autopick`,
   `-autoshot file.png` (use an absolute path), `-shotat seconds` (shoot that long after the table is drawn, to catch the
@@ -161,8 +161,26 @@ The in-game encyclopedia (user: "search for any mechanic in the game and get a v
 - **Adding a mechanic later**: add a page in `TavernGuide.Build` (and a shot in `guide_shots.py` if it needs one); the
   tests fail if a new keyword in `KeywordGlossary` has no page.
 
+### 2.5 Sound (built 2026-10-10)
+
+- **Synthesis v2** (`Client/Logic/SfxSynth.cs`, no Unity; smooth, LoR-style, Decision Log): `Render(kind, faction)`
+  gives mono 44.1 kHz samples. Each faction is an instrument of sine partials (higher ones fade faster, so notes mellow),
+  with its own attack, chorus, vibrato and breath; gestures add pads, bells, muffled metal, low booms, a rumble and
+  band-pass whooshes; then a small Schroeder hall reverb, a low-pass, a soft limiter and levelling to -18 dB RMS.
+  Kinds (`SfxKind`, named after LoR's sound events): Creature (summon), Instant, Sorcery, Equipment, Relic, Curse,
+  Ability, Power, Trigger, Equip, Countered, Pass, RoundStart, Attack (attack declare), Block (block declare), Death. `SfxSynthTests`: every sound audible, in range, short, fading out (no click), different per faction, deterministic.
+- **Playback** (`TableView.Audio.cs`): clips are made on first use and cached; 12 `AudioSource`s; `SoundFor` is called
+  for each event in `PlayBeats` with the beat's time, so a sound plays when its animation does (`PlayDelayed`). Attack,
+  block and death play once per batch of events (one war drum for a whole attack). Pass
+  sound only for real passes with an empty Chain in the action phase (not the engine's automatic ones).
+- **Settings**: Sound (Off / Low / Medium / High, `AudioListener.volume`), Pass sound, Trigger ticks; **Sound board**
+  (Settings → Sound board, `-soundboard`) plays every kind in every faction voice.
+- **Checking sounds without ears**: Restarted Tavern → Export Sound Preview (`SfxPreview.Export`) writes
+  `Builds/sfx_preview.wav` and one WAV per sound in `Builds/sfx/`; `python Tools/SoundCheck/sound_check.py` draws a
+  spectrogram sheet and prints loudness, pitch, brightness, harshness, clicks and cut-off tails, flagging problems.
+
 ## 3. Status and later
-Built: everything in §2. Later releases (additions only): painted card art and portraits, sound, a mulligan screen
+Built: everything in §2. Later releases (additions only): painted card art and portraits, music, a mulligan screen
 with card picks, the history rail as cards, multiplayer (3–4) layouts, online play.
 
 ## 4. Open (for later releases)

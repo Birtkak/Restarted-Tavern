@@ -139,6 +139,7 @@ namespace RestartedTavern.Client.Table
                     case "-editor": _menuOpen = true; _editorAtStart = true; break;
                     case "-debug": _debugOpen = true; break;
                     case "-settings": _settingsOpen = true; break;
+                    case "-soundboard": _settingsOpen = true; _soundBoard = true; break;
                     case "-place": _place = next; break;
                     case "-placeopp": _placeOpp = next; break;
                     case "-gold": int.TryParse(next, out _goldShot); break;
@@ -155,6 +156,7 @@ namespace RestartedTavern.Client.Table
             if (_seed == 0) _seed = (ulong)(Environment.TickCount & 0x7fffffff) % 1000000 + 1;
             BuildCanvas();
             LoadSettings();
+            SetupAudio();
 
             // Loading screen while the cards and decks are read (skipped for automated screenshots).
             bool interactive = _autoshot == null && _autoplay == 0;

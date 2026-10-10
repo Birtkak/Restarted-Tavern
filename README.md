@@ -11,6 +11,7 @@ actions, the attack token passes every round), **permanent damage** (creatures k
   `RestartedTavern.exe` (Windows). SmartScreen may warn about an unsigned app: More info → Run anyway.
 - Start with **Tutorial**, then **Play** against the bot or a friend. Rules questions: the in-game **Tavern Guide** (F3).
 - Found a bug? **Report bug** (F2) saves a folder in `BugReports/` next to the game; send it over.
+- Sound: every card kind has its own effect in its faction's voice; volume and a Sound board are in Settings (Esc).
 
 ## Build from source
 Unity **6000.6.4f1**. Open the project, then **Restarted Tavern → Build Windows** (writes `Builds/Table/`), or open

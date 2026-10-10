@@ -12,7 +12,9 @@ A 1v1 trading card game: MTG-style rules with Legends of Runeterra rounds, **per
 - Play against the bot, or a friend on the same screen (hot-seat).
 - A 3-round guided tutorial, and the **Tavern Guide** (F3): every rule and mechanic, searchable, with pictures and
   example cards.
-- Settings (Esc): animation speed, window, resolution, VSync, keyword hints, coin toss.
+- **Sound effects**: every kind of card has its own sound, played on its faction's instrument (brass, marimba, celesta,
+  choir, harp), plus attacks, blocks, deaths, passing and each new round. Settings has the volume and a Sound board to hear them all.
+- Settings (Esc): sound, animation speed, window, resolution, VSync, keyword hints, coin toss.
 - **Report bug** (F2) on every screen: saves a screenshot and the full game state. Please send those folders!
 
-**Known limitations:** placeholder art, no sound, Windows only, no online play.
+**Known limitations:** placeholder art, sound effects but no music, Windows only, no online play.

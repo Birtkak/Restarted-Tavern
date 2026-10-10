@@ -576,9 +576,21 @@ namespace RestartedTavern.Client.Logic
                     new[] { "hot-seat", "hotseat", "multiplayer", "versus", "ai", "bot", "friend", "local" },
                     related: new[] { "deck_building" }),
 
+                E("sounds", "Sounds", "Playing the Game",
+                    "Every card makes a sound when it's played, and each kind has its own: a creature lands with a low <b>boom</b> and a chord, "
+                    + "an Instant <b>whooshes</b> up into a bright note, a Sorcery <b>swells</b> into a full chord, Equipment rings like muffled metal, "
+                    + "a Relic <b>chimes</b> and a Curse sinks. Attacks beat a war drum, blocks thud, and dying creatures dissolve.\n\n"
+                    + "Each faction plays its own instrument: warm brass for the Goobers, a wooden marimba for the Wild, celesta for Glitterworld, "
+                    + "a dark choir for the Sensationalists and a harp for the Wizards.\n\n"
+                    + "Two soft taps mean someone <b>passed</b>; a deep boom starts each round. Change or mute them in Settings, and play every one of them on its <b>Sound board</b>.",
+                    new[] { "audio", "sound", "sfx", "music", "volume", "pass sound" },
+                    related: new[] { "settings", "actions" }),
+
                 E("settings", "Settings", "Playing the Game",
-                    "Open Settings from the main menu or with <b>Esc</b> in a game (the game waits). Animation speed, fullscreen or windowed, resolution, VSync, keyword hint boxes and the coin toss.",
-                    new[] { "options", "speed", "resolution", "fullscreen", "vsync", "volume" },
+                    "Open Settings from the main menu or with <b>Esc</b> in a game (the game waits).\n\n"
+                    + "<b>Sound</b>: volume (Off, Low, Medium, High), and the pass sound and trigger ticks on or off. "
+                    + "<b>Display</b>: animation speed, fullscreen or windowed, resolution, VSync. <b>Help</b>: keyword hint boxes and the coin toss.",
+                    new[] { "options", "speed", "resolution", "fullscreen", "vsync", "volume", "sound", "audio", "mute" },
                     frames: new[] { F("settings", "The Settings panel.") },
                     related: new[] { "controls" }),
 

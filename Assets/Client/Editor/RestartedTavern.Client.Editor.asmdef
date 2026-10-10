@@ -4,6 +4,7 @@
     "references": [
         "RestartedTavern.Rules",
         "RestartedTavern.Client",
+        "RestartedTavern.Client.Logic",
         "UnityEngine.UI"
     ],
     "includePlatforms": [

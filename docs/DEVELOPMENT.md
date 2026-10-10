@@ -35,15 +35,16 @@ Restarted-Tavern/
 │  ├─ StreamingAssets/Decks/      prototype_decks.json
 │  ├─ Client/                     RestartedTavern.Client.asmdef
 │  │   ├─ Table/                  the game client: TableView (uGUI built from code) and its partials (Board, Beats, Menu,
-│  │   │                          Tutorial, DeckEditor, Settings, Guide, BugReport, Debug, Shots), CardFaces, Ui (CLIENT_DESIGN §2.2)
+│  │   │                          Tutorial, DeckEditor, Settings, Guide, Audio, BugReport, Debug, Shots), CardFaces, Ui (CLIENT_DESIGN §2.2)
 │  │   ├─ Logic/                  RestartedTavern.Client.Logic.asmdef (noEngineReferences): session, snapshot, picker, combat
-│  │   │                          stage, tutorial script, keyword glossary, Tavern Guide content (CLIENT_DESIGN §2)
+│  │   │                          stage, tutorial script, keyword glossary, Tavern Guide content, sound synthesis (CLIENT_DESIGN §2)
 │  │   ├─ Logic.Tests/            its EditMode tests
-│  │   ├─ Editor/                 TableBuilder (scene + Windows build), Guide image importer, simulation menu
+│  │   ├─ Editor/                 TableBuilder (scene + Windows build), Guide image importer, sound preview export, simulation menu
 │  │   └─ DebugTable.cs           the old IMGUI rules-testing table (kept as a tool)
 │  ├─ Resources/Guide/            Tavern Guide screenshots (made by Tools/GuideShots)
 │  └─ Scenes/                     Table.unity (the game), DebugTable.unity
-├─ Tools/                         BugHunt, SimRunner, RulesTests (.NET 8, compile Assets/Rules), GuideShots (Python)
+├─ Tools/                         BugHunt, SimRunner, RulesTests (.NET 8, compile Assets/Rules); GuideShots, SoundCheck,
+│                                 Release (Python: Guide screenshots, sound analysis, the release zip)
 └─ Server/  (later)               a .NET host that compiles the same Assets/Rules source files
 ```
 - `noEngineReferences: true` on the Rules assembly **enforces** at compile time that rules code can't touch `UnityEngine`. This keeps it portable to a server and fast to test.
@@ -165,7 +166,7 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 3. ✅ **Visual client** (Windows): LoR-style table, MTG Arena hand and board, animations, hot-seat and vs. the bot.
 4. ✅ **v1.0 for friends** (2026-10-10): rules frozen, main menu, tutorial, deck editor, settings, Tavern Guide, bug reports.
 5. 🚧 **Friends playtest**: gather bug reports and balance notes ([HANDOVER.md](HANDOVER.md)).
-6. Later, as additions on top of the frozen rules: card art, sound, new cards and sets, new keywords, multiplayer (3–4), singleton, online play.
+6. Later, as additions on top of the frozen rules: card art, music, new cards and sets, new keywords, multiplayer (3–4), singleton, online play.
 
 ---
 
@@ -213,7 +214,7 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 - **Replacement effects** (MTG 614–616, `Core/Replacement.cs`, `Flow/GameRunner.Replacements.cs`): `ReplacementAbility` (a static, all data: event, filters, outcome) for dying, damage, entering, drawing, gaining life and gaining Gold; temporary ones from `AddReplacementEffect` live in `GameState.Replacements` ("until end of turn", "the next time"). Self-replacement first, then oldest first; each applies once per event and the rest are re-checked. The affected player doesn't choose the order yet (game actions can't pause). Keeper Z-00 uses it.
 - `GameEngine.CacheLegalActions` (opt-in, used by `MatchRunner`): the bot's legal-action list is reused by `Apply`'s validation, so it isn't enumerated twice.
 
-**Tests** (`Assets/Rules.Tests` and `Assets/Client/Logic.Tests`, about 275 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests` and `Assets/Client/Logic.Tests`, 278 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
