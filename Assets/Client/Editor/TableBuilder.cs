@@ -55,7 +55,7 @@ namespace RestartedTavern.Client.Editor
         [MenuItem("Restarted Tavern/Build Windows Table")]
         public static void BuildWindows()
         {
-            CreateScene(); // always rebuilt from code, so the scene matches this script
+            if (!File.Exists(ScenePath)) CreateScene(); // the menu item recreates it when this script changes
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { ScenePath },
