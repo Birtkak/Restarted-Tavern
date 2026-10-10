@@ -24,8 +24,8 @@ creatures and Gold (banked unspent mana).
 
 - [x] Rules locked, docs cleaned up, Tavern Guide, settings, bug reports (commit `efb90dd`)
 - [x] Sound effects (v2: smooth, LoR-style), sound settings, sound board, sound checking tools
-- [ ] **Commit** the sound work
-- [ ] **Rewrite the GitHub README** (§2.1) so it shows where the game is now
+- [x] **Commit** the sound work (`edbd840`)
+- [x] **Rewrite the GitHub README** (§2.1) so it shows where the game is now
 - [ ] **Push** `main` to GitHub (github.com/Birtkak/Restarted-Tavern, public)
 - [ ] **Build**: Unity → **Restarted Tavern → Build Windows** (or headless, DEVELOPMENT §7) → `Builds/Table/`
 - [ ] **Zip**: `python Tools/Release/make_release_zip.py v1.0` → `Builds/RestartedTavern-v1.0-win64.zip` (~43 MB; your
@@ -38,7 +38,7 @@ creatures and Gold (banked unspent mana).
       card being played, save a bug report.
 - [ ] **Send friends** the release link and §3.
 
-### 2.1 The GitHub README (to do)
+### 2.1 The GitHub README (done)
 
 The README is the repo's front page, the first thing friends see. It's still a short player note; rewrite it to cover:
 
