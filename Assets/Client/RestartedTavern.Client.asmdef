@@ -3,7 +3,8 @@
     "rootNamespace": "RestartedTavern.Client",
     "references": [
         "RestartedTavern.Rules",
-        "RestartedTavern.Client.Logic"
+        "RestartedTavern.Client.Logic",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

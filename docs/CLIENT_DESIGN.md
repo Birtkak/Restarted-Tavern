@@ -66,12 +66,38 @@ Declaring attackers / blockers → Attack / Block with something staged, else Do
 → its prompt, chosen on the table or in the choice panel. A staged attack in the action phase → Attack. Something on
 the Chain → OK. A combat priority window → Continue. Otherwise Pass, or End round when everyone else has passed.
 
+### 2.2 The table scene (built 2026-10-10)
+`Assets/Client/Table/` (in `RestartedTavern.Client`, which now references `UnityEngine.UI`). `TableView` builds the
+whole uGUI table from code at runtime (Screen Space – Camera, 1920×1080 reference, scale with screen size, legacy
+`Text` so no TextMeshPro import is needed); `TableBuilder` (editor) makes `Assets/Scenes/Table.unity` (camera, event
+system, TableView) and builds `Builds/Table/RestartedTavern.exe`. The table is rebuilt from a fresh `TableSnapshot`
+after every change (no animations yet).
+- **Layout** as §1.1: Tavern Dwellers left (life on the portrait, Power button beside it), opponent's hand as backs at
+  the top, rows of units above and below the combat lane, MTGA fanned hand at the bottom (lift + grow on hover), piles
+  (deck / graveyard / exile, click to browse) and mana column + 3 Gold diamonds + attack token on the right, the Chain
+  above the context button (top item largest).
+- **Glows**: blue = can be used, red = legal target, orange = can attack / block, white = picked.
+- **Playing**: click a glowing card (or drag it from the hand above the hand line) → `ActionPicker`; targets are
+  clicked on the table (or the card is dropped straight onto one), with a targeting arrow from the source. Real
+  choices (modes, X, Invest, options, mulligan, off-table targets) appear in a box in the middle of the lane; "No more
+  targets" and Cancel sit beside the prompt bar. Right-click or Esc cancels.
+- **Combat**: drag units into the lane (or click a unit that has no ability) to stage attackers, drag them out to
+  unstage; to block, drag a unit onto an attacker (or click the blocker, then the attacker). The context button
+  commits (`CommitCombat`).
+- **Other**: hover / right-click (pin) zoom for units and Tavern Dwellers; hot-seat cover; game-over screen with
+  Rematch / Undo; Undo, New game and bot speed buttons; Space = context button, Esc = cancel, Ctrl+Z = undo.
+- **Placeholder frames** (`CardFaces`): faction colour + accent, emblem text in the art window, cost / Power /
+  Health gems, rarity pip, text box; units show no cost, buffs in green, damage in red, keyword tags. Art drops in
+  from `Resources/CardArt/<card id>.png` with no code change. Faction colours are a proposal (still to confirm).
+- **Command line**: `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
+  everyone, `MatchSession.AutoStep`), `-until attack|block` (stop there and stage everything), `-autopick`,
+  `-autoshot file.png`.
+
 ---
 
 ## 3. Build plan 🟡
-1. **Table scene skeleton**: uGUI canvas (1920×1080 reference), the zones from §1.1 as plain panels, bound to
-   `TableSnapshot`; hand + units + mana gems + context button + Chain. Clicks through `ActionPicker`.
-2. **Drag and drop**: play from hand by dragging, targeting arrow, combat lane staging.
+1. ~~**Table scene skeleton**~~ done (§2.2).
+2. ~~**Drag and drop**~~ done (§2.2), apart from playing a card by dropping it on the board.
 3. **Card frames**: placeholder frames per faction (hand card + unit card variants), keyword icons.
 4. **Animations** from `PresentationQueue` (DOTween-style tweens written in-house or a package, ❓).
 5. **Hot-seat screens**: handoff cover, mulligan screen, game over, deck pick.

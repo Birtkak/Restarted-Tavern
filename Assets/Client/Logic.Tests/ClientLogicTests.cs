@@ -242,6 +242,16 @@ namespace RestartedTavern.Client.Logic.Tests
         }
 
         [Test]
+        public void Session_AutoStep_PlaysForHumansToo()
+        {
+            var session = new MatchSession(MatchSetup.Duel(2, 4, SeatKind.Human, SeatKind.Human, seed: 9));
+            int steps = 0;
+            while (session.WaitingOn != null && steps++ < 5000) session.AutoStep();
+            Assert.IsTrue(session.State.IsGameOver, "AutoStep game didn't finish in 5000 actions.");
+            Assert.IsFalse(session.CanUndo, "AutoStep actions aren't undoable.");
+        }
+
+        [Test]
         public void Session_HotSeat_HandsOffAndUndoes()
         {
             var session = new MatchSession(MatchSetup.Duel(0, 1, SeatKind.Human, SeatKind.Human, seed: 5));

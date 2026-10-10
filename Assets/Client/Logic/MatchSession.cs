@@ -114,6 +114,16 @@ namespace RestartedTavern.Client.Logic
             return Apply(_bot.Choose(State, WaitingOn.Value), keepUndo: false);
         }
 
+        /// <summary>
+        /// The bot plays one action for whoever the game waits on, human seats included (automated playtests and
+        /// screenshots). Not undoable.
+        /// </summary>
+        public List<GameEvent> AutoStep()
+        {
+            if (!(WaitingOn is PlayerId p)) throw new InvalidOperationException("The game is over.");
+            return Apply(_bot.Choose(State, p), keepUndo: false);
+        }
+
         public bool CanUndo => _undo.Count > 0;
 
         /// <summary>Back to the state before the last human action (bot actions after it are undone too).</summary>

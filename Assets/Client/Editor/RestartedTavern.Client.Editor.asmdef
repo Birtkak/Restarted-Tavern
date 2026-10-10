@@ -3,7 +3,8 @@
     "rootNamespace": "RestartedTavern.Client.Editor",
     "references": [
         "RestartedTavern.Rules",
-        "RestartedTavern.Client"
+        "RestartedTavern.Client",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

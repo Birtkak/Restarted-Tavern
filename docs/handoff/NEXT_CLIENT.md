@@ -52,6 +52,13 @@ WHAT EXISTS (Assets/Client/Logic, `RestartedTavern.Client.Logic`, no Unity refer
   it's reproducible headless, plus a Windows build method and `-autoshot file.png` / `-autoplay N` / `-seed` / `-bot1`
   flags for automated screenshots.
 
+DONE (2026-10-10, session 8): steps 1 and 2 below. The table scene exists (`Assets/Client/Table/`, CLIENT_DESIGN
+§2.2): playable vs the bot and hot-seat, clicks and drags through the picker, combat lane staging, targeting arrow,
+zoom, Chain, gems, piles, game over. **Next: step 3 (ask the user about the faction colours first), then 4–6.** The
+user hasn't played it by hand yet: ask for feedback on the feel first.
+Build: `-executeMethod RestartedTavern.Client.Editor.TableBuilder.BuildWindows`; screenshots:
+`Builds/Table/RestartedTavern.exe -screen-width 1920 -screen-height 1080 -autoplay 200 -until attack -autoshot x.png`.
+
 BUILD PLAN (CLIENT_DESIGN §3; commit after each step that works)
 1. **Table scene skeleton**: `Assets/Client/Table/` (a new asmdef referencing Rules + Client.Logic + UGUI, or inside
    RestartedTavern.Client), a `TableBuilder` editor script that creates `Assets/Scenes/Table.unity` (uGUI Canvas,
