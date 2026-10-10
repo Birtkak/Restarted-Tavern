@@ -43,7 +43,7 @@ namespace RestartedTavern.Rules
         private void DeclareAttacker(PlayerId player, ObjectId attackerId, PlayerId defender)
         {
             var attacker = S.FindOnBattlefield(attackerId);
-            attacker.Tapped = true; // no Vigilance yet
+            if (!Stats(attacker).Has(Keyword.Vigilance)) attacker.Tapped = true;
             S.Combat.Attacks.Add(new AttackDeclaration { Attacker = attackerId, Defender = defender });
             Emit(new AttackerDeclaredEvent { Attacker = attackerId, Defender = defender });
             QueueTriggers(attacker, TriggerEvent.Attacks, defender); // "the defending player" (Grubby Pickpocket)

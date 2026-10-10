@@ -552,10 +552,11 @@
     "cost": 5,
     "power": 5,
     "health": 6,
+    "keywords": "Vigilance",
     "subtypes": ["Human"],
     "rarity": "Uncommon",
     "faction": "neutral",
-    "text": "Can block an additional creature each combat.",
+    "text": "Vigilance. Can block an additional creature each combat.",
     "extraBlocks": 1
   },
   {

@@ -181,10 +181,14 @@ namespace RestartedTavern.Rules
             switch (step)
             {
                 case Step.Start:
-                    // §5.1: every player gains +1 max mana (cap 10) and refills. MTG 502: untap.
+                    // §5.1: every player gains +1 max mana (cap 10) and refills. MTG 502: untap, but only the player who
+                    // gets the attack token this round (their "turn" to attack; Decision Log 2026-10-10). So a creature
+                    // that attacked stays tapped through the opponent's attack round and can't block, and Tap abilities
+                    // cost something.
                     foreach (var p in TurnPlayers()) RefillMana(p);
                     foreach (var p in TurnPlayers())
-                        foreach (var c in p.Battlefield) c.Tapped = false;
+                        if (HasAttackToken(p))
+                            foreach (var c in p.Battlefield) c.Tapped = false;
                     ForEachTurnPlayer(() => QueueTurnTriggers(TriggerEvent.StartOfYourTurn));
                     GivePriority(ap.Id);
                     break;

@@ -47,6 +47,8 @@ namespace RestartedTavern.Rules
         Lifelink = 1 << 3,
         Reach = 1 << 4,
         CantBlock = 1 << 5,
+        /// <summary>Attacking doesn't tap it (MTG 702.20), so it can still block in the opponent's attack round.</summary>
+        Vigilance = 1 << 6,
     }
 
     /// <summary>

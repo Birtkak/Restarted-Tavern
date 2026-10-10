@@ -14,26 +14,26 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | **Goober Rascal** | 1 | Creature: Goober | C | 2/1 | Can't block. | The classic aggressive 1-drop | ✅ |
+| 1 | **Goober Rascal** | 1 | Creature: Goober | C | 1/1 | Can't block. | The classic aggressive 1-drop | ✅ |
 | 2 | **Spark Snot** | 1 | Instant | C | — | Deal 2 damage to target creature. | Cheap burn. The damage sticks, so it also finishes off a creature that's already wounded | ✅ |
 | 3 | **Grubby Pickpocket** | 1 | Creature: Goober | C | 1/2 | Whenever this attacks, the defending player loses 1 Gold and you gain 1 Gold. | Steals Gold, and cuts down the opponent's instant-speed answers | ✅ |
 | 4 | **Fuse Goober** | 2 | Creature: Goober | C | 1/2 | Last Breath: Deal 2 damage to any target. | Trades up even when it dies | ✅ |
 | 5 | **Gob Gang** | 2 | Sorcery | C | — | Create two 1/1 Goobers. | Goes wide | ✅ |
 | 6 | **Goober Shaman** | 2 | Creature: Goober | U | 2/2 | Arrival: You may discard a card. If you do, draw a card. | Rummage: Goobers' version of card selection | ✅ |
 | 7 | **Brawling Runt** | 2 | Creature: Goober | C | 2/2 | — | A plain, efficient aggro body | ✅ |
-| 8 | **Goober Warchief** | 3 | Creature: Goober | U | 2/3 | Your other Goobers get +1/+0. | The "lord": makes tokens a real threat | ✅ |
+| 8 | **Goober Warchief** | 4 | Creature: Goober | U | 2/3 | Your other Goobers get +1/+0. | The "lord": makes tokens a real threat | ✅ |
 | 9 | **Firecracker Volley** | 3 | Sorcery | U | — | Deal 3 damage divided as you choose among one, two or three targets (creatures and/or players). | Flexible burn: kill small creatures, or spread lasting damage | ✅ |
 | 10 | **Hog-Rider** | 3 | Creature: Goober | C | 3/3 | Trample. | A goblin on a war pig | ✅ |
 | 11 | **Gold-Snatcher Crew** | 3 | Creature: Goober | U | 2/2 | Whenever this deals combat damage to a player, that player loses up to 2 Gold and you gain that much. | Gold theft on a body | ✅ |
-| 12 | **Mob Rush** | 4 | Sorcery | U | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. | Instant pressure | ✅ |
+| 12 | **Mob Rush** | 5 | Sorcery | U | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. | Instant pressure | ✅ |
 | 13 | **Barrel Bomber** | 4 | Creature: Goober | C | 3/3 | Arrival: Deal 2 damage to any target. | Removal on a body | ✅ |
 | 14 | **Pit-Fighter** | 4 | Creature: Goober | C | 4/4 | Trample. | A solid mid-sized beater | ✅ |
 | 15 | **Goober Demolisher** | 5 | Creature: Goober | R | 4/5 | Trample. Whenever another Goober you control dies, deal 1 damage to each opponent. | Payoff for trading tokens away | ✅ |
 | 16 | **Overrun the Gates** | 5 | Sorcery | U | — | Your creatures get +2/+0 and Trample until end of turn. | A finisher for a wide board | ✅ |
 | 17 | **Scrapheap Inferno** | 5 | Sorcery | R | — | Deal X damage to any target, where X is 2 plus the number of Goobers you control. | Burn that scales with your board. Can finish the opponent off | ✅ |
-| 18 | **Pit Champion** | 6 | Creature: Goober | R | 6/5 | Trample. | Big, immediate damage | ✅ |
+| 18 | **Pit Champion** | 7 | Creature: Goober | R | 6/5 | Trample. | Big, immediate damage | ✅ |
 | 19 | **Grakka, Queen of the Rabble** | 7 | Creature: Goober | L | 5/6 | Your Goobers get +1/+1. Whenever you attack, create a 1/1 Goober that's tapped and attacking. | The face of the faction. Over budget on purpose (Legendary top-end exception) | ✅ |
-| 20 | **Snik, the Goober Doubler** | 4 | Creature: Goober | L | 2/4 | X, Tap: Choose up to X other Goobers you control. For each one, create a token copy of it. | Requested by the user. X can be paid with mana **or Gold**, since it's an activated ability, so stolen Gold fuels it. Copying a Warchief stacks the lord bonus. A copy of a Legendary (Grakka) dies to the Legendary rule. No summoning sickness: Snik can tap the round it arrives | ✅ |
+| 20 | **Snik, the Goober Doubler** | 4 | Creature: Goober | L | 2/4 | Vigilance. X, Tap: Choose up to X other Goobers you control. For each one, create a token copy of it. | Requested by the user. X can be paid with mana **or Gold**, since it's an activated ability, so stolen Gold fuels it. Copying a Warchief stacks the lord bonus. A copy of a Legendary (Grakka) dies to the Legendary rule. No summoning sickness: Snik can tap the round it arrives | ✅ |
 
 **Progress:** 20 / 20 · C 9 · U 6 · R 3 · L 2 (the second Legendary, Snik, replaced the rare Call the Horde)
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 4 · 5: 3 · 6: 1 · 7+: 1 · Creatures: 14 · Spells: 6

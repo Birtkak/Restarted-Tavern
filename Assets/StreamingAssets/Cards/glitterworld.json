@@ -530,10 +530,11 @@
     "cost": 5,
     "power": 4,
     "health": 5,
+    "keywords": "Vigilance",
     "subtypes": ["Citizen"],
     "rarity": "Uncommon",
     "faction": "glitterworld",
-    "text": "Equipped creatures you control get +1/+1.",
+    "text": "Vigilance. Equipped creatures you control get +1/+1.",
     "statics": [
       {"$type": "AnthemAbility", "requiresEquipped": true, "power": 1, "health": 1}
     ]
@@ -545,10 +546,11 @@
     "cost": 6,
     "power": 5,
     "health": 7,
+    "keywords": "Vigilance",
     "subtypes": ["Construct"],
     "rarity": "Rare",
     "faction": "glitterworld",
-    "text": "Whenever an Equipment becomes attached to this, heal it fully and draw a card.",
+    "text": "Vigilance. Whenever an Equipment becomes attached to this, heal it fully and draw a card.",
     "triggers": [
       {
         "when": "EquipmentAttachedToThis",
@@ -704,10 +706,11 @@
     "cost": 7,
     "power": 4,
     "health": 6,
+    "keywords": "Vigilance",
     "subtypes": ["Construct"],
     "rarity": "Rare",
     "faction": "glitterworld",
-    "text": "Whenever an enemy creature is dealt damage, if it has 1 or less Health remaining, destroy it.",
+    "text": "Vigilance. Whenever an enemy creature is dealt damage, if it has 1 or less Health remaining, destroy it.",
     "triggers": [
       {
         "when": "CreatureDealtDamage",

@@ -25,7 +25,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 7 | **Wandering Adventurer** | 4 | Creature: Human | U | 3/4 | Arrival: Draw a card. | A value body for any deck | ✅ |
 | 8 | **Old Tavern Keeper** | 4 | Creature: Human | R | 2/5 | At the end of your turn, heal 2 from each other creature you control. | A healing engine for every deck. Rare, so it's limited | ✅ |
 | 9 | **Mercenary Contract** | 4 | Relic | R | — | Pay 2 Gold: Create a 2/2 Mercenary. Activate only once per turn and only as a sorcery. | A Gold sink for every deck. Turns leftover mana into bodies | ✅ |
-| 10 | **Retired Champion** | 5 | Creature: Human | U | 5/6 | Can block an additional creature each combat. | An old arena hero who still holds the line | ✅ |
+| 10 | **Retired Champion** | 5 | Creature: Human | U | 5/6 | Vigilance. Can block an additional creature each combat. | An old arena hero who still holds the line | ✅ |
 
 **Progress:** 10 / 10 · C 5/5 · U 3/3 · R 2/2
 

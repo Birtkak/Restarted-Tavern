@@ -30,10 +30,10 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 13 | **Riot Suppressor** | 4 | Creature: Construct | U | 3/3 | Arrival: Deal 1 damage to each enemy creature. | A mini-sweeper on a body. Wrecks Goober tokens | ✅ |
 | 14 | **Grid Overload** | 4 | Sorcery | R | — | Deal 1 damage to each enemy creature twice. | From the samples. Balance 2026-10-10: three times → twice. Each ping is a separate damage event | ✅ |
 | 15 | **Megacorp Exosuit** | 5 | Equipment | R | — | Equipped creature gets +3/+3 and has Flying and Trample. Equip 3. | Turns any citizen into a big threat | ✅ |
-| 16 | **Patrol Captain** | 5 | Creature: Citizen | U | 4/5 | Equipped creatures you control get +1/+1. | An Equipment "lord" | ✅ |
+| 16 | **Patrol Captain** | 5 | Creature: Citizen | U | 4/5 | Vigilance. Equipped creatures you control get +1/+1. | An Equipment "lord" | ✅ |
 | 17 | **Hover Tank** | 5 | Creature: Construct | C | 4/5 | Arrival: Deal 1 damage to target creature. | A sturdy body with a ping | ✅ |
 | 18 | **Orbital Strike Network** | 6 | Relic | R | — | At the start of your turn, deal 1 damage to each enemy creature and each opponent. | A ping engine that slowly grinds the opposing board down | ✅ |
-| 19 | **Titan-Frame Guardian** | 6 | Creature: Construct | R | 5/7 | Whenever an Equipment becomes attached to this, heal it fully and draw a card. | A huge Equipment carrier that repairs itself | ✅ |
+| 19 | **Titan-Frame Guardian** | 6 | Creature: Construct | R | 5/7 | Vigilance. Whenever an Equipment becomes attached to this, heal it fully and draw a card. | A huge Equipment carrier that repairs itself | ✅ |
 | 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
@@ -61,7 +61,7 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | ✓ implemented | ✅ |
 | 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | ✓ implemented | ✅ |
 | 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | ✓ implemented | ✅ |
-| 30 | **Neon Executioner** | 6 | Creature: Construct | R | 4/6 | Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | ✓ implemented | ✅ |
+| 30 | **Neon Executioner** | 7 | Creature: Construct | R | 4/6 | Vigilance. Whenever an enemy creature is dealt damage, if it has 1 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2
 

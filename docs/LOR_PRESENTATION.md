@@ -170,7 +170,7 @@ Bug-report fixes:
 **MTG Arena board (user, 2026-10-10; `TableView.Board.cs`).**
 - Tapped units lie sideways (a quarter turn clockwise) with a light dim. The row makes room for the wider card.
 - Attacking taps: declared attackers lie sideways in the combat lane. Staged ones stay upright until you confirm.
-- Tapping animates as a quarter turn. Untapping at a new round waits until the gems have refilled, before the draws.
+- Tapping animates as a quarter turn. Untapping (only at the start of your attack rounds) waits until the gems have refilled, before the draws.
 - Equipment and Curses on a creature are tucked behind it, each strip 22 px higher, with a gold "E" pip on the host (with the count when 2+). Hovering the host or a strip fans them out beside it, upright. Hover zooms, click uses (Equip again). Equipping slides the card from the row to the host (FLIP).
 - Each side scales to fit: one line from full size down to half size, then two lines (creatures on the lane side), then overlap. Scale changes tween. Hover zoom is always full size, and sits beside the card whatever its width.
 - Merged triggers show a gold "×N" badge on their bubble. A trigger that found no target, or was declined, flashes "<card>: no target".

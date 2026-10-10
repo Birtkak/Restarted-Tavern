@@ -25,11 +25,11 @@
     "cost": 2,
     "power": 2,
     "health": 3,
-    "keywords": "Reach",
+    "keywords": "Reach, Vigilance",
     "subtypes": ["Spider"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "Reach."
+    "text": "Reach, Vigilance."
   },
   {
     "id": "razorhide_boar",
@@ -51,10 +51,11 @@
     "cost": 4,
     "power": 4,
     "health": 5,
+    "keywords": "Vigilance",
     "subtypes": ["Beast"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": ""
+    "text": "Vigilance."
   },
   {
     "id": "thornback_ravager",
@@ -117,10 +118,11 @@
     "cost": 2,
     "power": 1,
     "health": 4,
+    "keywords": "Vigilance",
     "subtypes": ["Turtle"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "At the start of your turn, heal 1 from this.",
+    "text": "Vigilance. At the start of your turn, heal 1 from this.",
     "triggers": [
       {
         "when": "StartOfYourTurn",

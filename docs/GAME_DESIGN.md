@@ -140,7 +140,7 @@ Unused mana is not lost.
 
 A **round** is everyone's turn at once. Wherever the MTG rules or a card say "turn", read "round": "once each turn" is once each round, "until end of turn" lasts until the round ends, and every player's "your turn" is the round, so "at the start of your turn" triggers for every player.
 
-1. **Round start**: every player gets +1 max mana (up to 10) and refills (§5.1) and untaps their permanents. "At the start of your turn" effects trigger for every player, the round leader's first.
+1. **Round start**: every player gets +1 max mana (up to 10) and refills (§5.1). **Only the player who gets the attack token this round untaps their permanents** (MTG's untap step, on your attack rounds: in 1v1 every other round). So a creature that attacked stays tapped through the opponent's attack round and can't block, and a Tap ability keeps the creature tapped until your next attack round. "At the start of your turn" effects trigger for every player, the round leader's first.
 2. **Draw**: every player draws 1 card, in round 1 too.
 3. **Action phase**: players take **actions** one at a time, starting with the round leader, then in turn order.
    - An action is: play a card from your hand (any type: creatures and Sorceries too), activate an ability or your Tavern Dweller's Power, or attack (§6.1).
@@ -163,7 +163,7 @@ There is **no automatic healing** at the end of a round (see §7.3).
 Creatures have **Power / Health**. Damage stays on the creature (it isn't removed at the end of the round), and the card shows **Health remaining** = max Health − damage.
 
 ### 7.2 Combat model 🔒 MTG-style blocking
-1. **Declare attackers**: the attack token holder (§6.1) taps untapped creatures to attack. Each attacker attacks a **player** (in multiplayer, the attacker picks which opponent for each creature).
+1. **Declare attackers**: the attack token holder (§6.1) taps untapped creatures to attack (not with Vigilance). They stay tapped until their controller's next attack round (§6 step 1), so attacking costs you those blockers. Each attacker attacks a **player** (in multiplayer, the attacker picks which opponent for each creature).
 2. **Response window** (§8).
 3. **Declare blockers**: each defending player assigns their untapped creatures as blockers. 🟡 Each blocker blocks one attacker; one attacker can be blocked by several blockers.
 4. **Response window** (§8).
@@ -273,6 +273,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | **Arrival** | Triggers when this creature enters the battlefield | 🟡 |
 | **Last Breath** | Triggers when this creature dies | 🟡 |
 | **Reach** | Can block creatures with Flying | 🟡 |
+| **Vigilance** | Attacking doesn't tap it, so it can still block in the opponent's attack round (MTG). On defensive creatures (Decision Log 2026-10-10) | 🟡 |
 | **Equip X** | (Glitterworld) Pay X: attach this Equipment to a creature you control. Only as one of your actions | 🟡 |
 
 ---
@@ -320,6 +321,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Untap only on your attack rounds** (user, bug report 2026-10-10_134627: "creatures untap when the opponent gets the attack token"). At the round start only the attack token holder untaps (MTG untap step). "Turn" still means round for everything else (start/end of turn triggers, once-each-turn, refill, draws). **Vigilance** added (attacks without tapping). Sims (500 games per pairing): the rule alone pushed the deck spread from 3.1 to 11.6 points (Goober Mob 56→80%, Auditor's Arsenal 52→29%; cheap wide aggro wins the race when attackers can't block). **Rebalance** (user-approved): Vigilance on Mossback Tortoise, Neon Executioner, Patrol Captain, Titan-Frame Guardian, Retired Champion, Vine Spider, Ironbark Grizzly and Snik; **Goober Warchief** cost 3→4, **Goober Rascal** 2/1→1/1, **Mob Rush** cost 4→5, **Pit Champion** cost 6→7. Result: spread 4.3, worst matchup 74.2% (was 71.4%), Goober 62.2%, Jungle 50.1, Zoo 46.5, Vesper 50.8, Sparkwrench 47.0, Auditor 43.5; games 10.3 rounds (was 10.5). Goober is still the top deck: watch it in playtests. |
 | 2026-10-10 | **Arena board presentation** (user; NEXT_ARENA.md Phases 2-4). Tapped units lie **sideways**, and **attacking taps** them on the table as in the rules: declared attackers lie sideways in the combat lane (staged ones stay upright until confirmed). Untapping plays at the round start, after the gems refill. **Equipment and Curses on a creature are tucked behind it** (title strips peek out above, a gold "E" pip on the host); hovering the host fans them out, clicking one uses it. **Each side scales down as it fills** (one line down to half size, then two lines, then overlap). Player Curses stay in the row with an "on Player" tag for now. |
 | 2026-10-10 | **Playtest fixes and the "may" rule** (user). **Archon Lumen**: one trigger, "At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control." (`repeatCount` removed from the engine). **Ambush Predator**: "Arrival: This may fight up to one target creature you don't control." (no longer "damaged"; the card scan still has it below filler, -5.5, so no nerf). **Sabretooth Prowler**: "may fight" too (its text said "up to one", but the engine forced the fight). **Rule:** a card lets you choose only if its text says "may" or "up to" (or offers "one, two or three targets" / "… or lose N life"); everything else is forced. "Loses up to 2 Gold" is a cap, not a choice. A test keeps text and data in line. A declined or targetless trigger now says so on the table ("Ambush Predator: no target"), and a "may" trigger asks "Use <card>? Pick a target" / "Don't use <card>". |
 | 2026-10-10 | **Trigger batching built** (user chose "one trigger with a count"). The same ability of the same source, triggered by several events before anyone gets priority (a sweeper kills 5 creatures and Scrap Collector watches), goes on the Chain as **one item that does it once per event**: totals stay exact, and per-creature effects still hit each creature. The table shows "×N". Targeted triggers stay one per event (each needs its target), and `"separate": true` on a trigger keeps them apart for future ping / storm cards (none yet; CARD_DESIGN §2.3). The engine counts triggers resolved per player each round (`UsesThisTurn["triggers:N"]`), next to spells cast. No card text changed. |

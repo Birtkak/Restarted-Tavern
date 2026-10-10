@@ -119,8 +119,8 @@ namespace RestartedTavern.Rules.Tests
         {
             var g = TestGame.AtFirstMainPhase();
             var grizzle = g.SetTavernDweller(g.Active, "grizzle_coinflick");
-            var champ = g.AddToHand(g.Active, "pit_champion"); // costs 6
-            g.SetMana(g.Active, 8);
+            var champ = g.AddToHand(g.Active, "pit_champion"); // costs 7
+            g.SetMana(g.Active, 9);
             g.Do(PlayerAction.Play(g.Active, champ.Id));
             Assert.AreEqual(2, g.State.Chain.Count, "the trigger goes on top of the spell");
             g.PassRound();

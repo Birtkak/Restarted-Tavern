@@ -173,7 +173,7 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var target = g.AddToBattlefield(me, "brawling_runt");   // Goober 2/2
-            var goober = g.AddToBattlefield(me, "goober_rascal");   // Goober 2/1
+            var goober = g.AddToBattlefield(me, "goober_rascal");   // Goober 1/1
             var human = g.AddToBattlefield(me, "hired_sellsword");
             var charge = g.AddToHand(me, "reckless_charge");
             g.SetMana(me, 1);
@@ -182,7 +182,7 @@ namespace RestartedTavern.Rules.Tests
             g.PassRound();
             Assert.AreEqual(4, g.Stats(target).Power, "+2/+0, not the Invest bonus");
             Assert.IsTrue(g.Stats(target).Has(Keyword.Trample));
-            Assert.AreEqual(3, g.Stats(goober).Power);
+            Assert.AreEqual(2, g.Stats(goober).Power);
             Assert.AreEqual(2, g.Stats(human).Power);
         }
 

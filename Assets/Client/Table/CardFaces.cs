@@ -152,6 +152,7 @@ namespace RestartedTavern.Client.Table
             if ((v.Keywords & Keyword.Trample) != 0) icons.Add("TRM");
             if ((v.Keywords & Keyword.Lifelink) != 0) icons.Add("LIF");
             if ((v.Keywords & Keyword.Reach) != 0) icons.Add("RCH");
+            if ((v.Keywords & Keyword.Vigilance) != 0) icons.Add("VIG");
             if ((v.Keywords & Keyword.CantBlock) != 0) icons.Add("NOB");
             if (v.PlusOneCounters > 0) icons.Add("+" + v.PlusOneCounters);
             float s = 26f * k, x = root.rect.width - s - 4f * k;
@@ -183,7 +184,7 @@ namespace RestartedTavern.Client.Table
         public static string CardText(CardView v)
         {
             var kw = new List<string>();
-            foreach (Keyword k in new[] { Keyword.Flying, Keyword.Trample, Keyword.Lifelink, Keyword.Reach })
+            foreach (Keyword k in new[] { Keyword.Flying, Keyword.Trample, Keyword.Lifelink, Keyword.Reach, Keyword.Vigilance })
                 if ((v.Keywords & k) != 0) kw.Add(k.ToString());
             string text = v.Text ?? "";
             if (kw.Count > 0 && !kw.All(k => text.Contains(k))) text = string.Join(", ", kw) + (text.Length > 0 ? "\n" + text : "");

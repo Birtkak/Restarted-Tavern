@@ -101,7 +101,7 @@ namespace RestartedTavern.Rules.Tests
             var sword = g.AddToBattlefield(g.Active, "hired_sellsword");
             var enemyGoober = g.AddToBattlefield(g.Other, "brawling_runt");
             Assert.AreEqual(2, g.Stats(chief).Power);
-            Assert.AreEqual(3, g.Stats(rascal).Power);
+            Assert.AreEqual(2, g.Stats(rascal).Power, "1/1 Rascal +1/+0");
             Assert.AreEqual(2, g.Stats(sword).Power, "not a Goober");
             Assert.AreEqual(2, g.Stats(enemyGoober).Power, "only your Goobers");
         }
@@ -111,7 +111,7 @@ namespace RestartedTavern.Rules.Tests
         {
             var g = TestGame.AtFirstMainPhase();
             var rush = g.AddToHand(g.Active, "mob_rush");
-            g.SetMana(g.Active, 4);
+            g.SetMana(g.Active, 5);
             g.Do(PlayerAction.Play(g.Active, rush.Id));
             g.PassRound();
 

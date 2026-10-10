@@ -150,7 +150,8 @@ namespace RestartedTavern.Client.Logic.Tests
                         var declared = events.OfType<AttackerDeclaredEvent>().Select(e => e.Attacker).ToList();
                         var staged = attack.Staged.Select(c => c.Creature).ToList();
                         CollectionAssert.IsSubsetOf(declared, staged);
-                        CollectionAssert.IsSubsetOf(staged.Where(c => session.State.FindOnBattlefield(c) != null), declared);
+                        if (!session.State.IsGameOver) // the game can end in the attack window (a response kills the defender)
+                            CollectionAssert.IsSubsetOf(staged.Where(c => session.State.FindOnBattlefield(c) != null), declared);
                         attacks++;
                     }
                     else if (block != null && session.State.Combat.Attacks.Count > 0)

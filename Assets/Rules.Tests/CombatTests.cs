@@ -37,6 +37,48 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(28, g.P(g.Other).Life);
         }
 
+        private static CardDefinition Sentry => new CardDefinition
+        {
+            Id = "test_sentry", Name = "Test Sentry", Type = CardType.Creature, Cost = 2, Power = 2, Health = 3,
+            Keywords = Keyword.Vigilance,
+        };
+
+        /// <summary>Untapping happens only at the start of your attack rounds (bug report 2026-10-10_134627).</summary>
+        [Test]
+        public void Attacker_StaysTapped_ThroughTheOpponentsAttackRound()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            var attacker = g.AddToBattlefield(me, "hired_sellsword");
+            var theirs = g.AddToBattlefield(g.Other, "tavern_bouncer");
+            ToDeclareAttackers(g);
+            g.Do(PlayerAction.Attack(me, attacker.Id, g.Other));
+            g.Do(PlayerAction.FinishAttacks(me));
+            g.FinishCombat();
+
+            g.NextRound();
+            Assert.AreNotEqual(me, g.Active, "the opponent has the attack token now");
+            Assert.IsTrue(attacker.Tapped, "it attacked: still tapped in the opponent's attack round, so it can't block");
+            Assert.IsFalse(theirs.Tapped);
+
+            g.NextRound();
+            Assert.AreEqual(me, g.Active);
+            Assert.IsFalse(attacker.Tapped, "untaps at the start of my next attack round");
+        }
+
+        [Test]
+        public void Vigilance_AttacksWithoutTapping()
+        {
+            var g = TestGame.AtFirstMainPhase(extraCards: new[] { Sentry });
+            var sentry = g.AddToBattlefield(g.Active, "test_sentry");
+            ToDeclareAttackers(g);
+            g.Do(PlayerAction.Attack(g.Active, sentry.Id, g.Other));
+            g.Do(PlayerAction.FinishAttacks(g.Active));
+            Assert.IsFalse(sentry.Tapped);
+            g.FinishCombat();
+            Assert.AreEqual(28, g.P(g.Other).Life);
+        }
+
         [Test]
         public void Damage_IsPermanent_AcrossTurns()
         {
