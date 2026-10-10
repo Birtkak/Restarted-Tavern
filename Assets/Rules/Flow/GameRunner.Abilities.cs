@@ -130,7 +130,7 @@ namespace RestartedTavern.Rules
 
         /// <summary>
         /// MTG 602.2: pay the costs and put the ability on the Chain. The generic cost (plus X) is
-        /// paid with mana first, then Gold; "Pay N Gold" only with Gold (§5.2). The player keeps
+        /// paid with Gold first, then mana; "Pay N Gold" only with Gold (§5.2). The player keeps
         /// priority afterwards (MTG 117.3c).
         /// </summary>
         private void Activate(PlayerAction a)
@@ -466,8 +466,8 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
-        /// "Counter target spell unless its controller pays N" (Hush Money). A tax is paid with mana first,
-        /// then Gold (§5.2). If they can't pay it's countered right away; otherwise they choose.
+        /// "Counter target spell unless its controller pays N" (Hush Money). A tax is paid with Gold first,
+        /// then mana (§5.2). If they can't pay it's countered right away; otherwise they choose.
         /// Must be the last effect of its spell.
         /// </summary>
         internal void AskTax(ChainItem item, int amount, PlayerId beneficiary, int rewardGold)
@@ -484,7 +484,7 @@ namespace RestartedTavern.Rules
             };
         }
 
-        /// <summary>Pay a generic amount: mana first, then Gold (§5.2). Gold paid this way is spent Gold.</summary>
+        /// <summary>Pay a generic amount: Gold first, then mana (§5.2). Gold paid this way is spent Gold.</summary>
         private void PayGeneric(PlayerId player, int amount)
         {
             var p = S.GetPlayer(player);

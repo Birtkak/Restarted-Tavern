@@ -27,7 +27,7 @@ namespace RestartedTavern.Rules.AI
             int mana = generic - (gold - ab.GoldCost);
             v -= mana * ManaUnitValue(s, p) + gold * GoldUnitValue(s, p);
 
-            // Instant-speed abilities on an opponent's turn: wait for their end step, unless it's
+            // Instant-speed abilities on someone else's action: wait for the end of the round, unless it's
             // a combat trick (after blockers) or something big like a kill.
             if (s.ActivePlayer != me && s.Step != Step.End && s.Step != Step.DeclareBlockers && v < 3) return 0;
             return v;
@@ -36,7 +36,6 @@ namespace RestartedTavern.Rules.AI
         /// <summary>What one mana is worth if it isn't spent now. Unspent mana becomes Gold, unless the cap wastes it.</summary>
         private double ManaUnitValue(GameState s, PlayerState p)
         {
-            if (MyTurnStillAhead(s, p.Id)) return DevelopmentManaValue;
             if (s.Step == Step.Main1 || s.Step == Step.BeginCombat) return 0.35;
             return p.Gold + p.Mana > GoldCap(s, p) ? 0.05 : 0.25;
         }
@@ -52,19 +51,7 @@ namespace RestartedTavern.Rules.AI
 
         private int GoldCap(GameState s, PlayerState p) => GoldRules.Cap(s, Db, p.Id);
 
-        /// <summary>One mana that would otherwise build the board on your own turn (a permanent is worth about 2 per mana).</summary>
-        private const double DevelopmentManaValue = 1.2;
-
-        /// <summary>Round pool: it's someone else's turn, and this player's own turn is still to come in this round.</summary>
-        private static bool MyTurnStillAhead(GameState s, PlayerId me)
-        {
-            if (!s.Format.ManaPerRound || s.Format.AlternatingActions || s.ActivePlayer == me) return false;
-            int n = s.Players.Count;
-            int RoundPos(PlayerId id) => (s.GetPlayer(id).Seat - s.RoundLeaderSeat + n) % n;
-            return RoundPos(me) > RoundPos(s.ActivePlayer);
-        }
-
-        /// <summary>A tapped creature can't attack, and stays tapped through the opponent's turn (no blocking).</summary>
+        /// <summary>A tapped creature can't attack, and stays tapped until the next round (no blocking).</summary>
         private double TapPenalty(GameState s, PlayerId me, CardInstance creature)
         {
             int power = Stats(s, creature).Power;

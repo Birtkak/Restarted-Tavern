@@ -144,7 +144,7 @@ namespace RestartedTavern.Client.Logic
                     Id = p.Id, Seat = p.Seat, HasLost = p.HasLost, Life = p.Life,
                     Mana = p.Mana, MaxMana = p.MaxMana, Gold = p.Gold, GoldCap = GoldRules.Cap(state, db, p.Id),
                     DeckCount = p.Deck.Count,
-                    HasAttackToken = state.Format.AttackToken && p.Id == leader,
+                    HasAttackToken = p.Id == leader,
                     IsWaitedOn = waiting == p.Id,
                 };
                 if (p.TavernDweller != null) pv.TavernDweller = View(engine, state, p.TavernDweller, false);

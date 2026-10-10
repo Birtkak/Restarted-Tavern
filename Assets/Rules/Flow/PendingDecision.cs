@@ -22,7 +22,7 @@ namespace RestartedTavern.Rules
         /// <summary>A resolving effect makes a player discard (Settle the Tab: "then discard a card"). Answered with Discard.</summary>
         DiscardCards,
         /// <summary>
-        /// "Counter target spell unless its controller pays N" (Hush Money): 1 = pay (mana first, then Gold,
+        /// "Counter target spell unless its controller pays N" (Hush Money): 1 = pay (Gold first, then mana,
         /// §5.2), 0 = don't. Answered with ChooseOption. Only offered when they can pay.
         /// </summary>
         PayTax,

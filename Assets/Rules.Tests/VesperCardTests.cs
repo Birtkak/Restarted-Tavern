@@ -81,7 +81,7 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             g.AddToBattlefield(g.Active, "hired_sellsword");
             g.AddToBattlefield(g.Other, "goober_rascal"); // can't block, so attacking is safe
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             Assert.AreEqual(ActionKind.DeclareAttacker, new GreedyBot(g.Engine, BotStyle.Greedy()).Choose(g.State, g.Active).Kind);
             Assert.AreEqual(ActionKind.FinishAttacks, new GreedyBot(g.Engine, BotStyle.Control()).Choose(g.State, g.Active).Kind,
                 "Control keeps its only creature back against an enemy creature");

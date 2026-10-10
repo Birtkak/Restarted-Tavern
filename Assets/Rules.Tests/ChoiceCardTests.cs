@@ -45,8 +45,9 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.ChooseOption(me, 1));
             Assert.AreEqual(28, g.P(me).Life);
             Assert.AreEqual(1, g.P(me).Gold);
-            Assert.AreEqual(me, g.State.PriorityPlayer);
+            Assert.AreEqual(g.Other, g.State.PriorityPlayer, "my action is over");
 
+            g.HandTheActionBack();
             CastAndResolveArrival(g, me, "ledger_imp");
             g.Do(PlayerAction.ChooseOption(me, 0));
             Assert.AreEqual(28, g.P(me).Life, "said no: nothing happens");
@@ -82,7 +83,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.ChooseTarget(g.Other, Target.ForObject(small.Id)));
             Assert.IsNull(g.State.FindOnBattlefield(small.Id));
             Assert.IsNotNull(g.State.FindOnBattlefield(big.Id));
-            Assert.AreEqual(me, g.State.PriorityPlayer);
+            Assert.AreEqual(g.Other, g.State.PriorityPlayer, "my action is over");
         }
 
         [Test]
@@ -103,17 +104,15 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void AbyssalHeadliner_SacrificeOrLoseLife()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             g.AddToBattlefield(me, "abyssal_headliner");
-            g.PassToStep(Step.Main1, g.Other);
-            g.PassUntil(s => s.ActivePlayer == me && s.Chain.Count > 0);
+            g.ToNextRoundStartTrigger();
             g.PassRound();
             Assert.AreEqual(27, g.P(me).Life, "no other creature: lose 3 life");
 
             var fodder = g.AddToBattlefield(me, "goober_rascal");
-            g.PassToStep(Step.Main1, g.Other);
-            g.PassUntil(s => s.ActivePlayer == me && s.Chain.Count > 0);
+            g.ToNextRoundStartTrigger();
             g.PassRound();
             Assert.AreEqual(DecisionKind.ChooseObject, g.State.Pending?.Kind);
             g.Do(PlayerAction.ChooseTarget(me, Target.ForObject(fodder.Id)));
@@ -127,7 +126,7 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             g.AddToBattlefield(me, "the_dealer");
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             g.PassUntil(s => s.ActivePlayer == me && s.Chain.Count > 0);
             g.P(g.Other).Gold = 3; // set after their turn: they bank mana in their cleanup
             g.P(me).Gold = 0;
@@ -139,7 +138,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(2, g.P(me).Gold);
 
             // With less than 2 Gold they can't give (decided 2026-10-09): the Dealer's controller draws.
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             g.PassUntil(s => s.ActivePlayer == me && s.Chain.Count > 0);
             g.P(g.Other).Gold = 1;
             int hand = g.P(me).Hand.Count;
@@ -166,13 +165,13 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.ChooseTarget(me, Target.ForObject(theirs.Id)));
             Assert.IsNotNull(g.OnBattlefield(me, "hog_rider"));
             Assert.IsNotNull(g.OnBattlefield(me, "pit_champion"), "under your control");
-            Assert.AreEqual(me, g.State.PriorityPlayer);
+            Assert.AreEqual(g.Other, g.State.PriorityPlayer, "my action is over");
         }
 
         [Test]
         public void EverythingHasAPrice_StealsTheMostExpensive_OwnerPicksOnTies()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var other = g.Other;
             var a = g.AddToBattlefield(other, "pit_fighter");  // 4
@@ -186,14 +185,14 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.ChooseTarget(other, Target.ForObject(b.Id)));
             Assert.AreEqual(me, b.Controller);
             Assert.AreEqual(other, a.Controller);
-            Assert.AreEqual(5, g.P(other).Gold);
+            Assert.AreEqual(3, g.P(other).Gold, "4 Gold, capped at 3");
             Assert.AreEqual(hand + 2, g.P(other).Hand.Count);
         }
 
         [Test]
         public void MidnightRitual_InvestCanBringBackTheSacrificedCreature()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var victim = g.AddToBattlefield(me, "hog_rider"); // cost 3
             var ritual = g.AddToHand(me, "midnight_ritual");

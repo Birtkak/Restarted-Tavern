@@ -26,7 +26,7 @@ namespace RestartedTavern.Rules
 
     /// <summary>
     /// "Counter target spell unless its controller pays N. If they pay, you gain G Gold." (Hush Money). The
-    /// tax is paid with mana first, then Gold. Must be the last effect (it waits for the controller's choice).
+    /// tax is paid with Gold first, then mana. Must be the last effect (it waits for the controller's choice).
     /// </summary>
     public sealed class CounterUnlessPaysEffect : Effect
     {

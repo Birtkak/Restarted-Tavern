@@ -29,12 +29,10 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(4, g.Stats(sword).MaxHealth);
             Assert.IsEmpty(g.Activations(g.Active, shiv), "already on the only creature: re-equipping there isn't offered");
 
-            var me = g.Active;
-            g.AddToBattlefield(me, "tavern_bouncer");
-            g.PassToStep(Step.Main1, g.Other);
-            g.Pass();
-            g.P(me).Gold = 5;
-            Assert.IsEmpty(g.Activations(me, shiv), "Equip is sorcery speed");
+            g.AddToBattlefield(g.Active, "tavern_bouncer");
+            var shock = g.AddToHand(g.Active, "static_shock");
+            g.Do(g.Legal(g.Active).First(a => a.Card == shock.Id));
+            Assert.IsEmpty(g.Activations(g.Active, shiv), "Equip is sorcery speed: not while the Chain has something on it");
         }
 
         [Test]
@@ -88,7 +86,7 @@ namespace RestartedTavern.Rules.Tests
             g.SetMana(g.Active, 2);
             Equip(g, blade, sword);
 
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             g.Do(PlayerAction.Attack(g.Active, sword.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
             Assert.AreEqual(DecisionKind.ChooseTriggerTarget, g.State.Pending.Kind, "the granted attack trigger");
@@ -211,7 +209,7 @@ namespace RestartedTavern.Rules.Tests
             var sword = g.AddToBattlefield(g.Active, "hired_sellsword");
             g.SetMana(g.Active, 1);
             Equip(g, scope, sword);
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             g.Do(PlayerAction.Attack(g.Active, sword.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
             g.PassUntil(s => s.Step == Step.CombatDamage);

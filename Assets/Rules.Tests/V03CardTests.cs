@@ -124,7 +124,7 @@ namespace RestartedTavern.Rules.Tests
             g.AddToBattlefield(me, "loan_shark");
             g.P(me).Gold = 3;
             g.SetMana(me, 0);
-            g.PassUntil(s => s.ActivePlayer != me);
+            g.NextRound();
             Assert.AreEqual(27, g.P(opponent).Life);
         }
 
@@ -144,8 +144,8 @@ namespace RestartedTavern.Rules.Tests
             Resolve(g);
             Assert.AreEqual(29, g.P(g.Other).Life);
             Assert.AreEqual(30, g.P(me).Life, "life gain is capped at starting life");
-            g.PassUntil(s => s.ActivePlayer != me && s.Step == Step.Main1);
-            Assert.AreEqual(28, g.P(opponent).Life, "lost 1 at the start of their turn");
+            g.NextRound();
+            Assert.AreEqual(28, g.P(opponent).Life, "lost 1 at the start of their turn (every round)");
         }
 
         [Test]
@@ -197,7 +197,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void OpenCasket_ToHand_OrBattlefieldWhenInvested()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var dead = g.AddToBattlefield(me, "spark_drone");
             g.P(me).Battlefield.Remove(dead);
@@ -233,16 +233,15 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void ClosingBell_OnlyWhenEveryOpponentIsLow()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
+            var opponent = g.Other;
             g.AddToBattlefield(me, "closing_bell");
-            g.PassUntil(s => s.ActivePlayer != me);
-            g.PassUntil(s => s.ActivePlayer == me && s.Step == Step.Main1);
-            Assert.AreEqual(30, g.P(g.Other).Life, "30 life: no drain");
-            g.P(g.Other).Life = 10;
-            g.PassUntil(s => s.ActivePlayer != me);
-            g.PassUntil(s => s.ActivePlayer == me && s.Step == Step.Main1);
-            Assert.AreEqual(8, g.P(g.Other).Life);
+            g.NextRound();
+            Assert.AreEqual(30, g.P(opponent).Life, "30 life: no drain");
+            g.P(opponent).Life = 10;
+            g.NextRound();
+            Assert.AreEqual(8, g.P(opponent).Life);
         }
 
         [Test]

@@ -44,7 +44,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(4, sword.Damage);
             Assert.AreEqual(1, g.Stats(sword).RemainingHealth, "2/5 with 4 damage");
 
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             Assert.IsNotNull(g.State.FindOnBattlefield(sword.Id), "survives the buff ending");
             Assert.AreEqual(2, sword.Damage, "damage capped at max Health − 1");
             Assert.AreEqual(1, g.Stats(sword).RemainingHealth);

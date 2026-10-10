@@ -117,7 +117,7 @@ namespace RestartedTavern.Rules.Tests
             {
                 PlayRandomGame(seed, out int actions, out var final);
                 total += actions;
-                turns += final.TurnNumber;
+                turns += final.RoundNumber;
                 if (final.Players.Any(p => p.HasLost && p.Life <= 0)) byLife++;
                 else byDeck++;
             }

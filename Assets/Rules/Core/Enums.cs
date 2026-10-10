@@ -50,8 +50,9 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
-    /// GAME_DESIGN §6, split into MTG-style steps. Start covers untap + upkeep,
-    /// Cleanup covers discard-to-hand-size and the mana → Gold conversion.
+    /// GAME_DESIGN §6, split into MTG-style steps. Start covers refill + untap + upkeep, Main1 is the action
+    /// phase, the combat steps run when the attack token holder attacks, and Cleanup covers discard-to-hand-size
+    /// and the mana → Gold conversion.
     /// </summary>
     public enum Step
     {
@@ -63,7 +64,6 @@ namespace RestartedTavern.Rules
         DeclareAttackers,
         DeclareBlockers,
         CombatDamage,
-        Main2,
         End,
         Cleanup,
         GameOver,

@@ -87,7 +87,9 @@ namespace RestartedTavern.Rules.Tests
             var attacker = g.AddToBattlefield(me, "hired_sellsword");
             var shot = g.AddToHand(g.Other, "called_shot");
             g.P(g.Other).Gold = 2;
-            g.Pass();
+            g.Do(PlayerAction.GoToCombat(me));
+            g.Pass(); // beginning of combat
+            Assert.AreEqual(g.Other, g.State.PriorityPlayer);
             Assert.IsFalse(g.Legal(g.Other).Any(a => a.Card == shot.Id), "no creature is in combat");
 
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
@@ -144,16 +146,14 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void ChaosEngine_DamagesEachOtherCreature_AtTheStartOfYourTurn()
+        public void ChaosEngine_DamagesEachOtherCreature_AtTheStartOfEachRound()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var engine = g.AddToBattlefield(me, "chaos_engine");
             var mine = g.AddToBattlefield(me, "tavern_bouncer");
             var theirs = g.AddToBattlefield(g.Other, "tavern_bouncer");
-            g.PassToStep(Step.Main1, g.Other);
-            Assert.AreEqual(0, theirs.Damage, "only at the start of its controller's turn");
-            g.PassToStep(Step.Main1, me);
+            g.NextRound();
             Assert.AreEqual(0, engine.Damage);
             Assert.AreEqual(1, mine.Damage);
             Assert.AreEqual(1, theirs.Damage);
@@ -174,7 +174,7 @@ namespace RestartedTavern.Rules.Tests
             g.PassRound();
             Assert.AreEqual(2, bouncer.Damage, "can't be dealt more than 2 damage each turn");
 
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             g.P(me).Gold = 1;
             var snot = g.AddToHand(me, "spark_snot");
             g.Pass();
@@ -194,7 +194,7 @@ namespace RestartedTavern.Rules.Tests
             var blocker = g.AddToBattlefield(g.Other, "tavern_bouncer");     // 2/5, dies to 4 + 1 earlier
             blocker.Damage = 1;
 
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             g.Do(PlayerAction.Attack(me, champ.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(me));
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareBlockers);
@@ -264,7 +264,7 @@ namespace RestartedTavern.Rules.Tests
             Cast(g, me, "curse_of_rot", Target.ForPlayer(other));
             g.PassRound();
 
-            g.PassToStep(Step.Main1, other);
+            g.NextRound();
             Assert.AreEqual(1, theirs.Damage);
             Assert.AreEqual(1, mine.Damage, "only that player's creatures");
 

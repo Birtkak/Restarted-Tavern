@@ -202,21 +202,20 @@ namespace RestartedTavern.Rules
         public static string FactionName(string faction) =>
             string.Join(" ", (faction ?? "").Split('_').Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w.Substring(1)));
 
-        /// <summary>Step names for players: "Main phase 1", "Declare attackers".</summary>
+        /// <summary>Step names for players: "Action phase", "Declare attackers".</summary>
         public static string StepName(Step step)
         {
             switch (step)
             {
                 case Step.Mulligan: return "Mulligan";
-                case Step.Start: return "Start of turn";
+                case Step.Start: return "Start of round";
                 case Step.Draw: return "Draw";
-                case Step.Main1: return "Main phase 1";
+                case Step.Main1: return "Action phase";
                 case Step.BeginCombat: return "Beginning of combat";
                 case Step.DeclareAttackers: return "Declare attackers";
                 case Step.DeclareBlockers: return "Declare blockers";
                 case Step.CombatDamage: return "Combat damage";
-                case Step.Main2: return "Main phase 2";
-                case Step.End: return "End step";
+                case Step.End: return "End of round";
                 case Step.Cleanup: return "Cleanup";
                 case Step.GameOver: return "Game over";
                 default: return step.ToString();
@@ -360,7 +359,7 @@ namespace RestartedTavern.Rules
         {
             switch (e)
             {
-                case TurnStartedEvent t: return "=== Turn " + t.Turn + ": " + t.Player + " ===";
+                case RoundStartedEvent r: return "=== Round " + r.Round + ": " + r.Leader + " leads ===";
                 case CardDrawnEvent d:
                     return viewer == null || viewer == d.Player ? d.Player + " draws " + Name(d.DefinitionId) : d.Player + " draws a card";
                 case SpellCastEvent s:

@@ -25,7 +25,7 @@ namespace RestartedTavern.Rules.Tests
 
         private static void Attack(TestGame g, params CardInstance[] attackers)
         {
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             foreach (var a in attackers) g.Do(PlayerAction.Attack(g.Active, a.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareBlockers);
@@ -47,9 +47,9 @@ namespace RestartedTavern.Rules.Tests
             Block(g, spider, mammoth);
             Block(g, runt, mammoth);
             g.Do(PlayerAction.FinishBlocks(g.Other));
-            g.PassUntil(s => s.Step == Step.Main2 || s.Pending?.Kind == DecisionKind.AssignCombatDamage);
+            g.PassUntil(s => s.Combat == null || s.Pending?.Kind == DecisionKind.AssignCombatDamage);
 
-            Assert.AreEqual(Step.Main2, g.State.Step, "5 damage kills both (3 + 2): nothing to choose");
+            Assert.IsNull(g.State.Combat, "5 damage kills both (3 + 2): nothing to choose");
             Assert.IsNull(g.State.FindOnBattlefield(spider.Id));
             Assert.IsNull(g.State.FindOnBattlefield(runt.Id));
             Assert.AreEqual(4, mammoth.Damage);
@@ -75,7 +75,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual("Damage from Hog-Rider: 0 to Hired Sellsword (3 Health left), 3 to Vine Spider (3 Health left)",
                 new GameText(g.Engine.Cards).Describe(g.State, PlayerAction.AssignDamage(g.Active, new[] { 0, 3 })));
             g.Do(PlayerAction.AssignDamage(g.Active, new[] { 0, 3 }));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
 
             Assert.AreEqual(0, sellsword.Damage);
             Assert.IsNull(g.State.FindOnBattlefield(spider.Id), "the second blocker got all 3");
@@ -99,7 +99,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(champion.Id, g.State.Pending.Card);
             Assert.AreEqual(5, g.State.Pending.Count);
             g.Do(PlayerAction.AssignDamage(g.Other, new[] { 3, 2 }));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
 
             Assert.IsNull(g.State.FindOnBattlefield(first.Id));
             Assert.AreEqual(2, second.Damage);

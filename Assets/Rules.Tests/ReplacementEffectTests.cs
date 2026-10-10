@@ -79,7 +79,7 @@ namespace RestartedTavern.Rules.Tests
             var other = g.AddToBattlefield(me, "hired_sellsword");
             Cast(g, "test_net", other);
             Assert.AreEqual(1, g.State.Replacements.Count);
-            g.PassUntil(s => s.TurnNumber == 2);
+            g.PassUntil(s => s.RoundNumber == 2);
             Assert.AreEqual(0, g.State.Replacements.Count, "until end of turn");
         }
 

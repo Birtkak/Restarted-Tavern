@@ -19,7 +19,7 @@ namespace RestartedTavern.Rules.Tests
         };
 
         private static void ToDeclareAttackers(TestGame g) =>
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
 
         private static void ToDeclareBlockers(TestGame g) =>
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareBlockers);
@@ -33,7 +33,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Attack(g.Active, attacker.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
             Assert.IsTrue(attacker.Tapped);
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
             Assert.AreEqual(28, g.P(g.Other).Life);
         }
 
@@ -49,13 +49,13 @@ namespace RestartedTavern.Rules.Tests
             ToDeclareBlockers(g);
             g.Do(PlayerAction.Block(g.Other, blocker.Id, attacker.Id));
             g.Do(PlayerAction.FinishBlocks(g.Other));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
             Assert.AreEqual(2, attacker.Damage);
             Assert.AreEqual(2, blocker.Damage);
 
             var first = g.Active;
-            g.PassToStep(Step.Main1, g.Other);
-            g.PassToStep(Step.Main1, first);
+            g.NextRound();
+            g.NextRound();
             Assert.AreEqual(2, attacker.Damage, "no healing at end of turn (§7.3)");
             Assert.AreEqual(1, g.Stats(attacker).RemainingHealth);
             Assert.AreEqual(3, g.Stats(blocker).RemainingHealth);
@@ -73,7 +73,7 @@ namespace RestartedTavern.Rules.Tests
             ToDeclareBlockers(g);
             g.Do(PlayerAction.Block(g.Other, wounded.Id, hog.Id));
             g.Do(PlayerAction.FinishBlocks(g.Other));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
 
             Assert.AreEqual(28, g.P(g.Other).Life, "1 to the blocker, 2 tramples over");
             Assert.IsNull(g.OnBattlefield(g.Other, "hired_sellsword"), "blocker died");
@@ -120,7 +120,7 @@ namespace RestartedTavern.Rules.Tests
             ToDeclareAttackers(g);
             g.Do(PlayerAction.Attack(g.Active, attacker.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
             Assert.AreEqual(28, g.P(g.Other).Life, "rascal couldn't block, so no blocker step for it");
         }
 
@@ -133,7 +133,7 @@ namespace RestartedTavern.Rules.Tests
             ToDeclareAttackers(g);
             g.Do(PlayerAction.Attack(g.Active, leech.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
             Assert.AreEqual(27, g.P(g.Other).Life);
             Assert.AreEqual(30, g.P(g.Active).Life, "healing can't go above starting life");
         }
@@ -156,7 +156,7 @@ namespace RestartedTavern.Rules.Tests
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.AssignCombatDamage);
             Assert.AreEqual(g.Active, g.State.Pending.Player, "4 damage can't kill both (6 Health): the attacker divides it");
             g.Do(PlayerAction.AssignDamage(g.Active, new[] { 3, 1 }));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
 
             Assert.IsNull(g.State.FindOnBattlefield(b.Id), "first blocker got lethal (3)");
             Assert.AreEqual(1, g.State.FindOnBattlefield(c.Id).Damage, "second blocker got the remaining 1");

@@ -12,7 +12,7 @@ namespace RestartedTavern.Rules.Tests
     {
         private static void Attack(TestGame g, params CardInstance[] attackers)
         {
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             foreach (var a in attackers) g.Do(PlayerAction.Attack(g.Active, a.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
         }
@@ -24,10 +24,10 @@ namespace RestartedTavern.Rules.Tests
             var mage = g.AddToHand(g.Other, "retainer_mage");
             g.P(g.Other).Gold = 3;
             g.Pass();
-            Assert.IsTrue(g.Legal(g.Other).Any(a => a.Card == mage.Id), "cast on the opponent's turn, paid with Gold");
+            Assert.IsTrue(g.Legal(g.Other).Any(a => a.Card == mage.Id), "Gold can pay for it");
 
             var sellsword = g.AddToHand(g.Other, "hired_sellsword");
-            Assert.IsFalse(g.Legal(g.Other).Any(a => a.Card == sellsword.Id), "other creatures still need a main phase and mana");
+            Assert.IsFalse(g.Legal(g.Other).Any(a => a.Card == sellsword.Id), "other creatures still need mana");
             g.Do(g.Legal(g.Other).First(a => a.Card == mage.Id));
             Assert.AreEqual(0, g.P(g.Other).Gold);
         }
@@ -62,7 +62,7 @@ namespace RestartedTavern.Rules.Tests
             g.AddToBattlefield(me, "shady_moneylender");
             g.Do(g.Legal(me).First(a => a.Card == rider.Id));
             Assert.AreEqual(0, g.P(me).Mana);
-            Assert.AreEqual(0, g.P(me).Gold, "mana first, then Gold");
+            Assert.AreEqual(0, g.P(me).Gold, "2 Gold first, then 1 mana");
             Assert.AreEqual(2, g.State.Chain.Count, "the Moneylender triggers");
             g.PassRound();
             Assert.AreEqual(1, g.P(g.Other).Gold);
@@ -71,15 +71,15 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void DiceGame_HighestBidDrawsTwo_TiesDrawOne()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var other = g.Other;
             var dice = g.AddToHand(me, "dice_game");
             g.SetMana(me, 2);
-            g.P(me).Gold = 3;
-            g.P(other).Gold = 4;
             int myHand = g.P(me).Hand.Count, theirHand = g.P(other).Hand.Count;
             g.Do(PlayerAction.Play(me, dice.Id));
+            g.P(me).Gold = 3;   // set after casting: Gold first would have paid for the spell
+            g.P(other).Gold = 3;
             g.PassRound();
 
             Assert.AreEqual(DecisionKind.PayAnyGold, g.State.Pending?.Kind);
@@ -92,7 +92,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(theirHand + 2, g.P(other).Hand.Count, "paid the most");
             Assert.AreEqual(myHand - 1, g.P(me).Hand.Count);
             Assert.AreEqual(1, g.P(me).Gold);
-            Assert.AreEqual(1, g.P(other).Gold);
+            Assert.AreEqual(0, g.P(other).Gold);
 
             // A tie: both draw one. A player with no Gold isn't asked (pays 0).
             var dice2 = g.AddToHand(me, "dice_game");
@@ -170,7 +170,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void RecklessCharge_InvestPumpsYourOtherGoobers()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var target = g.AddToBattlefield(me, "brawling_runt");   // Goober 2/2
             var goober = g.AddToBattlefield(me, "goober_rascal");   // Goober 2/1
@@ -189,18 +189,18 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GrandHeist_TakesAllTheirGold_InvestMakesGoobersForWhatYouGained()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var heist = g.AddToHand(me, "grand_heist");
             g.SetMana(me, 3);
             g.P(me).Gold = 3;
             g.P(g.Other).Gold = 5;
             g.Do(PlayerAction.Play(me, heist.Id, System.Array.Empty<Target>(), invest: true));
-            Assert.AreEqual(1, g.P(me).Gold, "Invest 2 paid with Gold");
+            Assert.AreEqual(0, g.P(me).Gold, "Invest 2 is Gold only; the cost takes the last Gold first, then mana");
             g.PassRound();
             Assert.AreEqual(0, g.P(g.Other).Gold);
-            Assert.AreEqual(5, g.P(me).Gold, "your cap limits the take: gained 4");
-            Assert.AreEqual(4, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
+            Assert.AreEqual(3, g.P(me).Gold, "your cap limits the take: gained 3");
+            Assert.AreEqual(3, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
         }
 
         [Test]

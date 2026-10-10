@@ -39,7 +39,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(me, g.State.Pending.Player);
             CollectionAssert.AreEquivalent(new[] { 0, 1 }, g.Legal(me).Select(a => a.Option));
             g.Do(PlayerAction.ChooseOption(me, 1));
-            Assert.AreEqual(0, g.P(me).Mana, "3 mana paid (mana first)");
+            Assert.AreEqual(0, g.P(me).Mana, "3 paid: no Gold, so all mana");
             Assert.AreEqual(2, g.P(g.Other).Gold, "0 left after casting, +2 because they paid");
             g.PassRound();
             Assert.IsNotNull(g.OnBattlefield(me, "hog_rider"));
@@ -73,6 +73,7 @@ namespace RestartedTavern.Rules.Tests
             g.Pass();
             Assert.IsFalse(g.Legal(g.Other).Any(a => a.Card == coin.Id), "Pit Champion costs 6");
             g.Pass(); // Pit Champion resolves
+            g.HandTheActionBack();
 
             var hog = g.AddToHand(me, "hog_rider");
             g.Do(PlayerAction.Play(me, hog.Id));
@@ -193,7 +194,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.IsFalse(victim.Tapped, "untapped");
             Assert.AreEqual(2, g.P(other).Gold);
 
-            g.PassUntil(s => s.ActivePlayer == other);
+            g.NextRound();
             Assert.AreEqual(other, victim.Controller, "control ends in the cleanup step");
             Assert.IsTrue(g.P(other).Battlefield.Contains(victim));
         }
@@ -201,7 +202,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void HostileTakeover_IsPermanent_AndPaysThePreviousController()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var other = g.Other;
             var victim = g.AddToBattlefield(other, "pit_champion"); // cost 6
@@ -211,7 +212,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Play(me, takeover.Id, Target.ForObject(victim.Id)));
             g.PassRound();
             Assert.AreEqual(me, victim.Controller);
-            Assert.AreEqual(5, g.P(other).Gold, "6 Gold, capped at 5");
+            Assert.AreEqual(3, g.P(other).Gold, "6 Gold, capped at 3");
             Assert.AreEqual(hand + 1, g.P(other).Hand.Count);
 
             g.PassUntil(s => s.ActivePlayer == other && s.Step == Step.Main1 && s.PriorityPlayer.HasValue);

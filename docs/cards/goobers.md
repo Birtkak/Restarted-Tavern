@@ -1,7 +1,7 @@
 # Goobers — Card List
 
 **Identity:** goblins (MTG red + LoR Noxus). Loud, reckless, many of them.
-**Faction pie:** go wide ★ (many small creatures), burn as removal, rummage instead of card draw, team-wide temporary buffs, steal Gold. Keywords: Trample (Haste was removed from the game on 2026-10-10). No healing, no graveyard play.
+**Faction pie:** go wide ★ (many small creatures), burn as removal, rummage instead of card draw, team-wide temporary buffs, steal Gold. Keywords: Trample. No healing, no graveyard play.
 **Role with permanent damage:** Goobers **create** damage and don't mind losing their small creatures.
 
 **Token:** *Goober*, a 1/1 Creature: Goober.
@@ -20,7 +20,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 4 | **Fuse Goober** | 2 | Creature: Goober | C | 1/2 | Last Breath: Deal 2 damage to any target. | Trades up even when it dies | ✅ |
 | 5 | **Gob Gang** | 2 | Sorcery | C | — | Create two 1/1 Goobers. | Goes wide | ✅ |
 | 6 | **Goober Shaman** | 2 | Creature: Goober | U | 2/2 | Arrival: You may discard a card. If you do, draw a card. | Rummage: Goobers' version of card selection | ✅ |
-| 7 | **Brawling Runt** | 2 | Creature: Goober | C | 2/2 | — | A plain, efficient aggro body (Haste removed 2026-10-10) | ✅ |
+| 7 | **Brawling Runt** | 2 | Creature: Goober | C | 2/2 | — | A plain, efficient aggro body | ✅ |
 | 8 | **Goober Warchief** | 3 | Creature: Goober | U | 2/3 | Your other Goobers get +1/+0. | The "lord": makes tokens a real threat | ✅ |
 | 9 | **Firecracker Volley** | 3 | Sorcery | U | — | Deal 3 damage divided as you choose among any number of creatures and/or players. | Flexible burn: kill small creatures, or spread lasting damage | ✅ |
 | 10 | **Hog-Rider** | 3 | Creature: Goober | C | 3/3 | Trample. | A goblin on a war pig | ✅ |
@@ -33,7 +33,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 17 | **Scrapheap Inferno** | 5 | Sorcery | R | — | Deal X damage to any target, where X is 2 plus the number of Goobers you control. | Burn that scales with your board. Can finish the opponent off | ✅ |
 | 18 | **Pit Champion** | 6 | Creature: Goober | R | 6/5 | Trample. | Big, immediate damage | ✅ |
 | 19 | **Grakka, Queen of the Rabble** | 7 | Creature: Goober | L | 5/6 | Your Goobers get +1/+1. Whenever you attack, create a 1/1 Goober that's tapped and attacking. | The face of the faction. Over budget on purpose (Legendary top-end exception) | ✅ |
-| 20 | **Snik, the Goober Doubler** | 4 | Creature: Goober | L | 2/4 | X, Tap: Choose up to X other Goobers you control. For each one, create a token copy of it. | Requested by the user. X can be paid with mana **or Gold**, since it's an activated ability, so stolen Gold fuels it. Copying a Warchief stacks the lord bonus. A copy of a Legendary (Grakka) dies to the Legendary rule. Tap ability: can't be used the turn Snik arrives | ✅ |
+| 20 | **Snik, the Goober Doubler** | 4 | Creature: Goober | L | 2/4 | X, Tap: Choose up to X other Goobers you control. For each one, create a token copy of it. | Requested by the user. X can be paid with mana **or Gold**, since it's an activated ability, so stolen Gold fuels it. Copying a Warchief stacks the lord bonus. A copy of a Legendary (Grakka) dies to the Legendary rule. No summoning sickness: Snik can tap the round it arrives | ✅ |
 
 **Progress:** 20 / 20 · C 9 · U 6 · R 3 · L 2 (the second Legendary, Snik, replaced the rare Call the Horde)
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 4 · 5: 3 · 6: 1 · 7+: 1 · Creatures: 14 · Spells: 6

@@ -5,13 +5,13 @@ namespace RestartedTavern.Rules
 {
     /// <summary>
     /// "[Cost]: [Effect]." (MTG 602). Activating puts the ability on the Chain (GAME_DESIGN §8).
-    /// Payment (§5.2): the generic part (<see cref="Cost"/> and X) is paid with mana first, then
-    /// Gold; <see cref="GoldCost"/> ("Pay N Gold") is paid only with Gold, like Invest.
+    /// Payment (§5.2): the generic part (<see cref="Cost"/> and X) is paid with Gold first, then
+    /// mana; <see cref="GoldCost"/> ("Pay N Gold") is paid only with Gold, like Invest.
     /// Equip and Tavern Dweller Powers are activated abilities with extra rules (see the flags).
     /// </summary>
     public sealed class ActivatedAbility
     {
-        /// <summary>Generic cost: mana first, then Gold (§5.2).</summary>
+        /// <summary>Generic cost: Gold first, then mana (§5.2).</summary>
         public int Cost { get; set; }
         /// <summary>"X, ...": X is added to the generic cost, chosen on activation (one action per payable X).</summary>
         public bool HasX { get; set; }
@@ -24,7 +24,7 @@ namespace RestartedTavern.Rules
         /// <summary>"Pay N life: ..."</summary>
         public int LifeCost { get; set; }
 
-        /// <summary>"Activate only as a sorcery": your main phase, empty Chain.</summary>
+        /// <summary>"Activate only as a sorcery": your own action, empty Chain.</summary>
         public bool SorcerySpeed { get; set; }
         /// <summary>"Activate only if you have N or more Gold" (Auditor Prime), checked before paying. 0 = no condition.</summary>
         public int ActivateOnlyWithGold { get; set; }

@@ -118,7 +118,7 @@ namespace RestartedTavern.Rules
     {
         public static void Validate(CardDatabase db, FormatConfig format, List<string> deck, string tavernDwellerId = null)
         {
-            if (tavernDwellerId == null && format.TavernDwellersEnabled)
+            if (tavernDwellerId == null)
                 throw new ArgumentException("Every deck needs a Tavern Dweller (GAME_DESIGN §9.1).");
             CardDefinition tavernDweller = null;
             if (tavernDwellerId != null)

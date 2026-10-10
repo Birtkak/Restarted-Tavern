@@ -119,7 +119,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(3, tokens.Count);
             Assert.IsTrue(tokens.All(t => g.Stats(t).Power == 2));
 
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             Assert.IsTrue(tokens.All(t => g.Stats(t).Power == 1));
         }
 
@@ -144,7 +144,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void JungleRemedy_Invest_PaidWithGoldOnly()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var beast = g.AddToBattlefield(g.Active, "ironbark_grizzly", damage: 4); // 4/5, 1 left
             var remedy = g.AddToHand(g.Active, "jungle_remedy");
             g.SetMana(g.Active, 5);

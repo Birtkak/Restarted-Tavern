@@ -10,7 +10,7 @@ using Debug = UnityEngine.Debug;
 namespace RestartedTavern.Client.Editor
 {
     /// <summary>
-    /// Runs the balance experiments and writes docs/playtest/SIMULATION_REPORT.md. Headless:
+    /// Runs the simulation report (Experiments) and writes docs/playtest/SIMULATION_REPORT.md. Headless:
     /// Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.SimulationMenu.RunReport [-simGames N] [-simSections words]
     /// -simSections keeps only sections whose title contains one of the comma-separated words (e.g. "round,styles").
     /// </summary>
@@ -35,7 +35,7 @@ namespace RestartedTavern.Client.Editor
             if (only != null)
                 sections = sections.FindAll(s => Array.Exists(only, w => s.Title.ToLowerInvariant().Contains(w.Trim())));
             Experiments.Run(sections, CardPool.CreateDatabase(),
-                r => Debug.Log($"[sim] {r.Config.Name}: A {r.WinRateA:P1}, first {r.FirstPlayerWinRate:P1}, {r.AvgTurns:0.0} turns ({watch.Elapsed.TotalSeconds:0}s)"));
+                r => Debug.Log($"[sim] {r.Config.Name}: A {r.WinRateA:P1}, first {r.FirstPlayerWinRate:P1}, {r.AvgRounds:0.0} rounds ({watch.Elapsed.TotalSeconds:0}s)"));
 
             var path = Path.Combine(Path.GetDirectoryName(Application.dataPath), "docs", "playtest", "SIMULATION_REPORT.md");
             Directory.CreateDirectory(Path.GetDirectoryName(path));

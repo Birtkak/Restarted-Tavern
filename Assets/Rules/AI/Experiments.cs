@@ -8,8 +8,8 @@ using RestartedTavern.Rules.Cards;
 namespace RestartedTavern.Rules.AI
 {
     /// <summary>
-    /// The roadmap step 3 balance questions as bot-vs-bot experiments: game length (and how
-    /// to even it out), whether damage matters, going second, and the Gold cap.
+    /// The simulation report (playtest/SIMULATION_REPORT.md): every prototype deck against every deck under the
+    /// Standard rules, with Greedy and Control bots.
     /// </summary>
     public static class Experiments
     {
@@ -44,13 +44,11 @@ namespace RestartedTavern.Rules.AI
             var decks = PrototypeDecks();
             var sections = new List<Section>();
 
-            MatchConfig M(string name, Deck a, Deck b, Action<FormatConfig> tweak = null, BotStyle styleA = null, BotStyle styleB = null)
+            MatchConfig M(string name, Deck a, Deck b, BotStyle styleA = null, BotStyle styleB = null)
             {
-                var f = FormatConfig.Standard();
-                tweak?.Invoke(f);
                 return new MatchConfig
                 {
-                    Name = name, Format = f, Games = games,
+                    Name = name, Format = FormatConfig.Standard(), Games = games,
                     DeckAName = a.Name, DeckA = a.Cards, TavernDwellerA = a.TavernDweller, StyleA = styleA ?? BotStyle.Greedy(),
                     DeckBName = b.Name, DeckB = b.Cards, TavernDwellerB = b.TavernDweller, StyleB = styleB ?? BotStyle.Greedy(),
                 };
@@ -58,7 +56,7 @@ namespace RestartedTavern.Rules.AI
 
             var roundRobin = new Section
             {
-                Title = "Round robin (current rules, Greedy bots)",
+                Title = "Round robin (Greedy bots)",
                 Question = "How long are games, and does damage on creatures decide anything? Every deck against every deck.",
             };
             for (int i = 0; i < decks.Length; i++)
@@ -75,78 +73,11 @@ namespace RestartedTavern.Rules.AI
                            + "In \"Greedy vs Control\", A win% is the Greedy side.",
             };
             foreach (var d in decks)
-                styles.Configs.Add(M(d.Name + " mirror, Control vs Control", d, d, null, BotStyle.Control(), BotStyle.Control()));
+                styles.Configs.Add(M(d.Name + " mirror, Control vs Control", d, d, BotStyle.Control(), BotStyle.Control()));
             foreach (var d in decks)
-                styles.Configs.Add(M(d.Name + " mirror, Greedy vs Control", d, d, null, BotStyle.Greedy(), BotStyle.Control()));
+                styles.Configs.Add(M(d.Name + " mirror, Greedy vs Control", d, d, BotStyle.Greedy(), BotStyle.Control()));
             sections.Add(styles);
-
-            var life = new Section
-            {
-                Title = "Game length lever: starting life",
-                Question = "Can starting life even out game length between fast and slow decks? Compare with the 30-life mirrors in the round robin.",
-            };
-            foreach (int l in new[] { 25, 35 })
-                foreach (var d in decks)
-                    life.Configs.Add(M(d.Name + " mirror, " + l + " life", d, d, f => f.StartingLife = l));
-            sections.Add(life);
-
-            var damage = new Section
-            {
-                Title = "Permanent damage (GAME_DESIGN §7.3)",
-                Question = "What changes when damage wears off at end of turn like in MTG? Compare with the round-robin mirrors (permanent damage).",
-            };
-            foreach (var d in decks)
-                damage.Configs.Add(M(d.Name + " mirror, damage wears off (MTG)", d, d, f => f.DamageWearsOff = true));
-            sections.Add(damage);
-
-            var turns = new Section
-            {
-                Title = "Turn structure and going first (GAME_DESIGN §3, §6)",
-                Question = "First-player win% in mirrors (50% is fair). Standard = Legends of Runeterra rounds: everyone refills, untaps and "
-                           + "draws when a round starts, players alternate actions, the round leader holds the attack token. Turns = rounds with Runeterra rounds (one round is everyone's turn), turns otherwise.",
-            };
-            foreach (var d in decks)
-            {
-                turns.Configs.Add(M(d.Name + " mirror, Runeterra rounds (Standard)", d, d));
-                turns.Configs.Add(M(d.Name + " mirror, rounds, everyone attacks once a round", d, d, f => f.AttackToken = false));
-                turns.Configs.Add(M(d.Name + " mirror, MTG turns (A B A B), draw skip", d, d, f => Copy(FormatConfig.MtgTurns(), f)));
-                turns.Configs.Add(M(d.Name + " mirror, MTG turns, 2nd player +1 mana on their first 3 turns", d, d,
-                    f => { Copy(FormatConfig.MtgTurns(), f); f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 3; }));
-                turns.Configs.Add(M(d.Name + " mirror, A B | B A + attack token (2026-10-10 morning)", d, d,
-                    f => Copy(FormatConfig.RuneterraRotation(), f)));
-            }
-            sections.Add(turns);
-
-            var tavernDwellers = new Section
-            {
-                Title = "Tavern Dwellers (GAME_DESIGN §9)",
-                Question = "What do Tavern Dwellers (passives and Powers, the universal Gold sink) change? Each mirror with and without Tavern Dwellers. "
-                           + "Watch Wasted (mana lost to the Gold cap), Gold spent and game length.",
-            };
-            foreach (var d in decks)
-            {
-                tavernDwellers.Configs.Add(M(d.Name + " mirror, with Tavern Dwellers", d, d));
-                tavernDwellers.Configs.Add(M(d.Name + " mirror, no Tavern Dwellers", d, d, f => f.TavernDwellersEnabled = false));
-            }
-            sections.Add(tavernDwellers);
-
-            var cap = new Section
-            {
-                Title = "Gold cap (GAME_DESIGN §5.2)",
-                Question = "Does the cap matter now that Tavern Dweller Powers and Equip spend Gold?",
-            };
-            foreach (var d in new[] { decks[2], decks[3], decks[4], decks[5] })
-                foreach (int c in new[] { 3, 5, 8 })
-                    cap.Configs.Add(M(d.Name + " mirror, Gold cap " + c, d, d, f => f.GoldCap = c));
-            sections.Add(cap);
             return sections;
-        }
-
-        /// <summary>Copies every format setting from <paramref name="from"/> onto <paramref name="to"/>.</summary>
-        private static void Copy(FormatConfig from, FormatConfig to)
-        {
-            foreach (var prop in typeof(FormatConfig).GetProperties())
-                if (prop.CanWrite) prop.SetValue(to, prop.GetValue(from));
         }
 
         public static void Run(List<Section> sections, CardDatabase db, Action<MatchResult> progress = null)
@@ -166,18 +97,18 @@ namespace RestartedTavern.Rules.AI
             var sb = new StringBuilder();
             sb.AppendLine("# Simulation Report");
             sb.AppendLine();
-            sb.AppendLine("Bot-vs-bot results for roadmap step 3 (DEVELOPMENT §5). Players are `GreedyBot`s in two styles: **Greedy** (develops and races) and **Control** (blocks, holds back, saves Gold). "
+            sb.AppendLine("Bot-vs-bot results under the Standard rules (Legends of Runeterra rounds). Players are `GreedyBot`s in two styles: **Greedy** (develops and races) and **Control** (blocks, holds back, saves Gold). "
                           + "They play like careful beginners, so **treat these numbers as hints about the rules, not as card balance**. Human playtests on the debug table decide.");
             sb.AppendLine();
-            sb.AppendLine($"{games} games per row · decks swap seats every game, and who goes first is random · games over 120 turns count as draws · run time {duration.TotalSeconds:0}s.");
+            sb.AppendLine($"{games} games per row · decks swap seats every game, and who goes first is random · games over 120 rounds count as draws · run time {duration.TotalSeconds:0}s.");
             sb.AppendLine();
             sb.AppendLine("Columns: **A win%** = the first-named side's win rate · **1st win%** = how often the player who went first won · "
-                          + "**Turns** = average game length (both players' turns) ± standard deviation · **Long** / **Short** = share of games over "
-                          + MatchResult.LongGameTurns + " / under " + MatchResult.ShortGameTurns + " turns · "
+                          + "**Rounds** = average game length ± standard deviation · **Long** / **Short** = share of games over "
+                          + MatchResult.LongGameRounds + " / under " + MatchResult.ShortGameRounds + " rounds · "
                           + "**Dmg→death** = share of all damage dealt to creatures that was still on a creature when it died (includes killing blows) · "
-                          + "**Chip→death** = share of *chip damage* (damage a creature carried into a later turn) that was still on it when it died; the rest was healed away or sat on survivors, so it **never decided anything** · "
-                          + "**Wounded** = share of creatures carrying damage at the start of a turn · **Deaths** / **Heal** / **Gold spent** are per game · "
-                          + "**Powers** = Tavern Dweller Powers used per game (in brackets: share used on an opponent's turn) · **Abil.** = other activated abilities per game (Equip, Tap abilities...) · **Off-turn** = spells cast and abilities/Powers used on an opponent's turn, per game · "
+                          + "**Chip→death** = share of *chip damage* (damage a creature carried into a later round) that was still on it when it died; the rest was healed away or sat on survivors, so it **never decided anything** · "
+                          + "**Wounded** = share of creatures carrying damage at the start of a round · **Deaths** / **Heal** / **Gold spent** are per game · "
+                          + "**Powers** = Tavern Dweller Powers used per game (in brackets: share used while an opponent had the action) · **Abil.** = other activated abilities per game (Equip, Tap abilities...) · **Off-turn** = spells cast and abilities/Powers used while an opponent had the action, per game · "
                           + "**Wasted** = share of unspent mana lost to the Gold cap.");
             foreach (var s in sections)
             {
@@ -186,14 +117,14 @@ namespace RestartedTavern.Rules.AI
                 sb.AppendLine();
                 sb.AppendLine("*" + s.Question + "*");
                 sb.AppendLine();
-                sb.AppendLine("| Matchup | A win% | 1st win% | Turns | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Powers | Abil. | Off-turn | Wasted | Draws |");
+                sb.AppendLine("| Matchup | A win% | 1st win% | Rounds | Long | Short | Dmg→death | Chip→death | Wounded | Deaths | Heal | Gold spent | Powers | Abil. | Off-turn | Wasted | Draws |");
                 sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
                 foreach (var r in s.Results)
                 {
                     sb.Append("| ").Append(r.Config.Name)
                       .Append(" | ").Append(Pct(r.WinRateA))
                       .Append(" | ").Append(Pct(r.FirstPlayerWinRate))
-                      .Append(" | ").Append(F(r.AvgTurns)).Append(" ± ").Append(F(r.TurnsStdDev))
+                      .Append(" | ").Append(F(r.AvgRounds)).Append(" ± ").Append(F(r.RoundsStdDev))
                       .Append(" | ").Append(Pct(r.LongGameShare))
                       .Append(" | ").Append(Pct(r.ShortGameShare))
                       .Append(" | ").Append(Pct(r.DamageThatKilledShare))

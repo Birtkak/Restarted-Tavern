@@ -89,7 +89,7 @@ namespace RestartedTavern.Client.Logic
             var pass = PlayerAction.Pass(me);
             if (!legal.Contains(pass)) return Button(ButtonMode.ChooseOnTable, "Choose");
             if (state.Chain.Count > 0) return Submit(ButtonMode.Resolve, "OK", pass);
-            if (state.Step != Step.Main1 && state.Step != Step.Main2) return Submit(ButtonMode.Continue, "Continue", pass);
+            if (state.Step != Step.Main1) return Submit(ButtonMode.Continue, "Continue", pass);
             bool endsRound = state.PassesInRow >= state.LivingPlayerCount - 1;
             return endsRound ? Submit(ButtonMode.EndRound, "End round", pass) : Submit(ButtonMode.Pass, "Pass", pass);
         }

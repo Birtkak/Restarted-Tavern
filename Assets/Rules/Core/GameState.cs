@@ -15,16 +15,13 @@ namespace RestartedTavern.Rules
 
         public int ActiveIndex { get; set; }
         public int StartingPlayerIndex { get; set; }
-        /// <summary>Seat of the player who starts the current round (FormatConfig.RotateRoundLeader moves it each round).</summary>
+        /// <summary>Seat of the player who leads the current round and holds the attack token (moves one seat each round).</summary>
         public int RoundLeaderSeat { get; set; }
-        /// <summary>Turns already finished in the current round.</summary>
-        public int TurnsThisRound { get; set; }
-        /// <summary>The current round (1 = every player's first turn).</summary>
+        /// <summary>The current round (1 = the first round).</summary>
         public int RoundNumber { get; set; } = 1;
-        public int TurnNumber { get; set; }
-        /// <summary>FormatConfig.AlternatingActions: the active player's action is on the Chain (or in combat) and hasn't finished.</summary>
+        /// <summary>The active player's action is on the Chain (or in combat) and hasn't finished.</summary>
         public bool ActionInProgress { get; set; }
-        /// <summary>FormatConfig.AlternatingActions: seats (bits) that already attacked this round.</summary>
+        /// <summary>Seats (bits) that already attacked this round.</summary>
         public int AttackedThisRound { get; set; }
         public Step Step { get; set; } = Step.Mulligan;
 
@@ -207,7 +204,7 @@ namespace RestartedTavern.Rules
         public string Fingerprint()
         {
             var sb = new StringBuilder();
-            sb.Append("T").Append(TurnNumber).Append(' ').Append(Step)
+            sb.Append("R").Append(RoundNumber).Append(' ').Append(Step)
               .Append(" A").Append(ActiveIndex)
               .Append(" Pr").Append(PriorityPlayer?.ToString() ?? "-")
               .Append(" Over").Append(IsGameOver)

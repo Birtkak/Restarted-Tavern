@@ -60,9 +60,9 @@ namespace RestartedTavern.Rules.Tests
         // ------------------------------------------------------------------ Powers
 
         [Test]
-        public void Power_OnceEachTurn_AtInstantSpeed_PaidWithGoldOnTheOpponentsTurn()
+        public void Power_OnceEachRound_AtInstantSpeed_GoldFirst()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var keeper = g.SetTavernDweller(me, "keeper_z00");
             var hurt = g.AddToBattlefield(me, "tavern_bouncer", damage: 4);
@@ -70,26 +70,29 @@ namespace RestartedTavern.Rules.Tests
             g.P(me).Gold = 0;
 
             g.Do(g.Activations(me, keeper).Single(a => a.Target == Target.ForObject(hurt.Id)));
-            Assert.AreEqual(1, g.P(me).Mana, "mana first");
+            Assert.AreEqual(1, g.P(me).Mana, "no Gold: paid with mana");
             g.PassRound();
             Assert.AreEqual(1, hurt.Damage, "heal 3");
             Assert.IsEmpty(g.Activations(me, keeper), "once each turn");
 
             hurt.Damage = 4;
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound(); // the other player leads round 2
+            var them = g.Active;
+            g.SetMana(me, 0);
             g.P(me).Gold = 1;
-            g.Pass();
+            g.SetMana(them, 2);
+            g.Do(g.Legal(them).First(a => a.Kind == ActionKind.PlayCard));
+            g.Pass(); // they pass with their creature on the Chain
             Assert.AreEqual(me, g.State.PriorityPlayer);
-            Assert.AreEqual(0, g.P(me).Mana, "no mana on other players' turns (§5.2)");
             Assert.IsEmpty(g.Activations(me, keeper), "1 Gold can't pay (2)");
 
             g.P(me).Gold = 3;
             g.Do(g.Activations(me, keeper).Single(a => a.Target == Target.ForObject(hurt.Id)));
             Assert.AreEqual(1, g.P(me).Gold);
-            var item = g.State.Chain.Single();
+            var item = g.State.Chain.Last();
             Assert.IsTrue(item.IsTavernDwellerPower);
             g.PassRound();
-            Assert.AreEqual(1, hurt.Damage, "usable again on the opponent's turn (MTG: once each turn)");
+            Assert.AreEqual(1, hurt.Damage, "usable again in the next round, in response on their action");
         }
 
         [Test]
@@ -172,7 +175,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Auditor_LowersInvestAndEquip_AndThePowerDrawsAtThreeGold()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var auditor = g.SetTavernDweller(g.Active, "auditor_prime");
             var ledger = g.AddToHand(g.Active, "the_grand_ledger"); // Invest 3
             g.SetMana(g.Active, 7);
@@ -257,7 +260,7 @@ namespace RestartedTavern.Rules.Tests
             var onField = g.OnBattlefield(me, "neon_shiv");
             onField.AttachedToObject = a.Id;
 
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             g.P(me).Gold = 2;
             g.Pass();
             var uses = g.Activations(me, wrench);

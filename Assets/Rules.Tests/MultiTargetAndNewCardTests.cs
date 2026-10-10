@@ -93,7 +93,7 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(4, sword.Damage);
             Assert.AreEqual(1, g.Stats(sword).RemainingHealth);
 
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             Assert.IsNotNull(g.State.FindOnBattlefield(sword.Id), "§7.3: the +2/+2 ending can't kill it");
             Assert.AreEqual(2, sword.Damage);
         }
@@ -143,15 +143,15 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void MossbackTortoise_HealsAtTheStartOfItsTurn()
+        public void MossbackTortoise_HealsAtTheStartOfEachRound()
         {
             var g = TestGame.AtFirstMainPhase();
             var first = g.Active;
             var turtle = g.AddToBattlefield(first, "mossback_tortoise", damage: 3);
-            g.PassToStep(Step.Main1, g.Other);
-            Assert.AreEqual(3, turtle.Damage, "only on its controller's turn");
-            g.PassToStep(Step.Main1, first);
+            g.NextRound();
             Assert.AreEqual(2, turtle.Damage);
+            g.NextRound();
+            Assert.AreEqual(1, turtle.Damage);
         }
 
         [Test]
@@ -163,8 +163,7 @@ namespace RestartedTavern.Rules.Tests
             g.AddToBattlefield(first, "orbital_strike_network");
             var mine = g.AddToBattlefield(first, "hired_sellsword");
             var theirs = g.AddToBattlefield(other, "tavern_bouncer");
-            g.PassToStep(Step.Main1, other);
-            g.PassToStep(Step.Main1, first);
+            g.NextRound();
             Assert.AreEqual(1, theirs.Damage);
             Assert.AreEqual(0, mine.Damage);
             Assert.AreEqual(29, g.P(other).Life);

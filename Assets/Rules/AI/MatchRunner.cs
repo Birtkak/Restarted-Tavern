@@ -20,37 +20,37 @@ namespace RestartedTavern.Rules.AI
         public BotStyle StyleB { get; set; } = BotStyle.Greedy();
         public int Games { get; set; } = 1000;
         public ulong FirstSeed { get; set; } = 1;
-        /// <summary>Games running longer than this many turns count as draws.</summary>
-        public int MaxTurns { get; set; } = 120;
+        /// <summary>Games running longer than this many rounds count as draws.</summary>
+        public int MaxRounds { get; set; } = 120;
     }
 
     /// <summary>Aggregated statistics over all games of a <see cref="MatchConfig"/>.</summary>
     public sealed class MatchResult
     {
-        public const int LongGameTurns = 25;
-        public const int ShortGameTurns = 10;
+        public const int LongGameRounds = 25;
+        public const int ShortGameRounds = 10;
 
         public MatchConfig Config;
         public int Games, WinsA, WinsB, Draws;
         public int FirstPlayerWins;
         public List<int> GameLengths = new List<int>();
-        /// <summary>Unspent mana at end of turn, how much of it became Gold, and Gold spent.</summary>
+        /// <summary>Unspent mana at the end of the round, how much of it became Gold, and Gold spent.</summary>
         public long UnspentMana, GoldBanked, GoldSpent;
         public long InstantsOnOpponentsTurn, AbilitiesOnOpponentsTurn;
         /// <summary>Cards that went from hand to the graveyard (mostly discards to hand size).</summary>
         public long Discards;
-        /// <summary>Tavern Dweller Powers used, how many of them on an opponent's turn, other activated abilities, and Gold paid for both.</summary>
+        /// <summary>Tavern Dweller Powers used, how many of them while an opponent had the action, other activated abilities, and Gold paid for both.</summary>
         public long PowersUsed, PowersOnOpponentsTurn, AbilitiesActivated, GoldOnAbilities;
         public long CreatureDeaths, HealingDone, DamageToCreatures, DamageToPlayers;
         /// <summary>Damage that was still on a creature when it died (the rest was healed or never mattered).</summary>
         public long DamageOnDeath;
         /// <summary>
-        /// Chip damage: damage a creature carried into a later turn (its peak carried amount).
+        /// Chip damage: damage a creature carried into a later round (its peak carried amount).
         /// ChipThatKilled = the part of it still on the creature when it died.
         /// </summary>
         public long ChipCarried, ChipThatKilled;
-        /// <summary>At each turn start: creatures on the battlefield, and how many of them carried damage.</summary>
-        public long CreatureTurnSamples, WoundedTurnSamples;
+        /// <summary>At each round start: creatures on the battlefield, and how many of them carried damage.</summary>
+        public long CreatureRoundSamples, WoundedRoundSamples;
         /// <summary>
         /// Per card (balance): in how many decided games each side cast it at least once, and how many of those that side
         /// won. Keys are "A:card_id" / "B:card_id"; Tavern Dweller Powers are "A:power".
@@ -60,20 +60,20 @@ namespace RestartedTavern.Rules.AI
         public int Decided => WinsA + WinsB;
         public double WinRateA => Games == 0 ? 0 : (double)WinsA / Games;
         public double FirstPlayerWinRate => Decided == 0 ? 0 : (double)FirstPlayerWins / Decided;
-        public double AvgTurns => GameLengths.Count == 0 ? 0 : GameLengths.Average();
-        public double TurnsStdDev
+        public double AvgRounds => GameLengths.Count == 0 ? 0 : GameLengths.Average();
+        public double RoundsStdDev
         {
             get
             {
                 if (GameLengths.Count < 2) return 0;
-                double avg = AvgTurns;
+                double avg = AvgRounds;
                 return Math.Sqrt(GameLengths.Sum(t => (t - avg) * (t - avg)) / (GameLengths.Count - 1));
             }
         }
-        public double LongGameShare => GameLengths.Count == 0 ? 0 : (double)GameLengths.Count(t => t > LongGameTurns) / GameLengths.Count;
-        public double ShortGameShare => GameLengths.Count == 0 ? 0 : (double)GameLengths.Count(t => t < ShortGameTurns) / GameLengths.Count;
+        public double LongGameShare => GameLengths.Count == 0 ? 0 : (double)GameLengths.Count(t => t > LongGameRounds) / GameLengths.Count;
+        public double ShortGameShare => GameLengths.Count == 0 ? 0 : (double)GameLengths.Count(t => t < ShortGameRounds) / GameLengths.Count;
         public double GoldWastedShare => UnspentMana == 0 ? 0 : 1.0 - (double)GoldBanked / UnspentMana;
-        public double WoundedShare => CreatureTurnSamples == 0 ? 0 : (double)WoundedTurnSamples / CreatureTurnSamples;
+        public double WoundedShare => CreatureRoundSamples == 0 ? 0 : (double)WoundedRoundSamples / CreatureRoundSamples;
         /// <summary>Share of damage dealt to creatures that was on them when they died.</summary>
         public double DamageThatKilledShare => DamageToCreatures == 0 ? 0 : (double)DamageOnDeath / DamageToCreatures;
         /// <summary>Share of carried-over chip damage that was still on a creature when it died. The rest never decided anything.</summary>
@@ -95,14 +95,14 @@ namespace RestartedTavern.Rules.AI
             CreatureDeaths += o.CreatureDeaths; HealingDone += o.HealingDone;
             DamageToCreatures += o.DamageToCreatures; DamageToPlayers += o.DamageToPlayers;
             DamageOnDeath += o.DamageOnDeath; ChipCarried += o.ChipCarried; ChipThatKilled += o.ChipThatKilled;
-            CreatureTurnSamples += o.CreatureTurnSamples; WoundedTurnSamples += o.WoundedTurnSamples;
+            CreatureRoundSamples += o.CreatureRoundSamples; WoundedRoundSamples += o.WoundedRoundSamples;
             foreach (var kv in o.CardGames) CardGames[kv.Key] = CardGames.TryGetValue(kv.Key, out int n) ? n + kv.Value : kv.Value;
             foreach (var kv in o.CardWins) CardWins[kv.Key] = CardWins.TryGetValue(kv.Key, out int n) ? n + kv.Value : kv.Value;
         }
     }
 
     /// <summary>
-    /// Plays bot-vs-bot games for balance experiments (DEVELOPMENT roadmap step 3). Decks swap
+    /// Plays bot-vs-bot games for balance measurements. Decks swap
     /// seats every game; who goes first is still random (GAME_DESIGN §3).
     /// Games run in parallel on all CPU cores. Each game has its own seed and results are merged
     /// in game order, so the outcome is the same as running them one by one.
@@ -152,7 +152,7 @@ namespace RestartedTavern.Rules.AI
 
                 Tally(r, state, events, db, t);
                 var cast = new HashSet<string>();
-                while (!state.IsGameOver && state.TurnNumber <= cfg.MaxTurns)
+                while (!state.IsGameOver && state.RoundNumber <= cfg.MaxRounds)
                 {
                     var who = engine.WaitingOn(state).Value;
                     var bot = who == deckAPlayer ? botA : botB;
@@ -167,7 +167,7 @@ namespace RestartedTavern.Rules.AI
                 foreach (var carried in t.Carried.Values) r.ChipCarried += carried; // survivors: their chip never killed
 
                 r.Games++;
-                r.GameLengths.Add(state.TurnNumber);
+                r.GameLengths.Add(state.RoundNumber);
                 if (!state.IsGameOver || state.Winners.Count != 1)
                 {
                     r.Draws++;
@@ -258,13 +258,13 @@ namespace RestartedTavern.Rules.AI
                             damageOn[d.Target.Object] = before + d.Amount;
                         }
                         break;
-                    case TurnStartedEvent _:
+                    case RoundStartedEvent _:
                         foreach (var c in s.AllPermanents())
                         {
                             if (!db.Get(c.DefinitionId).IsCreature) continue;
-                            r.CreatureTurnSamples++;
+                            r.CreatureRoundSamples++;
                             if (c.Damage <= 0) continue;
-                            r.WoundedTurnSamples++;
+                            r.WoundedRoundSamples++;
                             t.Carried.TryGetValue(c.Id, out int peak);
                             t.Carried[c.Id] = Math.Max(peak, c.Damage);
                         }

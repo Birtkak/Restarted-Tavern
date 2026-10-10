@@ -24,7 +24,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 5 | **Hush Money** | 2 | Instant | U | — | Counter target spell unless its controller pays 3. If they pay, you gain 2 Gold. | You profit either way. It is the faction's counterspell, and it's weak late in the game on purpose | ✅ |
 | 6 | **Crooked Accountant** | 3 | Creature: Wizard | C | 2/3 | Whenever you cast a spell that costs 5 or more, draw a card. | Engine for the big-spell plan | ✅ |
 | 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of your turn, if you have 3 or more Gold, draw a card. | Rewards banking up to the cap | ✅ |
-| 8 | **Golden Handshake** | 5 | Sorcery | U | — | Return target creature to its owner's hand. Its controller gains Gold equal to its cost. | "Clean" removal of a big creature, but the opponent gets up to 5 Gold to spend on tricks. Damage is wiped when the creature returns to hand | ✅ |
+| 8 | **Golden Handshake** | 5 | Sorcery | U | — | Return target creature to its owner's hand. Its controller gains Gold equal to its cost. | "Clean" removal of a big creature, but the opponent gets Gold (up to their cap of 3) to spend on tricks. Damage is wiped when the creature returns to hand | ✅ |
 
 ## Legendary
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
@@ -34,7 +34,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 ## Batch 2
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
-| 10 | **Pocket Change** | 1 | Instant | C | — | Look at the top 2 cards of your deck. Put one in your hand and the other on the bottom. Invest 1: Put both in your hand. | A cheap instant to spend leftover Gold on during an opponent's turn | ✅ |
+| 10 | **Pocket Change** | 1 | Instant | C | — | Look at the top 2 cards of your deck. Put one in your hand and the other on the bottom. Invest 1: Put both in your hand. | A cheap instant to spend leftover Gold on during an opponent's action | ✅ |
 | 11 | **Apprentice Forger** | 2 | Creature: Wizard | C | 1/2 | Flying. Arrival: Gain 1 Gold. | A simple, efficient Gold source | ✅ |
 | 12 | **Sticky Fingers** | 2 | Instant | C | — | Target creature gets -3/-0 until end of turn. Invest 1: Draw a card. | Defensive combat trick. It saves a blocker from permanent damage | ✅ |
 | 13 | **Debt Collector** | 4 | Creature: Wizard | U | 3/4 | Arrival: Each opponent loses up to 2 Gold. You gain that much Gold. | Takes back the Gold your shady deals handed out | ✅ |
@@ -69,7 +69,7 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 21 | **Interest Broker** | 2 | Creature: Wizard | U | 1/3 | Whenever you bank 2 or more Gold, draw a card. | Rewards holding mana up. The cap fights it: at 3 Gold you bank nothing, so you have to spend Gold to keep drawing | ✓ implemented | ✅ |
 | 22 | **Offshore Account** | 2 | Relic | U | — | Your Gold cap is 8. | Simulations: up to 70% of unspent mana is lost to the cap in long games. This is the Wizards' answer, and it makes Invest bursts bigger | ✓ implemented | ✅ |
 | 23 | **Fee Collector** | 2 | Creature: Wizard | C | 2/2 | Whenever an opponent spends Gold, you gain 1 Gold. | Taxes the opponent's instant-speed play. Every Gold they spend helps you a bit | ✓ implemented | ✅ |
-| 24 | **Retainer Mage** | 3 | Creature: Wizard | C | 2/3 | Flying. You may cast this whenever you could cast an Instant. If you do, you may pay for it with Gold. | An ambush creature: Gold creates a body on the opponent's turn. The only creature in the faction that Gold can pay for | ✓ implemented | ✅ |
+| 24 | **Retainer Mage** | 3 | Creature: Wizard | C | 2/3 | Flying. You may cast this whenever you could cast an Instant. If you do, you may pay for it with Gold. | An ambush creature: Gold creates a body in response to the opponent's action. The only creature in the faction that Gold can pay for | ✓ implemented | ✅ |
 | 25 | **Bounced Check** | 2 | Instant | C | — | Return target creature with cost 3 or less to its owner's hand. Its controller gains 1 Gold. | Cheap bounce with the faction's 'shady' drawback. Bounce also wipes the creature's damage, so use it on an enemy that is healthy | ✓ implemented | ✅ |
 | 26 | **Golden Parachute** | 3 | Instant | C | — | Return target creature you control to your hand. Gain Gold equal to its cost. | Permanent-damage depth: rescue a wounded creature (it comes back fresh) and bank its value. A response on the Chain to removal | ✓ implemented | ✅ |
 | 27 | **Silent Partner** | 4 | Creature: Wizard | U | 2/5 | You may pay Invest costs with mana as well as Gold. | Opens Invest to big main-phase turns, the Wizards' 'big impressive spells'. Tough body, no attack | ✓ implemented | ✅ |

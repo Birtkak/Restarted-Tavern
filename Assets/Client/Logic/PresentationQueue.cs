@@ -71,7 +71,7 @@ namespace RestartedTavern.Client.Logic
         {
             switch (e)
             {
-                case TurnStartedEvent _:
+                case RoundStartedEvent _:
                 case GameOverEvent _:
                 case PlayerLostEvent _:
                     return BeatWeight.Long;

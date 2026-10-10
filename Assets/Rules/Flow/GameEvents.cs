@@ -31,11 +31,11 @@ namespace RestartedTavern.Rules
         public override string ToString() => Player + " mulligans (" + MulligansTaken + ")";
     }
 
-    public sealed class TurnStartedEvent : GameEvent
+    public sealed class RoundStartedEvent : GameEvent
     {
-        public PlayerId Player;
-        public int Turn;
-        public override string ToString() => "Turn " + Turn + ": " + Player;
+        public PlayerId Leader;
+        public int Round;
+        public override string ToString() => "Round " + Round + ": " + Leader + " leads";
     }
 
     public sealed class StepStartedEvent : GameEvent

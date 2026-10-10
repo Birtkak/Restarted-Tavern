@@ -30,7 +30,7 @@ namespace RestartedTavern.Rules.Tests
 
         private static void Attack(TestGame g, params CardInstance[] attackers)
         {
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             foreach (var a in attackers) g.Do(PlayerAction.Attack(g.Active, a.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
         }
@@ -42,7 +42,7 @@ namespace RestartedTavern.Rules.Tests
             var me = g.Active;
             var fresh = g.AddToBattlefield(me, "sproutling");
             var hurt = g.AddToBattlefield(me, "sproutling", damage: 1);
-            g.PassUntil(s => s.ActivePlayer != me);
+            g.NextRound();
             Assert.AreEqual(1, fresh.PlusOneCounters);
             Assert.AreEqual(0, hurt.PlusOneCounters, "intervening if: it has damage");
         }
@@ -59,7 +59,7 @@ namespace RestartedTavern.Rules.Tests
                 g.P(me).Gold = gold;
                 g.SetMana(me, 0);
                 int hand = g.P(me).Hand.Count;
-                g.PassUntil(s => s.Step == Step.Cleanup || s.ActivePlayer != me);
+                g.PassUntil(s => s.Step == Step.Cleanup);
                 Assert.AreEqual(hand + draws, g.P(me).Hand.Count, gold + " Gold");
             }
         }
@@ -85,17 +85,16 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void TaxOffice_TakesGold_OrPaysYou()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             g.AddToBattlefield(g.Other, "tax_office");
-            g.P(me).Gold = 2;
             var victim = g.AddToBattlefield(me, "tavern_bouncer");
             Cast(g, me, "spark_snot", Target.ForObject(victim.Id));
+            g.P(me).Gold = 2; // set after casting: Gold first would have paid for the spell
             g.PassRound();
             Assert.AreEqual(1, g.P(me).Gold);
 
             g.P(me).Gold = 0;
-            g.PassRound();
             Cast(g, me, "spark_snot", Target.ForObject(victim.Id));
             g.PassRound();
             Assert.AreEqual(1, g.P(g.Other).Gold, "they couldn't lose Gold: the Tax Office's controller gains 1");
@@ -120,7 +119,7 @@ namespace RestartedTavern.Rules.Tests
             g.PassUntil(s => s.Pending?.Kind == DecisionKind.AssignCombatDamage);
             Assert.AreEqual(g.Other, g.State.Pending.Player, "5 damage can't kill both (6 Health): the defender divides it");
             g.Do(PlayerAction.AssignDamage(g.Other, new[] { 3, 2 }));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
             Assert.IsNull(g.State.FindOnBattlefield(a.Id), "3 lethal to the first");
             Assert.AreEqual(2, b.Damage, "the rest (2) to the second");
             Assert.AreEqual(5, champ.Damage);
@@ -140,7 +139,7 @@ namespace RestartedTavern.Rules.Tests
             var token = g.P(me).Battlefield.Single(c => c.DefinitionId == CardPool.GooberToken);
             Assert.IsTrue(token.Tapped);
             Assert.IsTrue(g.State.Combat.IsAttacking(token.Id));
-            g.PassUntil(s => s.Step == Step.Main2);
+            g.FinishCombat();
             Assert.AreEqual(30 - 6 - 2, g.P(g.Other).Life, "Grakka 6 + a 2/2 token");
         }
 
@@ -222,7 +221,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void PocketChange_OneToHandOneToBottom_InvestTakesBoth()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var top = g.P(me).Deck.Take(2).ToList();
             int hand = g.P(me).Hand.Count;
@@ -262,14 +261,13 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void GroveWarden_GivesYourOtherCreaturesAStartOfTurnHeal()
+        public void GroveWarden_GivesYourOtherCreaturesAStartOfRoundHeal()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var warden = g.AddToBattlefield(me, "grove_warden", damage: 1);
             var bouncer = g.AddToBattlefield(me, "tavern_bouncer", damage: 3);
-            g.PassToStep(Step.Main1, g.Other);
-            g.PassToStep(Step.Main1, me);
+            g.NextRound();
             Assert.AreEqual(2, bouncer.Damage);
             Assert.AreEqual(1, warden.Damage, "other creatures only");
         }
@@ -283,7 +281,7 @@ namespace RestartedTavern.Rules.Tests
             Cast(g, me, "hex_of_withering", Target.ForObject(victim.Id));
             g.PassRound();
             Assert.AreEqual(0, g.Stats(victim).Power, "-2/-0");
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             Assert.AreEqual(1, victim.Damage);
         }
 

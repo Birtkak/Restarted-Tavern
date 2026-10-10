@@ -14,9 +14,7 @@ namespace RestartedTavern.Rules
 
         public int Life { get; set; }
         public int MaxMana { get; set; }
-        /// <summary>FormatConfig.GoldFirstAlways (Classic: false), set by the engine at each turn start.</summary>
-        public bool PaysGoldFirst { get; set; }
-        /// <summary>Only filled during this player's own turn (GAME_DESIGN §5.2).</summary>
+        /// <summary>The round pool: refilled at the start of each round, banked as Gold at its end (GAME_DESIGN §5).</summary>
         public int Mana { get; set; }
         public int Gold { get; set; }
 

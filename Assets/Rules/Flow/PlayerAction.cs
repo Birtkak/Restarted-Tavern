@@ -23,7 +23,7 @@ namespace RestartedTavern.Rules
         ChooseOption,
         /// <summary>Divide a creature's combat damage among several creatures (§7.2.6): <see cref="PlayerAction.Division"/>.</summary>
         AssignCombatDamage,
-        /// <summary>FormatConfig.AlternatingActions: use this action to attack (goes to combat).</summary>
+        /// <summary>The attack token holder uses this action to attack (goes to combat).</summary>
         GoToCombat,
     }
 

@@ -24,7 +24,7 @@ namespace RestartedTavern.Rules.Tests
             var g = TestGame.AtFirstMainPhase();
             var attacker = g.AddToBattlefield(g.Active, "hired_sellsword");
             g.P(g.Other).Life = 2;
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             g.Do(PlayerAction.Attack(g.Active, attacker.Id, g.Other));
             g.Do(PlayerAction.FinishAttacks(g.Active));
             g.PassUntil(s => s.IsGameOver);

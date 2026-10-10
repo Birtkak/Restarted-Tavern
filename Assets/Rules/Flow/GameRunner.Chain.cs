@@ -24,7 +24,7 @@ namespace RestartedTavern.Rules
             CheckStateBasedActionsAndTriggers();
             if (S.IsGameOver || S.Pending != null) return;
 
-            // Alternating actions: once an action has fully resolved, the next player has the action.
+            // Once an action has fully resolved, the next player has the action.
             if (InActionPhase && S.Chain.Count == 0 && S.ActionInProgress)
             {
                 S.ActionInProgress = false;
@@ -54,7 +54,7 @@ namespace RestartedTavern.Rules
             if (S.PassesInRow < S.LivingPlayerCount)
             {
                 S.PriorityPlayer = NextLivingPlayer(passer).Id;
-                // Alternating actions: passing with an empty Chain hands the action on.
+                // Passing with an empty Chain hands the action on.
                 if (InActionPhase && S.Chain.Count == 0) S.ActiveIndex = S.GetPlayer(S.PriorityPlayer.Value).Seat;
                 return;
             }
@@ -77,7 +77,7 @@ namespace RestartedTavern.Rules
             var card = p.Hand.Find(c => c.Id == a.Card);
             var def = Def(card);
 
-            // §5.2: Gold first (Classic: mana first), never Gold for permanents; Invest and "pay X Gold" only with Gold,
+            // §5.2: Gold first, never Gold for permanents; Invest and "pay X Gold" only with Gold,
             // set aside before the cost takes Gold. Cost modifiers (Tavern Dwellers, Archon Lumen...) are applied first.
             // Silent Partner lets Invest use the mana that's left.
             Payment.TrySplit(S, Db, p, def, a.X, a.Invest, out var pay);

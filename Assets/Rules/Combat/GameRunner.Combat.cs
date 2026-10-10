@@ -8,8 +8,8 @@ namespace RestartedTavern.Rules
         /// <summary>An untapped creature. There's no summoning sickness (§7.4).</summary>
         private bool CanAttack(CardInstance c) => Def(c).IsCreature && !c.Tapped;
 
-        /// <summary>FormatConfig.AttackToken: only the player who started the round may attack in it.</summary>
-        private bool HasAttackToken(PlayerState p) => !S.Format.AttackToken || p.Id == RoundLeader().Id;
+        /// <summary>The attack token (§6.1): only the round leader may attack in the round.</summary>
+        private bool HasAttackToken(PlayerState p) => p.Id == RoundLeader().Id;
 
         /// <summary>Untapped creatures can block, even the turn they arrive (§7.4). Blocking doesn't tap.</summary>
         private bool CanBlock(CardInstance c) =>

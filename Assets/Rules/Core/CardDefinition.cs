@@ -68,7 +68,7 @@ namespace RestartedTavern.Rules
 
         /// <summary>"You may cast this whenever you could cast an Instant" (Retainer Mage; MTG Flash).</summary>
         public bool Flash { get; set; }
-        /// <summary>"You may pay for it with Gold": a permanent that Gold can help pay for, mana first (Retainer Mage).</summary>
+        /// <summary>"You may pay for it with Gold": a permanent that Gold can help pay for, Gold first (Retainer Mage).</summary>
         public bool GoldMayPay { get; set; }
 
         /// <summary>"As an extra cost, pay N life" (Blood Price). You need at least N life (MTG 119.4).</summary>

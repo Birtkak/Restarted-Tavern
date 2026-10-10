@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace RestartedTavern.Rules.Tests
 {
-    /// <summary>Activated abilities (MTG 602): costs, payment (§5.2), timing, Tap (no summoning sickness, §7.4), once each turn.</summary>
+    /// <summary>Activated abilities (MTG 602): costs, payment (§5.2), timing, Tap (no summoning sickness, §7.4), once each round.</summary>
     public class ActivatedAbilityTests
     {
         [Test]
@@ -78,18 +78,18 @@ namespace RestartedTavern.Rules.Tests
             g.P(g.Active).Gold = 5;
             Assert.IsEmpty(g.Activations(g.Active, jar), "once each turn");
 
-            // MTG "once each turn": the opponent's turn is a new turn.
+            // "Once each turn" means once each round: the next round is a new turn.
             var me = g.Active;
-            g.PassToStep(Step.Main1, g.Other);
+            g.NextRound();
             g.Pass();
             Assert.AreEqual(me, g.State.PriorityPlayer);
-            Assert.IsNotEmpty(g.Activations(me, jar), "usable again on the opponent's turn");
+            Assert.IsNotEmpty(g.Activations(me, jar), "usable again in the next round");
         }
 
         [Test]
-        public void GenericCost_UsesManaFirst_ThenGold()
+        public void GenericCost_UsesGoldFirst_ThenMana()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var sword = g.AddToBattlefield(g.Active, "hired_sellsword");
             var blade = g.AddToBattlefield(g.Active, "pulse_blade"); // Equip 2
             g.SetMana(g.Active, 1);
@@ -97,17 +97,17 @@ namespace RestartedTavern.Rules.Tests
 
             var equip = g.Activations(g.Active, blade).Single();
             var events = g.Do(equip);
-            Assert.AreEqual(0, g.P(g.Active).Mana);
-            Assert.AreEqual(2, g.P(g.Active).Gold, "1 mana, then 1 Gold");
+            Assert.AreEqual(1, g.P(g.Active).Mana);
+            Assert.AreEqual(1, g.P(g.Active).Gold, "§5.2: Gold first");
             var activated = events.OfType<AbilityActivatedEvent>().Single();
-            Assert.AreEqual(1, activated.ManaPaid);
-            Assert.AreEqual(1, activated.GoldPaid);
+            Assert.AreEqual(0, activated.ManaPaid);
+            Assert.AreEqual(2, activated.GoldPaid);
             g.PassRound();
             Assert.AreEqual(blade.AttachedToObject, sword.Id);
         }
 
         [Test]
-        public void SorcerySpeedAbility_OnlyInYourMainPhaseWithAnEmptyChain()
+        public void SorcerySpeedAbility_OnlyOnYourActionWithAnEmptyChain()
         {
             var g = TestGame.AtFirstMainPhase();
             var contract = g.AddToBattlefield(g.Active, "mercenary_contract");
@@ -124,11 +124,6 @@ namespace RestartedTavern.Rules.Tests
             g.Do(g.Activations(g.Active, contract).Single());
             g.PassRound();
             Assert.IsNotNull(g.OnBattlefield(g.Active, Cards.CardPool.MercenaryToken));
-
-            var me = g.Active;
-            g.PassToStep(Step.Main1, g.Other);
-            g.Pass();
-            Assert.IsEmpty(g.Activations(me, contract), "only as a sorcery: not on the opponent's turn");
         }
 
         [Test]

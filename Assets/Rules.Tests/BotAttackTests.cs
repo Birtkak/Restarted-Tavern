@@ -10,7 +10,7 @@ namespace RestartedTavern.Rules.Tests
         /// <summary>Let the bot declare attackers until it's done; returns the attackers it chose.</summary>
         private static List<ObjectId> BotAttacks(TestGame g)
         {
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
+            g.GoToCombat();
             var bot = new GreedyBot(g.Engine);
             var chosen = new List<ObjectId>();
             while (g.State.Pending?.Kind == DecisionKind.DeclareAttackers)

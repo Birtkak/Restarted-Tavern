@@ -10,7 +10,7 @@ namespace RestartedTavern.Rules.AI
 
         /// <summary>Value of 1 damage that doesn't kill (it stays: §7.3).</summary>
         public double ChipDamageValue { get; set; } = 0.4;
-        /// <summary>Reluctance to spend Gold on your own turn (Gold is your only resource on other turns).</summary>
+        /// <summary>Reluctance to spend Gold on your own action (Gold is what answers on someone else's action).</summary>
         public double GoldOnOwnTurnPenalty { get; set; } = 0.4;
         /// <summary>Block with a creature that survives but doesn't kill when life is at or below this.</summary>
         public int WallBlockAtLife { get; set; } = 12;
@@ -42,7 +42,7 @@ namespace RestartedTavern.Rules.AI
         /// </summary>
         public bool ValueArrivalDamage { get; set; } = true;
 
-        /// <summary>Alternating actions: attack as the first action of the round instead of after developing.</summary>
+        /// <summary>Attack as the first action of the round instead of after developing.</summary>
         public bool AttackFirstInRound { get; set; }
 
         /// <summary>The original bot: develops, races, blocks only good or even trades.</summary>

@@ -13,8 +13,8 @@ namespace RestartedTavern.Rules.AI
     /// (Greedy by default, or Control).
     /// Activated abilities and Tavern Dweller Powers are worth their effect minus what they cost: mana
     /// that would only be banked is cheap, Gold that would overflow the cap is cheap, and Gold on
-    /// your own turn costs extra (it's your only resource on other turns). Instant-speed Powers
-    /// wait for the opponent's end step unless something big is on offer (a kill, a combat trick).
+    /// your own action costs extra (it answers on someone else's). Instant-speed Powers
+    /// wait for the end of the round unless something big is on offer (a kill, a combat trick).
     /// </summary>
     public sealed partial class GreedyBot
     {
@@ -108,15 +108,10 @@ namespace RestartedTavern.Rules.AI
             }
             PlayerAction best = null;
             double bestScore = 0;
-            int reserve = InstantReserve(s, me, out double reserveValue);
             foreach (var a in legal)
             {
                 double score;
-                if (a.Kind == ActionKind.PlayCard)
-                {
-                    score = PlayValue(s, me, a) - 0.9; // anything below 0.9 isn't worth a card
-                    if (reserve > 0 && BreaksReserve(s, me, a, reserve)) score -= reserveValue;
-                }
+                if (a.Kind == ActionKind.PlayCard) score = PlayValue(s, me, a) - 0.9; // anything below 0.9 isn't worth a card
                 else if (a.Kind == ActionKind.ActivateAbility) score = AbilityValue(s, me, a) - 0.25;
                 else continue;
                 if (score > bestScore)
@@ -125,47 +120,12 @@ namespace RestartedTavern.Rules.AI
                     best = a;
                 }
             }
-            // Alternating actions: attack once nothing else is worth an action (the attack planner may still hold back).
+            // Attack once nothing else is worth an action (the attack planner may still hold back).
             return best ?? legal.FirstOrDefault(a => a.Kind == ActionKind.GoToCombat)
                         ?? legal.First(a => a.Kind == ActionKind.PassPriority);
         }
 
         // ------------------------------------------------------------------ helpers
-
-        /// <summary>
-        /// Round pool (FormatConfig.ManaPerRound): mana left at the end of your turn can still be used on the
-        /// opponent's turn. On its own turn the bot keeps enough mana and Gold for the cheapest Instant in hand
-        /// (cost 3 or less). Returns that cost (0 = nothing to hold) and, in <paramref name="value"/>, roughly
-        /// what keeping it ready is worth.
-        /// </summary>
-        private int InstantReserve(GameState s, PlayerId me, out double value)
-        {
-            value = 0;
-            if (s.ActivePlayer != me || s.Pending != null || s.Format.AlternatingActions) return 0;
-            if (!s.Format.ManaPerRound && !s.Format.ManaUntilYourNextTurn) return 0;
-            // Round pool: only worth it if an opponent's turn still comes in this round; the last player's leftovers are banked at once.
-            int n = s.Players.Count;
-            if (s.Format.ManaPerRound && (s.GetPlayer(me).Seat - s.RoundLeaderSeat + n) % n == n - 1) return 0;
-            int cheapest = 0;
-            foreach (var c in s.GetPlayer(me).Hand)
-            {
-                var def = Db.Get(c.DefinitionId);
-                if (def.Type != CardType.Instant && !def.Flash) continue;
-                int cost = Costs.SpellCost(s, Db, me, def);
-                if (cost <= 3 && (cheapest == 0 || cost < cheapest)) cheapest = cost;
-            }
-            value = 0.6 * (2 * cheapest + 1);
-            return cheapest;
-        }
-
-        /// <summary>Would this sorcery-speed play leave less mana + Gold than the Instant reserve?</summary>
-        private bool BreaksReserve(GameState s, PlayerId me, PlayerAction a, int reserve)
-        {
-            var p = s.GetPlayer(me);
-            var def = Db.Get(p.Hand.Find(c => c.Id == a.Card).DefinitionId);
-            if (def.Type == CardType.Instant || def.Flash) return false;
-            return p.Mana + p.Gold - Costs.SpellCost(s, Db, me, def) < reserve;
-        }
 
         private CardDefinition Def(GameState s, ObjectId id) => Db.Get(s.FindObject(id).DefinitionId);
         // The bot never changes the state while deciding, so stats are cached per state and version.
@@ -232,11 +192,8 @@ namespace RestartedTavern.Rules.AI
 
             if (a.Invest) value += EffectValue(s, me, def.InvestEffects, a.Targets, a.Card) + 0.1;
 
-            // Gold is flexible (instant speed); spend mana first when it's our turn.
+            // Gold is flexible (instant speed): on our own action, prefer plays that leave it.
             if (s.ActivePlayer == me) value -= _style.GoldOnOwnTurnPenalty * Math.Max(0, Payment.GoldNeeded(s, Db, p, def));
-            // Round pool: mana spent before our own turn in the round is mana we can't develop with.
-            if (MyTurnStillAhead(s, me))
-                value -= DevelopmentManaValue * Math.Max(0, Costs.SpellCost(s, Db, me, def) - Math.Max(0, Payment.GoldNeeded(s, Db, p, def)));
             return value;
         }
 

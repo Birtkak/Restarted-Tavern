@@ -34,24 +34,15 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
-        /// Gold needed for a cost after mana is used up (or Gold first, see PlayerState.PaysGoldFirst), or -1 if it can't be paid.
-        /// <paramref name="generic"/> is paid with mana first, then Gold if <paramref name="goldAllowed"/>;
-        /// <paramref name="goldOnly"/> is paid only with Gold.
+        /// Gold needed for a cost, or -1 if it can't be paid. <paramref name="generic"/> is paid Gold first (§5.2) if
+        /// <paramref name="goldAllowed"/>, then mana; <paramref name="goldOnly"/> is paid only with Gold.
         /// </summary>
         public static int GoldNeeded(PlayerState p, int generic, bool goldAllowed, int goldOnly = 0)
         {
-            if (p.PaysGoldFirst && goldAllowed)
-            {
-                // Gold first, then mana (FormatConfig.GoldFirstAlways).
-                int spare = p.Gold - goldOnly;
-                if (spare < 0) return -1;
-                int fromGold = Math.Min(spare, Math.Max(0, generic));
-                return generic - fromGold <= p.Mana ? fromGold + goldOnly : -1;
-            }
-            int rest = Math.Max(0, generic - p.Mana);
-            if (rest > 0 && !goldAllowed) return -1;
-            int gold = rest + goldOnly;
-            return p.Gold >= gold ? gold : -1;
+            int spare = p.Gold - goldOnly;
+            if (spare < 0) return -1;
+            int fromGold = goldAllowed ? Math.Min(spare, Math.Max(0, generic)) : 0;
+            return generic - fromGold <= p.Mana ? fromGold + goldOnly : -1;
         }
 
         /// <summary>Gold casting this card would take after mana is used up, or -1 if it can't be paid at all.</summary>
@@ -71,7 +62,7 @@ namespace RestartedTavern.Rules
         /// <summary>
         /// Splits the whole payment for casting <paramref name="def"/> (§5.2). Gold-only parts (Invest, "pay X Gold") are
         /// set aside first, so paying the cost Gold first can't use up the Gold they need (2026-10-10 fix). Then the cost
-        /// is paid (Gold first or mana first, see PlayerState.PaysGoldFirst), then Invest with Silent Partner uses the mana
+        /// is paid (Gold first), then Invest with Silent Partner uses the mana
         /// that's left before Gold. Returns false if it can't all be paid.
         /// </summary>
         public static bool TrySplit(GameState s, CardDatabase db, PlayerState p, CardDefinition def, int x, bool invest, out SpellPayment pay)

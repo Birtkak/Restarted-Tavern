@@ -13,42 +13,41 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void BankTrigger_GoesOnTheChainInCleanup_ThenCleanupRepeats()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var other = g.Other;
             g.AddToBattlefield(me, "interest_broker");
             g.SetMana(me, 3);
-            int hand = g.P(me).Hand.Count;
-            Assert.AreEqual(7, hand);
 
             g.PassUntil(s => s.Step == Step.Cleanup && s.Chain.Count > 0);
+            Assert.AreEqual(7, g.P(me).Hand.Count, "discarded to 7 first");
             Assert.AreEqual(3, g.P(me).Gold, "3 unspent mana banked");
             Assert.AreEqual(me, g.State.PriorityPlayer, "MTG 514.3a: players get priority in the cleanup step");
-            Assert.AreEqual(me, g.State.ActivePlayer, "still the same turn");
+            Assert.AreEqual(me, g.State.ActivePlayer, "still the same round");
 
             g.PassRound();
-            Assert.AreEqual(hand + 1, g.P(me).Hand.Count, "Interest Broker drew a card");
+            Assert.AreEqual(8, g.P(me).Hand.Count, "Interest Broker drew a card");
             Assert.AreEqual(Step.Cleanup, g.State.Step, "the cleanup step repeats");
             Assert.AreEqual(DecisionKind.DiscardToHandSize, g.State.Pending?.Kind, "8 cards: discard again in the new cleanup step");
 
             g.Do(PlayerAction.Discard(me, g.P(me).Hand[0].Id));
-            Assert.AreEqual(other, g.State.ActivePlayer, "then the next turn starts");
+            Assert.AreEqual(other, g.State.ActivePlayer, "then the next round starts, led by the other player");
             Assert.AreEqual(3, g.P(me).Gold, "nothing is banked twice");
         }
 
         [Test]
         public void BankTrigger_CountsOnlyTheGoldActuallyGained()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             g.AddToBattlefield(me, "interest_broker"); // "2 or more"
             g.SetMana(me, 3);
-            g.P(me).Gold = 4;                          // cap 5: only 1 is banked
+            g.P(me).Gold = 2;                          // cap 3: only 1 is banked
 
-            g.PassUntil(s => s.ActivePlayer != me);
-            Assert.AreEqual(5, g.P(me).Gold);
-            Assert.AreEqual(7, g.P(me).Hand.Count, "banked 1, so no draw");
-            var bank = g.Events.OfType<GoldBankedEvent>().Last();
+            g.NextRound();
+            Assert.AreEqual(3, g.P(me).Gold);
+            Assert.AreEqual(8, g.P(me).Hand.Count, "7 after the cleanup + the round's draw; banked 1, so no Broker draw");
+            var bank = g.Events.OfType<GoldBankedEvent>().Last(e => e.Player == me);
             Assert.AreEqual(3, bank.UnspentMana);
             Assert.AreEqual(1, bank.Banked);
         }
@@ -72,20 +71,20 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void OffshoreAccount_RaisesTheCap_AndExcessIsLostWhenItLeaves()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var account = g.AddToBattlefield(me, "offshore_account");
             g.SetMana(me, 6);
             g.P(me).Gold = 4;
             Assert.AreEqual(8, GoldRules.Cap(g.State, g.Engine.Cards, me));
-            Assert.AreEqual(5, GoldRules.Cap(g.State, g.Engine.Cards, g.Other), "the cap is per player");
+            Assert.AreEqual(3, GoldRules.Cap(g.State, g.Engine.Cards, g.Other), "the cap is per player");
 
-            g.PassUntil(s => s.ActivePlayer != me && s.Step == Step.Main1 && s.PriorityPlayer.HasValue);
+            g.NextRound();
             Assert.AreEqual(8, g.P(me).Gold, "banked 4 of 6, up to the new cap");
 
             g.P(me).Battlefield.Remove(account); // test setup: the Account leaves
             g.PassRound();                       // next step: state-based actions are checked
-            Assert.AreEqual(5, g.P(me).Gold, "decided 2026-10-09: Gold above the cap is lost at once");
+            Assert.AreEqual(3, g.P(me).Gold, "decided 2026-10-09: Gold above the cap is lost at once");
         }
 
         [Test]
@@ -115,7 +114,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void TravelingBard_NeedsThreeGoldOnOneSpellOrAbility_InvestCounts()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             g.AddToBattlefield(me, "traveling_bard");
             var muscle = g.AddToBattlefield(me, "hired_muscle");
@@ -162,7 +161,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void SettleTheTab_PayAnyAmountOfGold_DrawXThenDiscard()
         {
-            var g = TestGame.Classic();
+            var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             var settle = g.AddToHand(me, "settle_the_tab");
             g.SetMana(me, 3);
@@ -173,8 +172,8 @@ namespace RestartedTavern.Rules.Tests
 
             int hand = g.P(me).Hand.Count;
             g.Do(plays.Single(a => a.X == 3));
-            Assert.AreEqual(1, g.P(me).Gold, "X is paid with Gold only");
-            Assert.AreEqual(0, g.P(me).Mana);
+            Assert.AreEqual(0, g.P(me).Gold, "X takes 3 Gold (Gold only), the cost takes the last Gold first");
+            Assert.AreEqual(1, g.P(me).Mana, "then 2 mana");
             g.PassRound();
             Assert.AreEqual(hand - 1 + 3, g.P(me).Hand.Count, "drew 3");
             Assert.AreEqual(DecisionKind.DiscardCards, g.State.Pending?.Kind);
@@ -183,7 +182,7 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Discard(me, g.P(me).Hand[0].Id));
             Assert.AreEqual(hand + 1, g.P(me).Hand.Count);
             Assert.IsNull(g.State.Pending);
-            Assert.AreEqual(me, g.State.PriorityPlayer);
+            Assert.AreEqual(g.Other, g.State.PriorityPlayer, "my action is over");
         }
 
         [Test]

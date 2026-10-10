@@ -190,8 +190,8 @@ namespace RestartedTavern.Rules
 
     /// <summary>
     /// Payment rules that change §5.2 for their controller: "You may pay Invest costs with mana as well as
-    /// Gold" (Silent Partner; mana first, then Gold) and "You may spend Gold as though it were mana to cast
-    /// creature spells" (Shady Moneylender; mana first, then Gold).
+    /// Gold" (Silent Partner: the mana left after the cost, then Gold) and "You may spend Gold as though it were
+    /// mana to cast creature spells" (Shady Moneylender: Gold first, then mana).
     /// </summary>
     public sealed class PaymentRuleAbility : StaticAbility
     {

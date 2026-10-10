@@ -30,9 +30,7 @@ namespace RestartedTavern.Rules
 
             if (S.PriorityPlayer != player) return result;
             result.Add(PlayerAction.Pass(player));
-            bool sorcerySpeed = S.ActivePlayer == player
-                && (S.Step == Step.Main1 || S.Step == Step.Main2)
-                && S.Chain.Count == 0;
+            bool sorcerySpeed = S.ActivePlayer == player && S.Step == Step.Main1 && S.Chain.Count == 0;
             if (sorcerySpeed && InActionPhase && CanStartAttack(S.GetPlayer(player))) result.Add(PlayerAction.GoToCombat(player));
             AddPlayableCards(player, result, sorcerySpeed);
             if (result.Count < _stopAfter) AddActivatableAbilities(player, result, sorcerySpeed);
@@ -194,8 +192,8 @@ namespace RestartedTavern.Rules
 
         /// <summary>
         /// GAME_DESIGN §10 timing + §5.2 payment. Timing: Instants whenever you have priority,
-        /// everything else in your own main phase with an empty Chain. Payment is automatic:
-        /// permanents use mana only; Instants and Sorceries use mana first, then Gold.
+        /// everything else on your own action with an empty Chain. Payment is automatic:
+        /// permanents use mana only; Instants and Sorceries use Gold first, then mana.
         /// </summary>
         private void AddPlayableCards(PlayerId player, List<PlayerAction> result, bool sorcerySpeed)
         {
