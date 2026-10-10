@@ -22,8 +22,9 @@ namespace RestartedTavern.Client.Logic
         public PlayerId Controller;
         public Zone Zone;
 
-        /// <summary>The printed cost (cost changes are applied by the engine when paying).</summary>
+        /// <summary>What the card costs to play now: in hand, with the controller's cost changes (Sparkwrench...).</summary>
         public int Cost;
+        public int PrintedCost;
         public int PrintedPower;
         public int PrintedHealth;
         /// <summary>Current values, with counters, anthems, Equipment and until-end-of-turn changes (creatures on the battlefield).</summary>
@@ -66,12 +67,19 @@ namespace RestartedTavern.Client.Logic
         public bool HasAttackToken;
         /// <summary>The game waits on this player (their action, a response, or a decision).</summary>
         public bool IsWaitedOn;
+        /// <summary>The Tavern Dweller Power (Hearthstone hero power button): cost, text, used this round.</summary>
+        public bool HasPower;
+        public int PowerCost;
+        public string PowerText;
+        public bool PowerUsed;
     }
 
     /// <summary>A spell or ability on the Chain, bottom first.</summary>
     public sealed class ChainView
     {
         public int Id;
+        /// <summary>What "target spell / ability" chooses (Target.ForObject), and what the table keys its bubble by.</summary>
+        public ObjectId ObjectId;
         public ChainItemKind Kind;
         public PlayerId Controller;
         public string SourceDefinitionId;
@@ -147,7 +155,19 @@ namespace RestartedTavern.Client.Logic
                     HasAttackToken = p.Id == leader,
                     IsWaitedOn = waiting == p.Id,
                 };
-                if (p.TavernDweller != null) pv.TavernDweller = View(engine, state, p.TavernDweller, false);
+                if (p.TavernDweller != null)
+                {
+                    pv.TavernDweller = View(engine, state, p.TavernDweller, false);
+                    var abilities = engine.GetAbilities(state, p.TavernDweller);
+                    int power = abilities.FindIndex(ab => ab.IsTavernDwellerPower);
+                    if (power >= 0)
+                    {
+                        pv.HasPower = true;
+                        pv.PowerCost = abilities[power].Cost;
+                        pv.PowerText = abilities[power].Text;
+                        pv.PowerUsed = GameEngine.UsedThisRound(state, p.TavernDweller, power);
+                    }
+                }
                 pv.Hand = p.Hand.Select(c => View(engine, state, c, p.Id != viewer)).ToList();
                 pv.Battlefield = p.Battlefield.Select(c => View(engine, state, c, false)).ToList();
                 pv.Graveyard = p.Graveyard.Select(c => View(engine, state, c, false)).ToList();
@@ -157,7 +177,7 @@ namespace RestartedTavern.Client.Logic
             foreach (var item in state.Chain)
                 snap.Chain.Add(new ChainView
                 {
-                    Id = item.Id, Kind = item.Kind, Controller = item.Controller,
+                    Id = item.Id, ObjectId = item.ObjectId, Kind = item.Kind, Controller = item.Controller,
                     SourceDefinitionId = item.SourceDefinitionId ?? item.Card?.DefinitionId,
                     Source = item.Card?.Id ?? item.SourceId,
                     Text = item.Text, Targets = item.Targets.ToList(), IsTavernDwellerPower = item.IsTavernDwellerPower,
@@ -178,7 +198,8 @@ namespace RestartedTavern.Client.Logic
             v.Text = def.Text;
             v.Subtypes = def.Subtypes;
             v.IsToken = c.IsToken;
-            v.Cost = def.Cost;
+            v.PrintedCost = v.Cost = def.Cost;
+            if (c.Zone == Zone.Hand) v.Cost = Costs.SpellCost(state, engine.Cards, c.Controller, def);
             v.PrintedPower = v.Power = def.Power;
             v.PrintedHealth = v.MaxHealth = def.Health;
             v.Keywords = def.Keywords;

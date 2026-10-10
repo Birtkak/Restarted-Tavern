@@ -40,6 +40,8 @@ namespace RestartedTavern.Client.Logic
         public bool Enabled;
         /// <summary>The engine action a click submits. Null for Attack / Block (commit the stage) and Handoff (acknowledge).</summary>
         public PlayerAction Action;
+        /// <summary>One line under the button: what pressing it does, or what the game waits for (LoR clarity).</summary>
+        public string Hint = "";
     }
 
     /// <summary>A labelled action for the choice panel (options, declining a target, mulligan, X...).</summary>
@@ -58,10 +60,17 @@ namespace RestartedTavern.Client.Logic
     {
         public static ContextButton Main(MatchSession s, CombatStage stage = null)
         {
+            var b = MainButton(s, stage);
+            if (string.IsNullOrEmpty(b.Hint)) b.Hint = HintFor(s, b);
+            return b;
+        }
+
+        private static ContextButton MainButton(MatchSession s, CombatStage stage)
+        {
             var state = s.State;
             if (state.IsGameOver) return Button(ButtonMode.GameOver, "Game over");
             if (s.HandoffPending) return new ContextButton { Mode = ButtonMode.Handoff, Label = s.Viewer + ", take the table", Enabled = true };
-            if (!s.HumanToAct) return Button(ButtonMode.Waiting, s.CombatInProgress ? "Attacking..." : "Opponent's action");
+            if (!s.HumanToAct) return Button(ButtonMode.Waiting, s.CombatInProgress ? "Attacking..." : "Opponent's turn");
 
             var legal = s.LegalForViewer();
             var me = s.Viewer;
@@ -88,10 +97,55 @@ namespace RestartedTavern.Client.Logic
 
             var pass = PlayerAction.Pass(me);
             if (!legal.Contains(pass)) return Button(ButtonMode.ChooseOnTable, "Choose");
-            if (state.Chain.Count > 0) return Submit(ButtonMode.Resolve, "OK", pass);
+            // The label says what passing does right now (playtest 2026-10-10).
+            if (state.Chain.Count > 0)
+            {
+                // Your own item on top: passing gives the opponent the chance to respond. Theirs: passing lets it resolve.
+                bool ownTop = state.Chain[state.Chain.Count - 1].Controller == me;
+                return Submit(ButtonMode.Resolve, ownTop ? "Pass priority" : "Let it resolve", pass);
+            }
+            // After blocks: the last window before damage (LoR). Say so on the button.
+            if (state.Step == Step.DeclareBlockers) return Submit(ButtonMode.Continue, "To damage", pass);
+            if (state.Step == Step.BeginCombat || state.Step == Step.DeclareAttackers) return Submit(ButtonMode.Continue, "Pass priority", pass);
             if (state.Step != Step.Main1) return Submit(ButtonMode.Continue, "Continue", pass);
             bool endsRound = state.PassesInRow >= state.LivingPlayerCount - 1;
-            return endsRound ? Submit(ButtonMode.EndRound, "End round", pass) : Submit(ButtonMode.Pass, "Pass", pass);
+            return endsRound ? Submit(ButtonMode.EndRound, "End round", pass) : Submit(ButtonMode.Pass, "Pass turn", pass);
+        }
+
+        private static string HintFor(MatchSession s, ContextButton b)
+        {
+            var state = s.State;
+            bool attacking = state.Combat != null && state.ActivePlayer == s.Viewer;
+            switch (b.Mode)
+            {
+                case ButtonMode.Waiting:
+                    return s.CombatInProgress ? "Waiting for the opponent to respond to your attack" : "Waiting for the opponent";
+                case ButtonMode.Keep: return "Keep this hand, or mulligan";
+                case ButtonMode.Pass: return "Your action passes to the opponent. If they pass too, the round ends";
+                case ButtonMode.EndRound: return "Opponent passed. Passing now ends the round";
+                case ButtonMode.Resolve:
+                    var top = state.Chain.Count > 0 ? state.Chain[state.Chain.Count - 1] : null;
+                    string def = top?.SourceDefinitionId ?? top?.Card?.DefinitionId;
+                    string name = def != null ? s.Text.Name(def) : "the top of the Chain";
+                    bool ownTop = top != null && top.Controller == s.Viewer;
+                    return ownTop ? "The opponent may respond to " + name + ", then it resolves" : "Respond now, or " + name + " resolves";
+                case ButtonMode.Continue:
+                    switch (state.Step)
+                    {
+                        case Step.BeginCombat: return "Combat is starting. Last chance before attacks";
+                        case Step.DeclareAttackers:
+                            return attacking ? "Attack declared. Respond, or let them block" : "You are attacked. Respond before blocks";
+                        case Step.DeclareBlockers:
+                            return attacking ? "Blocks are in. Pump or remove now, then fight" : "Blocks are in. Last chance before damage";
+                        case Step.End: return "The round is ending";
+                        default: return "";
+                    }
+                case ButtonMode.Attack: return "Send the units in the lane";
+                case ButtonMode.SkipAttack: return "Attack with nothing";
+                case ButtonMode.Block: return "Confirm your blocks";
+                case ButtonMode.NoBlocks: return "Take the hits unblocked";
+                default: return "";
+            }
         }
 
         /// <summary>

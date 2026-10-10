@@ -139,7 +139,39 @@ namespace RestartedTavern.Rules.Tests
             g.PassRound();
             g.PassRound(); // the Shiv moves: it became unattached from Titan-Frame
             g.PassRound();
-            Assert.AreEqual(gold + 1, g.P(g.Active).Gold, "Scrap Collector");
+            Assert.AreEqual(gold, g.P(g.Active).Gold, "Scrap Collector pays only when an equipped creature dies (no Equip loop)");
+        }
+
+        /// <summary>The active player destroys their own creature (Ritual Slaughter) and everything resolves.</summary>
+        private static void Kill(TestGame g, CardInstance creature)
+        {
+            var spell = g.AddToHand(g.Active, "ritual_slaughter");
+            g.SetMana(g.Active, 4);
+            g.Do(PlayerAction.Play(g.Active, spell.Id, Target.ForObject(creature.Id)));
+            g.PassUntil(st => st.Chain.Count == 0 && st.Pending == null && st.ActivePlayer == g.Active && st.PriorityPlayer == g.Active);
+        }
+
+        [Test]
+        public void ScrapCollector_GoldWhenAnEquippedCreatureDies_NotForAnUnequippedOne()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            g.AddToBattlefield(g.Active, "scrap_collector");
+            var sword = g.AddToBattlefield(g.Active, "hired_sellsword");
+            var bare = g.AddToBattlefield(g.Active, "brawling_runt");
+            var shiv = g.AddToBattlefield(g.Active, "neon_shiv");
+            g.SetMana(g.Active, 1);
+            g.Do(g.Activations(g.Active, shiv).Single(a => a.Target == Target.ForObject(sword.Id)));
+            g.PassRound();
+            Assert.AreEqual(sword.Id, shiv.AttachedToObject);
+
+            int gold = g.P(g.Active).Gold;
+            Kill(g, bare);
+            Assert.IsNull(g.State.FindOnBattlefield(bare.Id));
+            Assert.AreEqual(gold, g.P(g.Active).Gold, "not equipped: no Gold");
+
+            Kill(g, sword);
+            Assert.IsNull(g.State.FindOnBattlefield(sword.Id));
+            Assert.AreEqual(gold + 1, g.P(g.Active).Gold, "the equipped Sellsword died: 1 Gold");
         }
 
         [Test]

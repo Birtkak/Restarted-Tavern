@@ -98,6 +98,11 @@ namespace RestartedTavern.Rules
         public bool RestToBottom { get; set; }
         /// <summary>ChooseObject / KeepLegendary: the objects that can be chosen. AssignCombatDamage: the recipients, in order.</summary>
         public List<ObjectId> Choices { get; set; }
+        /// <summary>
+        /// AssignCombatDamage, asked one recipient at a time: the amounts chosen so far (-1 = not yet), or null before the
+        /// first. Never changed in place (clones share it).
+        /// </summary>
+        public int[] DamageSoFar { get; set; }
         /// <summary>ChooseObject: choosing nothing is allowed ("you may").</summary>
         public bool Optional { get; set; }
         /// <summary>ChooseObject / YesNo: what happens after a choice (EventObject = the chosen object, EventPlayer = the chooser) or a decline / "no".</summary>

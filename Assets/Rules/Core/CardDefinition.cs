@@ -226,6 +226,8 @@ namespace RestartedTavern.Rules
         public bool OnlySelf { get; set; }
         /// <summary>CreatureDealtDamage: "... and survives": it still has Health left after the damage.</summary>
         public bool OnlyIfSurvives { get; set; }
+        /// <summary>CreatureDies: only creatures that had Equipment attached when they died (Scrap Collector).</summary>
+        public bool OnlyEquipped { get; set; }
         /// <summary>CreatureDies: only creatures controlled by the player this Curse is attached to (Curse of the Spotlight).</summary>
         public bool OnlyEnchantedPlayer { get; set; }
         /// <summary>SpellCast: "your second spell each turn" (Card Shark). 0 = every spell.</summary>

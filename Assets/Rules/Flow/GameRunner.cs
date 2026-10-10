@@ -152,7 +152,7 @@ namespace RestartedTavern.Rules
             while (S.AutoPass && !S.IsGameOver && S.Pending == null && S.PriorityPlayer.HasValue)
             {
                 if (HasMoreThanPass(S.PriorityPlayer.Value)) return;
-                Pass();
+                Pass(automatic: true);
                 if (++guard > 1_000_000) throw new InvalidOperationException("Auto-pass did not settle.");
             }
         }

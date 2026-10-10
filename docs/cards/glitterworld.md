@@ -18,20 +18,20 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 1 | **Static Shock** | 1 | Instant | C | — | Deal 1 damage to target creature. Draw a card. | A ping that replaces itself | ✅ |
 | 2 | **Neon Shiv** | 1 | Equipment | C | — | Equipped creature gets +1/+1. Equip 1. | The basic Equipment | ✅ |
 | 3 | **Courier Bot** | 1 | Creature: Construct | C | 1/2 | Arrival: You may attach target Equipment you control to this. | Saves an Equip cost | ✅ |
-| 4 | **Spark Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Deal 1 damage to a creature. | From the samples | ✅ |
-| 5 | **Pulse Blade** | 2 | Equipment | C | — | Equipped creature gets +1/+1 and has "Whenever this creature attacks, deal 1 damage to a creature." Equip 2. | From the samples. A ping engine on any creature | ✅ |
+| 4 | **Spark Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Deal 1 damage to target creature. | From the samples | ✅ |
+| 5 | **Pulse Blade** | 2 | Equipment | C | — | Equipped creature gets +1/+1 and has "Whenever this creature attacks, deal 1 damage to target creature." Equip 2. | From the samples. A ping engine on any creature | ✅ |
 | 6 | **Back-Street Mechanic** | 2 | Creature: Citizen | U | 2/2 | Tap: Heal 2 from target Construct or equipped creature. | Healing for machines, as the faction pie says | ✅ |
 | 7 | **Alley Tinker** | 2 | Creature: Citizen | C | 2/2 | Arrival: Create a *Scrap Plating* Equipment token with "Equipped creature gets +0/+2. Equip 1." | Body plus Equipment | ✅ |
 | 8 | **Chain Zap** | 3 | Sorcery | C | — | Deal 1 damage to each of up to three target creatures. | Spreads damage across a board | ✅ |
 | 9 | **Overclock Rig** | 3 | Equipment | U | — | Equipped creature gets +2/+1 and has "Tap: Deal 1 damage to any target." Equip 2. | Turns any creature into a ping turret | ✅ |
 | 10 | **Sky Patrol Drone** | 3 | Creature: Construct | C | 2/3 | Flying. | An evasive Equipment carrier | ✅ |
 | 11 | **Arc Welder** | 3 | Creature: Citizen | U | 2/3 | Whenever you pay an Equip cost, deal 1 damage to any target. | Ties the two themes together: equipping causes pings | ✅ |
-| 12 | **Rail Cannon** | 4 | Equipment | U | — | Equipped creature gets +3/+0 and has "Whenever this creature attacks, deal 1 damage to a creature." Equip 3. | Heavy weaponry | ✅ |
+| 12 | **Rail Cannon** | 4 | Equipment | U | — | Equipped creature gets +3/+0 and has "Whenever this creature attacks, deal 1 damage to target creature." Equip 3. | Heavy weaponry | ✅ |
 | 13 | **Riot Suppressor** | 4 | Creature: Construct | U | 3/3 | Arrival: Deal 1 damage to each enemy creature. | A mini-sweeper on a body. Wrecks Goober tokens | ✅ |
 | 14 | **Grid Overload** | 4 | Sorcery | R | — | Deal 1 damage to each enemy creature twice. | From the samples. Balance 2026-10-10: three times → twice. Each ping is a separate damage event | ✅ |
 | 15 | **Megacorp Exosuit** | 5 | Equipment | R | — | Equipped creature gets +3/+3 and has Flying and Trample. Equip 3. | Turns any citizen into a big threat | ✅ |
 | 16 | **Patrol Captain** | 5 | Creature: Citizen | U | 4/5 | Equipped creatures you control get +1/+1. | An Equipment "lord" | ✅ |
-| 17 | **Hover Tank** | 5 | Creature: Construct | C | 4/5 | Arrival: Deal 1 damage to a creature. | A sturdy body with a ping | ✅ |
+| 17 | **Hover Tank** | 5 | Creature: Construct | C | 4/5 | Arrival: Deal 1 damage to target creature. | A sturdy body with a ping | ✅ |
 | 18 | **Orbital Strike Network** | 6 | Relic | R | — | At the start of your turn, deal 1 damage to each enemy creature and each opponent. | A ping engine that slowly grinds the opposing board down | ✅ |
 | 19 | **Titan-Frame Guardian** | 6 | Creature: Construct | R | 5/7 | Whenever an Equipment becomes attached to this, heal it fully and draw a card. | A huge Equipment carrier that repairs itself | ✅ |
 | 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of your turn, deal 1 damage to any target for each Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
@@ -54,9 +54,9 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 |---|---|---|---|---|---|---|---|---|---|
 | 21 | **Gilded Knuckles** | 1 | Equipment | C | — | Equipped creature gets +2/+0. Equip 1. | Cheap to cast; the Equip can be paid with banked Gold | ✓ implemented | ✅ |
 | 22 | **Patch-Up Drone** | 2 | Creature: Construct | C | 1/1 | Flying. Arrival: Heal 2 from target Construct or equipped creature. | Machine repair on a drone | ✓ implemented | ✅ |
-| 23 | **Scrap Collector** | 2 | Creature: Construct | C | 2/2 | Whenever an Equipment you control becomes unattached, gain 1 Gold. | When an equipped creature dies, you get Gold back to re-equip | ✓ implemented | ✅ |
+| 23 | **Scrap Collector** | 2 | Creature: Construct | C | 2/2 | Whenever an equipped creature you control dies, gain 1 Gold. | When an equipped creature dies, you get Gold back to re-equip | ✓ implemented | ✅ |
 | 24 | **Finisher Protocol** | 2 | Instant | C | — | Destroy target creature with 2 or less Health remaining. | The ping plan's closer: spread damage, then delete | ✓ implemented | ✅ |
-| 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to a creature." Equip 1. | Ping engine on any attacker | ✓ implemented | ✅ |
+| 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to target creature." Equip 1. | Ping engine on any attacker | ✓ implemented | ✅ |
 | 26 | **Smart Rounds** | 3 | Sorcery | U | — | Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage. | Chains across a wounded board, and rewards having pinged before | ✓ implemented | ✅ |
 | 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | ✓ implemented | ✅ |
 | 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | ✓ implemented | ✅ |

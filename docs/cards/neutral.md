@@ -16,8 +16,8 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | **Barkeep's Tonic** | 1 | Instant | C | — | Heal 3 from a creature or your Tavern Dweller. Invest 1: Draw a card. | From the samples. Healing for every deck | ✅ |
-| 2 | **Pot Boy** | 1 | Creature: Human | C | 1/2 | Arrival: Heal 1 from a creature. | A small helper | ✅ |
+| 1 | **Barkeep's Tonic** | 1 | Instant | C | — | Heal 3 from target creature or your Tavern Dweller. Invest 1: Draw a card. | From the samples. Healing for every deck | ✅ |
+| 2 | **Pot Boy** | 1 | Creature: Human | C | 1/2 | Arrival: Heal 1 from target creature. | A small helper | ✅ |
 | 3 | **Hired Sellsword** | 2 | Creature: Human | C | 2/3 | — | A plain, honest 2-drop | ✅ |
 | 4 | **Last Call** | 2 | Instant | C | — | Destroy target Equipment, Relic or Curse. | The generic answer to non-creature permanents | ✅ |
 | 5 | **Tavern Bouncer** | 3 | Creature: Human | C | 2/5 | — | From the samples. A defensive wall | ✅ |

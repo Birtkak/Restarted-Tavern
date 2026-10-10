@@ -15,14 +15,14 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
 | 1 | **Goober Rascal** | 1 | Creature: Goober | C | 2/1 | Can't block. | The classic aggressive 1-drop | ✅ |
-| 2 | **Spark Snot** | 1 | Instant | C | — | Deal 2 damage to a creature. | Cheap burn. The damage sticks, so it also finishes off a creature that's already wounded | ✅ |
+| 2 | **Spark Snot** | 1 | Instant | C | — | Deal 2 damage to target creature. | Cheap burn. The damage sticks, so it also finishes off a creature that's already wounded | ✅ |
 | 3 | **Grubby Pickpocket** | 1 | Creature: Goober | C | 1/2 | Whenever this attacks, the defending player loses 1 Gold and you gain 1 Gold. | Steals Gold, and cuts down the opponent's instant-speed answers | ✅ |
 | 4 | **Fuse Goober** | 2 | Creature: Goober | C | 1/2 | Last Breath: Deal 2 damage to any target. | Trades up even when it dies | ✅ |
 | 5 | **Gob Gang** | 2 | Sorcery | C | — | Create two 1/1 Goobers. | Goes wide | ✅ |
 | 6 | **Goober Shaman** | 2 | Creature: Goober | U | 2/2 | Arrival: You may discard a card. If you do, draw a card. | Rummage: Goobers' version of card selection | ✅ |
 | 7 | **Brawling Runt** | 2 | Creature: Goober | C | 2/2 | — | A plain, efficient aggro body | ✅ |
 | 8 | **Goober Warchief** | 3 | Creature: Goober | U | 2/3 | Your other Goobers get +1/+0. | The "lord": makes tokens a real threat | ✅ |
-| 9 | **Firecracker Volley** | 3 | Sorcery | U | — | Deal 3 damage divided as you choose among any number of creatures and/or players. | Flexible burn: kill small creatures, or spread lasting damage | ✅ |
+| 9 | **Firecracker Volley** | 3 | Sorcery | U | — | Deal 3 damage divided as you choose among one, two or three targets (creatures and/or players). | Flexible burn: kill small creatures, or spread lasting damage | ✅ |
 | 10 | **Hog-Rider** | 3 | Creature: Goober | C | 3/3 | Trample. | A goblin on a war pig | ✅ |
 | 11 | **Gold-Snatcher Crew** | 3 | Creature: Goober | U | 2/2 | Whenever this deals combat damage to a player, that player loses up to 2 Gold and you gain that much. | Gold theft on a body | ✅ |
 | 12 | **Mob Rush** | 4 | Sorcery | U | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. | Instant pressure | ✅ |

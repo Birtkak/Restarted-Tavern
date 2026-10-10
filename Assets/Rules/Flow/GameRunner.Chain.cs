@@ -47,9 +47,10 @@ namespace RestartedTavern.Rules
         /// When every living player has passed in a row, the top of the Chain resolves and the
         /// active player gets priority again; with an empty Chain the step ends.
         /// </summary>
-        private void Pass()
+        private void Pass(bool automatic = false)
         {
             var passer = S.PriorityPlayer.Value;
+            Emit(new PriorityPassedEvent { Player = passer, Step = S.Step, ChainCount = S.Chain.Count, Automatic = automatic });
             S.PassesInRow++;
             if (S.PassesInRow < S.LivingPlayerCount)
             {

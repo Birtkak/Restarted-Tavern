@@ -71,7 +71,7 @@ the Chain → OK. A combat priority window → Continue. Otherwise Pass, or End 
 whole uGUI table from code at runtime (Screen Space – Camera, 1920×1080 reference, scale with screen size, legacy
 `Text` so no TextMeshPro import is needed); `TableBuilder` (editor) makes `Assets/Scenes/Table.unity` (camera, event
 system, TableView) and builds `Builds/Table/RestartedTavern.exe`. The table is rebuilt from a fresh `TableSnapshot`
-after every change (no animations yet).
+after every change; the events of the change then animate on top (FLIP slides + effects, `TableView.Beats.cs`, [LOR_PRESENTATION.md](LOR_PRESENTATION.md) §6).
 - **Layout** as §1.1: Tavern Dwellers left (life on the portrait, Power button beside it), opponent's hand as backs at
   the top, rows of units above and below the combat lane, MTGA fanned hand at the bottom (lift + grow on hover), piles
   (deck / graveyard / exile, click to browse) and mana column + 3 Gold diamonds + attack token on the right, the Chain
@@ -102,7 +102,7 @@ after every change (no animations yet).
   legal actions, picker / combat stage, errors, log, and `MatchSession.History`, which replays the game exactly).
 - **Command line**: `-menu`, `-debug`, `-reveal`, `-bugreport note`, `-seed N`, `-deck1/-deck2 N`, `-bot1`, `-human2` (hot-seat), `-autoplay N` (the bot plays for
   everyone, `MatchSession.AutoStep`), `-until attack|block` (stop there and stage everything), `-autopick`,
-  `-autoshot file.png`.
+  `-autoshot file.png`, `-shotat seconds` (shoot that long after the table is drawn, to catch the beats).
 
 ---
 
@@ -110,11 +110,11 @@ after every change (no animations yet).
 1. ~~**Table scene skeleton**~~ done (§2.2).
 2. ~~**Drag and drop**~~ done (§2.2), apart from playing a card by dropping it on the board.
 3. **Card frames**: placeholder frames per faction (hand card + unit card variants), keyword icons.
-4. **Animations** from `PresentationQueue` (DOTween-style tweens written in-house or a package, ❓).
+4. **Animations**: LoR clarity + core beats built with PrimeTween ([LOR_PRESENTATION.md](LOR_PRESENTATION.md) §6). The round ceremony, the Chain as cards and the history rail are next.
 5. **Hot-seat screens**: handoff cover, mulligan screen, game over, deck pick.
 6. **Tavern table art pass**: board background, portraits, gem art (placeholder → painted).
 
 ## 4. Open ❓
-- Tween library: a small in-house tweener vs. a package (DOTween is not on the Unity registry).
+- ~~Tween library~~: PrimeTween 1.3.3 from OpenUPM 🔒 (2026-10-10).
 - Multiplayer (3–4) layout: later, with §13 of GAME_DESIGN.
 - Art production: who paints (commission, AI-assisted, mixed) once the frames are in.

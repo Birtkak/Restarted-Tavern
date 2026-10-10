@@ -222,6 +222,19 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
   ```
   This writes `Builds/DebugTable/RestartedTavern.exe` (git-ignored). Command-line flags: `-seed N`, `-bot1`, `-bot2`, `-deck1 N`, `-deck2 N`, `-autoplay N` (the bots play N actions at startup), and `-autoshot file.png` (take a screenshot, then quit), for automated checks.
 - The P1/P2 bot toggles use `GreedyBot` (`Assets/Rules/AI`), a deterministic rule-based player. It plans each attack as a whole: candidate attacks are scored against the defender's likely blocks and the crack-back next turn, so it alpha-strikes through blockers and holds back when the swing back would kill. `MatchRunner` plays bot-vs-bot games and `Experiments` builds the simulation report (see [playtest/PLAYTEST.md](playtest/PLAYTEST.md)).
+- **Bug hunt** (`Tools/BugHunt`, same SDK): run it before a push.
+  - It plays three sets of games:
+    - every prototype deck × Tavern Dweller pairing with the greedy bot
+    - random play with the prototype decks
+    - random play with random 60-card decks from the whole pool
+  - After every action it checks:
+    - the engine invariants (mana, Gold, card conservation, dead creatures, Equipment)
+    - the client logic: the context button's action is legal and labelled, choice buttons are legal, every legal target is on the table (Chain bubbles too), and the picker only builds legal actions
+  - At the end of each game it checks that the history replays to the same game.
+  - A watchdog prints any game running over 15 s (hangs, choices that explode).
+  - Default run: about 6,000 games in about 15 s. Exit code 1 on any failure.
+  - Options: `-seeds N`, `-random N`, `-randomDecks N`, `-seed S` (one game, with a line per combat damage choice), `-data path`.
+  - Command: `Editor/Data/DotNetSdk/dotnet.exe run -c Release --project Tools/BugHunt`.
 - **Simulations outside Unity**: `Tools/SimRunner` (a .NET 8 console app built with the SDK in Unity's `Editor/Data/DotNetSdk`) compiles the `Assets/Rules` sources and runs the simulation report in ~35 s instead of several minutes in Unity (Mono's GC keeps the parallel games from scaling). See [playtest/PLAYTEST.md](playtest/PLAYTEST.md) "How to run". `-trace` prints one readable bot game; `-h2h` plays the current GreedyBot against `BotStyle.Baseline()` (or, with `-off Switch`, against itself minus one switch) in every mirror. Balance tools: `-balance [-cards]` (win matrix, per-card cast stats), `-scan` (card power table, playtest/CARD_POWER.md), `-impact`, `-optimize` (deck tuning by measurement), and `-data <folder>` to load a changed copy of StreamingAssets; `MatchResult.CardGames/CardWins` track which cards each side cast.
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 

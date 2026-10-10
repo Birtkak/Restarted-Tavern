@@ -14,8 +14,8 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | **Canopy Critter** | 1 | Creature: Critter | C | 1/1 | Arrival: Heal 2 from another creature. | From the samples | ✅ |
-| 2 | **Jungle Remedy** | 1 | Instant | C | — | Heal 4 from a creature. Invest 1: Put a +1/+1 counter on it. | Efficient healing, as the guidelines require | ✅ |
+| 1 | **Canopy Critter** | 1 | Creature: Critter | C | 1/1 | Arrival: Heal 2 from another target creature. | From the samples | ✅ |
+| 2 | **Jungle Remedy** | 1 | Instant | C | — | Heal 4 from target creature. Invest 1: Put a +1/+1 counter on it. | Efficient healing, as the guidelines require | ✅ |
 | 3 | **Sproutling** | 1 | Creature: Plant | C | 1/2 | At the end of your turn, if this has no damage, put a +1/+1 counter on it. | Grows if you protect it | ✅ |
 | 4 | **Vine Spider** | 2 | Creature: Spider | C | 2/3 | Reach. | The faction's answer to fliers | ✅ |
 | 5 | **Primal Clash** | 2 | Sorcery | C | — | Target creature you control fights target creature you don't control. | Fight removal. Your creature keeps its damage too | ✅ |
@@ -74,7 +74,7 @@ Goal: players should have to count their mana out most rounds. Each faction gets
 | # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | 31 | **Gift of the Grove** | 3 | Sorcery | C | — | Draw a card for each creature with 5 or more Power you control (at least one). | Draw · draw from big creatures (faction pie) | ✓ implemented | ✅ |
-| 32 | **Watering Hole** | 2 | Relic | U | — | Whenever a creature with 5 or more Power enters under your control, draw a card. (2): Heal 2 from a creature. | Draw · mana sink · healing ★ | ✓ implemented | ✅ |
+| 32 | **Watering Hole** | 2 | Relic | U | — | Whenever a creature with 5 or more Power enters under your control, draw a card. (2): Heal 2 from target creature. | Draw · mana sink · healing ★ | ✓ implemented | ✅ |
 | 33 | **Overgrowth** | X+1 | Sorcery | C | — | Put X +1/+1 counters on target creature you control. | Mana sink · +1/+1 counters; growth that stays | ✓ implemented | ✅ |
 | 34 | **Mossgut Grower** | 3 | Creature: Beast | U | 2/3 | Trample. (3): Put a +1/+1 counter on this creature. | Mana sink · repeatable growth into a big creature | ✓ implemented | ✅ |
 | 35 | **Call of the Deep** | X+2 | Sorcery | R | — | Target creature you control gets +X/+X and Trample until end of turn. Then it fights up to one target creature you don't control. | Finisher · Wild doesn't burn; it clears a blocker and swings for lethal | ✓ implemented | ✅ |

@@ -15,14 +15,14 @@ Status tags: ✅ approved · 🟡 draft · ✏️ revised in the final pass
 |---|---|---|---|---|---|
 | 1 | Wizards + Goobers | **Grizzle Coinflick**, goblin pyromancer-for-hire | Whenever you cast a spell that costs **5 or more**, create a 1/1 Goober. | (2) Deal 1 damage to any target. | ✅ |
 | 2 | Wizards + Sensationalists | **Madame Vesper**, the debt collector | Whenever a creature an opponent controls dies, gain 1 Gold. | (3) Draw a card and lose 2 life. | ✅ |
-| 3 | Wizards + Wild | **Old Mossbank**, the druid banker | Your **spells and creatures** that cost 6 or more cost 1 less. | (2) Give a creature +2/+2 until end of turn. | ✅ |
+| 3 | Wizards + Wild | **Old Mossbank**, the druid banker | Your **spells and creatures** that cost 6 or more cost 1 less. | (2) Target creature gets +2/+2 until end of turn. | ✅ |
 | 4 | Wizards + Glitterworld | **Auditor Prime**, a construct accountant | Your Invest **and Equip** costs are 1 lower (minimum 1). | ✏️ (2) Draw a card. Activate only if you have **3 or more Gold**. | ✅ |
 | 5 | Goobers + Sensationalists | **Skabba**, goblin cult chieftain | Whenever one of your creatures dies, deal 1 damage to each opponent. **This triggers at most 3 times each turn.** | (1) Sacrifice a creature: Draw a card. | ✅ |
 | 6 | Goobers + Wild | **Mukk the Grub King**, a goblin riding a giant beast | Your creatures with Trample get +1/+0. | ✏️ (3) Target creature you control **with Trample** fights target creature you don't control. | ✅ |
 | 7 | Goobers + Glitterworld | **Sparkwrench**, goblin mechanic | Your Equipment spells cost 1 less. | ✏️ (2) Attach up to one target Equipment you control to target creature you control. If no Equipment became attached, that creature gets **+1/+1** until end of turn. | ✅ |
-| 8 | Sensationalists + Wild | **The Rotmother**, a jungle witch of rot and rebirth | Whenever a creature with 5 or more Power you control dies, create a 2/2 Spawn. | (3) Return a creature card from your graveyard to your hand, then lose 3 life. | ✅ |
-| 9 | Sensationalists + Glitterworld | **Vox Nocturne**, a cult leader who broadcasts horror live on the city's screens | Whenever a creature an opponent controls dies, you gain 1 life. | (2) Deal 1 damage to a creature. If it dies, draw a card. | ✅ |
-| 10 | Wild + Glitterworld | **Keeper Z-00**, the city's zookeeper unit | Your creatures with 5 or more Health enter with a +1/+1 counter. | (2) Heal 3 from a creature. | ✅ |
+| 8 | Sensationalists + Wild | **The Rotmother**, a jungle witch of rot and rebirth | Whenever a creature with 5 or more Power you control dies, create a 2/2 Spawn. | (3) Return target creature card from your graveyard to your hand, then lose 3 life. | ✅ |
+| 9 | Sensationalists + Glitterworld | **Vox Nocturne**, a cult leader who broadcasts horror live on the city's screens | Whenever a creature an opponent controls dies, you gain 1 life. | (2) Deal 1 damage to target creature. If it dies, draw a card. | ✅ |
+| 10 | Wild + Glitterworld | **Keeper Z-00**, the city's zookeeper unit | Your creatures with 5 or more Health enter with a +1/+1 counter. | (2) Heal 3 from target creature. | ✅ |
 
 ✅ **All 10 approved (v0.1)**
 

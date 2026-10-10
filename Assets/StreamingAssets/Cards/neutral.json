@@ -6,7 +6,7 @@
     "cost": 1,
     "rarity": "Common",
     "faction": "neutral",
-    "text": "Heal 3 from a creature or your Tavern Dweller. Invest 1: Draw a card.",
+    "text": "Heal 3 from target creature or your Tavern Dweller. Invest 1: Draw a card.",
     "spellTargets": [
       {"spec": "CreatureOrYou"}
     ],
@@ -487,7 +487,7 @@
     "subtypes": ["Human"],
     "rarity": "Common",
     "faction": "neutral",
-    "text": "Arrival: Heal 1 from a creature.",
+    "text": "Arrival: Heal 1 from target creature.",
     "triggers": [
       {
         "target": "Creature",

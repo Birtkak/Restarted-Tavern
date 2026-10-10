@@ -37,7 +37,7 @@
     "cost": 1,
     "rarity": "Common",
     "faction": "sensationalists",
-    "text": "Attach to an enemy creature. It gets -1/-1.",
+    "text": "Attach to target enemy creature. It gets -1/-1.",
     "spellTargets": [
       {"spec": "CreatureYouDontControl"}
     ],
@@ -141,7 +141,7 @@
     "cost": 2,
     "rarity": "Common",
     "faction": "sensationalists",
-    "text": "Attach to an enemy creature. It can't be healed. Whenever it's dealt damage, its controller loses 1 life.",
+    "text": "Attach to target enemy creature. It can't be healed. Whenever it's dealt damage, its controller loses 1 life.",
     "spellTargets": [
       {"spec": "CreatureYouDontControl"}
     ],
@@ -181,7 +181,7 @@
     "cost": 4,
     "rarity": "Uncommon",
     "faction": "sensationalists",
-    "text": "Attach to an enemy creature. It gets -1/-1 for each creature card in your graveyard (up to -4/-4).",
+    "text": "Attach to target enemy creature. It gets -1/-1 for each creature card in your graveyard (up to -4/-4).",
     "spellTargets": [
       {"spec": "CreatureYouDontControl"}
     ],
@@ -201,7 +201,7 @@
     "cost": 5,
     "rarity": "Rare",
     "faction": "sensationalists",
-    "text": "Attach to an opponent. At the start of that player's turn, deal 1 damage to each creature they control. Creatures they control can't be healed.",
+    "text": "Attach to target opponent. At the start of that player's turn, deal 1 damage to each creature they control. Creatures they control can't be healed.",
     "spellTargets": [
       {"spec": "Opponent"}
     ],
@@ -227,7 +227,7 @@
     "subtypes": ["Horror"],
     "rarity": "Common",
     "faction": "sensationalists",
-    "text": "Arrival: Exile a creature card from a graveyard. If you do, gain 2 life.",
+    "text": "Arrival: Exile target creature card from a graveyard. If you do, gain 2 life.",
     "triggers": [
       {
         "target": "CreatureCardInAGraveyard",
@@ -328,7 +328,7 @@
     "cost": 2,
     "rarity": "Uncommon",
     "faction": "sensationalists",
-    "text": "Return up to two creature cards with cost 3 or less from your graveyard to your hand.",
+    "text": "Return up to two target creature cards with cost 3 or less from your graveyard to your hand.",
     "spellTargets": [
       {"spec": "CreatureCardInYourGraveyard", "optional": true, "maxCost": 3},
       {"spec": "CreatureCardInYourGraveyard", "optional": true, "maxCost": 3}
@@ -345,7 +345,7 @@
     "cost": 3,
     "rarity": "Common",
     "faction": "sensationalists",
-    "text": "Attach to an enemy creature. It gets -2/-0. At the start of its controller's turn, deal 1 damage to it.",
+    "text": "Attach to target enemy creature. It gets -2/-0. At the start of its controller's turn, deal 1 damage to it.",
     "spellTargets": [
       {"spec": "CreatureYouDontControl"}
     ],
@@ -371,7 +371,7 @@
     "subtypes": ["Human"],
     "rarity": "Common",
     "faction": "sensationalists",
-    "text": "Arrival: Return a creature card with cost 2 or less from your graveyard to your hand.",
+    "text": "Arrival: Return target creature card with cost 2 or less from your graveyard to your hand.",
     "triggers": [
       {
         "target": "CreatureCardInYourGraveyard",
@@ -411,7 +411,7 @@
     "cost": 4,
     "rarity": "Rare",
     "faction": "sensationalists",
-    "text": "Attach to an opponent. Whenever a creature that player controls dies, they lose 2 life and you draw a card.",
+    "text": "Attach to target opponent. Whenever a creature that player controls dies, they lose 2 life and you draw a card.",
     "spellTargets": [
       {"spec": "Opponent"}
     ],
@@ -613,7 +613,7 @@
     "cost": 3,
     "rarity": "Uncommon",
     "faction": "sensationalists",
-    "text": "Return a creature card with cost 3 or less from your graveyard to your hand. Invest 3: Put it onto the battlefield instead.",
+    "text": "Return target creature card with cost 3 or less from your graveyard to your hand. Invest 3: Put it onto the battlefield instead.",
     "spellTargets": [
       {"spec": "CreatureCardInYourGraveyard", "maxCost": 3}
     ],
@@ -642,7 +642,7 @@
     "cost": 4,
     "rarity": "Rare",
     "faction": "sensationalists",
-    "text": "Attach to an opponent. At the start of that player's turn, they lose 1 life. (3): That player loses 1 life and you gain 1 life.",
+    "text": "Attach to target opponent. At the start of that player's turn, they lose 1 life. (3): That player loses 1 life and you gain 1 life.",
     "spellTargets": [
       {"spec": "Opponent"}
     ],

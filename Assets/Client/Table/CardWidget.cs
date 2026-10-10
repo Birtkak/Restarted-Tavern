@@ -12,6 +12,10 @@ namespace RestartedTavern.Client.Table
         OpponentHandCard,
         Unit,
         TavernDweller,
+        /// <summary>A spell or ability on the Chain (a LoR-style bubble in the middle of the table). Targetable.</summary>
+        ChainItem,
+        /// <summary>An entry of the play history (left rail): hover zooms the card; not a target.</summary>
+        History,
     }
 
     /// <summary>

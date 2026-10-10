@@ -29,11 +29,35 @@ namespace RestartedTavern.Rules.AI
                     var c = recipients[i];
                     if (c == null) continue;
                     int left = Math.Max(1, Stats(s, c).RemainingHealth);
-                    score += a.Division[i] >= left ? Worth(s, c) : 0.3 * Worth(s, c) * a.Division[i] / left;
+                    int dealt = Math.Max(0, a.Division[i]);
+                    score += dealt >= left ? Worth(s, c) : 0.3 * Worth(s, c) * dealt / left;
                 }
                 return score;
             }
-            return legal.OrderByDescending(Score).First();
+            // 3+ recipients are asked one at a time (steps with -1 for later ones): plan the whole split greedily instead
+            // (the engine accepts a whole split): kill what is worth most per point of damage, chip with the rest.
+            if (s.Pending.DamageSoFar == null && legal.Any(a => Array.IndexOf(a.Division, -1) >= 0))
+                return PlayerAction.AssignDamage(s.Pending.Player, PlanSplit(s, recipients, s.Pending.Count));
+            return legal.OrderByDescending(a => Score(a)).First();
+        }
+
+        private int[] PlanSplit(GameState s, List<CardInstance> recipients, int total)
+        {
+            int n = recipients.Count;
+            var lethal = recipients.Select(c => c == null ? 0 : Math.Max(0, Stats(s, c).RemainingHealth)).ToArray();
+            var split = new int[n];
+            int left = total;
+            foreach (int i in Enumerable.Range(0, n).Where(i => recipients[i] != null && lethal[i] > 0)
+                         .OrderByDescending(i => Worth(s, recipients[i]) / lethal[i]))
+                if (lethal[i] <= left) { split[i] = lethal[i]; left -= lethal[i]; }
+            for (int i = 0; i < n && left > 0; i++)
+            {
+                int room = Math.Min(left, Math.Min(total, lethal[i]) - split[i]);
+                if (room > 0) { split[i] += room; left -= room; }
+            }
+            for (int i = 0; i < n && left > 0; i++)
+                if (recipients[i] == null) { split[i] += left; left = 0; } // a recipient that's gone soaks the rest
+            return split;
         }
 
         /// <summary>

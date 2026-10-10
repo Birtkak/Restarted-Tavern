@@ -45,6 +45,7 @@ namespace RestartedTavern.Rules
                 }
             }
             int lastPower = dies ? Stats(card).Power : 0; // last known information (MTG 608.2h)
+            bool wasEquipped = dies && CharacteristicsCalculator.IsEquipped(S, Db, card);
 
             // A lord/anthem leaving ends its buffs (§7.3: losing a buff can't kill).
             var buffSnapshot = from == Zone.Battlefield && def.Statics.Count > 0 ? SnapshotRemainingHealth() : null;
@@ -92,7 +93,8 @@ namespace RestartedTavern.Rules
                     (t, watcher) => (t.MinPower <= 0 || lastPower >= t.MinPower)
                                     && (t.SubjectSubtype == null || def.HasSubtype(t.SubjectSubtype))
                                     && (!t.OthersOnly || watcher.Id != card.Id)
-                                    && (!t.OnlyEnchantedPlayer || watcher.AttachedToPlayer == lastController),
+                                    && (!t.OnlyEnchantedPlayer || watcher.AttachedToPlayer == lastController)
+                                    && (!t.OnlyEquipped || wasEquipped),
                     eventObject: card.Id, eventPlayer: lastController);
             }
             if (from == Zone.Battlefield && to == Zone.Graveyard && def.Type == CardType.Curse)

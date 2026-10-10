@@ -4,7 +4,8 @@
     "references": [
         "RestartedTavern.Rules",
         "RestartedTavern.Client.Logic",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "PrimeTween.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

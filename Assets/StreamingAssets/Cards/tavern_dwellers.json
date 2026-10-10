@@ -70,7 +70,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["shadow_money_wizards", "evergrowing_wild"],
-    "text": "Your spells and creatures that cost 6 or more cost 1 less. Power (2): Give a creature +2/+2 until end of turn.",
+    "text": "Your spells and creatures that cost 6 or more cost 1 less. Power (2): Target creature gets +2/+2 until end of turn.",
     "statics": [
       {"$type": "CostModifierAbility", "minPrintedCost": 6, "reduction": 1}
     ],
@@ -84,7 +84,7 @@
         "effects": [
           {"$type": "PumpTargetEffect", "power": 2, "health": 2}
         ],
-        "text": "(2) Give a creature +2/+2 until end of turn."
+        "text": "(2) Target creature gets +2/+2 until end of turn."
       }
     ]
   },
@@ -206,7 +206,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["sensationalists", "evergrowing_wild"],
-    "text": "Whenever a creature with 5 or more Power you control dies, create a 2/2 Spawn. Power (3): Return a creature card from your graveyard to your hand, then lose 3 life.",
+    "text": "Whenever a creature with 5 or more Power you control dies, create a 2/2 Spawn. Power (3): Return target creature card from your graveyard to your hand, then lose 3 life.",
     "triggers": [
       {
         "when": "CreatureDies",
@@ -228,7 +228,7 @@
           {"$type": "ReturnToHandFromGraveyardEffect"},
           {"$type": "LoseLifeEffect", "amount": 3}
         ],
-        "text": "(3) Return a creature card from your graveyard to your hand, then lose 3 life."
+        "text": "(3) Return target creature card from your graveyard to your hand, then lose 3 life."
       }
     ]
   },
@@ -240,7 +240,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["sensationalists", "glitterworld"],
-    "text": "Whenever a creature an opponent controls dies, you gain 1 life. Power (2): Deal 1 damage to a creature. If it dies, draw a card.",
+    "text": "Whenever a creature an opponent controls dies, you gain 1 life. Power (2): Deal 1 damage to target creature. If it dies, draw a card.",
     "triggers": [
       {
         "when": "CreatureDies",
@@ -260,7 +260,7 @@
         "effects": [
           {"$type": "DamageThenDrawIfLethalEffect"}
         ],
-        "text": "(2) Deal 1 damage to a creature. If it dies, draw a card."
+        "text": "(2) Deal 1 damage to target creature. If it dies, draw a card."
       }
     ]
   },
@@ -272,7 +272,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["evergrowing_wild", "glitterworld"],
-    "text": "Your creatures with 5 or more Health enter with a +1/+1 counter. Power (2): Heal 3 from a creature.",
+    "text": "Your creatures with 5 or more Health enter with a +1/+1 counter. Power (2): Heal 3 from target creature.",
     "statics": [
       {"$type": "ReplacementAbility", "event": "Enters", "affects": "You", "minHealth": 5, "counters": 1}
     ],
@@ -286,7 +286,7 @@
         "effects": [
           {"$type": "HealEffect", "amount": 3}
         ],
-        "text": "(2) Heal 3 from a creature."
+        "text": "(2) Heal 3 from target creature."
       }
     ]
   }

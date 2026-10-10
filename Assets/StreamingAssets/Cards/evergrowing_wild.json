@@ -6,7 +6,7 @@
     "cost": 1,
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "Heal 4 from a creature. Invest 1: Put a +1/+1 counter on it.",
+    "text": "Heal 4 from target creature. Invest 1: Put a +1/+1 counter on it.",
     "spellTargets": [
       {"spec": "Creature"}
     ],
@@ -99,7 +99,7 @@
     "subtypes": ["Critter"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "Arrival: Heal 2 from another creature.",
+    "text": "Arrival: Heal 2 from another target creature.",
     "triggers": [
       {
         "target": "Creature",
@@ -574,7 +574,7 @@
     "cost": 2,
     "rarity": "Uncommon",
     "faction": "evergrowing_wild",
-    "text": "Whenever a creature with 5 or more Power enters under your control, draw a card. (2): Heal 2 from a creature.",
+    "text": "Whenever a creature with 5 or more Power enters under your control, draw a card. (2): Heal 2 from target creature.",
     "triggers": [
       {
         "when": "CreatureEnters",
@@ -594,7 +594,7 @@
         "effects": [
           {"$type": "HealEffect", "amount": 2}
         ],
-        "text": "(2): Heal 2 from a creature."
+        "text": "(2): Heal 2 from target creature."
       }
     ]
   },

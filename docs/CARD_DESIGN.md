@@ -109,25 +109,25 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
 | **Candlelit Acolyte** | 2 | Creature: Human (C) | 2/2 | Lifelink. |
-| **Hex of Withering** | 3 | Curse (C) | — | Attach to an enemy creature. It gets -2/-0. At the start of its controller's turn, deal 1 damage to it. |
+| **Hex of Withering** | 3 | Curse (C) | — | Attach to target enemy creature. It gets -2/-0. At the start of its controller's turn, deal 1 damage to it. |
 | **Midnight Ritual** | 1 | Instant (U) | — | As an extra cost, sacrifice a creature. Draw 2 cards. Invest 2: Return a creature card with cost 3 or less from your graveyard to the battlefield. |
 
 ### Evergrowing Wild
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
-| **Canopy Critter** | 1 | Creature: Critter (C) | 1/1 | Arrival: Heal 2 from another creature. |
+| **Canopy Critter** | 1 | Creature: Critter (C) | 1/1 | Arrival: Heal 2 from another target creature. |
 | **Thornback Ravager** | 5 | Creature: Beast (U) | 4/4 | Trample. Arrival: Draw a card. |
 | **Apex of the Green Deep** | 10 | Creature: Leviathan (L) | 12/12 | Trample. At the start of your turn, heal this creature fully. |
 
 ### Glitterworld
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
-| **Spark Drone** | 2 | Creature: Construct (C) | 1/1 | Flying. Arrival: Deal 1 damage to a creature. |
-| **Pulse Blade** | 2 | Equipment (C) | — | Equipped creature gets +1/+1 and has "Whenever this creature attacks, deal 1 damage to a creature." Equip 2. |
+| **Spark Drone** | 2 | Creature: Construct (C) | 1/1 | Flying. Arrival: Deal 1 damage to target creature. |
+| **Pulse Blade** | 2 | Equipment (C) | — | Equipped creature gets +1/+1 and has "Whenever this creature attacks, deal 1 damage to target creature." Equip 2. |
 | **Grid Overload** | 4 | Sorcery (R) | — | Deal 1 damage to each enemy creature three times. |
 
 ### Neutral
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
 | **Tavern Bouncer** | 3 | Creature: Human (C) | 2/5 | — |
-| **Barkeep's Tonic** | 1 | Instant (C) | — | Heal 3 from a creature or your Tavern Dweller. Invest 1: Draw a card. |
+| **Barkeep's Tonic** | 1 | Instant (C) | — | Heal 3 from target creature or your Tavern Dweller. Invest 1: Draw a card. |

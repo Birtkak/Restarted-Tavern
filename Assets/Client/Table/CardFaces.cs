@@ -120,7 +120,8 @@ namespace RestartedTavern.Client.Table
             }
 
             // Units in play show no cost (LoR).
-            if (!dweller && !(unit && creature)) Gem(root, "Cost", 0f, 0f, 34f * k, CostColor, v.Cost.ToString(), Color.white, k);
+            if (!dweller && !(unit && creature)) Gem(root, "Cost", 0f, 0f, 34f * k, CostColor, v.Cost.ToString(),
+                v.Cost < v.PrintedCost ? Buffed : v.Cost > v.PrintedCost ? Damaged : Color.white, k);
 
             if (creature)
             {

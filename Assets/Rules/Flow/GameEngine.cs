@@ -70,7 +70,9 @@ namespace RestartedTavern.Rules
         public List<GameEvent> Apply(GameState state, PlayerAction action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
-            if (!GetLegalActions(state, action.Player).Contains(action))
+            // A whole combat damage split is accepted at once too (tests, older bug reports), not only step by step.
+            if (!GetLegalActions(state, action.Player).Contains(action)
+                && !new GameRunner(Cards, state, null).IsWholeDamageSplit(action))
                 throw new IllegalActionException("Illegal action: " + action);
 
             state.Version++;
@@ -97,6 +99,10 @@ namespace RestartedTavern.Rules
         /// <summary>The activated abilities of an object (printed, then granted), as indexed by PlayerAction.AbilityIndex.</summary>
         public List<ActivatedAbility> GetAbilities(GameState state, CardInstance obj) =>
             new GameRunner(Cards, state, null).AbilitiesOf(obj);
+
+        /// <summary>Was this "once each round" ability (a Tavern Dweller Power...) already used this round?</summary>
+        public static bool UsedThisRound(GameState state, CardInstance obj, int abilityIndex) =>
+            state.UsesThisTurn.ContainsKey(GameRunner.UseKey(obj, abilityIndex));
 
         /// <summary>The player the game is waiting on, or null when the game is over.</summary>
         public PlayerId? WaitingOn(GameState state)

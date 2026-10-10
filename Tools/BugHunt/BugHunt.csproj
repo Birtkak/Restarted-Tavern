@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Bug hunt (DEVELOPMENT §7.1): thousands of full games through the rules engine and the client logic layer, with
+    invariant checks after every action. Same .NET SDK as SimRunner (Unity's bundled one):
+      Editor/Data/DotNetSdk/dotnet.exe run -c Release, on this project (see the header of Program.cs)
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <StartupObject>BugHunt</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/Rules/**/*.cs" />
+    <Compile Include="../../Assets/Client/Logic/*.cs" />
+  </ItemGroup>
+
+</Project>

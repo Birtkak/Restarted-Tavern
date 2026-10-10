@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RestartedTavern.Rules
 {
@@ -133,6 +135,12 @@ namespace RestartedTavern.Rules
 
         private void AnswerDamageAssignment(PlayerAction a)
         {
+            // One step of the split (later recipients still -1): remember it and ask for the next recipient.
+            if (Array.IndexOf(a.Division, -1) >= 0)
+            {
+                S.Pending.DamageSoFar = (int[])a.Division.Clone();
+                return;
+            }
             S.Combat.Assignments.Add(new DamageAssignment
             {
                 Dealer = S.Pending.Card, Recipients = new List<ObjectId>(S.Pending.Choices), Amounts = (int[])a.Division.Clone(),
@@ -233,30 +241,67 @@ namespace RestartedTavern.Rules
         }
 
         /// <summary>
-        /// Every way to divide <paramref name="total"/> combat damage among <paramref name="recipients"/>
-        /// creatures, 0 allowed (§7.2.6: "however they like").
+        /// The combat damage split (§7.2.6: "however they like"), asked **one recipient at a time**: the legal actions are
+        /// the amounts for the next recipient, the earlier ones fixed, later ones -1. With two recipients left, the
+        /// amount also fixes the last one, so that step is a whole split. A recipient never gets more than lethal (past
+        /// lethal changes nothing). Listing every whole split at once exploded: 10 power into 10 blockers is ~40,000
+        /// splits, which froze the bots and would have drawn 40,000 buttons (bug-hunt sims 2026-10-10). Now a step has at
+        /// most power + 1 choices. The game only asks when the damage can't kill them all, so a split always exists.
         /// </summary>
-        private static List<int[]> CombatDivisions(int total, int recipients)
+        private List<int[]> DamageSplitSteps()
         {
+            var d = S.Pending;
+            int total = d.Count;
+            var caps = DamageCaps();
+            int n = caps.Length;
+            var done = d.DamageSoFar ?? Enumerable.Repeat(-1, n).ToArray();
+            int index = Array.IndexOf(done, -1);
+            int used = 0;
+            for (int i = 0; i < index; i++) used += done[i];
+            int left = total - used;
+            int restCap = 0; // the most the recipients after this one can take
+            for (int i = index + 1; i < n; i++) restCap += caps[i];
             var result = new List<int[]>();
-            var parts = new int[recipients];
-            Split(0, total);
-            return result;
-
-            void Split(int index, int left)
+            if (index < 0) return result;
+            for (int amount = Math.Min(left, caps[index]); amount >= 0; amount--)
             {
-                if (index == recipients - 1)
-                {
-                    parts[index] = left;
-                    result.Add((int[])parts.Clone());
-                    return;
-                }
-                for (int n = left; n >= 0; n--)
-                {
-                    parts[index] = n;
-                    Split(index + 1, left - n);
-                }
+                if (left - amount > restCap) break;
+                var step = (int[])done.Clone();
+                step[index] = amount;
+                if (index == n - 2) step[n - 1] = left - amount; // the last one takes the rest
+                else if (index == n - 1 && amount != left) continue;
+                result.Add(step);
             }
+            return result;
+        }
+
+        /// <summary>The most each recipient can usefully take: its lethal damage (capped at the damage dealt).</summary>
+        private int[] DamageCaps()
+        {
+            var d = S.Pending;
+            return d.Choices.Select(id =>
+            {
+                var c = S.FindOnBattlefield(id);
+                return c != null ? Math.Min(d.Count, Lethal(c)) : d.Count;
+            }).ToArray();
+        }
+
+        /// <summary>
+        /// A whole split given in one action (tests, replays of older bug reports): every recipient gets 0 or more, the
+        /// total is the damage dealt, nobody gets more than lethal, and it agrees with the steps already chosen.
+        /// </summary>
+        internal bool IsWholeDamageSplit(PlayerAction a)
+        {
+            var d = S.Pending;
+            if (a.Kind != ActionKind.AssignCombatDamage || d == null || d.Kind != DecisionKind.AssignCombatDamage || a.Player != d.Player) return false;
+            if (a.Division == null || a.Division.Length != d.Choices.Count || a.Division.Sum() != d.Count) return false;
+            var caps = DamageCaps();
+            for (int i = 0; i < caps.Length; i++)
+            {
+                if (a.Division[i] < 0 || a.Division[i] > caps[i]) return false;
+                if (d.DamageSoFar != null && d.DamageSoFar[i] >= 0 && d.DamageSoFar[i] != a.Division[i]) return false;
+            }
+            return true;
         }
 
         /// <summary>

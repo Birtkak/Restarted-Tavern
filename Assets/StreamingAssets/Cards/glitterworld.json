@@ -26,7 +26,7 @@
     "subtypes": ["Construct"],
     "rarity": "Common",
     "faction": "glitterworld",
-    "text": "Flying. Arrival: Deal 1 damage to a creature.",
+    "text": "Flying. Arrival: Deal 1 damage to target creature.",
     "triggers": [
       {
         "target": "Creature",
@@ -108,7 +108,7 @@
     "subtypes": ["Construct"],
     "rarity": "Common",
     "faction": "glitterworld",
-    "text": "Arrival: Deal 1 damage to a creature.",
+    "text": "Arrival: Deal 1 damage to target creature.",
     "triggers": [
       {
         "target": "Creature",
@@ -202,7 +202,7 @@
     "cost": 2,
     "rarity": "Common",
     "faction": "glitterworld",
-    "text": "Equipped creature gets +1/+1 and has \"Whenever this creature attacks, deal 1 damage to a creature.\" Equip 2.",
+    "text": "Equipped creature gets +1/+1 and has \"Whenever this creature attacks, deal 1 damage to target creature.\" Equip 2.",
     "statics": [
       {
         "$type": "AttachedCreatureModifier",
@@ -215,7 +215,7 @@
             "effects": [
               {"$type": "DealDamageEffect", "amount": 1}
             ],
-            "text": "Whenever this creature attacks, deal 1 damage to a creature."
+            "text": "Whenever this creature attacks, deal 1 damage to target creature."
           }
         ]
       }
@@ -282,7 +282,7 @@
     "cost": 4,
     "rarity": "Uncommon",
     "faction": "glitterworld",
-    "text": "Equipped creature gets +3/+0 and has \"Whenever this creature attacks, deal 1 damage to a creature.\" Equip 3.",
+    "text": "Equipped creature gets +3/+0 and has \"Whenever this creature attacks, deal 1 damage to target creature.\" Equip 3.",
     "statics": [
       {
         "$type": "AttachedCreatureModifier",
@@ -294,7 +294,7 @@
             "effects": [
               {"$type": "DealDamageEffect", "amount": 1}
             ],
-            "text": "Whenever this creature attacks, deal 1 damage to a creature."
+            "text": "Whenever this creature attacks, deal 1 damage to target creature."
           }
         ]
       }
@@ -370,7 +370,7 @@
     "cost": 2,
     "rarity": "Common",
     "faction": "glitterworld",
-    "text": "Equipped creature gets +1/+0 and has \"Whenever this deals combat damage to a player, deal 1 damage to a creature.\" Equip 1.",
+    "text": "Equipped creature gets +1/+0 and has \"Whenever this deals combat damage to a player, deal 1 damage to target creature.\" Equip 1.",
     "statics": [
       {
         "$type": "AttachedCreatureModifier",
@@ -382,7 +382,7 @@
             "effects": [
               {"$type": "DealDamageEffect", "amount": 1}
             ],
-            "text": "Whenever this deals combat damage to a player, deal 1 damage to a creature."
+            "text": "Whenever this deals combat damage to a player, deal 1 damage to target creature."
           }
         ]
       }
@@ -613,14 +613,15 @@
     "subtypes": ["Construct"],
     "rarity": "Common",
     "faction": "glitterworld",
-    "text": "Whenever an Equipment you control becomes unattached, gain 1 Gold.",
+    "text": "Whenever an equipped creature you control dies, gain 1 Gold.",
     "triggers": [
       {
-        "when": "EquipmentUnattached",
+        "when": "CreatureDies",
         "effects": [
           {"$type": "GainGoldEffect", "amount": 1}
         ],
-        "subject": "You"
+        "subject": "You",
+        "onlyEquipped": true
       }
     ]
   },

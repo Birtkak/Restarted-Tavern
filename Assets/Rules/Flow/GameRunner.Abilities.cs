@@ -55,7 +55,7 @@ namespace RestartedTavern.Rules
             return all ?? NoTriggers;
         }
 
-        private static string UseKey(CardInstance source, int abilityIndex) => "ability:" + source.Id.Value + ":" + abilityIndex;
+        internal static string UseKey(CardInstance source, int abilityIndex) => "ability:" + source.Id.Value + ":" + abilityIndex;
 
         private bool UsedThisTurn(CardInstance source, int abilityIndex) => S.UsesThisTurn.ContainsKey(UseKey(source, abilityIndex));
 

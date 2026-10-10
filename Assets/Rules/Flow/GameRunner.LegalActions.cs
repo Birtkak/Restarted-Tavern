@@ -103,7 +103,7 @@ namespace RestartedTavern.Rules
                     break;
 
                 case DecisionKind.AssignCombatDamage:
-                    foreach (var division in CombatDivisions(S.Pending.Count, S.Pending.Choices.Count))
+                    foreach (var division in DamageSplitSteps())
                         result.Add(PlayerAction.AssignDamage(player, division));
                     break;
 

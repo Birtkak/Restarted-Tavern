@@ -16,8 +16,8 @@ namespace RestartedTavern.Client.Table
     /// for what to draw, <see cref="ActionPicker"/> for clicks, <see cref="CombatStage"/> for the combat lane and
     /// <see cref="TableControls"/> for the context button and the choice panel.
     ///
-    /// The table is rebuilt from a fresh snapshot after every change (animations come later, from the
-    /// PresentationQueue).
+    /// The table is rebuilt from a fresh snapshot after every change; the change's events then animate on top
+    /// (TableView.Beats.cs).
     ///
     /// Command line: -seed N, -deck1/-deck2 N, -bot1, -human2 (hot-seat), -autoplay N (the bot plays N actions for
     /// everyone at startup), -autopick (start picking the first usable card, to show targeting), -autoshot path.png
@@ -45,6 +45,7 @@ namespace RestartedTavern.Client.Table
         private static readonly Color ButtonColor = Ui.Hex("#7A4E22");
         private static readonly Color ContextOn = Ui.Hex("#C08A2A");
         private static readonly Color ContextOff = Ui.Hex("#4A4038");
+        private static readonly Color ActingGlow = Ui.Hex("#FFC840");
         private static readonly Color Mine = Ui.Hex("#2A5A8A");
         private static readonly Color Theirs = Ui.Hex("#8A2A2A");
 
@@ -70,6 +71,11 @@ namespace RestartedTavern.Client.Table
         private string _autoshot;
         private string _until;
         private int _shotFrame = -1;
+        /// <summary>-shotat seconds: take the -autoshot that long after the table is drawn (to catch the beats mid-way).</summary>
+        private float _shotAt = -1f;
+        /// <summary>-zoom chain|dweller: pin that zoom for the -autoshot (hover can't be automated).</summary>
+        private string _zoomShot;
+        private float _shotStart;
 
         private Camera _camera;
         private RectTransform _root, _dynamic, _dragLayer, _zoomLayer, _overlay;
@@ -78,6 +84,10 @@ namespace RestartedTavern.Client.Table
         private CardWidget _dragging;
         private ObjectId _selectedBlocker = ObjectId.None;
         private ObjectId _pinnedZoom = ObjectId.None;
+        private CardWidget _hovered;
+        /// <summary>The rect that keeps the hover zoom open, when it isn't the card itself (the Power coin).</summary>
+        private RectTransform _hoverRect;
+        private int _cancelFrame = -1;
         private Zone? _browsing;
         private PlayerId _browsingPlayer;
 
@@ -107,6 +117,8 @@ namespace RestartedTavern.Client.Table
                     case "-autoplay": int.TryParse(next, out _autoplay); break;
                     case "-autopick": _autopick = true; break;
                     case "-autoshot": _autoshot = next; break;
+                    case "-zoom": _zoomShot = next; break;
+                    case "-shotat": float.TryParse(next, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _shotAt); break;
                     case "-until": _until = next; break;
                     case "-menu": _menuOpen = true; break;
                     case "-debug": _debugOpen = true; break;
@@ -145,6 +157,7 @@ namespace RestartedTavern.Client.Table
                 {
                     if (_until != null && _s.WaitingOn == _s.State.Players[0].Id && !_s.HandoffPending
                         && (_until == "block" ? CombatStage.CanBlock(_s) : CombatStage.ForAttack(_s)?.Candidates().Count > 0)) break;
+                    if (i == _autoplay - 1 || _until != null) _pendingEvents.Clear(); // only the last action animates
                     _s.AutoStep();
                 }
                 if (_s.HandoffPending) _s.AcknowledgeHandoff();
@@ -171,7 +184,7 @@ namespace RestartedTavern.Client.Table
                 Refresh();
                 SaveBugReport();
             }
-            if (_autoshot != null) _shotFrame = 0;
+            if (_autoshot != null) { _shotFrame = 0; _shotStart = Time.time; }
         }
 
         private bool _autoBugReport;
@@ -188,6 +201,7 @@ namespace RestartedTavern.Client.Table
             _menuOpen = false;
             _pinnedZoom = ObjectId.None;
             _browsing = null;
+            HookBeats();
             OnSessionChanged();
             StartLog();
         }
@@ -221,6 +235,7 @@ namespace RestartedTavern.Client.Table
             _root.anchoredPosition = Vector2.zero;
             BuildBackground(_root);
             _dynamic = Ui.Fill(_root, "Dynamic");
+            _fxLayer = Ui.Fill(_root, "Fx");
             _zoomLayer = Ui.Fill(_root, "Zoom");
             _overlay = Ui.Fill(_root, "Overlay");
             _dragLayer = Ui.Fill(_root, "Drag");
@@ -279,6 +294,7 @@ namespace RestartedTavern.Client.Table
 
         private void PressContext()
         {
+            if (Busy) { SkipBeats(); return; }
             var b = TableControls.Main(_s, _stage);
             if (!b.Enabled) return;
             _picker.Cancel();
@@ -297,6 +313,7 @@ namespace RestartedTavern.Client.Table
         {
             if (!_s.CanUndo) return;
             LogLine("(undo)");
+            ResetBeats();
             Run(_s.Undo);
         }
 
@@ -309,8 +326,27 @@ namespace RestartedTavern.Client.Table
 
             if (_shotFrame >= 0)
             {
+                UpdateBeats();
                 if (_dirty) Refresh();
+                if (_zoomShot != null && _snap != null)
+                {
+                    var pin = _zoomShot == "chain" ? _widgets.LastOrDefault(x => x != null && x.Kind == WidgetKind.ChainItem)
+                        : _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.TavernDweller && x.Player == _snap.Viewer);
+                    _zoomShot = null;
+                    if (pin != null) { _pinnedZoom = pin.Id; ShowZoom(pin); }
+                }
                 _shotFrame++;
+                if (_shotAt >= 0f)
+                {
+                    // Timed: the beats run in real time; shoot once, quit a few frames later.
+                    if (_shotFrame > 0 && _shotFrame < 1000000 && Time.time - _shotStart >= _shotAt)
+                    {
+                        ScreenCapture.CaptureScreenshot(_autoshot);
+                        _shotFrame = 1000000;
+                    }
+                    if (_shotFrame > 1000008) Application.Quit();
+                    return;
+                }
                 if (_shotFrame == 5) ScreenCapture.CaptureScreenshot(_autoshot);
                 if (_shotFrame == 12) Application.Quit();
                 return;
@@ -321,10 +357,29 @@ namespace RestartedTavern.Client.Table
             if (_dragging == null && !_menuOpen && !_bugOpen)
             {
                 if (Input.GetKeyDown(KeyCode.Space)) PressContext();
-                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1) && _picker.IsPicking) CancelPicking();
+                else if (Busy && Input.GetMouseButtonDown(0)) SkipBeats();
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1) && _picker.IsPicking)
+                {
+                    _cancelFrame = Time.frameCount;
+                    CancelPicking();
+                }
+                // A pinned zoom closes on the next left click or Escape.
+                if (!_pinnedZoom.IsNone && (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Escape)))
+                {
+                    _pinnedZoom = ObjectId.None;
+                    Ui.Clear(_zoomLayer);
+                }
                 if (Input.GetKeyDown(KeyCode.Z) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))) Undo();
             }
+            // A hover zoom whose card is gone or no longer under the mouse (redrawn under it, exit never came) closes.
+            if (_pinnedZoom.IsNone && _zoomLayer.childCount > 0 && _dragging == null
+                && (_hovered == null || !RectTransformUtility.RectangleContainsScreenPoint(_hoverRect != null ? _hoverRect : _hovered.Rect, Input.mousePosition, CanvasCamera)))
+            {
+                _hovered = null;
+                Ui.Clear(_zoomLayer);
+            }
 
+            UpdateBeats();
             if (_s.BotToAct && _dragging == null && !_menuOpen && !_bugOpen && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
             {
                 try { _s.StepBot(); }
@@ -350,6 +405,8 @@ namespace RestartedTavern.Client.Table
         private void Refresh()
         {
             _dirty = false;
+            CaptureOld();
+            ClearSpendPreview();
             _snap = _s.Snapshot();
             Ui.Clear(_dynamic);
             Ui.Clear(_zoomLayer);
@@ -377,6 +434,8 @@ namespace RestartedTavern.Client.Table
             DrawOpponentHand(opp);
             DrawHand(me);
             DrawChain();
+            DrawHistory();
+            PlayBeats(); // after the cards are drawn, before the context button (it's blank while beats play)
             DrawContext();
             DrawPromptAndChoices();
             DrawTopBar();
@@ -403,10 +462,11 @@ namespace RestartedTavern.Client.Table
             widget.View = v;
             widget.HomePosition = rt.anchoredPosition;
             widget.HomeRotation = rotation;
-            if (v == null || v.IsHidden) CardFaces.BuildBack(rt);
-            else CardFaces.Build(rt, v, kind == WidgetKind.HandCard ? FaceStyle.Hand : FaceStyle.Unit);
+            if (kind == WidgetKind.ChainItem || kind == WidgetKind.TavernDweller || kind == WidgetKind.History) { } // DrawChain / DrawDweller draw these
+            else if (v == null || v.IsHidden) CardFaces.BuildBack(rt);
+            else CardFaces.Build(rt, v, kind == WidgetKind.HandCard || kind == WidgetKind.ChainItem ? FaceStyle.Hand : FaceStyle.Unit);
             _widgets.Add(widget);
-            ApplyGlow(widget);
+            if (kind != WidgetKind.ChainItem && kind != WidgetKind.TavernDweller && kind != WidgetKind.History) ApplyGlow(widget); // these glow once their frame exists
             return widget;
         }
 
@@ -422,26 +482,100 @@ namespace RestartedTavern.Client.Table
             else w.SetGlow(null);
         }
 
+        /// <summary>
+        /// The Tavern Dweller's spot, Hearthstone hero style, in LoR's Nexus place (left edge): an oval portrait in a gold
+        /// frame with a name ribbon, life in a red gem at the bottom right, and the Power as a round coin beside it with its
+        /// cost on top (lit when usable, dark and "USED" once used this round). The portrait is the player's target.
+        /// </summary>
         private void DrawDweller(PlayerView p, bool top)
         {
-            float y = top ? 108f : 640f;
-            var name = p.TavernDweller?.Name ?? p.Id.ToString();
-            Ui.Label(_dynamic, (p.Id == _snap.Viewer ? "You · " : "") + name, 14, top ? y - 34 : y + 262, 252, 30, 20,
-                Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
-            var w = MakeWidget(_dynamic, WidgetKind.TavernDweller, p.TavernDweller, 125, y + 115, 210, 230);
+            const float pw = 186f, ph = 224f;
+            float y = top ? 104f : 650f;
+            float cx = 118f, cy = y + ph / 2f;
+            Ui.Label(_dynamic, p.Id == _snap.Viewer ? "YOU" : "OPPONENT", 20, top ? y - 30 : y + ph + 4, pw, 24, 15,
+                Ui.Hex("#E0C890"), TextAnchor.MiddleCenter, FontStyle.Bold);
+            var w = MakeWidget(_dynamic, WidgetKind.TavernDweller, p.TavernDweller, cx, cy, pw, ph);
             w.Player = p.Id;
+            var def = p.TavernDweller?.DefinitionId != null ? _db.Get(p.TavernDweller.DefinitionId) : null;
+            var first = CardFaces.Style(def != null && def.TavernDwellerFactions.Length > 0 ? def.TavernDwellerFactions[0] : null);
+            var second = CardFaces.Style(def != null && def.TavernDwellerFactions.Length > 1 ? def.TavernDwellerFactions[1] : null);
 
-            // Life on the portrait, like a Nexus.
-            var life = Ui.Panel(w.transform, "Life", 60, 64, 90, 60, p.Life <= 5 ? Ui.Hex("#A01818") : Ui.Hex("#1E1410"));
-            Ui.AddOutline(life.gameObject, new Color(1f, 0.8f, 0.4f, 0.8f), 2f);
-            Ui.FillLabel(life.transform, p.Life.ToString(), 40, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
-            if (p.HasLost) Ui.FillPanel(w.transform, "Lost", new Color(0, 0, 0, 0.6f));
+            // Frame: gold oval, dark rim, portrait (two faction colours until the art drops in), initials as the face.
+            Ui.Circle(w.transform, "Frame", 0, 0, pw, ph, Ui.Hex("#C89A50"), raycast: true);
+            Ui.Circle(w.transform, "Rim", 6, 6, pw - 12, ph - 12, Ui.Hex("#2A1A0E"));
+            Ui.Circle(w.transform, "PortraitA", 12, 12, pw - 24, ph - 24, first.Frame);
+            var lower = Ui.Circle(w.transform, "PortraitB", 12, ph * 0.45f, pw - 24, ph * 0.55f - 12, second.Frame * new Color(1, 1, 1, 0.85f));
+            Ui.Circle(w.transform, "Shine", pw * 0.25f, 22, pw * 0.5f, ph * 0.28f, new Color(1f, 1f, 1f, 0.08f));
+            string initials = string.Concat((p.TavernDweller?.Name ?? "?").Split(' ', ',').Where(x => x.Length > 0 && char.IsUpper(x[0])).Take(2).Select(x => x[0]));
+            var face = Ui.Label(w.transform, initials, 0, 36, pw, 90, 64, first.Accent, TextAnchor.MiddleCenter, FontStyle.Bold);
+            Ui.AddOutline(face.gameObject, new Color(0, 0, 0, 0.8f), 2f);
 
-            // The Power as a button beside the portrait (lit when usable).
+            // Name ribbon across the bottom of the oval.
+            var ribbon = Ui.Panel(w.transform, "Ribbon", -12, ph - 58, pw - 44, 30, Ui.Hex("#6A4420"));
+            Ui.AddOutline(ribbon.gameObject, Ui.Hex("#E0B060"), 2f);
+            Ui.FillLabel(ribbon.transform, p.TavernDweller?.Name ?? p.Id.ToString(), 15, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold, 4f).resizeTextForBestFit = true;
+
+            // Life: a red gem at the bottom right (Hearthstone health).
+            var lifeGem = Ui.Circle(w.transform, "Life", pw - 62, ph - 64, 70, 70, p.Life <= 5 ? Ui.Hex("#FF3020") : Ui.Hex("#B01818"));
+            Ui.AddOutline(lifeGem.gameObject, Ui.Hex("#FFD080"), 2f);
+            var lifeText = Ui.FillLabel(lifeGem.transform, p.Life.ToString(), 32, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            Ui.AddOutline(lifeText.gameObject, new Color(0, 0, 0, 0.9f), 2f);
+            if (p.HasLost) Ui.Circle(w.transform, "Lost", 0, 0, pw, ph, new Color(0, 0, 0, 0.65f));
+            ApplyGlow(w);
+
+            // Whose action it is (LoR): a gold glow on that portrait; a "PASSED" chip on whoever passed the action.
+            bool acting = !_snap.IsGameOver && _s.WaitingOn == p.Id;
+            float tagY = top ? ph + 4 : -28;
+            if (acting && !_targets.Contains(Target.ForPlayer(p.Id)))
+            {
+                w.SetGlow(ActingGlow);
+                var tag = Ui.Panel(w.transform, "Acting", 18, tagY, pw - 36, 24, ActingGlow);
+                Ui.FillLabel(tag.transform, p.Id == _snap.Viewer ? "YOUR ACTION" : "THEIR ACTION", 14, Color.black, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
+            if (_passed.Contains(p.Id) && !acting)
+            {
+                var chip = Ui.Panel(w.transform, "Passed", 18, tagY, pw - 36, 24, Ui.Hex("#5A5048"));
+                Ui.FillLabel(chip.transform, "PASSED", 14, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
+
+            if (p.HasPower) DrawPowerCoin(p, w, 214f, y + ph - 96f);
+        }
+
+        /// <summary>The Power as a Hearthstone hero-power coin. Hover shows the Tavern Dweller card; click uses it.</summary>
+        private void DrawPowerCoin(PlayerView p, CardWidget dweller, float x, float y)
+        {
+            const float d = 72f;
             bool usable = p.TavernDweller != null && _sources.Contains(p.TavernDweller.Id);
-            var power = Ui.Button(_dynamic, "Power", 236, y + 92, 40, 46, usable ? Ui.Hex("#E0A020") : Ui.Hex("#3A3028"),
+            var coin = Ui.Button(_dynamic, "", x, y, d, d, Ui.Hex("#C89A50"),
                 () => { if (p.TavernDweller != null && _picker.Begin(p.TavernDweller.Id)) AfterPick(); }, 12, usable);
-            if (usable) Ui.AddOutline(power.gameObject, GlowSource, 4f);
+            coin.image.sprite = Ui.CircleSprite;
+            coin.image.alphaHitTestMinimumThreshold = 0.5f;
+            var colors = coin.colors;
+            colors.disabledColor = Color.white; // the coin shows its own state
+            coin.colors = colors;
+            var disc = Ui.Circle(coin.transform, "Disc", 6, 6, d - 12, d - 12,
+                p.PowerUsed ? Ui.Hex("#2A2420") : usable ? Ui.Hex("#2A70C0") : Ui.Hex("#4A3E30"));
+            Ui.Label(disc.transform, p.PowerUsed ? "USED" : "POWER", 0, 0, d - 12, d - 12, 13,
+                p.PowerUsed ? Ui.Hex("#8A8070") : Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            if (!p.PowerUsed)
+            {
+                var cost = Ui.Circle(coin.transform, "Cost", d / 2f - 15, -16, 30, 30, CardFaces.CostColor);
+                Ui.AddOutline(cost.gameObject, new Color(0, 0, 0, 0.8f), 1.5f);
+                Ui.FillLabel(cost.transform, p.PowerCost.ToString(), 17, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
+            if (usable)
+            {
+                Ui.AddOutline(coin.gameObject, GlowSource, 4f);
+                Pulse(coin.transform, 0.07f);
+            }
+            // Hover: the Tavern Dweller card (with the Power text) in the zoom.
+            var trigger = coin.gameObject.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => { if (_pinnedZoom.IsNone) { _hovered = dweller; ShowZoom(dweller); _hoverRect = (RectTransform)coin.transform; } });
+            trigger.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => { if (_pinnedZoom.IsNone) { _hovered = null; _hoverRect = null; Ui.Clear(_zoomLayer); } });
+            trigger.triggers.Add(exit);
         }
 
         private void DrawSide(PlayerView p, bool top)
@@ -454,6 +588,8 @@ namespace RestartedTavern.Client.Table
 
             // Mana as a column of gems (filled = available, outline = spent); Gold as spell mana under it.
             float manaTop = top ? 130f : 694f;
+            var manaGems = _manaGems[p.Id] = new List<Image>();
+            var goldGems = _goldGems[p.Id] = new List<Image>();
             Ui.Label(_dynamic, p.Mana + "/" + p.MaxMana, 1846, manaTop - 30 + (top ? 0 : 0), 70, 26, 18, Ui.Hex("#A0D0FF"), TextAnchor.MiddleCenter, FontStyle.Bold);
             for (int i = 0; i < 10; i++)
             {
@@ -461,6 +597,7 @@ namespace RestartedTavern.Client.Table
                 Color c = i < p.Mana ? Ui.Hex("#3AA0FF") : i < p.MaxMana ? Ui.Hex("#1A3048") : new Color(1, 1, 1, 0.06f);
                 var gem = Ui.Panel(_dynamic, "Mana", 1872, gy, 22, 22, c);
                 if (i < p.MaxMana) Ui.AddOutline(gem.gameObject, Ui.Hex("#80C0FF"), 1.5f);
+                manaGems.Add(gem);
             }
             float goldY = top ? manaTop + 258f : manaTop - 58f;
             for (int i = 0; i < Math.Max(3, p.GoldCap); i++)
@@ -469,6 +606,7 @@ namespace RestartedTavern.Client.Table
                 var gem = Ui.Panel(_dynamic, "Gold", 1818 + i * 30, goldY, 20, 20, c);
                 gem.rectTransform.localEulerAngles = new Vector3(0, 0, 45);
                 if (i < p.GoldCap) Ui.AddOutline(gem.gameObject, Ui.Hex("#FFE090"), 1.5f);
+                goldGems.Add(gem);
             }
 
             // The attack token next to the leader's gems (dim once used this round).
@@ -476,6 +614,7 @@ namespace RestartedTavern.Client.Table
             {
                 float ty = top ? manaTop : manaTop + 180f;
                 var token = Ui.Panel(_dynamic, "AttackToken", 1816, ty, 48, 48, _snap.AttackUsed ? Ui.Hex("#4A3A30") : Ui.Hex("#D04A20"));
+                _token = token.rectTransform;
                 Ui.AddOutline(token.gameObject, Ui.Hex("#FFD080"), 2f);
                 Ui.FillLabel(token.transform, "ATK", 16, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
             }
@@ -606,34 +745,181 @@ namespace RestartedTavern.Client.Table
             Ui.Label(_dynamic, "Hand " + n, CenterX + 380, 8, 120, 26, 16, Ui.Hex("#E0C890"), TextAnchor.MiddleLeft);
         }
 
+        /// <summary>
+        /// LoR spell stack: the Chain as a row of card bubbles in the middle of the table, oldest on the left, the next
+        /// to resolve on the right (larger, "NEXT"). Each bubble is a widget keyed by the item's object id, so
+        /// "target spell / ability" picks it by clicking it, and hovering it zooms the full card. Lines run from each
+        /// bubble to what it targets.
+        /// </summary>
         private void DrawChain()
         {
-            if (_snap.Chain.Count == 0) return;
-            Ui.Label(_dynamic, "CHAIN", 1640, 112, 180, 26, 18, Ui.Hex("#FFD080"), TextAnchor.MiddleCenter, FontStyle.Bold);
-            float y = 140f;
-            // Top of the Chain first and largest (MTGA stack).
-            for (int i = _snap.Chain.Count - 1; i >= 0 && y < 440f; i--)
+            int n = _snap.Chain.Count;
+            if (n == 0) return;
+            // Units in the lane (combat): keep the middle free, the bubbles go small to the right end of the lane.
+            bool laneBusy = _snap.Players.Any(p => p.Battlefield.Any(c => c.IsAttacking || !c.Blocks.IsNone)) || _stage != null && _stage.Staged.Count > 0;
+            float w = laneBusy ? 64f : 96f, h = w;
+            float topW = laneBusy ? 80f : 124f, topH = topW;
+            float step = Math.Min(laneBusy ? w + 8f : w + 70f, (laneBusy ? 300f : 1100f) / Math.Max(1, n));
+            float right = laneBusy ? CenterRight - topW / 2f - 10f : CenterX + (step * (n - 1)) / 2f + (topW - w) / 2f;
+            float cy = LaneMid;
+
+            Ui.Panel(_dynamic, "ChainBand", laneBusy ? CenterRight - 330f : CenterLeft, LaneTop + 4, laneBusy ? 330f : CenterRight - CenterLeft,
+                LaneBottom - LaneTop - 8, new Color(0.05f, 0.02f, 0.08f, 0.55f));
+            Ui.Label(_dynamic, n == 1 ? "CHAIN" : "CHAIN · " + n + " · resolves right to left", laneBusy ? CenterRight - 330f : CenterX - 300f,
+                LaneTop + 8, laneBusy ? 330f : 600f, 24, 16, Ui.Hex("#D8B8FF"), TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            var bubbles = new List<(CardWidget widget, ChainView item)>();
+            for (int i = 0; i < n; i++)
             {
                 var item = _snap.Chain[i];
-                bool topItem = i == _snap.Chain.Count - 1;
-                float h = topItem ? 96f : 60f;
-                var panel = Ui.Panel(_dynamic, "ChainItem", 1640, y, 170, h, item.Controller == _snap.Viewer ? Mine : Theirs);
-                Ui.AddOutline(panel.gameObject, topItem ? Ui.Hex("#FFD080") : new Color(0, 0, 0, 0.6f), 2f);
-                string source = item.SourceDefinitionId != null ? _s.Text.Name(item.SourceDefinitionId) : item.Kind.ToString();
-                Ui.Label(panel.transform, source, 6, 2, 158, 22, 15, Color.white, TextAnchor.MiddleLeft, FontStyle.Bold);
-                Ui.Label(panel.transform, !string.IsNullOrEmpty(item.Text) ? item.Text : item.SourceDefinitionId != null ? _db.Get(item.SourceDefinitionId).Text : "", 6, 24, 158, h - 26, 12, Ui.Hex("#F0E8D8"), TextAnchor.UpperLeft);
-                y += h + 6f;
+                bool top = i == n - 1;
+                float x = right - (n - 1 - i) * step;
+                var view = ChainItemView(item);
+                var widget = MakeWidget(_dynamic, WidgetKind.ChainItem, view, x, cy, top ? topW : w, top ? topH : h);
+                Bubble(widget, view, item, top ? topW : w, top, laneBusy);
+                ApplyGlow(widget); // the glow goes on the bubble's ring
+                if (top) _chainTop = new Vector2(x, -cy);
+                bubbles.Add((widget, item));
             }
+
+            // Target lines (drawn after every card is on the table), from the bubble to each target.
+            foreach (var (widget, item) in bubbles)
+            {
+                if (item.Targets == null) continue;
+                var color = item.Controller == _snap.Viewer ? new Color(0.35f, 0.7f, 1f, 0.8f) : new Color(1f, 0.35f, 0.3f, 0.8f);
+                foreach (var t in item.Targets)
+                {
+                    var target = t.IsPlayer ? _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.TavernDweller && x.Player == t.Player)
+                                            : _widgets.FirstOrDefault(x => x != null && x.Id == t.Object && x != widget);
+                    if (target == null) continue;
+                    Line(Center(widget), Center(target), color);
+                }
+                widget.transform.SetAsLastSibling(); // bubbles above the lines
+            }
+        }
+
+/// <summary>
+        /// One LoR spell bubble: a ring in the caster's colour, the faction disc with its emblem and the cost, the
+        /// name on a pill underneath, a kind tag (POWER / TRIGGER / ABILITY) for abilities and "NEXT" on the top item.
+        /// Hover zooms the full card (the widget's view).
+        /// </summary>
+        private void Bubble(CardWidget widget, CardView v, ChainView item, float d, bool top, bool small)
+        {
+            bool mine = item.Controller == _snap.Viewer;
+            var style = CardFaces.Style(v.Faction);
+            var ring = Ui.Circle(widget.transform, "Frame", 0, 0, d, mine ? Ui.Hex("#3A8AE0") : Ui.Hex("#D04A3A"), raycast: true);
+            if (top) Ui.AddOutline(ring.gameObject, Ui.Hex("#FFD080"), 3f);
+            float inset = Mathf.Max(5f, d * 0.08f);
+            var disc = Ui.Circle(widget.transform, "Disc", inset, inset, d - 2 * inset, style.Frame);
+            Ui.Circle(widget.transform, "Shine", d * 0.22f, d * 0.14f, d * 0.36f, new Color(1f, 1f, 1f, 0.12f));
+            var emblem = Ui.Label(disc.transform, style.Emblem, 0, 0, d - 2 * inset, d - 2 * inset, Mathf.RoundToInt(d * 0.3f), style.Accent, TextAnchor.MiddleCenter, FontStyle.Bold);
+            Ui.AddOutline(emblem.gameObject, new Color(0, 0, 0, 0.8f), 1.5f);
+            if (item.Kind == ChainItemKind.Spell && v.Cost > 0)
+            {
+                var cost = Ui.Circle(widget.transform, "Cost", -4, -4, d * 0.3f, CardFaces.CostColor);
+                Ui.FillLabel(cost.transform, v.Cost.ToString(), Mathf.RoundToInt(d * 0.17f), Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
+            if (item.Kind != ChainItemKind.Spell)
+            {
+                string kind = item.IsTavernDwellerPower ? "POWER" : item.Kind == ChainItemKind.TriggeredAbility ? "TRIGGER" : "ABILITY";
+                var tag = Ui.Panel(widget.transform, "Kind", d / 2f - 36, d - 14, 72, 18, Ui.Hex("#5A2A8A"));
+                Ui.FillLabel(tag.transform, kind, 11, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
+            if (small) return;
+            float pillW = d + 56f;
+            var pill = Ui.Panel(widget.transform, "Name", d / 2f - pillW / 2f, d + 6, pillW, 22, new Color(0, 0, 0, 0.75f));
+            Ui.FillLabel(pill.transform, v.Name, 13, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold, 2f).resizeTextForBestFit = true;
+            var who = Ui.Panel(widget.transform, "Who", d / 2f - 44, -22, 88, 18, mine ? Mine : Theirs);
+            Ui.FillLabel(who.transform, (mine ? "YOU" : "OPPONENT") + (top ? " · NEXT" : ""), 11, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+        }
+
+/// <summary>
+        /// LoR's play history: the last few plays down the left rail, newest on top (who, what, at whom). Hover an entry
+        /// to zoom the card.
+        /// </summary>
+        private void DrawHistory()
+        {
+            if (_playLog.Count == 0) return;
+            const float x = 14f, top = 366f, rowH = 36f;
+            Ui.Label(_dynamic, "RECENT PLAYS", x, top, 250, 20, 13, Ui.Hex("#C8A878"), TextAnchor.MiddleLeft, FontStyle.Bold);
+            int shown = 0;
+            for (int i = _playLog.Count - 1; i >= 0 && shown < 5; i--, shown++)
+            {
+                var e = _playLog[i];
+                bool mine = e.Player == _snap.Viewer;
+                float y = top + 24 + shown * (rowH + 4);
+                var view = e.DefinitionId != null ? ViewOf(e.DefinitionId, e.Player) : null;
+                var w = MakeWidget(_dynamic, WidgetKind.History, view, x + 125, y + rowH / 2f, 250, rowH);
+                var bg = Ui.FillPanel(w.transform, "Row", shown == 0 ? new Color(0.25f, 0.16f, 0.08f, 0.95f) : new Color(0.12f, 0.08f, 0.05f, 0.85f), 0f, raycast: true);
+                Ui.Panel(w.transform, "Side", 0, 0, 5, rowH, mine ? Ui.Hex("#3A8AE0") : Ui.Hex("#D04A3A"));
+                var style = CardFaces.Style(view?.Faction);
+                var orb = Ui.Circle(w.transform, "Orb", 9, 3, rowH - 6, view == null ? Ui.Hex("#B0301E") : style.Frame);
+                Ui.FillLabel(orb.transform, view == null ? "ATK" : style.Emblem, 10, view == null ? Color.white : style.Accent, TextAnchor.MiddleCenter, FontStyle.Bold);
+                Ui.Label(w.transform, e.Text, rowH + 10, 0, 250 - rowH - 14, rowH, 13, shown == 0 ? Color.white : Ui.Hex("#D8C8B0"), TextAnchor.MiddleLeft).resizeTextForBestFit = true;
+            }
+        }
+
+        private CardView ChainItemView(ChainView item)
+        {
+            var v = item.SourceDefinitionId != null ? ViewOf(item.SourceDefinitionId, item.Controller)
+                                                    : new CardView { Name = item.Kind.ToString(), DefinitionId = "?", Text = item.Text, Controller = item.Controller };
+            v.Id = item.ObjectId;
+            v.Zone = Zone.Chain;
+            if (item.Kind != ChainItemKind.Spell && !string.IsNullOrEmpty(item.Text)) v.Text = item.Text;
+            return v;
+        }
+
+        private void Line(Vector2 from, Vector2 to, Color color)
+        {
+            var d = to - from;
+            var line = Ui.Panel(_dynamic, "TargetLine", 0, 0, d.magnitude, 5f, color);
+            var rt = line.rectTransform;
+            rt.pivot = new Vector2(0f, 0.5f);
+            rt.anchoredPosition = from;
+            rt.localEulerAngles = new Vector3(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+            var dot = Ui.Panel(_dynamic, "TargetMark", 0, 0, 22f, 22f, color);
+            dot.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            dot.rectTransform.anchoredPosition = to;
+            dot.rectTransform.localEulerAngles = new Vector3(0, 0, 45f);
+            Ui.AddOutline(dot.gameObject, new Color(0, 0, 0, 0.8f), 2f);
         }
 
         private void DrawContext()
         {
             var b = TableControls.Main(_s, _stage);
-            var button = Ui.Button(_dynamic, b.Label, 1650, 456, 160, 112, b.Enabled ? ContextOn : ContextOff, PressContext, 24, b.Enabled);
-            if (b.Enabled) Ui.AddOutline(button.gameObject, Ui.Hex("#FFE0A0"), 3f);
-            string whose = _snap.IsGameOver ? "" : _s.HumanToAct ? "Your action" : _s.HandoffPending ? "" : "Opponent's action";
-            Ui.Label(_dynamic, "Round " + _snap.Round + (whose.Length > 0 ? " · " + whose : ""), 1636, 572, 190, 24, 16,
-                Ui.Hex("#E0C890"), TextAnchor.MiddleCenter);
+            // LoR: blank while something animates; lit (colour by verb) when it's yours; grey while the opponent acts.
+            bool animating = Busy && !_snap.IsGameOver;
+            string label = animating ? "" : b.Label;
+            var color = animating || !b.Enabled ? ContextOff : ButtonColorFor(b.Mode);
+            int size = b.Mode == ButtonMode.Waiting || label.Length > 10 ? 21 : 24;
+            var button = Ui.Button(_dynamic, label, 1650, 456, 160, 112, color, PressContext, size, b.Enabled || animating);
+            // Greyed out while the opponent acts (LoR): the label dims too.
+            if (!b.Enabled && !animating) foreach (var txt in button.GetComponentsInChildren<Text>()) txt.color = Ui.Hex("#9A9088");
+            if (b.Enabled && !animating)
+            {
+                Ui.AddOutline(button.gameObject, Ui.Hex("#FFE0A0"), 3f);
+                Pulse(button.transform, 0.05f);
+            }
+            Ui.Label(_dynamic, "Round " + _snap.Round, 1636, 572, 190, 22, 16, Ui.Hex("#E0C890"), TextAnchor.MiddleCenter);
+            if (!animating && !string.IsNullOrEmpty(b.Hint))
+                Ui.Label(_dynamic, b.Hint, 1636, 596, 190, 60, 14, b.Enabled ? Ui.Hex("#FFE8C0") : Ui.Hex("#A89880"), TextAnchor.UpperCenter);
+        }
+
+        private static Color ButtonColorFor(ButtonMode mode)
+        {
+            switch (mode)
+            {
+                case ButtonMode.Attack:
+                case ButtonMode.Block:
+                    return Ui.Hex("#C0402A");
+                case ButtonMode.EndRound:
+                    return Ui.Hex("#2A7AB0");
+                case ButtonMode.Continue:
+                case ButtonMode.Resolve:
+                    return Ui.Hex("#B07A20");
+                default:
+                    return ContextOn;
+            }
         }
 
         private void DrawTopBar()
@@ -705,6 +991,8 @@ namespace RestartedTavern.Client.Table
                     prompt = _snap.DecisionPrompt ?? _snap.Decision.ToString();
                 else if (_stage != null && _combatCandidates.Count > 0)
                     prompt = "Your action. Drag units into the lane to attack";
+                else if (_s.State.Combat != null && (_s.State.Step == Step.DeclareAttackers || _s.State.Step == Step.DeclareBlockers))
+                    prompt = TableControls.Main(_s, _stage).Hint; // the response windows in combat (after the attack, after blocks)
                 else prompt = "Your action";
 
                 foreach (var c in TableControls.Choices(_s))
@@ -901,6 +1189,9 @@ namespace RestartedTavern.Client.Table
             if (_dragging != null) return;
             if (w.Kind == WidgetKind.HandCard && w.View != null && w.View.Zone == Zone.Hand)
             {
+                PrimeTween.Tween.StopAll(w.Rect);
+                if (enter) PreviewSpend(w.View);
+                else ClearSpendPreview();
                 // MTGA hand: the card lifts, straightens and grows.
                 w.Rect.anchoredPosition = enter ? new Vector2(w.HomePosition.x, -(HandTop + HandH / 2f) + 60f) : w.HomePosition;
                 w.Rect.localEulerAngles = new Vector3(0, 0, enter ? 0f : w.HomeRotation);
@@ -910,13 +1201,14 @@ namespace RestartedTavern.Client.Table
                 return;
             }
             if (!_pinnedZoom.IsNone) return;
-            if (enter) ShowZoom(w);
-            else Ui.Clear(_zoomLayer);
+            if (enter) { _hovered = w; _hoverRect = null; ShowZoom(w); }
+            else if (_hovered == w) { _hovered = null; Ui.Clear(_zoomLayer); }
         }
 
         public void OnRightClick(CardWidget w)
         {
-            if (_picker.IsPicking) { CancelPicking(); return; }
+            // A right-click that cancels targeting (here or in Update, same frame) must not also pin the card under the mouse.
+            if (_picker.IsPicking || _cancelFrame == Time.frameCount) { CancelPicking(); return; }
             _pinnedZoom = _pinnedZoom == w.Id ? ObjectId.None : w.Id;
             if (_pinnedZoom.IsNone) Ui.Clear(_zoomLayer);
             else ShowZoom(w);
@@ -935,6 +1227,7 @@ namespace RestartedTavern.Client.Table
         public void OnClick(CardWidget w)
         {
             if (_dragging != null || !_s.HumanToAct) return;
+            if (Busy) { SkipBeats(); return; }
 
             if (_picker.IsPicking)
             {
@@ -1006,7 +1299,7 @@ namespace RestartedTavern.Client.Table
 
         public void OnBeginDrag(CardWidget w, PointerEventData e)
         {
-            if (!_s.HumanToAct || _picker.IsPicking) return;
+            if (!_s.HumanToAct || _picker.IsPicking || Busy) return;
             bool fromHand = w.Kind == WidgetKind.HandCard && w.View?.Zone == Zone.Hand && _sources.Contains(w.Id);
             bool combat = w.Kind == WidgetKind.Unit && IsMine(w) && _stage != null && (_combatCandidates.Contains(w.Id) || IsStaged(w.Id));
             if (!fromHand && !combat) return;
@@ -1031,6 +1324,7 @@ namespace RestartedTavern.Client.Table
             if (_dragging != w) return;
             _dragging = null;
             _dirty = true;
+            RememberDrop(w);
             Destroy(w.gameObject); // it lives on the drag layer now; the refresh draws the card again where it belongs
             float y = Ui.Height / 2f - w.Rect.localPosition.y; // top-based reference y of the drop
             var drop = e.pointerCurrentRaycast.gameObject != null ? e.pointerCurrentRaycast.gameObject.GetComponentInParent<CardWidget>() : null;

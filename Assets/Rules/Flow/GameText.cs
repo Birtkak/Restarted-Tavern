@@ -295,9 +295,13 @@ namespace RestartedTavern.Rules
                     var d = state.Pending;
                     if (d == null || d.Choices == null) return a.ToString();
                     var parts = new List<string>();
+                    bool step = System.Array.IndexOf(a.Division, -1) >= 0; // asked one recipient at a time
                     for (int i = 0; i < d.Choices.Count && i < a.Division.Length; i++)
+                    {
+                        if (a.Division[i] < 0 || d.DamageSoFar != null && d.DamageSoFar[i] >= 0) continue; // not yet / already chosen
                         parts.Add(a.Division[i] + " to " + DescribeOneLine(state, d.Choices[i]));
-                    return "Damage from " + Name(state, d.Card) + ": " + string.Join(", ", parts);
+                    }
+                    return "Damage from " + Name(state, d.Card) + ": " + string.Join(", ", parts) + (step ? " (then the next one)" : "");
                 }
                 case ActionKind.DeclareAttacker: return "Attack " + a.Defender + " with " + Name(state, a.Card);
                 case ActionKind.DeclareBlocker: return "Block " + Name(state, a.BlockedAttacker) + " with " + Name(state, a.Card);

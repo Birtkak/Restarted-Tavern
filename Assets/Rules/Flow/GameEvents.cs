@@ -44,6 +44,18 @@ namespace RestartedTavern.Rules
         public override string ToString() => "Step " + Step;
     }
 
+    /// <summary>A player passed (by hand or by auto-pass). The client shows it like LoR's "Pass" callout.</summary>
+    public sealed class PriorityPassedEvent : GameEvent
+    {
+        public PlayerId Player;
+        public Step Step;
+        /// <summary>Items on the Chain when they passed (0: passing the action on, or ending the round / step).</summary>
+        public int ChainCount;
+        /// <summary>The engine passed for them: passing was their only legal action.</summary>
+        public bool Automatic;
+        public override string ToString() => Player + (Automatic ? " auto-passes" : " passes") + " (" + Step + ", Chain " + ChainCount + ")";
+    }
+
     public sealed class CardDrawnEvent : GameEvent
     {
         public PlayerId Player;

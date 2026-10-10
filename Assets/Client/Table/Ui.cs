@@ -107,6 +107,44 @@ namespace RestartedTavern.Client.Table
             return b;
         }
 
+        private static Sprite _circle;
+
+        /// <summary>A smooth white disc (made once at runtime, no asset needed), for bubbles and round gems.</summary>
+        public static Sprite CircleSprite
+        {
+            get
+            {
+                if (_circle != null) return _circle;
+                const int n = 128;
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+                var px = new Color32[n * n];
+                float r = n / 2f - 1f;
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float d = Mathf.Sqrt((x + 0.5f - n / 2f) * (x + 0.5f - n / 2f) + (y + 0.5f - n / 2f) * (y + 0.5f - n / 2f));
+                        byte a = (byte)(Mathf.Clamp01(r - d + 0.5f) * 255f);
+                        px[y * n + x] = new Color32(255, 255, 255, a);
+                    }
+                tex.SetPixels32(px);
+                tex.Apply();
+                return _circle = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f);
+            }
+        }
+
+        /// <summary>A disc of the given colour (top-left x/y like <see cref="Panel"/>). Raycasts follow the round shape.</summary>
+        public static Image Circle(Transform parent, string name, float x, float y, float size, Color color, bool raycast = false) =>
+            Circle(parent, name, x, y, size, size, color, raycast);
+
+        /// <summary>An ellipse (the disc stretched to w × h).</summary>
+        public static Image Circle(Transform parent, string name, float x, float y, float w, float h, Color color, bool raycast = false)
+        {
+            var img = Panel(parent, name, x, y, w, h, color, raycast);
+            img.sprite = CircleSprite;
+            if (raycast) img.alphaHitTestMinimumThreshold = 0.5f;
+            return img;
+        }
+
         public static Outline AddOutline(GameObject go, Color color, float distance)
         {
             var o = go.AddComponent<Outline>();
