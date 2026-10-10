@@ -127,6 +127,37 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
+        public void GoldFirst_KeepsTheGoldInvestNeeds()
+        {
+            // Bug found 2026-10-10: Gold first used to pay the cost with the Gold the Invest needed.
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            g.SetMana(me, 2);
+            g.P(me).Gold = 3;
+            var special = g.AddToHand(me, "house_special"); // Sorcery 2, Invest 3
+            var invest = g.Legal(me).SingleOrDefault(a => a.Card == special.Id && a.Invest);
+            Assert.IsNotNull(invest, "2 mana for the cost, 3 Gold for the Invest");
+            g.Do(invest);
+            Assert.AreEqual(0, g.P(me).Mana);
+            Assert.AreEqual(0, g.P(me).Gold);
+        }
+
+        [Test]
+        public void GoldFirst_KeepsTheGoldForPayAnyAmountOfGold()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            g.SetMana(me, 3);
+            g.P(me).Gold = 3;
+            var tab = g.AddToHand(me, "settle_the_tab"); // Sorcery 3, "pay any amount of Gold (X)"
+            var xs = g.Legal(me).Where(a => a.Card == tab.Id).Select(a => a.X).OrderBy(x => x).ToArray();
+            Assert.AreEqual(new[] { 0, 1, 2, 3 }, xs, "the cost can use mana so every Gold can go to X");
+            g.Do(g.Legal(me).Single(a => a.Card == tab.Id && a.X == 1));
+            Assert.AreEqual(2, g.P(me).Mana, "X = 1 Gold set aside; the cost took the other 2 Gold first, then 1 mana");
+            Assert.AreEqual(0, g.P(me).Gold);
+        }
+
+        [Test]
         public void SummoningSickness_CanBeTurnedOff()
         {
             var g = Game(summoningSickness: false);

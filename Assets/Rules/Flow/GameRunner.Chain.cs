@@ -67,17 +67,15 @@ namespace RestartedTavern.Rules
             var card = p.Hand.Find(c => c.Id == a.Card);
             var def = Def(card);
 
-            // §5.2: mana first, then Gold (not for permanents); Invest is paid only with Gold.
-            // Cost modifiers (Tavern Dwellers, Archon Lumen...) are applied first.
-            // Silent Partner lets Invest use the mana that's left; X is always Gold.
-            int cost = Costs.SpellCost(S, Db, a.Player, def) + (def.XCost ? a.X : 0);
-            int goldForCost = Payment.GoldNeeded(p, cost, Payment.GoldAllowed(S, Db, a.Player, def));
-            int investMana = 0, investGold = 0;
-            if (a.Invest) Payment.InvestSplit(S, Db, p, def, out investMana, out investGold);
-            int manaPaid = cost - goldForCost + investMana;
+            // §5.2: Gold first (Classic: mana first), never Gold for permanents; Invest and "pay X Gold" only with Gold,
+            // set aside before the cost takes Gold. Cost modifiers (Tavern Dwellers, Archon Lumen...) are applied first.
+            // Silent Partner lets Invest use the mana that's left.
+            Payment.TrySplit(S, Db, p, def, a.X, a.Invest, out var pay);
+            int goldForCost = pay.GoldForCost;
+            int manaPaid = pay.Mana;
             p.Mana -= manaPaid;
             if (manaPaid > 0) Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
-            int goldPaid = goldForCost + investGold + (def.XGoldExtraCost ? a.X : 0);
+            int goldPaid = pay.Gold;
             if (goldPaid > 0) ChangeGold(p.Id, -goldPaid);
             // Extra costs (MTG 601.2h): pay life, sacrifice a creature (its last known Power is kept).
             if (def.ExtraLifeCost > 0) ChangeLife(p.Id, -def.ExtraLifeCost);

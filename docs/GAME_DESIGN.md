@@ -27,8 +27,8 @@ This game only **deviates** from MTG in these areas:
 
 | Area | MTG | Restarted Tavern |
 |---|---|---|
-| **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per turn up to 10, refilled each turn (§5.1). No lands |
-| **Gold** | — | Unspent mana becomes Gold (cap 5). Gold pays for Instants, Sorceries and activated abilities (mana is used first), and Invest is paid only with Gold. Permanents are mana only (§5.2) |
+| **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per round up to 10, refilled when a round starts and kept for the whole round (§5.1, §6.1). No lands |
+| **Gold** | — | Unspent mana becomes Gold at the end of the round (cap 3). Gold pays for Instants, Sorceries and activated abilities (**Gold is used first**), and Invest is paid only with Gold. Permanents are mana only (§5.2) |
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | **Life gain** | Uncapped | Gaining life (Lifelink, drains) can't take you above your starting life (§11.1) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
@@ -110,9 +110,10 @@ Unused mana is not lost.
 - 🔒 **Gold is always used first** (decided 2026-10-10, like Runeterra's spell mana). When a cost can be paid with both, your Gold is spent first automatically, and mana pays only what Gold can't. There's no choosing the split. (Invest is separate: it is always paid with Gold.)
   - Gold can never pay for permanents, so spending it first is always right: casting a Sorcery before a creature can't use up the creature's mana any more (this was RULES_REVIEW #6 under the old mana-first rule).
   - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 3 Gold and then 1 mana.
-- 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early. A few cards break this on purpose, and mana is still spent first: **Retainer Mage** (Gold can pay for it whenever it's cast, decided 2026-10-09) and **Shady Moneylender** (Gold can pay for your creature spells). **Silent Partner** lets mana pay for Invest (mana first, then Gold).
+- 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early. A few cards break this on purpose, and Gold is then spent first like for spells: **Retainer Mage** (Gold can pay for it whenever it's cast, decided 2026-10-09) and **Shady Moneylender** (Gold can pay for your creature spells). **Silent Partner** lets mana pay for Invest (mana first, then Gold).
 - 🔒 **Clarification**: the mana pool fills when a round starts and lasts until it ends, so mana you didn't spend on your own turn can still pay for Instants on an opponent's turn in the same round. What's left at the end of the round is banked as Gold.
-- 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (mana first).
+- 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (Gold first).
+- 🔒 **Gold-only parts are set aside first** (2026-10-10): when a spell also has Invest or "pay any amount of Gold (X)", the Gold for those is kept back before its cost takes Gold first, so the cost uses mana instead where it can.
 - 🔒 Gold gained above the cap of 3 is lost.
 - 🔒 **Bank** (rules term, introduced with set v0.2): when unspent mana becomes Gold at the end of the round, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
 - 🔒 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap. If several effects set it, the newest one wins (MTG timestamp order).
@@ -289,7 +290,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Gain control** (MTG): the permanent keeps its damage and counters. A creature can't attack or use Tap abilities until its new controller's next turn, unless it has Haste (MTG 302.6), and a creature that changes controller leaves combat. "Until end of turn" control ends in the cleanup step. When a player leaves the game, what they controlled but didn't own goes back to its owner.
 - **Return to hand** (bounce): the card comes back as a new object, so its damage is gone. A token stops existing.
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
-- **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with mana first, then Gold (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means your main phase with an empty Chain.
+- **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with Gold first, then mana (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means your main phase with an empty Chain.
 
 ---
 
@@ -318,6 +319,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Gold-only parts are set aside first** (§5.2): Invest and "pay any amount of Gold (X)" keep their Gold before the spell's cost takes Gold first (fixes a bug found in the design review: Gold first could eat the Invest Gold). |
 | 2026-10-10 | **Cards are data**: every card and the prototype decks live in JSON files (`Assets/StreamingAssets/Cards`, `Decks`), built from the engine's building blocks (DEVELOPMENT §3). Changing a card no longer needs code. |
 | 2026-10-10 | **Replacement effects are in the engine** (§8.1, MTG 614–616): dying, damage, entering, drawing, gaining life and gaining Gold can be replaced. Self-replacement effects first, then oldest first; each applies once per event. MTG's "the affected player chooses the order" is not asked yet (noted as open). No card uses them yet except Keeper Z-00, whose counter now goes through them. |
 | 2026-10-10 | **"Choose" without "target" is chosen on resolution** (MTG 608.2d). Snik pays X on activation and chooses up to X other Goobers when the ability resolves, one at a time, and may stop early; a Goober that left in response just can't be chosen. |

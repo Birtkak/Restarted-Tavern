@@ -225,20 +225,15 @@ namespace RestartedTavern.Rules
                     sacrifices.Add(ObjectId.None);
                 }
 
-                bool canInvest = Payment.CanInvest(S, Db, p, def);
-                int goldForCost = Payment.GoldNeeded(S, Db, p, def);
-                for (int invest = 0; invest <= (canInvest ? 1 : 0); invest++)
+                for (int invest = 0; invest <= (def.InvestCost.HasValue ? 1 : 0); invest++)
                 {
-                    // "As an extra cost, pay any amount of Gold (X)": every X the remaining Gold allows, 0 included.
-                    int investGold = 0;
-                    if (invest == 1) Payment.InvestSplit(S, Db, p, def, out _, out investGold);
-                    int minX = 0, maxX = def.XGoldExtraCost ? p.Gold - goldForCost - investGold : 0;
-                    if (def.XCost)
-                    {
-                        // "X" in the cost: every X from 1 up to what can be paid.
-                        minX = 1;
-                        while (Payment.GoldNeeded(S, Db, p, def, maxX + 1) >= 0) maxX++;
-                    }
+                    // "X" in the cost: every X from 1 up to what can be paid. "As an extra cost, pay any amount of Gold (X)":
+                    // every X the Gold allows, 0 included. Each is checked with the whole payment (Invest too).
+                    int minX = def.XCost ? 1 : 0;
+                    if (!Payment.TrySplit(S, Db, p, def, minX, invest == 1, out _)) continue;
+                    int maxX = minX;
+                    if (def.XCost || def.XGoldExtraCost)
+                        while (Payment.TrySplit(S, Db, p, def, maxX + 1, invest == 1, out _)) maxX++;
                     for (int x = minX; x <= maxX; x++)
                         foreach (var targets in targetChoices)
                             foreach (var sacrifice in sacrifices)

@@ -60,27 +60,58 @@ namespace RestartedTavern.Rules
 
         public static bool CanPay(GameState s, CardDatabase db, PlayerState p, CardDefinition def) => GoldNeeded(s, db, p, def) >= 0;
 
-        /// <summary>
-        /// How the Invest cost would be paid after the main cost: Gold only, or mana first and then Gold
-        /// with Silent Partner. Returns false if it can't be paid.
-        /// </summary>
-        public static bool InvestSplit(GameState s, CardDatabase db, PlayerState p, CardDefinition def, out int mana, out int gold)
+        /// <summary>How casting a spell is paid: its cost, its Invest cost and "pay any amount of Gold (X)".</summary>
+        public struct SpellPayment
         {
-            mana = 0;
-            gold = 0;
-            if (!def.InvestCost.HasValue) return false;
-            int goldForCost = GoldNeeded(s, db, p, def);
-            if (goldForCost < 0) return false;
-            int manaLeft = p.Mana - (Costs.SpellCost(s, db, p.Id, def) - goldForCost);
-            int invest = Costs.InvestCost(s, db, p.Id, def);
-            if (InvestMayUseMana(s, db, p.Id)) mana = Math.Min(Math.Max(0, manaLeft), invest);
-            gold = invest - mana;
-            return goldForCost + gold <= p.Gold;
+            public int ManaForCost, GoldForCost, InvestMana, InvestGold, XGold;
+            public int Mana => ManaForCost + InvestMana;
+            public int Gold => GoldForCost + InvestGold + XGold;
         }
 
-        /// <summary>Can the Invest cost be paid too, after the main cost?</summary>
+        /// <summary>
+        /// Splits the whole payment for casting <paramref name="def"/> (§5.2). Gold-only parts (Invest, "pay X Gold") are
+        /// set aside first, so paying the cost Gold first can't use up the Gold they need (2026-10-10 fix). Then the cost
+        /// is paid (Gold first or mana first, see PlayerState.PaysGoldFirst), then Invest with Silent Partner uses the mana
+        /// that's left before Gold. Returns false if it can't all be paid.
+        /// </summary>
+        public static bool TrySplit(GameState s, CardDatabase db, PlayerState p, CardDefinition def, int x, bool invest, out SpellPayment pay)
+        {
+            pay = default;
+            if (invest && !def.InvestCost.HasValue) return false;
+            int cost = Costs.SpellCost(s, db, p.Id, def) + (def.XCost ? x : 0);
+            pay.XGold = def.XGoldExtraCost ? x : 0;
+            int investCost = invest ? Costs.InvestCost(s, db, p.Id, def) : 0;
+            bool investMana = invest && InvestMayUseMana(s, db, p.Id);
+            int reserved = pay.XGold + (investMana ? 0 : investCost);
+
+            int gold = GoldNeeded(p, cost, GoldAllowed(s, db, p.Id, def), reserved);
+            if (gold < 0) return false;
+            pay.GoldForCost = gold - reserved;
+            pay.ManaForCost = cost - pay.GoldForCost;
+            if (investMana)
+            {
+                pay.InvestMana = Math.Min(Math.Max(0, p.Mana - pay.ManaForCost), investCost);
+                pay.InvestGold = investCost - pay.InvestMana;
+            }
+            else
+            {
+                pay.InvestGold = investCost;
+            }
+            return pay.Gold <= p.Gold && pay.Mana <= p.Mana;
+        }
+
+        /// <summary>How the Invest cost would be paid along with the main cost. Returns false if it can't be paid.</summary>
+        public static bool InvestSplit(GameState s, CardDatabase db, PlayerState p, CardDefinition def, out int mana, out int gold)
+        {
+            bool ok = TrySplit(s, db, p, def, def.XCost ? 1 : 0, true, out var pay);
+            mana = pay.InvestMana;
+            gold = pay.InvestGold;
+            return ok;
+        }
+
+        /// <summary>Can the Invest cost be paid too, along with the main cost?</summary>
         public static bool CanInvest(GameState s, CardDatabase db, PlayerState p, CardDefinition def) =>
-            InvestSplit(s, db, p, def, out _, out _);
+            TrySplit(s, db, p, def, def.XCost ? 1 : 0, true, out _);
     }
 
     /// <summary>GAME_DESIGN §5.2: each player's Gold cap.</summary>

@@ -319,7 +319,8 @@ namespace RestartedTavern.Rules
                     if (card?.DefinitionId != null)
                     {
                         var def = _db.Get(card.DefinitionId);
-                        int gold = Payment.GoldNeeded(state, _db, state.GetPlayer(a.Player), def, a.X);
+                        Payment.TrySplit(state, _db, state.GetPlayer(a.Player), def, a.X, a.Invest, out var pay);
+                        int gold = pay.GoldForCost;
                         if (gold > 0) sb.Append("  [uses ").Append(gold).Append(" Gold]");
                         if (def.XGoldExtraCost) sb.Append("  [X=").Append(a.X).Append(" Gold]");
                         if (def.XCost) sb.Append("  [X=").Append(a.X).Append(']');
