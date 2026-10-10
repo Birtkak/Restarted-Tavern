@@ -9,14 +9,14 @@ namespace RestartedTavern.Client.Table
 {
     /// <summary>
     /// The battlefield rows, MTG Arena style (docs/handoff/NEXT_ARENA.md):
-    /// - tapped units lie sideways (attackers too, once declared)
+    /// - tapped permanents tilt a little (attackers too, once declared)
     /// - Equipment and Curses on a creature are tucked behind it, stacked up and to the right so a corner peeks out; hovering
     ///   the host fans them out beside it (hovering a fanned one zooms it)
     /// - each side shrinks as it fills up, down to two half-size lines before cards overlap.
     /// </summary>
     public sealed partial class TableView
     {
-        private const float TappedAngle = -90f;      // a quarter turn clockwise
+        private const float TappedAngle = -12f;      // tapped permanents tilt a little clockwise (user, 2026-10-10)
         private const float TuckStepX = 10f, TuckStepY = 12f; // how far each tucked attachment peeks out (right, up)
         private const float OneLineMinScale = 0.5f;  // below this, the side splits into two lines
         private const float TwoLineScale = 0.5f;
@@ -51,9 +51,9 @@ namespace RestartedTavern.Client.Table
         }
 
         /// <summary>How wide a card is on the table at full size: a tapped unit lies sideways.</summary>
-        private static float Footprint(bool sideways) => sideways ? UnitH : UnitW;
+        private static float Footprint(bool tilted) => tilted ? UnitW + 30f : UnitW; // a 12 degree tilt is ~30 wider
 
-        private static bool LiesSideways(CardView c) => c.Type == CardType.Creature && c.Tapped;
+        private static bool LiesSideways(CardView c) => c.Tapped;
 
         /// <summary>
         /// One side's battlefield (minus the combat lane and tucked attachments), between <paramref name="rowTop"/> and
@@ -165,7 +165,7 @@ namespace RestartedTavern.Client.Table
             var hostWidget = WidgetFor(host);
             if (hostWidget == null || !_tucked.TryGetValue(host, out var group)) return;
             float s = hostWidget.HomeScale;
-            float hostHalf = Footprint(Mathf.Abs(hostWidget.HomeRotation) > 45f) * s / 2f;
+            float hostHalf = Footprint(Mathf.Abs(hostWidget.HomeRotation) > 1f) * s / 2f;
             float dir = hostWidget.HomePosition.x < CenterX ? 1f : -1f; // fan towards the middle of the table
             for (int i = open ? 0 : group.Count - 1; open ? i < group.Count : i >= 0; i += open ? 1 : -1)
             {

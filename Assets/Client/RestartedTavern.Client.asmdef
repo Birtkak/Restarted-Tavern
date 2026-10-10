@@ -5,6 +5,7 @@
         "RestartedTavern.Rules",
         "RestartedTavern.Client.Logic",
         "UnityEngine.UI",
+        "Unity.TextMeshPro",
         "PrimeTween.Runtime"
     ],
     "includePlatforms": [],

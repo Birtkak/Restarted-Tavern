@@ -115,9 +115,11 @@ after every change; the events of the change then animate on top (FLIP slides + 
   zoom it), each side scaled to fit. Token creatures are domes (a half circle with a flat underside). Attackers in the
   lane only tilt instead of lying sideways, and a crowded lane shrinks them to fit (down to half size). See
   LOR_PRESENTATION §6.
-- **Deck editor** (`TableView.DeckEditor.cs`, "Deck editor" in the main menu): start from any deck or an empty one,
-  pick a Tavern Dweller (the pool shows its factions plus neutral, filter by faction and type), click a card to add a
-  copy, right-click or click a deck row to take one out, hover to zoom; name, count, mana curve; Save / Delete. Decks go
+- **Deck editor** (`TableView.DeckEditor.cs`, "Deck editor" in the main menu), Hearthstone's collection layout in the
+  LoR look: "My decks" tiles (a prototype deck opens as a copy) and New deck, which picks a Tavern Dweller first; faction
+  tabs over a 4 x 2 book of cards with page arrows; mana gems (All, 0-7+), type and search (Enter) below; on the right
+  the Tavern Dweller, the name, LoR deck rows (cost, name, copies), curve and count, Done / Save / Delete. Click a card to
+  add a copy, right-click it or click its row to take one out, hover to zoom. Decks go
   to `custom_decks.json` in Unity's persistentDataPath (`CardPool.CustomDecksFile`, the prototype deck format) and
   come after the prototype decks in the menu; BATTLE refuses a deck that isn't legal yet (60 cards, 4 copies,
   factions). Sims and tests don't see them.

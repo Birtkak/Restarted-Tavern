@@ -34,9 +34,10 @@ namespace RestartedTavern.Client.Table
         private const float OppRowY = 112f, LaneTop = 296f, LaneMid = 471f, LaneBottom = 646f, MyRowY = 656f;
         private const float HandTop = 862f;
 
-        private static readonly Color Wood = Ui.Hex("#4A2F1C");
-        private static readonly Color WoodDark = Ui.Hex("#2E1C10");
-        private static readonly Color Felt = Ui.Hex("#5A3B24");
+        // LoR look (user, 2026-10-10): slate blue table and panels, gold trim. The names stay from the tavern theme.
+        private static readonly Color Wood = Ui.Hex("#232A3A");
+        private static readonly Color WoodDark = Ui.Hex("#11151F");
+        private static readonly Color Felt = Ui.Hex("#2C3650");
         private static readonly Color LaneColor = new Color(0.08f, 0.05f, 0.03f, 0.45f);
         private static readonly Color GlowSource = Ui.Hex("#40C0FF");
         private static readonly Color GlowTarget = Ui.Hex("#FF5050");
@@ -44,9 +45,9 @@ namespace RestartedTavern.Client.Table
         private static readonly Color GlowSelected = Ui.Hex("#FFFFFF");
         /// <summary>Your card whose triggered ability is going off (playtest 2026-10-10_141453), and its Chain bubble.</summary>
         private static readonly Color GlowTrigger = Ui.Hex("#40E060");
-        private static readonly Color ButtonColor = Ui.Hex("#7A4E22");
-        private static readonly Color ContextOn = Ui.Hex("#C08A2A");
-        private static readonly Color ContextOff = Ui.Hex("#4A4038");
+        private static readonly Color ButtonColor = Ui.Hex("#3A4766");
+        private static readonly Color ContextOn = Ui.Hex("#C99A3E");
+        private static readonly Color ContextOff = Ui.Hex("#2A303E");
         private static readonly Color ActingGlow = Ui.Hex("#FFC840");
         private static readonly Color Mine = Ui.Hex("#2A5A8A");
         private static readonly Color Theirs = Ui.Hex("#8A2A2A");
@@ -550,7 +551,7 @@ namespace RestartedTavern.Client.Table
             Ui.AddOutline(face.gameObject, new Color(0, 0, 0, 0.8f), 2f);
 
             // Name ribbon across the bottom of the oval.
-            var ribbon = Ui.Panel(w.transform, "Ribbon", -12, ph - 58, pw - 44, 30, Ui.Hex("#6A4420"));
+            var ribbon = Ui.Panel(w.transform, "Ribbon", -12, ph - 58, pw - 44, 30, Ui.Hex("#2A3550"));
             Ui.AddOutline(ribbon.gameObject, Ui.Hex("#E0B060"), 2f);
             Ui.FillLabel(ribbon.transform, p.TavernDweller?.Name ?? p.Id.ToString(), 15, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold, 4f).resizeTextForBestFit = true;
 
@@ -1084,7 +1085,7 @@ namespace RestartedTavern.Client.Table
 
         private void DrawHandoff()
         {
-            Ui.FillPanel(_overlay, "Cover", Ui.Hex("#1A100A"), 0f, raycast: true);
+            Ui.FillPanel(_overlay, "Cover", Ui.Hex("#0E121A"), 0f, raycast: true);
             Ui.Label(_overlay, "Pass the table", 0, 380, Ui.Width, 80, 54, Ui.Hex("#FFE0A0"), TextAnchor.MiddleCenter, FontStyle.Bold);
             Ui.Button(_overlay, _s.Viewer + ", take the table", Ui.Width / 2f - 200, 500, 400, 90, ContextOn, PressContext, 30);
         }
@@ -1103,7 +1104,7 @@ namespace RestartedTavern.Client.Table
 
         private void ShowLoading()
         {
-            var panel = Ui.FillPanel(_root, "Loading", Ui.Hex("#1A100A"), 0f, raycast: true);
+            var panel = Ui.FillPanel(_root, "Loading", Ui.Hex("#0E121A"), 0f, raycast: true);
             _loading = panel.gameObject;
             Ui.Label(panel.transform, "RESTARTED TAVERN", 0, 380, Ui.Width, 120, 96, Ui.Hex("#FFD070"), TextAnchor.MiddleCenter, FontStyle.Bold);
             Ui.Label(panel.transform, "Pulling up a chair...", 0, 520, Ui.Width, 50, 28, Ui.Hex("#C8A878"), TextAnchor.MiddleCenter, FontStyle.Italic);
@@ -1123,7 +1124,7 @@ namespace RestartedTavern.Client.Table
         /// <summary>The main menu: per seat human / bot, a prototype deck and a Tavern Dweller that can lead it; Battle.</summary>
         private void DrawMenu()
         {
-            Ui.FillPanel(_overlay, "Menu", Ui.Hex("#24160C"), 0f, raycast: true);
+            Ui.FillPanel(_overlay, "Menu", Ui.Hex("#10141D"), 0f, raycast: true);
             Ui.Label(_overlay, "RESTARTED TAVERN", 0, 14, Ui.Width, 80, 56, Ui.Hex("#FFD070"), TextAnchor.MiddleCenter, FontStyle.Bold);
             var decks = CardPool.PrototypeDecks();
             for (int seat = 0; seat < 2; seat++)
@@ -1196,7 +1197,7 @@ namespace RestartedTavern.Client.Table
                     _dirty = true;
                 }, 20);
             Ui.Button(_overlay, "Quit", Ui.Width / 2f - 460, 978, 260, 54, Ui.Hex("#5A2A20"), Application.Quit, 20);
-            Ui.Button(_overlay, "Deck editor", Ui.Width / 2f - 740, 978, 260, 54, Mine, () => OpenEditor(decks[_deck[0]]), 20);
+            Ui.Button(_overlay, "Deck editor", Ui.Width / 2f - 740, 978, 260, 54, Mine, () => OpenEditor(), 20);
         }
 
         // ------------------------------------------------------------------ zoom
