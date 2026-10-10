@@ -10,6 +10,10 @@ namespace RestartedTavern.Rules
         public List<string> Deck { get; set; } = new List<string>();
         /// <summary>Null = own team (free-for-all).</summary>
         public int? TeamId { get; set; }
+        /// <summary>Skip the opening shuffle: <see cref="Deck"/>[0] is the top card (the scripted tutorial).</summary>
+        public bool KeepDeckOrder { get; set; }
+        /// <summary>This player goes first instead of a random one (the scripted tutorial).</summary>
+        public bool GoesFirst { get; set; }
     }
 
     public sealed class IllegalActionException : Exception

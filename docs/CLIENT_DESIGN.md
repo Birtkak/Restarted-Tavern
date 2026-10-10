@@ -126,6 +126,13 @@ after every change; the events of the change then animate on top (FLIP slides + 
 
 ---
 
+### 2.3 Main menu, tutorial, coin toss (built 2026-10-10)
+
+- **Home** (`TableView.Menu.cs`): title, tiles Continue (in a game) / Play / Tutorial ("START HERE") / Deck editor / Quit, a hoverable fan of showcase cards (rarest creature per faction) and the faction emblems. **Play** is the setup page (seats human / bot, deck, Tavern Dweller, Battle).
+- **Tutorial** (`Client/Logic/Tutorial.cs`, `TableView.Tutorial.cs`): `Tutorial.Setup` stacks the scripted cards on top (`PlayerSetup.KeepDeckOrder`, `GoesFirst`), the steps are Info (a box with Next; nothing moves), You (only `Allow`ed actions pass `MatchSession.HumanFilter`) and Opponent (`MatchSession.BotOverride`); the player's other priority passes are taken for them (`AutoHumanAction`). After the round 3 attack it releases into a normal bot game. Skip tutorial releases at once; Undo is off while it runs. `-tutorial` / `-tutorialstep N` start it (played up to step N) for screenshots; `TutorialTests` play it through.
+- **Coin toss** (`StartToss`): before every game from the menu or a rematch, a coin flips (viewer's side blue with their Tavern Dweller's initials) and lands on whoever the engine picked to go first; click skips.
+- **Playtest fixes** (2026-10-10): `ActionPicker` always asks target slots, even with one option. `KeywordGlossary` boxes beside the zoom (and a lifted hand card); an invisible `ZoomHit` area from the card's edge over the zoom keeps it open while hovered. `DrawPhases`: the phase tracker at the lane's right end; `StepStartedEvent` banners for the opponent's attack and for blocks. Coach Info boxes: hidden while beats play, not closed by the context button, Space works after 0.5 s.
+
 ## 3. Build plan 🟡
 1. ~~**Table scene skeleton**~~ done (§2.2).
 2. ~~**Drag and drop**~~ done (§2.2), apart from playing a card by dropping it on the board.

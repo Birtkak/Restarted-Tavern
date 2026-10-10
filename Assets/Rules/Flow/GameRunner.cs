@@ -49,11 +49,13 @@ namespace RestartedTavern.Rules
                     p.TavernDwellerZone.Add(NewObject(setup.TavernDwellerId, p.Id, Zone.TavernDweller));
                 foreach (var cardId in setup.Deck)
                     p.Deck.Add(NewObject(cardId, p.Id, Zone.Deck));
-                S.Rng.Shuffle(p.Deck);
+                if (!setup.KeepDeckOrder) S.Rng.Shuffle(p.Deck);
             }
 
-            // GAME_DESIGN §3: who goes first is random.
-            S.StartingPlayerIndex = S.Rng.Next(S.Players.Count);
+            // GAME_DESIGN §3: who goes first is random (unless a setup fixes it).
+            int fixedFirst = -1;
+            for (int i = 0; i < setups.Count; i++) if (setups[i].GoesFirst) fixedFirst = i;
+            S.StartingPlayerIndex = fixedFirst >= 0 ? fixedFirst : S.Rng.Next(S.Players.Count);
             S.ActiveIndex = S.StartingPlayerIndex;
             S.RoundLeaderSeat = S.StartingPlayerIndex;
             Emit(new GameStartedEvent { StartingPlayer = S.ActivePlayer });

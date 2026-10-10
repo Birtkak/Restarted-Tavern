@@ -20,6 +20,10 @@ namespace RestartedTavern.Client.Logic
         public List<SeatKind> Seats = new List<SeatKind>();
         public FormatConfig Format = FormatConfig.Standard();
         public ulong Seed = 1;
+        /// <summary>The decks are dealt in list order, top card first (no opening shuffle): the scripted tutorial.</summary>
+        public bool StackedDecks;
+        /// <summary>This seat goes first, or -1 for a random one.</summary>
+        public int FirstSeat = -1;
 
         /// <summary>1v1 with two prototype decks (indexes into CardPool.PrototypeDecks()).</summary>
         public static MatchSetup Duel(int deck1, int deck2, SeatKind seat1 = SeatKind.Human, SeatKind seat2 = SeatKind.Bot, ulong seed = 1)
@@ -118,7 +122,11 @@ namespace RestartedTavern.Client.Logic
             _bot = new GreedyBot(Engine);
             StartEvents = new List<GameEvent>();
             State = Engine.CreateGame(setup.Format,
-                setup.Decks.Select(d => new PlayerSetup { Deck = new List<string>(d.Cards), TavernDwellerId = d.TavernDweller }).ToList(),
+                setup.Decks.Select((d, i) => new PlayerSetup
+                {
+                    Deck = new List<string>(d.Cards), TavernDwellerId = d.TavernDweller,
+                    KeepDeckOrder = setup.StackedDecks, GoesFirst = i == setup.FirstSeat,
+                }).ToList(),
                 setup.Seed, StartEvents);
             Text.Remember(State, StartEvents);
             Viewer = State.Players[Math.Max(0, setup.Seats.IndexOf(SeatKind.Human))].Id;
@@ -139,8 +147,22 @@ namespace RestartedTavern.Client.Logic
         /// <summary>The game waits on the human at the screen and the table isn't covered for a handoff.</summary>
         public bool HumanToAct => WaitingOn is PlayerId p && p == Viewer && SeatOf(p) == SeatKind.Human && !HandoffPending;
 
+        /// <summary>
+        /// Narrows what the human may do (the scripted tutorial: "play this card now"). Null = everything legal.
+        /// Only the table's choices go through it; <see cref="CommitCombat"/> still sends its own passes.
+        /// </summary>
+        public Func<PlayerAction, bool> HumanFilter { get; set; }
+
+        /// <summary>Picks the bot's action instead of the bot (the scripted tutorial); null or a null result = the bot decides.</summary>
+        public Func<MatchSession, PlayerId, PlayerAction> BotOverride { get; set; }
+
         /// <summary>The legal actions of the viewer, or none when it isn't their call.</summary>
-        public List<PlayerAction> LegalForViewer() => HumanToAct ? Engine.GetLegalActions(State, Viewer) : new List<PlayerAction>();
+        public List<PlayerAction> LegalForViewer()
+        {
+            if (!HumanToAct) return new List<PlayerAction>();
+            var legal = Engine.GetLegalActions(State, Viewer);
+            return HumanFilter == null ? legal : legal.Where(HumanFilter).ToList();
+        }
 
         /// <summary>A fresh picker for the viewer's current legal actions.</summary>
         public ActionPicker NewPicker() => new ActionPicker(LegalForViewer());
@@ -157,7 +179,10 @@ namespace RestartedTavern.Client.Logic
         public List<GameEvent> StepBot()
         {
             if (!BotToAct) throw new InvalidOperationException("No bot to act.");
-            return Apply(_bot.Choose(State, WaitingOn.Value), keepUndo: false);
+            var p = WaitingOn.Value;
+            var scripted = BotOverride?.Invoke(this, p);
+            if (scripted != null && !Engine.GetLegalActions(State, p).Contains(scripted)) scripted = null;
+            return Apply(scripted ?? _bot.Choose(State, p), keepUndo: false);
         }
 
         /// <summary>

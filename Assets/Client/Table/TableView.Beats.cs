@@ -317,6 +317,17 @@ namespace RestartedTavern.Client.Table
                         t += 1.0f * k;
                         break;
                     }
+                    // Combat steps get a banner too (playtest 2026-10-10_155716), except your own attack's: you just declared it.
+                    case StepStartedEvent st when st.Step == Step.DeclareAttackers || st.Step == Step.DeclareBlockers:
+                    {
+                        var attacker = _snap.Players.FirstOrDefault(p => p.HasAttackToken);
+                        bool mine = attacker != null && attacker.Id == _snap.Viewer;
+                        if (st.Step == Step.DeclareAttackers && mine) break;
+                        if (st.Step == Step.DeclareAttackers) Banner("They attack!", "Declare attackers", t, k * 0.7f, Ui.Hex("#FF7050"));
+                        else Banner(mine ? "They block" : "Block!", mine ? "Opponent declares blockers" : "Choose your blockers, then press Block", t, k * 0.7f, Ui.Hex("#FF7050"));
+                        t += 0.7f * k;
+                        break;
+                    }
                     case GoldBankedEvent g when g.Banked > 0:
                         Bank(g.Player, g.Banked, t, k);
                         t += 0.35f * k;

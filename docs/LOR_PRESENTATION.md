@@ -200,7 +200,7 @@ Bug-report fixes:
 - The Scrap Collector infinite loop, now a death trigger.
 
 **Test hooks.**
-- `-zoom chain|dweller` pins that zoom for the screenshot (the bubble zoom is verified this way).
+- `-zoom chain|dweller|<card id on the board>` pins that zoom for the screenshot (the bubble zoom is verified this way).
 - `-shotat` now counts game time, so the clamped first frames don't skew it.
 
 **Test hook.** `-shotat seconds` with `-autoshot` takes the screenshot that long after the table is drawn, and with `-autoplay` only the last action animates. Use it to catch beats mid-way.

@@ -23,7 +23,9 @@ namespace RestartedTavern.Client.Logic.Tests
                     return;
                 }
                 Assert.IsNotNull(picker.Prompt);
-                Assert.Greater(picker.Prompt.Options.Count, 1, "A prompt must offer a real choice.");
+                // A real choice, except targets: a single legal target is still clicked (playtest 2026-10-10_155528).
+                if (picker.Prompt.Dimension != ChoiceDimension.Target)
+                    Assert.Greater(picker.Prompt.Options.Count, 1, "A prompt must offer a real choice.");
                 for (int i = 0; i < picker.Prompt.Options.Count; i++) Walk(new List<int>(path) { i });
             }
             Walk(new List<int>());
@@ -92,6 +94,46 @@ namespace RestartedTavern.Client.Logic.Tests
             Assert.AreEqual(ChoiceDimension.Invest, picker.Prompt.Dimension);
             picker.Choose(picker.Prompt.Options.First(o => o.Invest));
             Assert.AreEqual(PlayerAction.Play(p, card, b, invest: true), picker.Ready);
+        }
+
+        [Test]
+        public void Picker_SingleTarget_IsStillClicked()
+        {
+            // Playtest 2026-10-10_155528: one legal target is still a choice the player makes.
+            var p = new PlayerId(1);
+            var card = new ObjectId(10);
+            var a = Target.ForObject(new ObjectId(20));
+            var picker = new ActionPicker(new List<PlayerAction> { PlayerAction.Play(p, card, a) });
+            Assert.IsTrue(picker.Begin(card));
+            Assert.IsNull(picker.Ready);
+            Assert.AreEqual(ChoiceDimension.Target, picker.Prompt.Dimension);
+            CollectionAssert.AreEquivalent(new[] { a }, picker.Prompt.Targets);
+            Assert.IsTrue(picker.ChooseTarget(a));
+            Assert.AreEqual(PlayerAction.Play(p, card, a), picker.Ready);
+        }
+
+        [Test]
+        public void Picker_NoTargets_IsReadyAtOnce()
+        {
+            var p = new PlayerId(1);
+            var card = new ObjectId(10);
+            var picker = new ActionPicker(new List<PlayerAction> { PlayerAction.Play(p, card) });
+            Assert.IsTrue(picker.Begin(card));
+            Assert.AreEqual(PlayerAction.Play(p, card), picker.Ready);
+        }
+
+        [Test]
+        public void KeywordGlossary_ExplainsKeywordsAndRulesWords()
+        {
+            var v = new CardView
+            {
+                DefinitionId = "x", Type = CardType.Creature, Keywords = Keyword.Trample | Keyword.CantBlock,
+                Text = "Arrival: Deal 1 damage to any target. Last Breath: Draw a card.",
+            };
+            var names = KeywordGlossary.For(v).Select(e => e.Name).ToList();
+            CollectionAssert.AreEqual(new[] { "Trample", "Can't block", "Arrival", "Last Breath" }, names);
+            Assert.IsEmpty(KeywordGlossary.For(new CardView()), "Hidden cards explain nothing");
+            Assert.AreEqual("Instant", KeywordGlossary.For(new CardView { DefinitionId = "y", Type = CardType.Instant, Text = "" }).Single().Name);
         }
 
         [Test]

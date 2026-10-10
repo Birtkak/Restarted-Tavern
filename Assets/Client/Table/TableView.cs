@@ -134,6 +134,8 @@ namespace RestartedTavern.Client.Table
                     case "-until": _until = next; break;
                     case "-board": int.TryParse(next, out _board); break;
                     case "-menu": _menuOpen = true; break;
+                    case "-tutorial": _tutorialAt = 0; break;
+                    case "-tutorialstep": int.TryParse(next, out _tutorialAt); break;
                     case "-editor": _menuOpen = true; _editorAtStart = true; break;
                     case "-debug": _debugOpen = true; break;
                     case "-reveal": _revealHands = true; break;
@@ -160,11 +162,18 @@ namespace RestartedTavern.Client.Table
             if (_board > 0) { FillBoard(_board); OnSessionChanged(); }
             _menuOpen = menu;
             if (_editorAtStart) OpenEditor(CardPool.PrototypeDecks()[_deck[0]]);
+            if (_tutorialAt >= 0)
+            {
+                StartTutorial();
+                if (_tutorialAt > 0) EndToss();
+                for (int i = 0; i < 500 && _tutorial.Index < _tutorialAt && _tutorial.AutoPlayStep(); i++) _pendingEvents.Clear();
+                OnSessionChanged();
+            }
             if (interactive)
             {
                 while (Time.realtimeSinceStartup - shown < 1.2f) yield return null;
                 Destroy(_loading);
-                _menuOpen = true;
+                _menuOpen = _tutorialAt < 0;
                 _dirty = true;
             }
 
@@ -205,22 +214,29 @@ namespace RestartedTavern.Client.Table
         }
 
         private bool _autoBugReport;
+        /// <summary>-tutorial / -tutorialstep N: start the tutorial (played up to step N, for screenshots).</summary>
+        private int _tutorialAt = -1;
         /// <summary>A game was started from the menu (so "Back to the game" makes sense).</summary>
         private bool _battleStarted;
 
-        private void NewGame(ulong seed)
+        /// <summary>A new game from the menu choices, or from <paramref name="setup"/> (the tutorial); toss: show the coin toss.</summary>
+        private void NewGame(ulong seed, MatchSetup setup = null, bool toss = false)
         {
             _seed = seed;
             var decks = CardPool.PrototypeDecks();
             _deck[0] = Mathf.Clamp(_deck[0], 0, decks.Count - 1);
             _deck[1] = Mathf.Clamp(_deck[1], 0, decks.Count - 1);
-            _s = new MatchSession(MatchSetup.Duel(_deck[0], _dweller[0], _deck[1], _dweller[1], _seats[0], _seats[1], seed));
+            _s = new MatchSession(setup ?? MatchSetup.Duel(_deck[0], _dweller[0], _deck[1], _dweller[1], _seats[0], _seats[1], seed));
+            _tutorial = null;
             _menuOpen = false;
+            _menuPage = MenuPage.Home;
             _pinnedZoom = ObjectId.None;
             _browsing = null;
             HookBeats();
             OnSessionChanged();
             StartLog();
+            if (toss) StartToss();
+            else EndToss();
         }
 
         private void BuildCanvas()
@@ -255,6 +271,7 @@ namespace RestartedTavern.Client.Table
             _fxLayer = Ui.Fill(_root, "Fx");
             _zoomLayer = Ui.Fill(_root, "Zoom");
             _overlay = Ui.Fill(_root, "Overlay");
+            _tossLayer = Ui.Fill(_root, "Toss");
             _dragLayer = Ui.Fill(_root, "Drag");
 
             for (int i = 0; i < ArrowSegments; i++)
@@ -293,6 +310,7 @@ namespace RestartedTavern.Client.Table
 
         private void OnSessionChanged()
         {
+            _tutorial?.Advance(); // before the picker: the step decides what the player may do
             _picker = _s.NewPicker();
             _selectedBlocker = ObjectId.None;
             if (_s.CombatInProgress) _stage = null;
@@ -318,6 +336,9 @@ namespace RestartedTavern.Client.Table
 
         private void PressContext()
         {
+            if (Tossing) return;
+            // The context button never closes a coach box (it has its own Next button; Space is handled in Update).
+            if (TutorialFrozen) { if (Busy) SkipBeats(); return; }
             if (Busy) { SkipBeats(); return; }
             var b = TableControls.Main(_s, _stage);
             if (!b.Enabled) return;
@@ -335,7 +356,7 @@ namespace RestartedTavern.Client.Table
 
         private void Undo()
         {
-            if (!_s.CanUndo) return;
+            if (!_s.CanUndo || TutorialRunning) return;
             LogLine("(undo)");
             ResetBeats();
             Run(_s.Undo);
@@ -347,6 +368,7 @@ namespace RestartedTavern.Client.Table
                 _loadingBar.rectTransform.sizeDelta = new Vector2(Mathf.Min(600f, Time.realtimeSinceStartup / 1.2f * 600f), 14f);
             if (_s == null) return;
             UpdateDebug();
+            UpdateToss();
 
             if (_shotFrame >= 0)
             {
@@ -355,7 +377,8 @@ namespace RestartedTavern.Client.Table
                 if (_zoomShot != null && _snap != null)
                 {
                     var pin = _zoomShot == "chain" ? _widgets.LastOrDefault(x => x != null && x.Kind == WidgetKind.ChainItem)
-                        : _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.TavernDweller && x.Player == _snap.Viewer);
+                        : _zoomShot == "dweller" ? _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.TavernDweller && x.Player == _snap.Viewer)
+                        : _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.Unit && x.View?.DefinitionId == _zoomShot);
                     _zoomShot = null;
                     if (pin != null) { _pinnedZoom = pin.Id; ShowZoom(pin); }
                 }
@@ -384,9 +407,13 @@ namespace RestartedTavern.Client.Table
 
             // Keyboard shortcuts act on the table, never on the last clicked button.
             if (EventSystem.current != null && !_bugOpen) EventSystem.current.SetSelectedGameObject(null);
-            if (_dragging == null && !_menuOpen && !_bugOpen)
+            if (_dragging == null && !_menuOpen && !_bugOpen && !Tossing)
             {
-                if (Input.GetKeyDown(KeyCode.Space)) PressContext();
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    if (TutorialFrozen && !Busy) TutorialNext();
+                    else PressContext();
+                }
                 else if (Busy && Input.GetMouseButtonDown(0)) SkipBeats();
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1) && _picker.IsPicking)
                 {
@@ -403,7 +430,8 @@ namespace RestartedTavern.Client.Table
             }
             // A hover zoom whose card is gone or no longer under the mouse (redrawn under it, exit never came) closes.
             if (_pinnedZoom.IsNone && _zoomLayer.childCount > 0 && _dragging == null
-                && (_hovered == null || !RectTransformUtility.RectangleContainsScreenPoint(_hoverRect != null ? _hoverRect : _hovered.Rect, Input.mousePosition, CanvasCamera)))
+                && (_hovered == null || !RectTransformUtility.RectangleContainsScreenPoint(_hoverRect != null ? _hoverRect : _hovered.Rect, Input.mousePosition, CanvasCamera))
+                && !(_hovered != null && MouseOverZoom()))
             {
                 _hovered = null;
                 Ui.Clear(_zoomLayer);
@@ -411,7 +439,8 @@ namespace RestartedTavern.Client.Table
 
             UpdateFan();
             UpdateBeats();
-            if (_s.BotToAct && _dragging == null && !_menuOpen && !_bugOpen && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
+            UpdateTutorial();
+            if (_s.BotToAct && _dragging == null && !_menuOpen && !_bugOpen && !Tossing && !TutorialFrozen && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
             {
                 try { _s.StepBot(); }
                 catch (Exception e) { Debug.LogException(e); }
@@ -475,7 +504,9 @@ namespace RestartedTavern.Client.Table
             DrawHistory();
             PlayBeats(); // after the cards are drawn, before the context button (it's blank while beats play)
             DrawContext();
+            DrawPhases();
             DrawPromptAndChoices();
+            DrawTutorial();
             DrawTopBar();
             if (_browsing != null) DrawBrowser();
             if (!_pinnedZoom.IsNone) ShowZoom(_widgets.FirstOrDefault(w => w.Id == _pinnedZoom));
@@ -938,6 +969,54 @@ namespace RestartedTavern.Client.Table
                 Ui.Label(_dynamic, b.Hint, 1636, 596, 190, 60, 14, b.Enabled ? Ui.Hex("#FFE8C0") : Ui.Hex("#A89880"), TextAnchor.UpperCenter);
         }
 
+        private static readonly string[] PhaseNames = { "ACTION", "ATTACKERS", "BLOCKERS", "DAMAGE" };
+
+        /// <summary>Which of <see cref="PhaseNames"/> the round is in, or -1 (round start / end, mulligan).</summary>
+        private int CurrentPhase()
+        {
+            switch (_snap.Step)
+            {
+                case Step.Main1:
+                    // Dragging attackers into the lane is declaring them already.
+                    return _stage != null && !_stage.IsBlocking && _stage.Staged.Count > 0 ? 1 : 0;
+                case Step.BeginCombat:
+                case Step.DeclareAttackers: return 1;
+                case Step.DeclareBlockers: return 2;
+                case Step.CombatDamage: return 3;
+                default: return -1;
+            }
+        }
+
+        /// <summary>
+        /// The phase tracker at the lane's right end: action, attackers, blockers, damage, top to bottom, the current one lit
+        /// (playtest 2026-10-10_155716: "a better indicator when main phase / declare attacks / declare blocks happen").
+        /// </summary>
+        private void DrawPhases()
+        {
+            if (_snap.IsGameOver) return;
+            int current = CurrentPhase();
+            const float cw = 122f, ch = 30f, gap = 6f;
+            float total = PhaseNames.Length * ch + (PhaseNames.Length - 1) * gap;
+            float x = CenterRight - cw - 8f, y = LaneMid - total / 2f;
+            var attacker = _snap.Players.FirstOrDefault(p => p.HasAttackToken);
+            bool mine = attacker != null && attacker.Id == _snap.Viewer;
+            for (int i = 0; i < PhaseNames.Length; i++)
+            {
+                bool on = i == current;
+                // Combat chips say whose attack it is.
+                string name = PhaseNames[i];
+                if (on && i == 1) name = mine ? "YOU ATTACK" : "THEY ATTACK";
+                if (on && i == 2) name = mine ? "THEY BLOCK" : "YOU BLOCK";
+                var chip = Ui.Panel(_dynamic, "Phase", x, y, cw, ch, on ? (i == 0 ? Ui.Hex("#2A7AB0") : Ui.Hex("#C0402A")) : new Color(0f, 0f, 0f, 0.35f));
+                chip.raycastTarget = false;
+                Ui.AddOutline(chip.gameObject, on ? Ui.Hex("#FFE0A0") : new Color(1f, 0.85f, 0.6f, 0.25f), on ? 2f : 1f);
+                var label = Ui.FillLabel(chip.transform, name, on ? 16 : 13, on ? Color.white : new Color(1f, 0.85f, 0.6f, 0.45f), TextAnchor.MiddleCenter, FontStyle.Bold);
+                label.raycastTarget = false;
+                if (on) Pulse(chip.transform, 0.04f);
+                y += ch + gap;
+            }
+        }
+
         private static Color ButtonColorFor(ButtonMode mode)
         {
             switch (mode)
@@ -957,7 +1036,7 @@ namespace RestartedTavern.Client.Table
 
         private void DrawTopBar()
         {
-            Ui.Button(_dynamic, "Undo", 8, 8, 80, 32, ButtonColor, Undo, 16, _s.CanUndo);
+            Ui.Button(_dynamic, "Undo", 8, 8, 80, 32, ButtonColor, Undo, 16, _s.CanUndo && !TutorialRunning);
             Ui.Button(_dynamic, "Menu", 94, 8, 110, 32, ButtonColor, OpenMenu, 16);
             Ui.Button(_dynamic, "Debug", 210, 8, 66, 32, _debugOpen ? ContextOn : ButtonColor, ToggleDebug, 14);
             Ui.Button(_dynamic, "Report bug", 290, 8, 120, 32, Ui.Hex("#7A2A20"), OpenBugReport, 15);
@@ -1097,7 +1176,7 @@ namespace RestartedTavern.Client.Table
                 _snap.Winners.Contains(_snap.Viewer) && _s.SeatOf(_snap.Viewer) == SeatKind.Human && _seats.Count(k => k == SeatKind.Human) == 1 ? "Victory!" :
                 string.Join(", ", _snap.Winners) + " wins";
             Ui.Label(_overlay, text, 0, 360, Ui.Width, 110, 80, Ui.Hex("#FFD060"), TextAnchor.MiddleCenter, FontStyle.Bold);
-            Ui.Button(_overlay, "Rematch", Ui.Width / 2f - 330, 520, 200, 70, ContextOn, () => NewGame(_seed + 1), 26);
+            Ui.Button(_overlay, "Rematch", Ui.Width / 2f - 330, 520, 200, 70, ContextOn, () => NewGame(_seed + 1, toss: true), 26);
             Ui.Button(_overlay, "Main menu", Ui.Width / 2f - 100, 520, 200, 70, ButtonColor, OpenMenu, 24);
             Ui.Button(_overlay, "Undo", Ui.Width / 2f + 130, 520, 200, 70, ButtonColor, Undo, 26, _s.CanUndo);
         }
@@ -1118,86 +1197,8 @@ namespace RestartedTavern.Client.Table
         {
             _picker.Cancel();
             _menuOpen = true;
+            _menuPage = MenuPage.Home;
             _dirty = true;
-        }
-
-        /// <summary>The main menu: per seat human / bot, a prototype deck and a Tavern Dweller that can lead it; Battle.</summary>
-        private void DrawMenu()
-        {
-            Ui.FillPanel(_overlay, "Menu", Ui.Hex("#10141D"), 0f, raycast: true);
-            Ui.Label(_overlay, "RESTARTED TAVERN", 0, 14, Ui.Width, 80, 56, Ui.Hex("#FFD070"), TextAnchor.MiddleCenter, FontStyle.Bold);
-            var decks = CardPool.PrototypeDecks();
-            for (int seat = 0; seat < 2; seat++)
-            {
-                int s = seat;
-                _deck[s] = Mathf.Clamp(_deck[s], 0, decks.Count - 1);
-                float x = 110 + s * 870;
-                var deck = decks[_deck[s]];
-                Ui.Panel(_overlay, "Column", x - 20, 100, 840, 840, new Color(0, 0, 0, 0.25f));
-                Ui.Label(_overlay, "Player " + (s + 1), x, 110, 400, 50, 34, Color.white, TextAnchor.MiddleLeft, FontStyle.Bold);
-                Ui.Button(_overlay, _seats[s] == SeatKind.Human ? "Human" : "Bot", x + 600, 112, 200, 46,
-                    _seats[s] == SeatKind.Human ? Mine : Theirs, () =>
-                    {
-                        _seats[s] = _seats[s] == SeatKind.Human ? SeatKind.Bot : SeatKind.Human;
-                        _dirty = true;
-                    }, 22);
-
-                Ui.Label(_overlay, "Deck", x, 170, 400, 30, 20, Ui.Hex("#E0C890"), TextAnchor.MiddleLeft, FontStyle.Bold);
-                for (int d = 0; d < decks.Count; d++)
-                {
-                    int di = d;
-                    Ui.Button(_overlay, decks[d].Name, x + (d % 2) * 405, 205 + (d / 2) * 58, 395, 50,
-                        d == _deck[s] ? ContextOn : ButtonColor, () =>
-                        {
-                            _deck[s] = di;
-                            _dweller[s] = null;
-                            _dirty = true;
-                        }, 20);
-                }
-                float y = 205 + (decks.Count + 1) / 2 * 58 + 6;
-                Ui.Label(_overlay, deck.Description ?? "", x, y, 800, 56, 16, Ui.Hex("#D8C8B0"), TextAnchor.UpperLeft);
-
-                y += 70;
-                Ui.Label(_overlay, "Tavern Dweller", x, y, 400, 30, 20, Ui.Hex("#E0C890"), TextAnchor.MiddleLeft, FontStyle.Bold);
-                y += 35;
-                var dwellers = MatchSetup.TavernDwellersFor(deck, _db);
-                string chosen = _dweller[s] ?? deck.TavernDweller;
-                for (int i = 0; i < dwellers.Count; i++)
-                {
-                    string id = dwellers[i];
-                    Ui.Button(_overlay, _db.Get(id).Name + (id == deck.TavernDweller ? " (deck's own)" : ""),
-                        x + (i % 2) * 405, y + (i / 2) * 58, 395, 50, id == chosen ? ContextOn : ButtonColor, () =>
-                        {
-                            _dweller[s] = id;
-                            _dirty = true;
-                        }, 20);
-                }
-                y += (dwellers.Count + 1) / 2 * 58 + 8;
-                var def = _db.Get(chosen);
-                var box = Ui.Panel(_overlay, "Dweller", x, y, 800, 150, new Color(0.95f, 0.9f, 0.8f, 0.92f));
-                Ui.FillLabel(box.transform, def.Name + "\n" + def.Text, 17, new Color(0.15f, 0.1f, 0.05f), TextAnchor.UpperLeft, FontStyle.Normal, 8f);
-            }
-            var battle = Ui.Button(_overlay, "BATTLE", Ui.Width / 2f - 170, 958, 340, 92, ContextOn, () =>
-            {
-                // A deck from the editor may not be legal yet (60 cards, copies, factions).
-                for (int s = 0; s < 2; s++)
-                {
-                    var d = decks[_deck[s]];
-                    try { DeckValidator.Validate(_db, FormatConfig.Standard(), d.Cards, _dweller[s] ?? d.TavernDweller); }
-                    catch (ArgumentException e) { ShowToast("Player " + (s + 1) + "'s deck " + d.Name + ": " + e.Message); return; }
-                }
-                _battleStarted = true;
-                NewGame(_seed + 1);
-            }, 44);
-            Ui.AddOutline(battle.gameObject, Ui.Hex("#FFE0A0"), 4f);
-            if (_battleStarted && !_s.State.IsGameOver)
-                Ui.Button(_overlay, "Back to the game", Ui.Width / 2f + 200, 978, 260, 54, ButtonColor, () =>
-                {
-                    _menuOpen = false;
-                    _dirty = true;
-                }, 20);
-            Ui.Button(_overlay, "Quit", Ui.Width / 2f - 460, 978, 260, 54, Ui.Hex("#5A2A20"), Application.Quit, 20);
-            Ui.Button(_overlay, "Deck editor", Ui.Width / 2f - 740, 978, 260, 54, Mine, () => OpenEditor(), 20);
         }
 
         // ------------------------------------------------------------------ zoom
@@ -1227,6 +1228,43 @@ namespace RestartedTavern.Client.Table
                 Ui.FillLabel(note.transform, "Printed " + w.View.PrintedPower + "/" + w.View.PrintedHealth + " · now " + w.View.Power + "/" + w.View.MaxHealth
                     + (w.View.Damage > 0 ? " · " + w.View.Damage + " damage" : ""), 14, Color.white);
             }
+            // Keyword explanations on the far side of the zoom (playtest 2026-10-10_155239).
+            float gx = right ? x + zw + 8f : x - 8f - GlossaryW;
+            if (gx < 10f || gx + GlossaryW > Ui.Width - 10f) gx = right ? x - 8f - GlossaryW : x + zw + 8f;
+            float gh = DrawGlossary(w.View, gx, y);
+            // The zoom can be hovered: an invisible area from the card's edge over the zoom and the keyword boxes keeps
+            // it open (and keeps the cards under it from taking the hover).
+            float cardEdge = right ? cx + halfW + 2f : cx - halfW - 2f;
+            float left = right ? cardEdge : Mathf.Min(x, gh > 0f ? gx : x);
+            float rightEdge = right ? Mathf.Max(x + zw, gh > 0f ? gx + GlossaryW : 0f) : cardEdge;
+            _zoomHit = Ui.Panel(_zoomLayer, "ZoomHit", left, y, Mathf.Max(0f, rightEdge - left), Mathf.Max(zh + 30f, gh), Color.clear, raycast: true).rectTransform;
+            _zoomHit.SetAsFirstSibling();
+        }
+
+        private const float GlossaryW = 260f;
+        private RectTransform _zoomHit;
+
+        private bool MouseOverZoom() =>
+            _zoomHit != null && RectTransformUtility.RectangleContainsScreenPoint(_zoomHit, Input.mousePosition, CanvasCamera);
+
+        /// <summary>A column of keyword boxes (<see cref="KeywordGlossary"/>) on the zoom layer; returns its height.</summary>
+        private float DrawGlossary(CardView v, float x, float y)
+        {
+            float top = y;
+            foreach (var (name, text) in KeywordGlossary.For(v))
+            {
+                var box = Ui.Panel(_zoomLayer, "Keyword", x, y, GlossaryW, 40f, new Color(0.06f, 0.07f, 0.1f, 0.95f));
+                Ui.AddOutline(box.gameObject, Ui.Gold * new Color(1f, 1f, 1f, 0.8f), 1.5f);
+                var t = Ui.Tmp(box.transform, "<color=#FFD070><b>" + name.ToUpperInvariant() + "</b></color>\n" + text, 12f, 8f, GlossaryW - 24f, 24f, 16f, Ui.Cream, TextAnchor.UpperLeft);
+                t.enableAutoSizing = false;
+                t.fontSize = 16f;
+                t.raycastTarget = false;
+                float h = t.GetPreferredValues(t.text, GlossaryW - 24f, 0f).y + 16f;
+                box.rectTransform.sizeDelta = new Vector2(GlossaryW, h);
+                t.rectTransform.sizeDelta = new Vector2(GlossaryW - 24f, h - 16f);
+                y += h + 6f;
+            }
+            return y - top;
         }
 
         // ------------------------------------------------------------------ input from widgets
@@ -1245,12 +1283,25 @@ namespace RestartedTavern.Client.Table
                 w.Rect.localScale = Vector3.one * (enter ? 1.35f : 1f);
                 if (enter) w.transform.SetAsLastSibling();
                 else w.transform.SetSiblingIndex(w.HomeSibling);
+                Ui.Clear(_zoomLayer);
+                _hovered = enter ? w : null;
+                _hoverRect = null;
+                if (enter)
+                {
+                    var corners = new Vector3[4];
+                    w.Rect.GetWorldCorners(corners);
+                    var lo = _root.InverseTransformPoint(corners[0]);
+                    var hi = _root.InverseTransformPoint(corners[2]);
+                    float gx = hi.x + Ui.Width / 2f + 10f;
+                    if (gx + GlossaryW > Ui.Width - 10f) gx = lo.x + Ui.Width / 2f - 10f - GlossaryW;
+                    DrawGlossary(w.View, gx, Ui.Height / 2f - hi.y);
+                }
                 return;
             }
             if (enter) FanOnHover(w);
             if (!_pinnedZoom.IsNone) return;
             if (enter) { _hovered = w; _hoverRect = null; ShowZoom(w); }
-            else if (_hovered == w) { _hovered = null; Ui.Clear(_zoomLayer); }
+            else if (_hovered == w && !MouseOverZoom()) { _hovered = null; Ui.Clear(_zoomLayer); }
         }
 
         public void OnRightClick(CardWidget w)

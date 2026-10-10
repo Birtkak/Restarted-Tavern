@@ -74,7 +74,7 @@ namespace RestartedTavern.Client.Logic
     /// Pick a source (a card in hand, a permanent, the Tavern Dweller); the picker keeps every legal
     /// action that uses it and asks one question at a time (mode, sacrifice, each target, Invest, X,
     /// division, defender, blocked attacker) until exactly one action is left; a question is skipped when
-    /// every candidate gives the same answer. Actions without a source (pass, keep, attack,
+    /// every candidate gives the same answer, except targets: those are always clicked, even when only one is legal. Actions without a source (pass, keep, attack,
     /// trigger targets, options) are in <see cref="SourcelessActions"/>.
     /// </summary>
     public sealed class ActionPicker
@@ -189,8 +189,9 @@ namespace RestartedTavern.Client.Logic
         private void Advance()
         {
             if (_candidates.Count == 0) { Cancel(); return; }
-            // NextPrompt is null only if distinct actions match on every dimension, which can't happen: take the first rather than hang.
-            Prompt = _candidates.Count == 1 ? null : NextPrompt();
+            // Targets are always clicked, even a single one (playtest 2026-10-10_155528). NextPrompt is null only if
+            // distinct actions match on every other dimension, which can't happen: take the first rather than hang.
+            Prompt = NextPrompt();
             if (Prompt == null) Ready = _candidates[0];
         }
 
@@ -210,17 +211,11 @@ namespace RestartedTavern.Client.Logic
                 int slot = _targetsFixed;
                 bool someStop = c.Any(a => a.Targets.Length == slot);
                 var next = c.Where(a => a.Targets.Length > slot).Select(a => a.Targets[slot]).Distinct().ToList();
-                if (next.Count > 0 && (next.Count > 1 || someStop))
+                if (next.Count > 0)
                 {
                     var options = next.Select(t => new PickerOption { Dimension = ChoiceDimension.Target, Target = t }).ToList();
                     if (someStop) options.Add(new PickerOption { Dimension = ChoiceDimension.Target, StopTargeting = true });
                     return Make(ChoiceDimension.Target, slot, options);
-                }
-                if (next.Count == 1)
-                {
-                    // Every candidate has the same target here: fix it and look at the next slot.
-                    _targetsFixed = slot + 1;
-                    return NextPrompt();
                 }
             }
 

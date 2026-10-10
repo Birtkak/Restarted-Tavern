@@ -117,6 +117,9 @@ namespace RestartedTavern.Client.Table
 
             sb.AppendLine("== Setup ==");
             sb.AppendLine("Seed: " + _seed);
+            if (_tutorial != null)
+                sb.AppendLine("TUTORIAL (Tutorial.Setup(seed), stacked decks): step " + (_tutorial.Index + 1) + " " + (_tutorial.Current?.Title ?? "")
+                              + (_tutorial.Released ? ", released" : ""));
             for (int seat = 0; seat < 2; seat++)
                 sb.AppendLine("P" + (seat + 1) + ": deck " + seat + "=" + _deck[seat] + " " + decks[_deck[seat]].Name + " (" + decks[_deck[seat]].Id + ")"
                               + ", Tavern Dweller " + _s.Setup.Decks[seat].TavernDweller + ", " + _seats[seat]);

@@ -61,6 +61,8 @@ namespace RestartedTavern.Client.Logic
         public static ContextButton Main(MatchSession s, CombatStage stage = null)
         {
             var b = MainButton(s, stage);
+            // An action the human may not take right now (the tutorial's filter) leaves the button dark.
+            if (b.Enabled && b.Action != null && !s.LegalForViewer().Contains(b.Action)) b.Enabled = false;
             if (string.IsNullOrEmpty(b.Hint)) b.Hint = HintFor(s, b);
             return b;
         }
