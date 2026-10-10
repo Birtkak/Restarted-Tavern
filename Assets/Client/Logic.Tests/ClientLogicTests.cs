@@ -169,6 +169,68 @@ namespace RestartedTavern.Client.Logic.Tests
             Assert.Greater(blocks, 2);
         }
 
+        /// <summary>
+        /// Hot-seat bot games: at every human decision, every legal action can be reached from the table's controls
+        /// (the context button, the choice panel, a card through the picker, a clicked target, the combat stage),
+        /// and the context button only submits legal actions.
+        /// </summary>
+        [Test]
+        public void TableControls_CoverEveryLegalAction()
+        {
+            int states = 0, endRounds = 0;
+            for (int game = 0; game < 6; game++)
+            {
+                var session = new MatchSession(MatchSetup.Duel(game, (game + 3) % 6, SeatKind.Human, SeatKind.Human, seed: (ulong)(game + 20)));
+                var bot = new GreedyBot(session.Engine);
+                for (int step = 0; step < 2500 && !session.State.IsGameOver; step++)
+                {
+                    if (session.HandoffPending)
+                    {
+                        Assert.AreEqual(ButtonMode.Handoff, TableControls.Main(session).Mode);
+                        session.AcknowledgeHandoff();
+                    }
+                    var legal = session.LegalForViewer();
+                    var button = TableControls.Main(session);
+                    if (button.Action != null) CollectionAssert.Contains(legal, button.Action, "Button " + button.Mode);
+                    Assert.AreEqual(button.Action != null, button.Enabled, "Enabled iff it submits something (" + button.Mode + ")");
+                    var choices = TableControls.Choices(session).Select(c => c.Action).ToList();
+                    Assert.IsTrue(TableControls.Choices(session).All(c => !string.IsNullOrEmpty(c.Label)));
+                    var picker = new ActionPicker(legal);
+                    var attack = CombatStage.ForAttack(session);
+                    foreach (var a in legal)
+                    {
+                        bool covered = a.Equals(button.Action) || choices.Contains(a)
+                            || picker.CanUse(a.Card) && a.Kind != ActionKind.ChooseOption && a.Kind != ActionKind.ChooseTarget && a.Kind != ActionKind.AssignCombatDamage
+                            || a.Kind == ActionKind.ChooseTarget && a.Targets.Length > 0
+                            || a.Kind == ActionKind.GoToCombat && attack != null && attack.Candidates().Count > 0
+                            || a.Kind == ActionKind.PassPriority && button.Mode == ButtonMode.ChooseOnTable;
+                        Assert.IsTrue(covered, "No control for " + a + " (" + session.State.Pending?.Kind + ", button " + button.Mode + ")");
+                    }
+                    foreach (var source in picker.Sources)
+                    {
+                        picker.Begin(source);
+                        if (picker.Prompt != null)
+                            Assert.IsTrue(picker.Prompt.Options.All(o => !string.IsNullOrEmpty(TableControls.Describe(session, picker, o))));
+                    }
+                    states++;
+                    var chosen = bot.Choose(session.State, session.Viewer);
+                    int round = session.State.RoundNumber;
+                    var stepBefore = session.State.Step;
+                    session.Submit(chosen);
+                    if (chosen.Equals(button.Action) && button.Mode == ButtonMode.Pass)
+                        Assert.AreEqual(round, session.State.RoundNumber, "Pass must not end the round");
+                    if (chosen.Equals(button.Action) && button.Mode == ButtonMode.EndRound)
+                    {
+                        endRounds++;
+                        Assert.IsTrue(session.State.RoundNumber > round || session.State.Step != stepBefore || session.State.IsGameOver,
+                            "End round must leave the action phase");
+                    }
+                }
+            }
+            Assert.Greater(states, 500);
+            Assert.Greater(endRounds, 5);
+        }
+
         [Test]
         public void Session_BotsFinishAGame()
         {
@@ -215,6 +277,8 @@ namespace RestartedTavern.Client.Logic.Tests
             Assert.IsTrue(them.Hand.All(c => c.IsHidden && c.Name == null));
             Assert.IsNotNull(me.TavernDweller?.Name);
             Assert.AreEqual(3, me.GoldCap);
+            Assert.AreEqual(1, snap.Players.Count(p => p.HasAttackToken), "Standard rules: exactly one attack token");
+            Assert.IsTrue(snap.Player(snap.RoundLeader).HasAttackToken);
         }
 
         [Test]

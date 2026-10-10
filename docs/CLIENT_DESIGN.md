@@ -56,12 +56,15 @@ engine itself.
 | `TableSnapshot` | What the viewer may see: players (life, mana, Gold, Gold cap, attack token, hand, deck count, zones, Tavern Dweller), unit stats with damage and keywords, attackers / blockers, the Chain, the decision being made. Hidden cards have no definition. |
 | `ActionPicker` | Turns the flat legal-action list into clicks: pick a source (hand card, permanent, Tavern Dweller) and it asks one question at a time (mode → sacrifice → each target → Invest → X → division → defender → blocked attacker) until one legal action is left. `Sources` = what to glow; `Prompt.Targets` = what to highlight while dragging. Tested to reach exactly the legal actions in bot games. |
 | `CombatStage` | LoR combat: stage attackers into the lane / blockers in front of attackers, unstage, then `MatchSession.CommitCombat` replays it as the engine's attack action, priority passes and one-by-one declarations. Legality is checked on a copy of the state. If an opponent responds in the attack window, the player answers by hand and the commit carries on. |
-| `PresentationQueue` | Events → beats to animate one by one, with a weight (Instant / Short / Normal / Long) and a hidden flag (opponent draws, hand↔deck moves). When the queue is empty, rebind to a fresh `TableSnapshot`. |
+| `TableControls` | The LoR context button (`Main`: Keep / Pass / End round / OK / Continue / Attack / Block / No blocks / Handoff / Waiting, with the action it submits) and the choice panel (`Choices`: sourceless actions with `GameText` labels: options, declining a target, mulligan). `Describe` labels picker options. Tested: in hot-seat bot games every legal action is reachable from some control, and Pass / End round predict the engine. |
+| `PresentationQueue` | Events → beats to animate one by one, with a weight (Instant / Short / Normal / Long, default seconds in `Seconds(weight, speed)`) and a hidden flag (opponent draws, hand↔deck moves). When the queue is empty, rebind to a fresh `TableSnapshot`. Note: object ids change on every zone change (`ZoneChangedEvent.OldId → NewId`), so card views must be re-keyed on that event. |
 
-### 2.1 Context button logic 🟡
-From the session and snapshot: a staged combat → Attack / Block; a decision pending → its prompt (OK, Keep / Mulligan
-on a mulligan); something on the Chain → OK (pass, let it resolve); the other player just passed → End Round;
-otherwise → Pass. Disabled with "Opponent's action" when it isn't the viewer's call.
+### 2.1 Context button logic 🔒 (`TableControls.Main`)
+Game over → disabled. Handoff pending → "P2, take the table". Not the viewer's call → "Opponent's action" (or
+"Attacking..." while a committed attack waits on a response). Mulligan → Keep (Mulligan is in the choice panel).
+Declaring attackers / blockers → Attack / Block with something staged, else Don't attack / No blocks. Another decision
+→ its prompt, chosen on the table or in the choice panel. A staged attack in the action phase → Attack. Something on
+the Chain → OK. A combat priority window → Continue. Otherwise Pass, or End round when everyone else has passed.
 
 ---
 

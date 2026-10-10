@@ -60,6 +60,13 @@ namespace RestartedTavern.Client.Logic
         /// <summary>Skip the animations (fast-forward, undo, new game).</summary>
         public void Clear() => _beats.Clear();
 
+        /// <summary>Default hold time of a beat in seconds; <paramref name="speed"/> 2 = twice as fast (playtest setting).</summary>
+        public static float Seconds(BeatWeight weight, float speed = 1f)
+        {
+            float s = weight == BeatWeight.Long ? 1.1f : weight == BeatWeight.Normal ? 0.45f : weight == BeatWeight.Short ? 0.2f : 0f;
+            return speed > 0f ? s / speed : 0f;
+        }
+
         public static BeatWeight WeightOf(GameEvent e)
         {
             switch (e)

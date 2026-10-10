@@ -8,12 +8,15 @@ You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-
 Repo: C:\Users\Birre\Desktop\Claude shizzle\Restarted-Tavern (GitHub: Birtkak/Restarted-Tavern, main).
 Run `git status` and `git log origin/main..` first and tell the user what's pending.
 
-STATE AT THE END OF THE LAST SESSION (2026-10-10), 263 EditMode tests, all green:
+**For the visual client, use docs/handoff/NEXT_CLIENT.md instead of this file.**
+
+STATE AT THE END OF THE LAST SESSION (2026-10-10), 264 EditMode tests, all green:
 - **Visual client started** (docs/CLIENT_DESIGN.md): direction locked (LoR screen logic, MTGA zones and hand, LoR
   passing / mana gems with Gold as spell mana / combat lane, stylized painterly, 2D slight tilt, tavern table,
   placeholder frames, LoR unit cards, Tavern Dweller in the Nexus spot, snappy animations). The client logic layer is
-  built and tested (Assets/Client/Logic: MatchSession, TableSnapshot, ActionPicker, CombatStage, PresentationQueue).
-  **Next: CLIENT_DESIGN §3 step 1, the table scene skeleton.**
+  built and tested (Assets/Client/Logic: MatchSession, TableSnapshot, ActionPicker, CombatStage, TableControls,
+  PresentationQueue).
+  **Next: the table scene, see docs/handoff/NEXT_CLIENT.md.**
 - **Standard rules = Legends of Runeterra rounds** (GAME_DESIGN §6, §6.1): a round is everyone's turn. Everyone gets
   +1 max mana, refills, untaps and draws; then players alternate single actions (play a card of any type, use an
   ability or Power, attack, or pass) from the round leader; responses on the Chain don't use an action; two passes in a

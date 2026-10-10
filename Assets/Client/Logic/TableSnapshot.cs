@@ -98,6 +98,8 @@ namespace RestartedTavern.Client.Logic
         /// <summary>The decision being made (mulligan, blocks, a trigger target...), or null for a normal action.</summary>
         public DecisionKind? Decision;
         public string DecisionPrompt;
+        /// <summary>Who leads the round (takes the first action; holds the attack token when the format has one).</summary>
+        public PlayerId RoundLeader;
         /// <summary>The attack token was used this round.</summary>
         public bool AttackUsed;
         public List<PlayerView> Players = new List<PlayerView>();
@@ -132,7 +134,9 @@ namespace RestartedTavern.Client.Logic
                 DecisionPrompt = state.Pending?.Prompt,
                 AttackUsed = state.AttackedThisRound > 0,
             };
-            int leader = state.Format.ManaPerRound ? state.RoundLeaderSeat : state.ActivePlayerState.Seat;
+            // The engine's rule (GameRunner.RoundLeader): the first living player from the round leader's seat.
+            var leader = state.LivingPlayersFrom(state.Players[state.RoundLeaderSeat].Id)[0].Id;
+            snap.RoundLeader = leader;
             foreach (var p in state.Players)
             {
                 var pv = new PlayerView
@@ -140,7 +144,7 @@ namespace RestartedTavern.Client.Logic
                     Id = p.Id, Seat = p.Seat, HasLost = p.HasLost, Life = p.Life,
                     Mana = p.Mana, MaxMana = p.MaxMana, Gold = p.Gold, GoldCap = GoldRules.Cap(state, db, p.Id),
                     DeckCount = p.Deck.Count,
-                    HasAttackToken = p.Seat == leader,
+                    HasAttackToken = state.Format.AttackToken && p.Id == leader,
                     IsWaitedOn = waiting == p.Id,
                 };
                 if (p.TavernDweller != null) pv.TavernDweller = View(engine, state, p.TavernDweller, false);
