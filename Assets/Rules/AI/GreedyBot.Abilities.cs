@@ -58,7 +58,7 @@ namespace RestartedTavern.Rules.AI
         /// <summary>Round pool: it's someone else's turn, and this player's own turn is still to come in this round.</summary>
         private static bool MyTurnStillAhead(GameState s, PlayerId me)
         {
-            if (!s.Format.ManaPerRound || s.ActivePlayer == me) return false;
+            if (!s.Format.ManaPerRound || s.Format.AlternatingActions || s.ActivePlayer == me) return false;
             int n = s.Players.Count;
             int RoundPos(PlayerId id) => (s.GetPlayer(id).Seat - s.RoundLeaderSeat + n) % n;
             return RoundPos(me) > RoundPos(s.ActivePlayer);

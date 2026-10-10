@@ -121,11 +121,34 @@ A read-through of the Standard rules after the switch to Runeterra-style mana (G
 
 | Flaw | Decision |
 |---|---|
+| R1, R3. Double turns, going first | ✅ **Legends of Runeterra rounds** (GAME_DESIGN §6): alternating single actions, the round leader holds the attack token (passes every round), no summoning sickness, everyone draws in round 1, no going-first compensation. Measured below. |
+| R2. Attack token and card values | Token kept (real LoR). Still open: "whenever you attack" cards trigger every other round, and **Haste is now blank** (GAME_DESIGN §7.4, 12 cards). Tavern Dweller Powers are now once each round instead of up to twice. Card pass needed. |
+| R4. Multiplayer | Still open (GAME_DESIGN §13). The engine's multiplayer format keeps MTG turns for now. |
 | 8. Invest payment bug | ✅ Fixed: Gold-only parts are set aside before the cost takes Gold first (`Payment.TrySplit`, GAME_DESIGN §5.2). |
 | 11. Weak Tavern Dwellers | ✅ New Powers for Mukk, Sparkwrench and Auditor Prime (cards/tavern_dwellers.md). |
 | 12. Doc contradictions | ✅ Fixed; Runeterra mana confirmed and locked by the user (Decision Log). |
 
-## 🔴 R1. Double turns remove the opponent's sorcery-speed window
+## Turn structure measurements (2026-10-10)
+
+First-player win% in bot mirrors, 400–500 games each (50% is fair). Full rows: SIMULATION_REPORT.md, "Turn structure and going first"; SimRunner `-goingfirst` (MTG-turn variants with `-rules mtg`).
+
+| Turn structure | Goober | Jungle | Zoo | Vesper | Spark | Auditor | Avg off 50% |
+|---|---|---|---|---|---|---|---|
+| MTG turns (A B A B), round pool, draw skip | 85 | 85 | 58 | 50 | 77 | 73 | 21 |
+| … + 2nd player 1–2 starting Gold | 78 | 82 | 56 | 49 | 70 | 60 | 16 |
+| … + 2nd player +1 mana on their first turn | 75 | 82 | 52 | 49 | 70 | 65 | 16 |
+| … + 2nd player +1 mana on their first 3 turns | 44 | 57 | 44 | 37 | 56 | 50 | 6.4 |
+| … 1st player one max mana behind all game | 17 | 30 | 26 | 27 | 33 | 17 | 25 |
+| … mana until your next turn (like MTG lands) | 85 | 79 | 70 | 60 | 75 | 78 | 24.5 |
+| A B \| B A + attack token (morning of 2026-10-10) | 48 | 50 | 48 | 41 | 51 | 51 | 2.8 |
+| **Runeterra rounds (Standard)** | 54 | 47 | 47 | 45 | 51 | 52 | **~3** |
+
+- With MTG turns the edge held with defensive bots, 40 life, damage wearing off and without Tavern Dwellers, and a smarter bot (saving mana to build on its own turn) changed nothing: it is the rules, not the bots. Without lands both players curve out perfectly, and the player who acts first in each round is always a play ahead. One mana flips the result (rows 5 and 6), so every compensation felt bad for one side.
+- The rounds fix the cause: every play gets an answer before the next, and the attack alternates. Variants measured: with summoning sickness (fair, but games about 10% longer and more mana lost to the cap), everyone may attack once a round (fair, games 25% shorter, less waste).
+- Bot timing: attacking as the first action vs after developing is deck-dependent (Goober prefers last 62%, Zoo first 63%); `BotStyle.AttackFirstInRound`, off by default.
+- Cross-faction balance is poor under every turn structure (16–18 points spread, SimRunner `-balance`): a card and deck question.
+
+## ✅ R1. Double turns remove the opponent's sorcery-speed window (solved 2026-10-10: Runeterra rounds)
 
 Under A B | B A, each player's build turn is followed straight away by their own attack turn. Creatures played on the build turn attack next turn, and the opponent can only answer with Instants in between. Summoning sickness almost never matters, and Haste only matters on attack turns. (PLAYTEST.md's open question "does the double turn feel good?" is this.)
 
@@ -136,7 +159,7 @@ Under A B | B A, each player's build turn is followed straight away by their own
 - Encore From Beyond and Silver-Tongued Deal are dead cards on build turns.
 - "At the start of your turn" effects are worth twice as much per attack (Closing Bell, the Glitterworld pings, Wild heal-per-turn creatures).
 
-## 🔴 R3. The going-first rule is now backwards
+## ✅ R3. The going-first rule is now backwards (solved 2026-10-10: Runeterra rounds, no compensation)
 
 §3 still has the first player skip their turn-1 draw, but with rotation the **second** player gets the first real attack (plays turn 2, attacks turn 3; the first player's next attack is turn 5). The first player wins only 41–50% under Runeterra rules (Vesper 40.8%). Rotation without the draw skip was never measured.
 

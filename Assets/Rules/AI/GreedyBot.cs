@@ -101,6 +101,11 @@ namespace RestartedTavern.Rules.AI
                 }
             }
 
+            if (_style.AttackFirstInRound)
+            {
+                var attack = legal.FirstOrDefault(a => a.Kind == ActionKind.GoToCombat);
+                if (attack != null) return attack;
+            }
             PlayerAction best = null;
             double bestScore = 0;
             int reserve = InstantReserve(s, me, out double reserveValue);
@@ -120,7 +125,9 @@ namespace RestartedTavern.Rules.AI
                     best = a;
                 }
             }
-            return best ?? legal.First(a => a.Kind == ActionKind.PassPriority);
+            // Alternating actions: attack once nothing else is worth an action (the attack planner may still hold back).
+            return best ?? legal.FirstOrDefault(a => a.Kind == ActionKind.GoToCombat)
+                        ?? legal.First(a => a.Kind == ActionKind.PassPriority);
         }
 
         // ------------------------------------------------------------------ helpers
@@ -134,10 +141,11 @@ namespace RestartedTavern.Rules.AI
         private int InstantReserve(GameState s, PlayerId me, out double value)
         {
             value = 0;
-            if (!s.Format.ManaPerRound || s.ActivePlayer != me || s.Pending != null) return 0;
-            // Only worth it if an opponent's turn still comes in this round; the last player's leftovers are banked at once.
+            if (s.ActivePlayer != me || s.Pending != null || s.Format.AlternatingActions) return 0;
+            if (!s.Format.ManaPerRound && !s.Format.ManaUntilYourNextTurn) return 0;
+            // Round pool: only worth it if an opponent's turn still comes in this round; the last player's leftovers are banked at once.
             int n = s.Players.Count;
-            if ((s.GetPlayer(me).Seat - s.RoundLeaderSeat + n) % n == n - 1) return 0;
+            if (s.Format.ManaPerRound && (s.GetPlayer(me).Seat - s.RoundLeaderSeat + n) % n == n - 1) return 0;
             int cheapest = 0;
             foreach (var c in s.GetPlayer(me).Hand)
             {

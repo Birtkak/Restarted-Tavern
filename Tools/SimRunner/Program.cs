@@ -25,18 +25,29 @@ namespace RestartedTavern.SimRunner
                 int i = Array.IndexOf(args, name);
                 return i >= 0 && i + 1 < args.Length ? args[i + 1] : fallback;
             }
-            bool runeterra = Arg("-rules", "runeterra") != "classic";
+            RulesName = Arg("-rules", "standard");
+            bool runeterra = RulesName != "classic";
             int games = int.Parse(Arg("-simGames", "500"));
 
             if (args.Contains("-trace")) return Trace(Arg("-decks", "0,1"), ulong.Parse(Arg("-seed", "1")), runeterra, Arg("-out"), Arg("-pass", "0,0"), Arg("-swap"));
             if (args.Contains("-h2h")) return HeadToHead(games, runeterra, Arg("-off"));
             if (args.Contains("-tweaks")) return TweakTest(games, runeterra);
+            if (args.Contains("-goingfirst")) return GoingFirst(games);
             if (args.Contains("-balance")) return Balance(games, runeterra, Arg("-out"));
             if (args.Contains("-decktest")) return args.Contains("-singles") ? SwapTest(games, runeterra) : DeckTest(games, runeterra);
             return Report(games, Arg("-simSections")?.ToLowerInvariant().Split(','), Arg("-out"));
         }
 
-        private static FormatConfig Rules(bool runeterra) => runeterra ? FormatConfig.Runeterra(3) : FormatConfig.Standard();
+        /// <summary>-rules: standard (default, Runeterra rounds), mtg (MTG turns), rotation (A B | B A + attack token), classic.</summary>
+        private static string RulesName = "standard";
+
+        private static FormatConfig Rules(bool runeterra) => RulesName switch
+        {
+            "classic" => FormatConfig.Classic(),
+            "rotation" => FormatConfig.RuneterraRotation(),
+            "mtg" => FormatConfig.MtgTurns(),
+            _ => FormatConfig.Standard(),
+        };
 
         private static int Report(int games, string[] only, string output)
         {
@@ -66,7 +77,9 @@ namespace RestartedTavern.SimRunner
                 // The current bot with one switch turned back to its baseline value.
                 var style = BotStyle.Greedy();
                 var prop = typeof(BotStyle).GetProperty(off) ?? throw new ArgumentException("No BotStyle switch " + off);
-                prop.SetValue(style, prop.GetValue(BotStyle.Baseline()));
+                var baseline = prop.GetValue(BotStyle.Baseline());
+                // A switch that is off in both: B gets it turned on instead.
+                prop.SetValue(style, Equals(baseline, prop.GetValue(style)) && baseline is bool on ? !on : baseline);
                 style.Name = "without " + off;
                 return style;
             }
@@ -266,6 +279,107 @@ namespace RestartedTavern.SimRunner
             return 0;
         }
 
+        /// <summary>
+        /// Going-first fixes under MTG turn order (A B A B, everyone attacks every turn) with the round pool, Gold first and
+        /// Gold cap 3: first-player win% in every mirror for each variant.
+        /// </summary>
+        private static int GoingFirst(int games)
+        {
+            FormatConfig Base()
+            {
+                return FormatConfig.MtgTurns();
+            }
+            if (RulesName == "standard") return GoingFirstRounds(games);
+            var variants = new (string Name, Action<FormatConfig> Tweak)[]
+            {
+                ("draw skip (MTG)", f => { }),
+                ("Runeterra rotation (old Standard)", f => { f.RotateRoundLeader = true; f.AttackToken = true; }),
+                ("rotation, no token", f => { f.RotateRoundLeader = true; }),
+                ("draw skip + 2nd +1 mana t2 + 1 Gold", f => { f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerStartingGold = 1; }),
+                ("draw skip + 2nd +1 mana x2", f => { f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 2; }),
+                ("draw skip + 2nd +1 mana x3", f => { f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 3; }),
+                ("draw skip + 2nd +1 mana x4", f => { f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 4; }),
+                ("draw skip + 2nd +1 mana x3 + 1 card", f => { f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 3; f.SecondPlayerExtraCards = 1; }),
+                ("until-next + 2nd +1 mana x3", f => { f.ManaPerRound = false; f.ManaUntilYourNextTurn = true; f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 3; }),
+                ("draw skip + 2nd +1 mana x3, Control", f => { f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 3; }),
+            };
+            var decks = Experiments.PrototypeDecks();
+            var configs = new List<MatchConfig>();
+            foreach (var v in variants)
+                foreach (var d in decks)
+                {
+                    var f = Base();
+                    v.Tweak(f);
+                    configs.Add(new MatchConfig
+                    {
+                        Name = v.Name + " | " + d.Name, Format = f, Games = games,
+                        StyleA = v.Name.Contains("Control") ? BotStyle.Control() : BotStyle.Greedy(),
+                        StyleB = v.Name.Contains("Control") ? BotStyle.Control() : BotStyle.Greedy(),
+                        DeckAName = d.Name, DeckA = d.Cards, TavernDwellerA = d.TavernDweller,
+                        DeckBName = d.Name, DeckB = d.Cards, TavernDwellerB = d.TavernDweller,
+                    });
+                }
+            var watch = Stopwatch.StartNew();
+            var results = MatchRunner.RunAll(configs, CardPool.CreateDatabase());
+            string Short(string name) => name.Split(' ')[0].Replace("'s", "");
+            Console.WriteLine($"Going first, MTG turn order + round pool + Gold first, {games} games per mirror ({watch.Elapsed.TotalSeconds:0}s). 1st player win%, then avg distance from 50% and avg turns.");
+            Console.WriteLine("".PadRight(38) + string.Join(" ", decks.Select(d => Short(d.Name).PadLeft(7))) + "    off50  turns");
+            for (int v = 0; v < variants.Length; v++)
+            {
+                var row = results.Skip(v * decks.Length).Take(decks.Length).ToList();
+                Console.WriteLine(variants[v].Name.PadRight(38) + string.Join(" ", row.Select(r => (r.FirstPlayerWinRate * 100).ToString("0.0").PadLeft(7)))
+                                  + $"   {row.Average(r => Math.Abs(r.FirstPlayerWinRate - 0.5)) * 100,6:0.0}  {row.Average(r => r.AvgTurns),5:0.0}");
+            }
+            return 0;
+        }
+
+        /// <summary>Legends of Runeterra rounds (alternating actions): first-player win% and game length per variant.</summary>
+        private static int GoingFirstRounds(int games)
+        {
+            var variants = new (string Name, Action<FormatConfig> Tweak)[]
+            {
+                ("MTG turns, draw skip", f => Copy(FormatConfig.MtgTurns(), f)),
+                ("LoR rounds (Standard)", f => { }),
+                ("LoR, summoning sickness", f => f.NoSummoningSickness = false),
+                ("LoR, everyone attacks once a round", f => f.AttackToken = false),
+                ("LoR, no token + sickness", f => { f.AttackToken = false; f.NoSummoningSickness = false; }),
+                ("LoR, leader skips round-1 draw", f => f.FirstPlayerSkipsDraw = true),
+                ("LoR, Gold cap 5", f => f.GoldCap = 5),
+            };
+            var decks = Experiments.PrototypeDecks();
+            var configs = new List<MatchConfig>();
+            foreach (var v in variants)
+                foreach (var d in decks)
+                {
+                    var f = FormatConfig.Standard();
+                    v.Tweak(f);
+                    configs.Add(new MatchConfig
+                    {
+                        Name = v.Name + " | " + d.Name, Format = f, Games = games,
+                        DeckAName = d.Name, DeckA = d.Cards, TavernDwellerA = d.TavernDweller,
+                        DeckBName = d.Name, DeckB = d.Cards, TavernDwellerB = d.TavernDweller,
+                    });
+                }
+            var watch = Stopwatch.StartNew();
+            var results = MatchRunner.RunAll(configs, CardPool.CreateDatabase());
+            string Short(string name) => name.Split(' ')[0].Replace("'s", "");
+            Console.WriteLine($"Going first, mirrors, {games} games each ({watch.Elapsed.TotalSeconds:0}s). 1st player win%; off50 = avg distance from 50%; length = turns (MTG) or rounds (LoR, a round = everyone's turn); wasted = mana lost to the Gold cap.");
+            Console.WriteLine("".PadRight(38) + string.Join(" ", decks.Select(d => Short(d.Name).PadLeft(7))) + "    off50  length  long%  wasted");
+            for (int v = 0; v < variants.Length; v++)
+            {
+                var row = results.Skip(v * decks.Length).Take(decks.Length).ToList();
+                Console.WriteLine(variants[v].Name.PadRight(38) + string.Join(" ", row.Select(r => (r.FirstPlayerWinRate * 100).ToString("0.0").PadLeft(7)))
+                                  + $"   {row.Average(r => Math.Abs(r.FirstPlayerWinRate - 0.5)) * 100,6:0.0}  {row.Average(r => r.AvgTurns),6:0.0}  {row.Average(r => r.LongGameShare) * 100,5:0}  {row.Average(r => r.GoldWastedShare) * 100,5:0}%");
+            }
+            return 0;
+        }
+
+        private static void Copy(FormatConfig from, FormatConfig to)
+        {
+            foreach (var prop in typeof(FormatConfig).GetProperties())
+                if (prop.CanWrite) prop.SetValue(to, prop.GetValue(from));
+        }
+
         /// <summary>One game between two GreedyBots, written out turn by turn with the board at each turn start.</summary>
         private static int Trace(string deckArg, ulong seed, bool runeterra, string output, string passArg, string swapArg)
         {
@@ -325,7 +439,8 @@ namespace RestartedTavern.SimRunner
                 text.Remember(state);
                 var ev = engine.Apply(state, action);
                 text.Remember(state, ev);
-                if (action.Kind != ActionKind.PassPriority) lines.Add($"> {who} [{GameText.StepName(state.Step)}]: {desc}");
+                bool passesAction = state.Format.AlternatingActions && state.Step == Step.Main1 && state.Chain.Count == 0 && state.Pending == null;
+                if (action.Kind != ActionKind.PassPriority || passesAction) lines.Add($"> {who} [{GameText.StepName(state.Step)}]: {(action.Kind == ActionKind.PassPriority ? "Pass the action" : desc)}");
                 foreach (var e in ev)
                 {
                     var line = text.Describe(state, e);

@@ -4,12 +4,18 @@ using NUnit.Framework;
 
 namespace RestartedTavern.Rules.Tests
 {
-    /// <summary>The Standard mana rules (Runeterra-style, locked 2026-10-10): round pool, rotating leader, attack token, Gold first, Gold cap 3.</summary>
+    /// <summary>
+    /// Runeterra-style mana in MTG turns (the Standard rules on the morning of 2026-10-10, now
+    /// <see cref="FormatConfig.RuneterraRotation"/>): round pool, rotating leader, attack token, Gold first, Gold cap 3.
+    /// The mana and Gold rules here are still the Standard ones; the rounds themselves are in <see cref="RoundsTests"/>.
+    /// </summary>
     public class RuneterraManaTests
     {
         private static TestGame Game(bool summoningSickness = true)
         {
-            return TestGame.AtFirstMainPhase(format: FormatConfig.Runeterra(3, summoningSickness));
+            var format = FormatConfig.RuneterraRotation();
+            format.NoSummoningSickness = !summoningSickness;
+            return TestGame.AtFirstMainPhase(format: format);
         }
 
         /// <summary>The seats of the next <paramref name="count"/> turns, starting with the current one.</summary>

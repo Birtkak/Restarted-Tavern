@@ -173,6 +173,7 @@ namespace RestartedTavern.Rules
             };
             item.TargetSlots = ab.Targets;
             item.Targets.AddRange(a.Targets);
+            MarkActionStarted(a.Player);
             S.Chain.Add(item);
 
             Emit(new AbilityActivatedEvent

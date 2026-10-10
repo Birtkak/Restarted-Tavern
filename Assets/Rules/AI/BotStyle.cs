@@ -42,6 +42,9 @@ namespace RestartedTavern.Rules.AI
         /// </summary>
         public bool ValueArrivalDamage { get; set; } = true;
 
+        /// <summary>Alternating actions: attack as the first action of the round instead of after developing.</summary>
+        public bool AttackFirstInRound { get; set; }
+
         /// <summary>The original bot: develops, races, blocks only good or even trades.</summary>
         public static BotStyle Greedy() => new BotStyle { Name = "Greedy" };
 

@@ -137,6 +137,11 @@ namespace RestartedTavern.Rules
                 case ActionKind.ActivateAbility: Activate(a); break;
                 case ActionKind.ChooseOption: AnswerOption(a); break;
                 case ActionKind.AssignCombatDamage: AnswerDamageAssignment(a); break;
+                case ActionKind.GoToCombat:
+                    S.AttackedThisRound |= 1 << S.ActivePlayerState.Seat;
+                    S.ActionInProgress = true;
+                    EnterStep(Step.BeginCombat);
+                    break;
                 default: throw new ArgumentOutOfRangeException(nameof(a), a.Kind, null);
             }
         }
@@ -163,6 +168,8 @@ namespace RestartedTavern.Rules
             S.ActiveIndex = index;
             S.TurnNumber++;
             S.UsesThisTurn.Clear(); // "once each turn" (MTG) resets every turn, yours or not
+            S.ActionInProgress = false;
+            S.AttackedThisRound = 0;
             foreach (var p in S.Players)
                 p.PaysGoldFirst = S.Format.GoldFirstAlways || (S.Format.GoldFirstOffTurn && p.Id != S.ActivePlayer);
             Emit(new TurnStartedEvent { Player = S.ActivePlayer, Turn = S.TurnNumber });
@@ -184,26 +191,34 @@ namespace RestartedTavern.Rules
                     // MTG 502: untap. §7.4: summoning sickness ends.
                     if (!S.Format.ManaPerRound)
                     {
+                        if (S.Format.ManaUntilYourNextTurn) BankMana(ap);
                         RefillMana(ap);
-                        if (S.TurnNumber == 2) ap.Mana += S.Format.SecondPlayerFirstTurnBonusMana;
                     }
                     else if (S.TurnsThisRound == 0)
                     {
                         foreach (var p in S.Players)
                             if (!p.HasLost) RefillMana(p);
                     }
-                    foreach (var c in ap.Battlefield)
+                    if (S.Format.SecondPlayerFirstTurnBonusMana > 0 && ap.Seat != S.StartingPlayerIndex
+                        && S.TurnNumber <= 2 * S.Format.SecondPlayerBonusTurns && S.Players.Count == 2)
                     {
-                        c.Tapped = false;
-                        c.SummoningSick = false;
+                        ap.Mana += S.Format.SecondPlayerFirstTurnBonusMana;
+                        Emit(new ManaChangedEvent { Player = ap.Id, Mana = ap.Mana, MaxMana = ap.MaxMana });
                     }
-                    QueueTurnTriggers(TriggerEvent.StartOfYourTurn);
+                    foreach (var p in TurnPlayers())
+                        foreach (var c in p.Battlefield)
+                        {
+                            c.Tapped = false;
+                            c.SummoningSick = false;
+                        }
+                    ForEachTurnPlayer(() => QueueTurnTriggers(TriggerEvent.StartOfYourTurn));
                     GivePriority(ap.Id);
                     break;
 
                 case Step.Draw:
-                    // §3 (MTG): the first player skips the turn-1 draw in 1v1.
-                    if (!(S.TurnNumber == 1 && S.Format.FirstPlayerSkipsDraw)) Draw(ap.Id, 1);
+                    // §3 (MTG): the first player skips the turn-1 draw in 1v1. Alternating actions: everyone draws.
+                    foreach (var p in TurnPlayers())
+                        if (!(S.TurnNumber == 1 && S.Format.FirstPlayerSkipsDraw && p.Seat == S.StartingPlayerIndex)) Draw(p.Id, 1);
                     GivePriority(ap.Id);
                     break;
 
@@ -229,16 +244,12 @@ namespace RestartedTavern.Rules
                     break;
 
                 case Step.End:
-                    QueueTurnTriggers(TriggerEvent.EndOfYourTurn);
+                    ForEachTurnPlayer(() => QueueTurnTriggers(TriggerEvent.EndOfYourTurn));
                     GivePriority(ap.Id);
                     break;
 
                 case Step.Cleanup:
-                    int excess = ap.Hand.Count - S.Format.MaxHandSize;
-                    if (excess > 0)
-                        S.Pending = new PendingDecision { Kind = DecisionKind.DiscardToHandSize, Player = ap.Id, Count = excess };
-                    else
-                        FinishCleanup();
+                    AskNextDiscardToHandSize();
                     break;
 
                 default: // Main1, BeginCombat
@@ -249,6 +260,25 @@ namespace RestartedTavern.Rules
 
         private void AdvanceStep()
         {
+            if (S.Format.AlternatingActions)
+            {
+                switch (S.Step)
+                {
+                    case Step.Main1:
+                        // Everyone passed in a row: the round ends. The leader is active for the end of the round.
+                        S.ActiveIndex = RoundLeader().Seat;
+                        EnterStep(Step.End);
+                        return;
+                    case Step.DeclareAttackers when S.Combat == null || S.Combat.Attacks.Count == 0:
+                    case Step.CombatDamage:
+                        // The attack was the action: the next player has the action.
+                        S.Combat = null;
+                        S.ActionInProgress = false;
+                        S.ActiveIndex = NextLivingPlayer(S.ActivePlayer).Seat;
+                        EnterStep(Step.Main1);
+                        return;
+                }
+            }
             switch (S.Step)
             {
                 case Step.Start: EnterStep(Step.Draw); break;
@@ -300,8 +330,8 @@ namespace RestartedTavern.Rules
         {
             S.Pending = null;
             var ap = S.ActivePlayerState;
-            bool endOfRound = S.TurnsThisRound + 1 >= S.LivingPlayerCount;
-            if (!S.Format.ManaPerRound) BankMana(ap); // mana is only filled during your own turn (§5.2)
+            bool endOfRound = S.Format.AlternatingActions || S.TurnsThisRound + 1 >= S.LivingPlayerCount;
+            if (!S.Format.ManaPerRound) { if (!S.Format.ManaUntilYourNextTurn) BankMana(ap); } // mana is only filled during your own turn (§5.2)
             else if (endOfRound)
                 foreach (var p in S.LivingPlayersFrom(ap.Id)) BankMana(p); // the round pool empties at the end of the round
 
@@ -334,7 +364,7 @@ namespace RestartedTavern.Rules
         /// </summary>
         private int NextTurnSeat(PlayerState ap)
         {
-            if (S.TurnsThisRound + 1 < S.LivingPlayerCount)
+            if (!S.Format.AlternatingActions && S.TurnsThisRound + 1 < S.LivingPlayerCount)
             {
                 S.TurnsThisRound++;
                 return NextLivingPlayer(ap.Id).Seat;
@@ -351,6 +381,7 @@ namespace RestartedTavern.Rules
             bool skip = S.Format.FirstPlayerSkipsFirstMana && S.TurnNumber == 1 && p.Seat == S.StartingPlayerIndex;
             if (!skip) p.MaxMana = Math.Min(S.Format.ManaCap, p.MaxMana + 1);
             p.Mana = p.MaxMana;
+            if (S.Format.FirstPlayerNoManaFirstRound && S.TurnNumber == 1 && p.Seat == S.StartingPlayerIndex) p.Mana = 0;
             Emit(new ManaChangedEvent { Player = p.Id, Mana = p.Mana, MaxMana = p.MaxMana });
         }
 
@@ -376,7 +407,64 @@ namespace RestartedTavern.Rules
         {
             var p = S.GetPlayer(player);
             MoveCard(p.Hand.Find(c => c.Id == card), Zone.Graveyard);
-            if (--S.Pending.Count == 0) FinishCleanup();
+            if (--S.Pending.Count == 0)
+            {
+                S.Pending = null;
+                AskNextDiscardToHandSize();
+            }
+        }
+
+        /// <summary>
+        /// Cleanup (§3): the active player discards down to the maximum hand size. Alternating actions: the round is
+        /// everyone's turn, so every player does, in turn order from the leader.
+        /// </summary>
+        private void AskNextDiscardToHandSize()
+        {
+            foreach (var p in TurnPlayers())
+            {
+                int excess = p.Hand.Count - S.Format.MaxHandSize;
+                if (excess <= 0) continue;
+                S.Pending = new PendingDecision { Kind = DecisionKind.DiscardToHandSize, Player = p.Id, Count = excess };
+                return;
+            }
+            FinishCleanup();
+        }
+
+        /// <summary>Whose turn it is: the active player, or with alternating actions everyone (from the active player).</summary>
+        private List<PlayerState> TurnPlayers() =>
+            S.Format.AlternatingActions ? S.LivingPlayersFrom(S.ActivePlayer) : new List<PlayerState> { S.ActivePlayerState };
+
+        /// <summary>Alternating actions: the main phase is the action phase.</summary>
+        private bool InActionPhase => S.Format.AlternatingActions && S.Step == Step.Main1;
+
+        /// <summary>An action starts when the player who has the action puts something on an empty Chain.</summary>
+        private void MarkActionStarted(PlayerId player)
+        {
+            if (InActionPhase && S.Chain.Count == 0 && player == S.ActivePlayer) S.ActionInProgress = true;
+        }
+
+        /// <summary>Alternating actions: the attack token holder may use an action to attack, once each round.</summary>
+        private bool CanStartAttack(PlayerState p) =>
+            (S.AttackedThisRound & (1 << p.Seat)) == 0 && HasAttackToken(p) && HasPossibleAttacker(p);
+
+        /// <summary>
+        /// "Your turn" triggers: for the active player, or with alternating actions for every player (the round is
+        /// everyone's turn), in turn order from the leader.
+        /// </summary>
+        private void ForEachTurnPlayer(Action queue)
+        {
+            if (!S.Format.AlternatingActions)
+            {
+                queue();
+                return;
+            }
+            int active = S.ActiveIndex;
+            foreach (var p in S.LivingPlayersFrom(S.ActivePlayer))
+            {
+                S.ActiveIndex = p.Seat;
+                queue();
+            }
+            S.ActiveIndex = active;
         }
 
         private PlayerState NextLivingPlayer(PlayerId after)

@@ -99,59 +99,25 @@ namespace RestartedTavern.Rules.AI
                 damage.Configs.Add(M(d.Name + " mirror, damage wears off (MTG)", d, d, f => f.DamageWearsOff = true));
             sections.Add(damage);
 
-            var second = new Section
+            var turns = new Section
             {
-                Title = "Going second (GAME_DESIGN §3)",
-                Question = "First-player win rate in mirrors (50% is fair). Current rule (MTG default): the first player skips their turn-1 draw, no other compensation.",
-            };
-            foreach (var d in new[] { decks[0], decks[1], decks[3] })
-            {
-                second.Configs.Add(M(d.Name + " mirror, current rule (MTG)", d, d));
-                second.Configs.Add(M(d.Name + " mirror, everyone draws + 2nd player +1 mana on turn 1", d, d,
-                    f => { f.FirstPlayerSkipsDraw = false; f.SecondPlayerFirstTurnBonusMana = 1; }));
-                second.Configs.Add(M(d.Name + " mirror, everyone draws + 2nd player +1 mana and 1 Gold", d, d,
-                    f => { f.FirstPlayerSkipsDraw = false; f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerStartingGold = 1; }));
-            }
-            sections.Add(second);
-
-            var mana = new Section
-            {
-                Title = "Mana model: round pool (GAME_DESIGN §5)",
-                Question = "Does the round pool (everyone refills when a round starts, mana usable on any turn of the round, unspent mana "
-                           + "banked at the end of the round) take away the first player's edge? Watch 1st win% (50% is fair).",
+                Title = "Turn structure and going first (GAME_DESIGN §3, §6)",
+                Question = "First-player win% in mirrors (50% is fair). Standard = Legends of Runeterra rounds: everyone refills, untaps and "
+                           + "draws when a round starts, players alternate actions, the round leader holds the attack token, no summoning "
+                           + "sickness. Turns = rounds with Runeterra rounds (one round is everyone's turn), turns otherwise.",
             };
             foreach (var d in decks)
             {
-                mana.Configs.Add(M(d.Name + " mirror, mana per turn (current)", d, d));
-                mana.Configs.Add(M(d.Name + " mirror, round pool", d, d, f => f.ManaPerRound = true));
-                mana.Configs.Add(M(d.Name + " mirror, round pool + Gold first off-turn", d, d,
-                    f => { f.ManaPerRound = true; f.GoldFirstOffTurn = true; }));
-                mana.Configs.Add(M(d.Name + " mirror, rotating first player", d, d, f => f.RotateRoundLeader = true));
-                mana.Configs.Add(M(d.Name + " mirror, rotating first player + round pool + Gold first", d, d,
-                    f => { f.RotateRoundLeader = true; f.ManaPerRound = true; f.GoldFirstOffTurn = true; }));
-                mana.Configs.Add(M(d.Name + " mirror, 1st player skips first mana", d, d, f => f.FirstPlayerSkipsFirstMana = true));
-                mana.Configs.Add(M(d.Name + " mirror, 1st player skips first mana + round pool + Gold first", d, d,
-                    f => { f.FirstPlayerSkipsFirstMana = true; f.ManaPerRound = true; f.GoldFirstOffTurn = true; }));
+                turns.Configs.Add(M(d.Name + " mirror, Runeterra rounds (Standard)", d, d));
+                turns.Configs.Add(M(d.Name + " mirror, rounds with summoning sickness", d, d, f => f.NoSummoningSickness = false));
+                turns.Configs.Add(M(d.Name + " mirror, rounds, everyone attacks once a round", d, d, f => f.AttackToken = false));
+                turns.Configs.Add(M(d.Name + " mirror, MTG turns (A B A B), draw skip", d, d, f => Copy(FormatConfig.MtgTurns(), f)));
+                turns.Configs.Add(M(d.Name + " mirror, MTG turns, 2nd player +1 mana on their first 3 turns", d, d,
+                    f => { Copy(FormatConfig.MtgTurns(), f); f.SecondPlayerFirstTurnBonusMana = 1; f.SecondPlayerBonusTurns = 3; }));
+                turns.Configs.Add(M(d.Name + " mirror, A B | B A + attack token (2026-10-10 morning)", d, d,
+                    f => Copy(FormatConfig.RuneterraRotation(), f)));
             }
-            sections.Add(mana);
-
-            var lor = new Section
-            {
-                Title = "Runeterra-style mana",
-                Question = "Legends of Runeterra's mana in full turns: everyone refills when a round starts, unspent mana becomes Gold "
-                           + "(spell mana) at the end of the round, spells and abilities spend Gold first, the round leader alternates "
-                           + "and only they may attack (attack token), creatures can attack the turn they arrive. Watch Turns, Off-turn and 1st win%.",
-            };
-            foreach (var d in decks)
-            {
-                lor.Configs.Add(M(d.Name + " mirror, today's rules", d, d));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra", d, d, f => Copy(FormatConfig.Runeterra(), f)));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra, Gold cap 5", d, d, f => Copy(FormatConfig.Runeterra(5), f)));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra, no summoning sickness", d, d, f => Copy(FormatConfig.Runeterra(3, false), f)));
-                lor.Configs.Add(M(d.Name + " mirror, Runeterra without the attack token", d, d,
-                    f => { Copy(FormatConfig.Runeterra(), f); f.AttackToken = false; }));
-            }
-            sections.Add(lor);
+            sections.Add(turns);
 
             var tavernDwellers = new Section
             {

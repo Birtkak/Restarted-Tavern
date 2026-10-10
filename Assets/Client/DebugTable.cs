@@ -52,15 +52,16 @@ namespace RestartedTavern.Client
         private readonly bool[] _bot = { false, true };
         private ObjectId _hover = ObjectId.None;
 
-        /// <summary>Rules for the next New game: 0 = Runeterra-style mana (default for playtests), 1 = Runeterra without summoning sickness, 2 = today's rules.</summary>
+        /// <summary>Rules for the next New game: 0 = Standard (Runeterra rounds), 1 = MTG turns with the round pool, 2 = Classic mana.</summary>
         private int _rulesChoice;
         private int _rulesInPlay;
-        private static readonly string[] RulesNames = { "Runeterra mana", "Runeterra, no sickness", "Classic mana" };
+        private static readonly string[] RulesNames = { "Standard (rounds)", "MTG turns", "Classic mana" };
 
         private static FormatConfig Format(int rules)
         {
-            if (rules == 2) return FormatConfig.Standard();
-            return FormatConfig.Runeterra(3, summoningSickness: rules != 1);
+            if (rules == 2) return FormatConfig.Classic();
+            if (rules == 1) return FormatConfig.MtgTurns();
+            return FormatConfig.Standard();
         }
 
         private bool Runeterra => _state.Format.ManaPerRound;
@@ -298,8 +299,10 @@ namespace RestartedTavern.Client
 
             string status = _state.IsGameOver
                 ? "GAME OVER. Winner: " + string.Join(", ", _state.Winners)
-                : (Runeterra ? "Round " + _state.RoundNumber + " (attack: " + RoundLeaderId() + ")" : "Turn " + _state.TurnNumber)
-                  + "  |  " + _state.ActivePlayer + "'s turn  |  " + GameText.StepName(_state.Step);
+                : _state.Format.AlternatingActions
+                    ? "Round " + _state.RoundNumber + " (attack: " + RoundLeaderId() + ")  |  " + _state.ActivePlayer + "'s action  |  " + GameText.StepName(_state.Step)
+                    : (Runeterra ? "Round " + _state.RoundNumber + " (attack: " + RoundLeaderId() + ")" : "Turn " + _state.TurnNumber)
+                      + "  |  " + _state.ActivePlayer + "'s turn  |  " + GameText.StepName(_state.Step);
             GUILayout.Label(status, _labelStyle, GUILayout.Width(310));
             if (GUILayout.Button(_showRules ? "Back to table" : "Rules", GUILayout.Width(80))) _showRules = !_showRules;
             if (GUILayout.Button("Save log", GUILayout.Width(70))) SaveLog();
@@ -541,7 +544,7 @@ namespace RestartedTavern.Client
             GUILayout.BeginArea(r, GUI.skin.box);
             _rulesScroll = GUILayout.BeginScrollView(_rulesScroll);
             GUILayout.Label("Quick rules (full rules: docs/GAME_DESIGN.md)", _bigStyle);
-            GUILayout.Label(Runeterra ? RuneterraRulesText : RulesText, _labelStyle);
+            GUILayout.Label(_state.Format.AlternatingActions ? RoundsRulesText : Runeterra ? RuneterraRulesText : RulesText, _labelStyle);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
@@ -550,16 +553,47 @@ namespace RestartedTavern.Client
         private PlayerId RoundLeaderId() =>
             _state.LivingPlayersFrom(_state.Players[_state.RoundLeaderSeat].Id)[0].Id;
 
-        private string RuneterraRulesText =>
-            "RUNETERRA-STYLE MANA (experiment, " + RulesNames[_rulesInPlay] + ")\n\n" +
+        private string RoundsRulesText =>
+            "STANDARD RULES: RUNETERRA ROUNDS\n\n" +
             "GOAL\n" +
             "Bring the opponent from 30 life to 0. You also lose if you must draw from an empty deck.\n\n" +
-            "ROUNDS AND THE ATTACK TOKEN\n" +
-            "• A round is one turn for each player. The player with the ATTACK TOKEN takes the first turn of the round, " +
-            "and only they can attack this round.\n" +
-            "• The token passes every round, so the order goes A B | B A | A B: the second player of a round also starts the next one " +
-            "(two turns in a row: one to build, one to attack).\n" +
-            "• On your turn without the token you can still play cards, use abilities and block on the opponent's attack turn.\n" +
+            "ROUNDS AND ACTIONS\n" +
+            "• A round starts for everyone at once: both players get +1 max mana (up to 10), refill, untap and draw a card.\n" +
+            "• Then you take turns doing ONE thing at a time, starting with the player who has the ATTACK TOKEN: " +
+            "play a card (creatures and Sorceries too), use an ability or Power, attack, or pass.\n" +
+            "• When that has resolved, the other player has the action. Answering on the Chain (Instants, abilities) doesn't use your action.\n" +
+            "• Passing gives the action to the other player. When both pass in a row, the round ends.\n\n" +
+            "ATTACKING\n" +
+            "• Only the player with the attack token can attack, once per round, as one of their actions. The token passes every round.\n" +
+            (_state.Format.NoSummoningSickness
+                ? "• Creatures can attack the round they arrive.\n\n"
+                : "• Creatures can't attack the round they arrive (summoning sickness), unless they have Haste.\n\n") +
+            "MANA AND GOLD\n" +
+            "• Mana lasts the whole round. At the end of the round, unspent mana becomes Gold (up to 3).\n" +
+            "• Gold pays for Instants, Sorceries, abilities, Tavern Dweller Powers and Invest, and it is spent FIRST, before mana.\n" +
+            "• Gold never pays for creatures or other permanents.\n\n" +
+            "COMBAT, DAMAGE, TAVERN DWELLER, THE CHAIN\n" +
+            "Blocking doesn't tap, damage stays on creatures, your Tavern Dweller's Power works once each round, " +
+            "and the last thing added to the Chain resolves first. At the end of the round both players discard down to 7.\n\n" +
+            "USING THIS TABLE\n" +
+            "• The status bar shows the round, who may attack, and whose action it is.\n" +
+            "• \"Attack (uses the action)\" starts combat. Pass hands the action to the other player.\n" +
+            "• The rules button in the top bar picks the rules for the next New game.";
+
+        private string RuneterraRulesText =>
+            "RUNETERRA-STYLE MANA IN MTG TURNS (" + RulesNames[_rulesInPlay] + ")\n\n" +
+            "GOAL\n" +
+            "Bring the opponent from 30 life to 0. You also lose if you must draw from an empty deck.\n\n" +
+            (_state.Format.AttackToken
+                ? "ROUNDS AND THE ATTACK TOKEN\n" +
+                  "• A round is one turn for each player. The player with the ATTACK TOKEN takes the first turn of the round, " +
+                  "and only they can attack this round.\n" +
+                  "• The token passes every round, so the order goes A B | B A | A B: the second player of a round also starts the next one " +
+                  "(two turns in a row: one to build, one to attack).\n" +
+                  "• On your turn without the token you can still play cards, use abilities and block on the opponent's attack turn.\n"
+                : "TURNS\n" +
+                  "• A round is one turn for each player, A B A B like MTG. Everyone may attack on their own turn. " +
+                  "The first player skips their first draw.\n") +
             (_state.Format.NoSummoningSickness
                 ? "• Creatures can attack the turn they arrive.\n\n"
                 : "• Creatures can't attack the turn they arrive (summoning sickness), unless they have Haste.\n\n") +

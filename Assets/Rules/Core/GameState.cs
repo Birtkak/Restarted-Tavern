@@ -22,6 +22,10 @@ namespace RestartedTavern.Rules
         /// <summary>The current round (1 = every player's first turn).</summary>
         public int RoundNumber { get; set; } = 1;
         public int TurnNumber { get; set; }
+        /// <summary>FormatConfig.AlternatingActions: the active player's action is on the Chain (or in combat) and hasn't finished.</summary>
+        public bool ActionInProgress { get; set; }
+        /// <summary>FormatConfig.AlternatingActions: seats (bits) that already attacked this round.</summary>
+        public int AttackedThisRound { get; set; }
         public Step Step { get; set; } = Step.Mulligan;
 
         /// <summary>Who may act on the Chain right now, if anyone (GAME_DESIGN §8).</summary>

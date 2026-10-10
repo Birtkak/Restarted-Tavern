@@ -34,7 +34,7 @@ CANDIDATE NEXT STEPS
    a real Unity hot-seat table for human playtests.
 2. Human playtests of the new Standard rules on the debug table (Going first stays the MTG default until
    playtests judge it; RULES_REVIEW #1).
-3. Balance pass with the new Powers and the 3-Gold changes (only if the user asks for sims; see below).
+3. Balance pass with the new Powers and the 3-Gold changes (sims are fine to run, see below).
 4. Smaller engine gaps (DEVELOPMENT §7 "Not yet implemented"): the affected player choosing the order of
    replacement effects, filtering events by hidden information, a targetable Tavern Dweller zone (design question).
 5. Generate rules text from the card data, so text and behavior can't disagree (DEVELOPMENT §3).
@@ -51,7 +51,7 @@ HOW TO WORK WITH THIS USER
 - The user has the vision and wants Claude to propose details. For design questions, use AskUserQuestion with
   multiple-choice options, recommended option first, and show the MTG default next to alternatives. Record every
   decision in the docs and the Decision Log.
-- **Don't run the simulation report or bot playtests unless the user asks.** Unit tests are fine and expected.
+- Simulations and bot experiments may be run without asking (quick now; the user lifted the old rule on 2026-10-10). Unit tests are expected.
 - Commit when a piece of work is done; ask before pushing to GitHub.
 
 PRACTICAL NOTES
@@ -61,7 +61,7 @@ PRACTICAL NOTES
 - Build the debug table: -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
   (Builds/DebugTable/RestartedTavern.exe; it reads the card files from RestartedTavern_Data/StreamingAssets).
   `-autoshot <png>` takes a screenshot and quits.
-- SimRunner (only when asked): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build
+- SimRunner (~15-30 s, run freely): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build
   Tools/SimRunner -c Release, then Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-balance] [-trace] [-h2h] ...
   It finds the card files by walking up from the working directory to Assets/StreamingAssets.
 - Multi-line edits: write a Python script to the scratchpad and run it; open files with newline='' (the repo keeps

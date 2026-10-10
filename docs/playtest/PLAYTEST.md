@@ -48,7 +48,9 @@ Method: read single bot games (`SimRunner -trace`), fix what looks wrong behind 
 
 **Design signal (not a bot problem):** in long games both players run out of cards while mana keeps growing, so 35-65% of leftover mana in Jungle/Zoo/Vesper/Sparkwrench is lost to the Gold cap of 3 (Goober and Auditor ~2-5%). More card draw or more Gold sinks in the slower decks would use it.
 
-## Experiment: Runeterra-style mana (2026-10-09, playtesting now)
+## Experiment: Runeterra-style mana (2026-10-09)
+
+> **Superseded 2026-10-10**: the Standard rules are now Legends of Runeterra rounds (alternating actions, GAME_DESIGN §6). The measurements are in RULES_REVIEW.md, "Turn structure measurements". The table below is the old A B | B A version.
 
 After the first human playtest ("mana could be slower, and there needs to be more interaction") the user asked for Legends of Runeterra's mana system, adapted to full turns. `FormatConfig.Runeterra()`; it's the debug table's default rules for now (the rules button in the top bar switches back to classic mana).
 
@@ -174,7 +176,7 @@ Gold spent per game is identical for caps 3, 5, 7 and 10. Only the wasted mana c
 
 ## What to look for in human playtests
 
-1. **Going first / the double turn**: with the rotating round leader (A B | B A), does either seat feel stronger? Does the double turn feel good?
+1. **Runeterra rounds** (Standard since 2026-10-10, GAME_DESIGN §6): does trading single actions feel good, or slow? Do you hold back to answer, or pass to make the opponent commit first? Does either seat feel stronger? With no summoning sickness, do new creatures attacking right away feel fair? Do the Haste and "whenever you attack" cards feel weak?
 2. **Gold**: do you ever hold mana back on purpose to bank Gold? When does the cap of 3 bite? Does "Gold first" ever pay with Gold you wanted to keep?
 3. **Permanent damage**: do wounded creatures change your decisions (attack, block, heal)? Is it readable on the table?
 4. **Curve**: are there turns where you have nothing to do? Does the 7-card hand limit force discards?

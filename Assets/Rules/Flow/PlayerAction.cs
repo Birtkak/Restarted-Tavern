@@ -23,6 +23,8 @@ namespace RestartedTavern.Rules
         ChooseOption,
         /// <summary>Divide a creature's combat damage among several creatures (§7.2.6): <see cref="PlayerAction.Division"/>.</summary>
         AssignCombatDamage,
+        /// <summary>FormatConfig.AlternatingActions: use this action to attack (goes to combat).</summary>
+        GoToCombat,
     }
 
     /// <summary>
@@ -65,6 +67,7 @@ namespace RestartedTavern.Rules
         public static PlayerAction Mulligan(PlayerId p) => new PlayerAction { Kind = ActionKind.Mulligan, Player = p };
         public static PlayerAction BottomCard(PlayerId p, ObjectId card) => new PlayerAction { Kind = ActionKind.BottomCard, Player = p, Card = card };
         public static PlayerAction Discard(PlayerId p, ObjectId card) => new PlayerAction { Kind = ActionKind.Discard, Player = p, Card = card };
+        public static PlayerAction GoToCombat(PlayerId p) => new PlayerAction { Kind = ActionKind.GoToCombat, Player = p };
         public static PlayerAction FinishAttacks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishAttacks, Player = p };
         public static PlayerAction FinishBlocks(PlayerId p) => new PlayerAction { Kind = ActionKind.FinishBlocks, Player = p };
         public static PlayerAction ChooseTarget(PlayerId p, Target t) => new PlayerAction { Kind = ActionKind.ChooseTarget, Player = p, Targets = new[] { t } };

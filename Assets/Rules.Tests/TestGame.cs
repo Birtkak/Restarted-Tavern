@@ -28,13 +28,15 @@ namespace RestartedTavern.Rules.Tests
         /// <summary>
         /// A game at the first player's turn-1 main phase, both players kept 7.
         /// Decks are 20 Hired Sellswords unless given. Extra test-only cards can be added.
+        /// Card tests step through MTG turns (<see cref="FormatConfig.MtgTurns"/>: round pool, Gold first, A B A B) unless
+        /// a format is given; the Standard rounds (alternating actions) have their own tests (<see cref="Rounds"/>).
         /// </summary>
         public static TestGame AtFirstMainPhase(ulong seed = 1, IEnumerable<CardDefinition> extraCards = null,
             string deckCard = "hired_sellsword", int deckSize = 20, FormatConfig format = null)
         {
             var db = new CardDatabase(CardPool.All().Concat(extraCards ?? Enumerable.Empty<CardDefinition>()));
             var engine = new GameEngine(db);
-            format = format ?? FormatConfig.Standard();
+            format = format ?? FormatConfig.MtgTurns();
             format.EnforceDeckRules = false;
             var deck = Enumerable.Repeat(deckCard, deckSize).ToList();
             var events = new List<GameEvent>();

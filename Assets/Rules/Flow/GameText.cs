@@ -261,6 +261,7 @@ namespace RestartedTavern.Rules
                 case ActionKind.BottomCard: return "Put on the bottom: " + Name(state, a.Card);
                 case ActionKind.Discard: return "Discard: " + Name(state, a.Card);
                 case ActionKind.FinishAttacks: return "Done attacking";
+                case ActionKind.GoToCombat: return "Attack (uses the action)";
                 case ActionKind.FinishBlocks: return "Done blocking";
                 case ActionKind.ChooseTarget:
                     if (state.Pending?.Kind == DecisionKind.ChooseObject)

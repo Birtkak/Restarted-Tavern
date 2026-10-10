@@ -33,6 +33,7 @@ namespace RestartedTavern.Rules
             bool sorcerySpeed = S.ActivePlayer == player
                 && (S.Step == Step.Main1 || S.Step == Step.Main2)
                 && S.Chain.Count == 0;
+            if (sorcerySpeed && InActionPhase && CanStartAttack(S.GetPlayer(player))) result.Add(PlayerAction.GoToCombat(player));
             AddPlayableCards(player, result, sorcerySpeed);
             if (result.Count < _stopAfter) AddActivatableAbilities(player, result, sorcerySpeed);
             return result;

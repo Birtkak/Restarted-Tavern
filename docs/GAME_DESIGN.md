@@ -27,13 +27,14 @@ This game only **deviates** from MTG in these areas:
 
 | Area | MTG | Restarted Tavern |
 |---|---|---|
-| **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per round up to 10, refilled when a round starts and kept for the whole round (§5.1, §6.1). No lands |
+| **Turns** | One player's turn after another; summoning sickness | **Legends of Runeterra rounds**: a round is everyone's turn. Players alternate single actions, only the round leader may attack (attack token, passes every round), no summoning sickness (§6, §7.4). Wherever MTG says "turn", read "round" |
+| **Mana** | Lands, colored mana, mana empties between steps | Colorless mana crystals: +1 max per round up to 10, refilled when a round starts and kept for the whole round (§5.1, §6). No lands |
 | **Gold** | — | Unspent mana becomes Gold at the end of the round (cap 3). Gold pays for Instants, Sorceries and activated abilities (**Gold is used first**), and Invest is paid only with Gold. Permanents are mana only (§5.2) |
 | **Damage** | Damage wears off in the cleanup step; toughness | **Health**. Damage is permanent until healed (§7.3), and **Heal** is a game action. A Health buff ending can't kill a creature (§7.3) |
 | **Life gain** | Uncapped | Gaining life (Lifelink, drains) can't take you above your starting life (§11.1) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
 | *Deck identity* | Colors (Commander uses a command zone) | A **Tavern Dweller** in the Tavern Dweller zone sets the factions and acts as the player's face, with a Power paid like any activated ability (§9). It works like a commander that never enters the battlefield |
-| *Going second* | The first player skips their draw | Same as MTG (no other compensation) |
+| *Going first* | The first player skips their draw | No compensation: the rounds share out going first (everyone draws in round 1, §3) |
 
 Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
 
@@ -62,10 +63,10 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 |---|---|---|
 | Starting life | 30 | 🔒 |
 | Starting hand | 7 | 🔒 |
-| Maximum hand size | 7 (discard down to 7 at the end of your turn) | 🔒 |
+| Maximum hand size | 7 (every player discards down to 7 at the end of the round) | 🔒 |
 | Mulligan | **London mulligan**: shuffle and draw 7, then put 1 card on the bottom for each mulligan taken | 🔒 |
 | Who goes first | Random | 🟡 |
-| Going-second compensation | **MTG default: the first player skips their turn-1 draw.** No bonus mana or Gold for the second player. Chosen on 2026-10-09 after trying "1 starting Gold" and "+1 first-turn mana" in simulations. Bots showed a first-player edge (playtest/RULES_REVIEW.md §1), but bots race more than people do, so human playtests will judge it. Since 2026-10-10 the round leader rotates (§6.1), so who goes first alternates every round | 🔒 |
+| Going-first compensation | **None.** Everyone draws when a round starts, round 1 included. The round leader (who acts first and holds the attack token) changes every round (§6.1), which evens out going first: 45–54% first-player wins in all six bot mirrors (decided 2026-10-10; MTG turns with the draw skip gave 50–85%, playtest/RULES_REVIEW.md) | 🔒 |
 
 ---
 
@@ -86,11 +87,11 @@ The **Chain** (MTG: the stack) holds spells and abilities while they wait to res
 
 ## 5. Mana & Gold
 
-Since 2026-10-10 the Standard rules use **Legends of Runeterra-style mana**, adapted to full turns (locked after the first human playtest asked for slower mana and more interaction). The old rules (mana per turn, mana first, Gold cap 5) are kept in the engine as `FormatConfig.Classic()` for comparisons.
+Since 2026-10-10 the Standard rules use **Legends of Runeterra-style mana** (locked after the first human playtest asked for slower mana and more interaction), and the same day **Legends of Runeterra rounds** (§6). The old rules (mana per turn, mana first, Gold cap 5) are kept in the engine as `FormatConfig.Classic()` for comparisons.
 
 ### 5.1 Mana crystals 🔒
-- A **round** is one turn for each player (§6.1). At the start of each round **every player's max mana goes up by 1** (cap **10**), and their mana refills to max.
-- Mana lasts the **whole round**: you can spend it on Instants, activated abilities and Tavern Dweller Powers during other players' turns too. Permanents and Sorceries are still cast only in your own main phase.
+- A **round** is everyone's turn (§6). At the start of each round **every player's max mana goes up by 1** (cap **10**), and their mana refills to max.
+- Mana lasts the **whole round**: spend it on your actions or on responses to other players' actions (§6).
 - Mana has no color 🔒. Which cards a deck can use is decided by its Tavern Dweller's factions (§9).
 
 ### 5.2 Gold 🔒
@@ -111,7 +112,7 @@ Unused mana is not lost.
   - Gold can never pay for permanents, so spending it first is always right: casting a Sorcery before a creature can't use up the creature's mana any more (this was RULES_REVIEW #6 under the old mana-first rule).
   - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 3 Gold and then 1 mana.
 - 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early. A few cards break this on purpose, and Gold is then spent first like for spells: **Retainer Mage** (Gold can pay for it whenever it's cast, decided 2026-10-09) and **Shady Moneylender** (Gold can pay for your creature spells). **Silent Partner** lets mana pay for Invest (mana first, then Gold).
-- 🔒 **Clarification**: the mana pool fills when a round starts and lasts until it ends, so mana you didn't spend on your own turn can still pay for Instants on an opponent's turn in the same round. What's left at the end of the round is banked as Gold.
+- 🔒 **Clarification**: the mana pool fills when a round starts and lasts until it ends. What's left at the end of the round is banked as Gold.
 - 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (Gold first).
 - 🔒 **Gold-only parts are set aside first** (2026-10-10): when a spell also has Invest or "pay any amount of Gold (X)", the Gold for those is kept back before its cost takes Gold first, so the cost uses mana instead where it can.
 - 🔒 Gold gained above the cap of 3 is lost.
@@ -136,22 +137,25 @@ Unused mana is not lost.
 
 ---
 
-## 6. Turn Structure 🔒
+## 6. Turn Structure 🔒 Legends of Runeterra rounds (2026-10-10)
 
-1. **Start phase**: if this turn starts a round, every player raises max mana by 1 (to a max of 10) and refills (§5.1). Untap your permanents, trigger "at start of turn" effects.
-2. **Draw phase**: draw 1 card (in 1v1 the first player skips their draw on turn 1, §3).
-3. **Main phase 1**: play creatures, sorceries and permanents; activate abilities.
-4. **Combat phase**: declare attackers, then declare blockers, then deal damage (see §7).
-5. **Main phase 2**: the same as main phase 1. Lets you react to the result of combat (for example, finish off wounded creatures).
-6. **End phase**: "at end of turn" effects trigger, you discard down to 7 cards. If this turn ends the round, every player's unspent mana turns into Gold (up to the cap of 3).
+A **round** is everyone's turn at once. Wherever the MTG rules or a card say "turn", read "round": "once each turn" is once each round, "until end of turn" lasts until the round ends, and every player's "your turn" is the round, so "at the start of your turn" triggers for every player.
 
-There is **no automatic healing** at end of turn (see §7.3).
+1. **Round start**: every player gets +1 max mana (up to 10) and refills (§5.1) and untaps their permanents. "At the start of your turn" effects trigger for every player, the round leader's first.
+2. **Draw**: every player draws 1 card, in round 1 too.
+3. **Action phase**: players take **actions** one at a time, starting with the round leader, then in turn order.
+   - An action is: play a card from your hand (any type: creatures and Sorceries too), activate an ability or your Tavern Dweller's Power, or attack (§6.1).
+   - The Chain works as in §8: everyone can respond to an action, and responses don't use up an action. When the Chain is empty again, the next player has the action.
+   - **Pass**: the next player has the action. When every player passes in a row with an empty Chain, the action phase ends.
+4. **End of round**: "at end of turn" effects trigger for every player, every player discards down to 7 (from the leader, in turn order), unspent mana becomes Gold (§5.2), and "until end of turn" effects end. The next player in seat order becomes the round leader.
 
-### 6.1 Rounds and the attack token 🔒 (Legends of Runeterra, 2026-10-10)
-- A **round** is one turn for each player. The player who takes the first turn of a round is the **round leader**.
-- The round leader **rotates**: in 1v1 the turn order is A B | B A | A B ... So each player takes two turns in a row across the round boundary, and going first is shared out.
-- **Attack token**: only the round leader may declare attackers in that round. The other player's turn is for building, Instants and blocking next round.
-- Summoning sickness stays (§7.4).
+There is **no automatic healing** at the end of a round (see §7.3).
+
+### 6.1 The attack token 🔒
+- The **round leader** holds the attack token. Once in the round they may use an action to **attack**: combat follows §7.2 (declare attackers, then blockers, then damage, with the response windows of §8). After combat, the next player has the action.
+- The token passes every round, so in 1v1 the players take turns attacking: A leads and attacks in round 1, B in round 2, and so on.
+- **Why** (playtest/RULES_REVIEW.md, design review 2026-10-10): every play gets an answer before the next one, so nobody builds and attacks before the opponent can respond, and going first is shared out round by round. Bot mirrors: the first player wins 45–54% in all six decks.
+- Earlier turn structures stay in the engine for comparisons: **MTG turns** (A B A B, everyone attacks on their own turn, `FormatConfig.MtgTurns()`: first player 75–85% in aggro mirrors) and the **rotating leader** (A B | B A with the attack token, `FormatConfig.RuneterraRotation()`: double turns, RULES_REVIEW R1).
 
 ---
 
@@ -183,9 +187,9 @@ Design consequences:
 - Design rule 🟡: every faction needs *some* answer to accumulated damage (healing, sacrifice-for-value, or just cheap creatures you don't mind losing), so that no faction is stuck with crippled creatures.
 - Damage needs clear UI support: show current/max health.
 
-### 7.4 Summoning sickness 🔒 (MTG)
-Creatures can't attack the turn they enter the battlefield (unless they have **Haste**). They *can* block right away.
-🔒 The same rule applies to **Tap abilities** (abilities whose cost includes tapping the creature): they can't be used the turn the creature arrives, unless it has Haste (MTG 302.6). Non-creature permanents can use Tap abilities right away.
+### 7.4 Summoning sickness 🔒 none (Legends of Runeterra, 2026-10-10)
+Creatures can attack, and use Tap abilities, the round they enter the battlefield. The opponent always gets at least one action between a creature arriving and attacking (§6).
+❓ **Haste** does nothing under these rules. The cards with Haste (Goober Rascal, Brawling Runt, Pit Champion, Goober Sapper, Chaos Engine, Gold Snatcher Crew, Grakka, Goober Bookie, Mob Rush, Goober Avalanche, Encore From Beyond, Silver-Tongued Deal) need a look: the keyword can go, and the cards may need something else to stay worth their cost.
 
 ---
 
@@ -196,7 +200,7 @@ Creatures can't attack the turn they enter the battlefield (unless they have **H
 - When **all players pass in a row**, the **top** item of the Chain resolves (last in, first out). Then the active player gets priority again, and the loop continues until the Chain is empty.
 - If **all** of a spell's targets are no longer valid when it resolves, it **fizzles** (it goes to the graveyard and does nothing). If only some are, it resolves and skips the illegal ones (MTG 608.2b).
 - Triggered abilities (Arrival, Last Breath…) also go on the Chain, so they can be responded to.
-- **Fixed windows** where players get priority even when the Chain is empty: 🟡 each main phase, the start of combat, after attackers are declared, after blockers are declared, and the end phase.
+- **Fixed windows** where players get priority even when the Chain is empty: 🟡 the action phase (§6: whoever has the action), the start of combat, after attackers are declared, after blockers are declared, and the end of the round.
 - 🟡 UX note: the client should auto-pass for players who have no legal response (or who choose "auto-pass this turn"), so the back-and-forth stays fast, especially with 4 players.
 
 ### 8.1 Replacement effects 🔒 (MTG 614–616, in the engine since 2026-10-10)
@@ -216,7 +220,7 @@ Every deck is led by a **Tavern Dweller**, a tavern regular you play *as*. The T
 
 - The Tavern Dweller **is the player**: your 30 life is the Tavern Dweller's life, and "attack a player" means attacking their Tavern Dweller.
 - The Tavern Dweller sits in the **Tavern Dweller zone** (public). In v0.1 it can't be removed from the game.
-- **Tavern Dweller Power**: each Tavern Dweller has a unique activated power, paid with mana and/or Gold like any activated ability (Gold first, §5.2) 🔒. 🔒 It can be used **once each turn** (MTG "once each turn": once on your turn and once on each opponent's turn), at instant speed, through the Chain, so opponents can respond to it.
+- **Tavern Dweller Power**: each Tavern Dweller has a unique activated power, paid with mana and/or Gold like any activated ability (Gold first, §5.2) 🔒. 🔒 It can be used **once each turn**, which is **once each round** under the Standard rules (§6), at instant speed, through the Chain, so opponents can respond to it.
 - **Passive**: 🟡 each Tavern Dweller has one always-on ability: a triggered ability, a static ability, or a cost change. It works from the Tavern Dweller zone.
 - 🔒 **Deck rule**: every deck has exactly one Tavern Dweller, and every card in it is from one of the Tavern Dweller's two factions or Neutral.
 - 🔒 The Tavern Dweller **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
@@ -290,7 +294,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Gain control** (MTG): the permanent keeps its damage and counters. A creature can't attack or use Tap abilities until its new controller's next turn, unless it has Haste (MTG 302.6), and a creature that changes controller leaves combat. "Until end of turn" control ends in the cleanup step. When a player leaves the game, what they controlled but didn't own goes back to its owner.
 - **Return to hand** (bounce): the card comes back as a new object, so its damage is gone. A token stops existing.
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
-- **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with Gold first, then mana (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means your main phase with an empty Chain.
+- **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with Gold first, then mana (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means as one of your actions, with an empty Chain (§6).
 
 ---
 
@@ -302,6 +306,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ---
 
 ## 13. Multiplayer (3–4 players) 🔒 (future format)
+- ❓ **Rounds in multiplayer**: how the action rounds and the attack token work with 3–4 players is open (with a rotating token, each player attacks once every 3–4 rounds). Until it's decided, the engine's multiplayer format keeps MTG turns (`FormatConfig.MultiplayerStandard()`).
 - **Seating and turns**: turn order goes clockwise. Priority on the Chain also goes clockwise, starting from the active player.
 - **Starting life: 40.**
 - **Turn order compensation: none.** Every player draws on their first turn, including the first player (unlike 1v1).
@@ -319,6 +324,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Legends of Runeterra rounds** replace the turn structure (§6, §6.1, §7.4), after the design review (playtest/RULES_REVIEW.md, "Design review 2026-10-10"). A round is everyone's turn: everyone refills, untaps and draws, then players **alternate single actions** from the round leader; the leader holds the **attack token** and may use one action to attack; the token passes every round; **no summoning sickness**; everyone discards to 7 at the end of the round; **no going-first compensation** (everyone draws in round 1). "Turn" in the MTG rules and on cards means "round" (Powers: once each round). Measured with bots first: MTG turns (A B A B) with the round pool gave the first player 75–85% in aggro mirrors and no compensation fixed it without overshooting (+1 mana on the second player's first 3 turns: 37–57%); the rounds give 45–54% in every mirror. Open follow-ups: Haste is blank (§7.4), multiplayer rounds (§13). |
 | 2026-10-10 | **Gold-only parts are set aside first** (§5.2): Invest and "pay any amount of Gold (X)" keep their Gold before the spell's cost takes Gold first (fixes a bug found in the design review: Gold first could eat the Invest Gold). |
 | 2026-10-10 | **Cards are data**: every card and the prototype decks live in JSON files (`Assets/StreamingAssets/Cards`, `Decks`), built from the engine's building blocks (DEVELOPMENT §3). Changing a card no longer needs code. |
 | 2026-10-10 | **Replacement effects are in the engine** (§8.1, MTG 614–616): dying, damage, entering, drawing, gaining life and gaining Gold can be replaced. Self-replacement effects first, then oldest first; each applies once per event. MTG's "the affected player chooses the order" is not asked yet (noted as open). No card uses them yet except Keeper Z-00, whose counter now goes through them. |

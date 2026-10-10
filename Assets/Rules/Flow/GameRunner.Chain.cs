@@ -24,6 +24,14 @@ namespace RestartedTavern.Rules
             CheckStateBasedActionsAndTriggers();
             if (S.IsGameOver || S.Pending != null) return;
 
+            // Alternating actions: once an action has fully resolved, the next player has the action.
+            if (InActionPhase && S.Chain.Count == 0 && S.ActionInProgress)
+            {
+                S.ActionInProgress = false;
+                S.ActiveIndex = NextLivingPlayer(S.ActivePlayer).Seat;
+                to = S.ActivePlayer;
+            }
+
             if (S.Chain.Count > 0 || StepHasPriorityWindow(S.Step))
             {
                 S.PriorityPlayer = S.GetPlayer(to).HasLost ? NextLivingPlayer(to).Id : to;
@@ -46,6 +54,8 @@ namespace RestartedTavern.Rules
             if (S.PassesInRow < S.LivingPlayerCount)
             {
                 S.PriorityPlayer = NextLivingPlayer(passer).Id;
+                // Alternating actions: passing with an empty Chain hands the action on.
+                if (InActionPhase && S.Chain.Count == 0) S.ActiveIndex = S.GetPlayer(S.PriorityPlayer.Value).Seat;
                 return;
             }
 
@@ -109,6 +119,7 @@ namespace RestartedTavern.Rules
                 GoldPaid = goldPaid,
             };
             item.Targets.AddRange(a.Targets);
+            MarkActionStarted(a.Player);
             S.Chain.Add(item);
 
             Emit(new SpellCastEvent

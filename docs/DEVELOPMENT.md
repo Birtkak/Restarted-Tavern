@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. Sets v0.1 and v0.2 are designed and every card runs in the rules engine (203 passing EditMode tests). A hot-seat **debug table** in Unity can play it, against itself or the GreedyBot (§7).
+**Status:** engine prototype. Sets v0.1 and v0.2 are designed and every card runs in the rules engine (255 passing EditMode tests). A hot-seat **debug table** in Unity can play it, against itself or the GreedyBot (§7).
 
 ---
 
@@ -173,8 +173,8 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 **API** (`GameEngine`): `CreateGame(format, players, seed)`, `GetLegalActions(state, player)`, `Apply(state, action) → events`, `WaitingOn(state)`. `Apply` **changes the state in place** and only accepts actions from the legal list. Call `GameState.Clone()` first to keep the old state (for AI search or undo). `GameState.CreateViewFor(player)` hides the other players' hands, all decks and the RNG.
 
 **Implemented**
-- Setup: a random first player, 7-card hands, the **London mulligan**, and the first player skips the turn-1 draw (MTG default, §3). `FormatConfig.MultiplayerStandard()` uses 40 life and no compensation.
-- Turn structure (§6): Start, Draw, Main 1, the combat steps, Main 2, End, and Cleanup (discard down to 7, then at the end of a round unspent mana becomes Gold capped at 3, then "until end of turn" effects end). Rounds (§6.1): the round leader rotates (A B | B A) and holds the attack token.
+- Setup: a random first player, 7-card hands, the **London mulligan**, everyone draws in round 1 (§3). `FormatConfig.MultiplayerStandard()` uses 40 life and MTG turns.
+- Turn structure (§6, `FormatConfig.AlternatingActions`, Standard since 2026-10-10): **Legends of Runeterra rounds**. One engine "turn" is a round: Start (everyone refills, untaps; start-of-turn triggers for everyone), Draw (everyone), then the action phase in Main 1: `GameState.ActivePlayer` is whoever has the action, an action starts when they put something on an empty Chain (`ActionInProgress`) and when the Chain is empty again `GivePriority` hands the action on; a pass with an empty Chain hands it on too, and all players passing in a row ends the phase. Attacking is an action (`ActionKind.GoToCombat`, round leader with the attack token, once per round, `AttackedThisRound`); after combat the next player has the action. End and Cleanup run for everyone (everyone discards to 7, mana banked, "until end of turn" ends). No summoning sickness (`NoSummoningSickness`). `FormatConfig.MtgTurns()` (A B A B), `RuneterraRotation()` (A B | B A + token) and `Classic()` keep the earlier structures; card tests run under `MtgTurns()` (`TestGame.AtFirstMainPhase`), the rounds under `RoundsTests`.
 - Mana and Gold (§5, Standard rules since 2026-10-10): every player refills when a round starts and the mana lasts the round. Permanents are paid with mana only; Instants, Sorceries and abilities use **Gold first**, then mana, automatically. Invest and "Pay N Gold" are paid with Gold only. `FormatConfig.Classic()` keeps the old rules (mana per turn, mana first, Gold cap 5); `TestGame.Classic()` runs tests under them.
 - **The Chain** (§8): LIFO; the caster keeps priority; it resolves when every living player passes in a row; spells fizzle when their target is illegal; the fixed priority windows; auto-pass for players who have no other option (`GameState.AutoPass`).
 - **Multiple targets** (MTG 115, 608.2b): a spell has a list of target slots (optional slots for "up to N"). Targets are distinct, and illegal targets are skipped at resolution; the spell only fizzles when every target is gone. **Fight** (§11.1).
