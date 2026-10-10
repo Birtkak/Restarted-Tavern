@@ -32,9 +32,9 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 15 | **Megacorp Exosuit** | 5 | Equipment | R | — | Equipped creature gets +3/+3 and has Flying and Trample. Equip 3. | Turns any citizen into a big threat | ✅ |
 | 16 | **Patrol Captain** | 5 | Creature: Citizen | U | 4/5 | Vigilance. Equipped creatures you control get +1/+1. | An Equipment "lord" | ✅ |
 | 17 | **Hover Tank** | 5 | Creature: Construct | C | 4/5 | Arrival: Deal 1 damage to target creature. | A sturdy body with a ping | ✅ |
-| 18 | **Orbital Strike Network** | 6 | Relic | R | — | At the start of your turn, deal 1 damage to each enemy creature and each opponent. | A ping engine that slowly grinds the opposing board down | ✅ |
+| 18 | **Orbital Strike Network** | 6 | Relic | R | — | At the start of each round, deal 1 damage to each enemy creature and each opponent. | A ping engine that slowly grinds the opposing board down | ✅ |
 | 19 | **Titan-Frame Guardian** | 6 | Creature: Construct | R | 5/7 | Vigilance. Whenever an Equipment becomes attached to this, heal it fully and draw a card. | A huge Equipment carrier that repairs itself | ✅ |
-| 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
+| 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of each round, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 3 · 5: 3 · 6: 2 · 7+: 1 · Creatures: 11 · Equipment: 5 · Spells/Relics: 4
@@ -58,9 +58,9 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 24 | **Finisher Protocol** | 2 | Instant | C | — | Destroy target creature with 2 or less Health remaining. | The ping plan's closer: spread damage, then delete | ✓ implemented | ✅ |
 | 25 | **Marksman Scope** | 2 | Equipment | C | — | Equipped creature gets +1/+0 and has "Whenever this deals combat damage to a player, deal 1 damage to target creature." Equip 1. | Ping engine on any attacker | ✓ implemented | ✅ |
 | 26 | **Smart Rounds** | 3 | Sorcery | U | — | Deal 1 damage to target creature. Then deal 1 damage to each other creature that already had damage. | Chains across a wounded board, and rewards having pinged before | ✓ implemented | ✅ |
-| 27 | **Repair Bay** | 3 | Relic | U | — | At the start of your turn, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | ✓ implemented | ✅ |
+| 27 | **Repair Bay** | 3 | Relic | U | — | At the start of each round, heal 1 from each Construct and each equipped creature you control. | Machine-only healing, as the faction pie says | ✓ implemented | ✅ |
 | 28 | **Drone Launcher** | 3 | Equipment | U | — | Equipped creature has "Whenever this attacks, create a 1/1 Drone with Flying." Equip 2. | Go wide through Equipment | ✓ implemented | ✅ |
-| 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | ✓ implemented | ✅ |
+| 29 | **Hardlight Aegis** | 4 | Equipment | R | — | Equipped creature gets +0/+3 and can't be dealt more than 2 damage each round. Equip 2. | Permanent-damage defense: big hits get capped, so wounds pile up slowly | ✓ implemented | ✅ |
 | 30 | **Neon Executioner** | 7 | Creature: Construct | R | 4/6 | Vigilance. Whenever an enemy creature is dealt damage, if it has 1 or less Health remaining, destroy it. | Turns every ping into a potential kill. The faction's damage payoff | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2
@@ -74,7 +74,7 @@ Goal: players should have to count their mana out most rounds. Each faction gets
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| 31 | **Market Data Feed** | 2 | Relic | U | — | Whenever an Equipment becomes attached to a creature you control, draw a card. This triggers at most once each turn. | Draw · Equipment ★ | ✓ implemented | ✅ |
+| 31 | **Market Data Feed** | 2 | Relic | U | — | Whenever an Equipment becomes attached to a creature you control, draw a card. This triggers at most once each round. | Draw · Equipment ★ | ✓ implemented | ✅ |
 | 32 | **Overclocked Analyst** | 3 | Creature: Construct | C | 2/3 | (3), Tap: Draw a card, then discard a card. | Draw · mana sink · card selection on a body | ✓ implemented | ✅ |
 | 33 | **Arc Cascade** | X+1 | Sorcery | U | — | Deal X damage divided as you choose among any number of creatures and/or opponents. | Mana sink · pings ★, scaled up | ✓ implemented | ✅ |
 | 34 | **Turret Rig** | 2 | Equipment | C | — | Equipped creature has "(2), Tap: Deal 1 damage to any target." Equip 2. | Mana sink · a repeatable ping you move around | ✓ implemented | ✅ |

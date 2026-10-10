@@ -153,6 +153,12 @@ namespace RestartedTavern.Client.Logic
         /// </summary>
         public Func<PlayerAction, bool> HumanFilter { get; set; }
 
+        /// <summary>
+        /// Human seats' triggers go on the Chain in the order they happened, without asking (MTGA's auto-order;
+        /// playtest 2026-10-10_192451). Off = the player orders them by hand.
+        /// </summary>
+        public bool AutoOrderTriggers { get; set; } = true;
+
         /// <summary>Picks the bot's action instead of the bot (the scripted tutorial); null or a null result = the bot decides.</summary>
         public Func<MatchSession, PlayerId, PlayerAction> BotOverride { get; set; }
 
@@ -225,6 +231,7 @@ namespace RestartedTavern.Client.Logic
             _combat = stage;
             _combatStarted = State.Pending?.Kind == DecisionKind.DeclareAttackers || stage.IsBlocking;
             var events = ContinueCombat();
+            events.AddRange(AutoOrder());
             UpdateViewer();
             EventsApplied?.Invoke(events);
             return events;
@@ -304,8 +311,22 @@ namespace RestartedTavern.Client.Logic
             if (keepUndo) KeepUndo();
             var events = ApplyToEngine(action);
             events.AddRange(ContinueCombat());
+            events.AddRange(AutoOrder());
             UpdateViewer();
             EventsApplied?.Invoke(events);
+            return events;
+        }
+
+        /// <summary>With <see cref="AutoOrderTriggers"/>: answers a human's "order your triggers" the way the bot does.</summary>
+        private List<GameEvent> AutoOrder()
+        {
+            var events = new List<GameEvent>();
+            while (AutoOrderTriggers && !State.IsGameOver && WaitingOn is PlayerId p && SeatOf(p) == SeatKind.Human
+                   && State.Pending?.Kind == DecisionKind.OrderTriggers)
+            {
+                events.AddRange(ApplyToEngine(_bot.Choose(State, p)));
+                events.AddRange(ContinueCombat());
+            }
             return events;
         }
 

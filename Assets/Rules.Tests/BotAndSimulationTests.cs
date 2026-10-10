@@ -67,6 +67,23 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
+        public void GreedyBot_DoesNotBurnACreatureItsChainAlreadyKills()
+        {
+            // Playtest 2026-10-10_192133: two Spark Snots at one creature, the second fizzled.
+            var g = TestGame.AtFirstMainPhase();
+            var wounded = g.AddToBattlefield(g.Other, "tavern_bouncer", damage: 3); // 2 left: one Snot kills
+            var first = g.AddToHand(g.Active, "spark_snot");
+            var second = g.AddToHand(g.Active, "spark_snot");
+            g.SetMana(g.Active, 10);
+            g.Do(PlayerAction.Play(g.Active, first.Id, Target.ForObject(wounded.Id)));
+            Assert.AreEqual(1, g.State.Chain.Count);
+            var me = g.State.PriorityPlayer ?? g.Active;
+            Assume.That(me == g.Active, "the caster keeps priority");
+            var choice = new GreedyBot(g.Engine).Choose(g.State, g.Active);
+            Assert.AreNotEqual(PlayerAction.Play(g.Active, second.Id, Target.ForObject(wounded.Id)), choice);
+        }
+
+        [Test]
         public void GreedyBot_DoesNotAttackIntoABadBlock()
         {
             var g = TestGame.AtFirstMainPhase();

@@ -125,7 +125,7 @@
     "cost": 6,
     "rarity": "Rare",
     "faction": "glitterworld",
-    "text": "At the start of your turn, deal 1 damage to each enemy creature and each opponent.",
+    "text": "At the start of each round, deal 1 damage to each enemy creature and each opponent.",
     "triggers": [
       {
         "when": "StartOfYourTurn",
@@ -572,7 +572,7 @@
     "subtypes": ["Construct"],
     "rarity": "Legendary",
     "faction": "glitterworld",
-    "text": "Flying. At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control.",
+    "text": "Flying. At the end of each round, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control.",
     "triggers": [
       {
         "when": "EndOfYourTurn",
@@ -634,7 +634,7 @@
     "cost": 3,
     "rarity": "Uncommon",
     "faction": "glitterworld",
-    "text": "At the start of your turn, heal 1 from each Construct and each equipped creature you control.",
+    "text": "At the start of each round, heal 1 from each Construct and each equipped creature you control.",
     "triggers": [
       {
         "when": "StartOfYourTurn",
@@ -681,7 +681,7 @@
     "cost": 4,
     "rarity": "Rare",
     "faction": "glitterworld",
-    "text": "Equipped creature gets +0/+3 and can't be dealt more than 2 damage each turn. Equip 2.",
+    "text": "Equipped creature gets +0/+3 and can't be dealt more than 2 damage each round. Equip 2.",
     "statics": [
       {"$type": "AttachedCreatureModifier", "health": 3, "maxDamageEachTurn": 2}
     ],
@@ -729,7 +729,7 @@
     "cost": 2,
     "rarity": "Uncommon",
     "faction": "glitterworld",
-    "text": "Whenever an Equipment becomes attached to a creature you control, draw a card. This triggers at most once each turn.",
+    "text": "Whenever an Equipment becomes attached to a creature you control, draw a card. This triggers at most once each round.",
     "triggers": [
       {
         "when": "EquipmentAttached",

@@ -513,11 +513,32 @@ namespace RestartedTavern.Rules.AI
             var c = s.FindOnBattlefield(t.Object);
             if (c == null) return 0;
             var st = Stats(s, c);
-            bool kills = amount >= st.RemainingHealth;
             double worth = Worth(s, c);
-            if (c.Controller == me) return kills ? -worth - 2 : -amount;
+            if (c.Controller == me) return amount >= st.RemainingHealth ? -worth - 2 : -amount;
+            // Our own spells already on the Chain may kill it first: don't spend a second one on it.
+            int pending = PendingDamage(s, me, t);
+            if (pending >= st.RemainingHealth) return 0;
+            bool kills = amount + pending >= st.RemainingHealth;
             // Chip damage sticks (§7.3), so it has some value even when it doesn't kill.
             return kills ? worth + 1 : _style.ChipDamageValue * amount;
+        }
+
+        /// <summary>Damage our own spells and abilities on the Chain will deal to this target.</summary>
+        private int PendingDamage(GameState s, PlayerId me, Target target)
+        {
+            int sum = 0;
+            foreach (var item in s.Chain)
+            {
+                if (item.Controller != me) continue;
+                foreach (var e in item.Effects)
+                {
+                    if (!(e is DealDamageEffect d)) continue;
+                    for (int i = 0; i < item.Targets.Count; i++)
+                        if ((d.EachTarget || i == d.TargetIndex) && item.Targets[i] == target)
+                            sum += DamageAmount(s, me, d, target, item.X);
+                }
+            }
+            return sum;
         }
 
         private double HealValue(GameState s, PlayerId me, int amount, Target? target)

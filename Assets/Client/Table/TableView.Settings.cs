@@ -13,6 +13,8 @@ namespace RestartedTavern.Client.Table
         private bool _settingsOpen;
         private bool _keywordHints = true;
         private bool _coinToss = true;
+        private bool _autoOrder = true;
+        private bool _autoPass;
 
         private static readonly float[] Speeds = { 0.5f, 1f, 2f, 4f };
         private static readonly Vector2Int[] Resolutions = { new(1280, 720), new(1600, 900), new(1920, 1080), new(2560, 1440) };
@@ -23,6 +25,8 @@ namespace RestartedTavern.Client.Table
             if (_autoshot == null) _speed = PlayerPrefs.GetFloat("speed", 1f);
             _keywordHints = PlayerPrefs.GetInt("keywordHints", 1) == 1;
             _coinToss = PlayerPrefs.GetInt("coinToss", 1) == 1;
+            _autoOrder = PlayerPrefs.GetInt("autoOrderTriggers", 1) == 1;
+            _autoPass = PlayerPrefs.GetInt("autoPass", 0) == 1;
             QualitySettings.vSyncCount = PlayerPrefs.GetInt("vsync", 1);
             _volume = PlayerPrefs.GetFloat("volume", 0.6f);
             _passSound = PlayerPrefs.GetInt("passSound", 1) == 1;
@@ -81,7 +85,7 @@ namespace RestartedTavern.Client.Table
                         _dirty = true;
                     }, 17);
                 }
-                row += 66f;
+                row += 60f;
             }
 
             Row("Sound", new[] { "Off", "Low", "Medium", "High" }, System.Array.FindIndex(Volumes, x => Mathf.Approximately(x, _volume)), i =>
@@ -126,6 +130,12 @@ namespace RestartedTavern.Client.Table
             {
                 _coinToss = i == 0;
                 PlayerPrefs.SetInt("coinToss", i == 0 ? 1 : 0);
+            });
+            Row("Trigger order", new[] { "Auto", "Myself" }, _autoOrder ? 0 : 1, i =>
+            {
+                _autoOrder = i == 0;
+                PlayerPrefs.SetInt("autoOrderTriggers", i == 0 ? 1 : 0);
+                if (_s != null) _s.AutoOrderTriggers = _autoOrder;
             });
 
             Ui.Tmp(t, "Esc: close  ·  F2: report a bug  ·  F3: guide", 50f, h - 78f, 360f, 52f, 16f, Ui.Cream * new Color(1, 1, 1, 0.45f), TextAnchor.MiddleLeft, FontStyle.Italic);

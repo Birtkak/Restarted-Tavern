@@ -174,8 +174,8 @@ namespace RestartedTavern.Client.Logic
                     + "<b>1. Start</b>: everyone gets +1 max mana (up to 10) and refills. Only the player with the <b>attack token</b> untaps their permanents.\n"
                     + "<b>2. Draw</b>: everyone draws a card.\n"
                     + "<b>3. Actions</b>: players take one action at a time, starting with the round leader. When everyone passes in a row, the round ends.\n"
-                    + "<b>4. End</b>: everyone discards down to 7, unspent mana becomes Gold, and \"until end of turn\" effects end. The attack token moves on.\n\n"
-                    + "When a card says <b>\"turn\"</b>, it means round: \"once each turn\" is once each round.",
+                    + "<b>4. End</b>: everyone discards down to 7, unspent mana becomes Gold, and \"until end of round\" effects end. The attack token moves on.\n\n"
+                    + "Cards count in <b>rounds</b>: \"at the start of each round\" triggers for every player, and \"once each round\" is once per round.",
                     new[] { "turn", "round", "turn structure", "phases", "end of turn", "start of turn" },
                     frames: new[] { F("round", "Round 2: both players have 2 mana and the attack token moved to Mukk.") },
                     related: new[] { "actions", "attack_token", "mana", "gold" }),
@@ -337,7 +337,7 @@ namespace RestartedTavern.Client.Logic
                     "The big one: <b>damage stays</b> on creatures from round to round. It only goes away when the creature is <b>healed</b> or dies. "
                     + "The red Health number on the table is what's left.\n\n"
                     + "So chip damage adds up: a ping today finishes a creature tomorrow, and big creatures wear down over time.\n\n"
-                    + "<b>Losing a buff can't kill</b>: when a Health bonus ends (\"until end of turn\" wears off, an Equipment moves), a creature that was alive keeps at least 1 Health.",
+                    + "<b>Losing a buff can't kill</b>: when a Health bonus ends (\"until end of round\" wears off, an Equipment moves), a creature that was alive keeps at least 1 Health.",
                     new[] { "damage", "wounds", "health", "chip damage", "damaged", "buff" },
                     new[] { "spark_snot", "canopy_critter" },
                     new[] { F("block3", "The Vine Spider keeps its 2 damage: 1 Health left.") },
@@ -401,7 +401,7 @@ namespace RestartedTavern.Client.Logic
 
                 E("activated", "Activated Abilities", "The Chain",
                     "Abilities written <b>\"[Cost]: [Effect]\"</b> are used by clicking the card when it glows. They go on the Chain and work at <b>instant speed</b>, unless they say \"only as a sorcery\".\n\n"
-                    + "A number cost is paid <b>Gold first</b>, then mana. \"Pay N Gold\" is Gold only. \"Activate only once each turn\" means once each round.",
+                    + "A number cost is paid <b>Gold first</b>, then mana. \"Pay N Gold\" is Gold only. \"Activate only once each round\" means once per round.",
                     new[] { "ability", "activate", "abilities", "cost", "tap:" },
                     new[] { "wound_dresser", "grove_elder" },
                     related: new[] { "powers", "gold", "tapping" }),
@@ -526,7 +526,7 @@ namespace RestartedTavern.Client.Logic
 
                 E("gain_control", "Gain Control", "Rules Terms",
                     "You take a creature: it keeps its damage and counters, and it can attack and use Tap abilities for you right away. "
-                    + "\"Until end of turn\" control ends when the round ends.",
+                    + "\"Until end of round\" control ends when the round ends.",
                     new[] { "steal", "control", "mind control", "take" },
                     new[] { "silver_tongued_deal", "hostile_takeover" },
                     related: new[] { "bounce" }),

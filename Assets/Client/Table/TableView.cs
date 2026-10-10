@@ -242,6 +242,7 @@ namespace RestartedTavern.Client.Table
             _deck[0] = Mathf.Clamp(_deck[0], 0, decks.Count - 1);
             _deck[1] = Mathf.Clamp(_deck[1], 0, decks.Count - 1);
             _s = new MatchSession(setup ?? MatchSetup.Duel(_deck[0], _dweller[0], _deck[1], _dweller[1], _seats[0], _seats[1], seed));
+            _s.AutoOrderTriggers = _autoOrder;
             _tutorial = null;
             _menuOpen = false;
             _menuPage = MenuPage.Home;
@@ -480,9 +481,28 @@ namespace RestartedTavern.Client.Table
                 OnSessionChanged();
                 _nextBot = Time.unscaledTime + 0.6f / _speed;
             }
+            else if (_autoPass && _s.HumanToAct && _dragging == null && !_menuOpen && !_bugOpen && !_settingsOpen && !_guideOpen
+                     && !Tossing && !TutorialRunning && !Busy && !_picker.IsPicking && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
+                AutoPass();
 
             if (_dirty && _dragging == null) Refresh();
             UpdateArrow();
+        }
+
+        /// <summary>
+        /// Auto-pass (user request 2026-10-10): with nothing you could do but pass (no affordable card, ability or
+        /// attack) the priority or round passes by itself, and a block with no possible blocker is skipped.
+        /// </summary>
+        private void AutoPass()
+        {
+            var legal = _s.LegalForViewer();
+            if (legal.Count == 0) return;
+            if (_stage != null && _stage.IsBlocking)
+            {
+                if (!_stage.Candidates().Any()) Run(() => _s.CommitCombat(_stage));
+                return;
+            }
+            if (legal.All(a => a.Kind == ActionKind.PassPriority)) Submit(legal[0]);
         }
 
         private void CancelPicking()
@@ -1092,6 +1112,13 @@ namespace RestartedTavern.Client.Table
             {
                 SetSpeed(_speed >= 4f ? 0.5f : _speed * 2f);
             }, 16);
+            Ui.Button(_dynamic, _autoPass ? "Auto-pass ON" : "Auto-pass off", 214, 1040, 104, 32, _autoPass ? ContextOn : ButtonColor, () =>
+            {
+                _autoPass = !_autoPass;
+                PlayerPrefs.SetInt("autoPass", _autoPass ? 1 : 0);
+                PlayerPrefs.Save();
+                _dirty = true;
+            }, 13);
         }
 
         private string PickerPromptText()
@@ -1279,11 +1306,12 @@ namespace RestartedTavern.Client.Table
             if (gx < 10f || gx + GlossaryW > Ui.Width - 10f) gx = right ? x - 8f - GlossaryW : x + zw + 8f;
             float gh = DrawGlossary(w.View, gx, y);
             // The zoom can be hovered: an invisible area from the card's edge over the zoom and the keyword boxes keeps
-            // it open (and keeps the cards under it from taking the hover).
+            // it open. It never takes the mouse, so the cards under it can still be hovered and clicked (playtest
+            // 2026-10-10_193416), and it can't cover the Power coin and make it flicker (2026-10-10_192831).
             float cardEdge = right ? cx + halfW + 2f : cx - halfW - 2f;
             float left = right ? cardEdge : Mathf.Min(x, gh > 0f ? gx : x);
             float rightEdge = right ? Mathf.Max(x + zw, gh > 0f ? gx + GlossaryW : 0f) : cardEdge;
-            _zoomHit = Ui.Panel(_zoomLayer, "ZoomHit", left, y, Mathf.Max(0f, rightEdge - left), Mathf.Max(zh + 30f, gh), Color.clear, raycast: true).rectTransform;
+            _zoomHit = Ui.Panel(_zoomLayer, "ZoomHit", left, y, Mathf.Max(0f, rightEdge - left), Mathf.Max(zh + 30f, gh), Color.clear).rectTransform;
             _zoomHit.SetAsFirstSibling();
         }
 

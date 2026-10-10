@@ -122,7 +122,7 @@
     "subtypes": ["Turtle"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "Vigilance. At the start of your turn, heal 1 from this.",
+    "text": "Vigilance. At the start of each round, heal 1 from this.",
     "triggers": [
       {
         "when": "StartOfYourTurn",
@@ -171,7 +171,7 @@
     "cost": 3,
     "rarity": "Uncommon",
     "faction": "evergrowing_wild",
-    "text": "Target creature you control gets +2/+2 until end of turn, then it fights target creature you don't control.",
+    "text": "Target creature you control gets +2/+2 until end of round, then it fights target creature you don't control.",
     "spellTargets": [
       {"spec": "CreatureYouControl"},
       {"spec": "CreatureYouDontControl"}
@@ -264,7 +264,7 @@
     "cost": 1,
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "Target creature gets +0/+3 until end of turn. Put a +1/+1 counter on it.",
+    "text": "Target creature gets +0/+3 until end of round. Put a +1/+1 counter on it.",
     "spellTargets": [
       {"spec": "Creature"}
     ],
@@ -307,7 +307,7 @@
     "subtypes": ["Beast"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "At the end of your turn, heal 2 from this.",
+    "text": "At the end of each round, heal 2 from this.",
     "triggers": [
       {
         "when": "EndOfYourTurn",
@@ -324,7 +324,7 @@
     "cost": 6,
     "rarity": "Rare",
     "faction": "evergrowing_wild",
-    "text": "Creatures you control get +2/+2 and Trample until end of turn. Heal them fully.",
+    "text": "Creatures you control get +2/+2 and Trample until end of round. Heal them fully.",
     "spellEffects": [
       {"$type": "PumpYourCreaturesEffect", "power": 2, "health": 2, "grants": "Trample"},
       {"$type": "HealOtherCreaturesYouControlEffect", "fully": true}
@@ -441,7 +441,7 @@
     "subtypes": ["Plant"],
     "rarity": "Common",
     "faction": "evergrowing_wild",
-    "text": "At the end of your turn, if this has no damage, put a +1/+1 counter on it.",
+    "text": "At the end of each round, if this has no damage, put a +1/+1 counter on it.",
     "triggers": [
       {
         "when": "EndOfYourTurn",
@@ -496,7 +496,7 @@
             "effects": [
               {"$type": "HealSelfEffect", "amount": 1}
             ],
-            "text": "At the start of your turn, heal 1 from this."
+            "text": "At the start of each round, heal 1 from this."
           }
         ]
       }
@@ -547,7 +547,7 @@
     "subtypes": ["Leviathan"],
     "rarity": "Legendary",
     "faction": "evergrowing_wild",
-    "text": "Trample. At the start of your turn, heal this creature fully.",
+    "text": "Trample. At the start of each round, heal this creature fully.",
     "triggers": [
       {
         "when": "StartOfYourTurn",
@@ -645,7 +645,7 @@
     "cost": 2,
     "rarity": "Rare",
     "faction": "evergrowing_wild",
-    "text": "Target creature you control gets +X/+X and Trample until end of turn. Then it fights up to one target creature you don't control.",
+    "text": "Target creature you control gets +X/+X and Trample until end of round. Then it fights up to one target creature you don't control.",
     "spellTargets": [
       {"spec": "CreatureYouControl"},
       {"spec": "CreatureYouDontControl", "optional": true}
@@ -667,14 +667,14 @@
     "subtypes": ["Beast"],
     "rarity": "Rare",
     "faction": "evergrowing_wild",
-    "text": "Trample. (X): This gets +X/+0 until end of turn.",
+    "text": "Trample. (X): This gets +X/+0 until end of round.",
     "abilities": [
       {
         "hasX": true,
         "effects": [
           {"$type": "PumpSourceEffect", "powerPerX": 1}
         ],
-        "text": "(X): This gets +X/+0 until end of turn."
+        "text": "(X): This gets +X/+0 until end of round."
       }
     ]
   }

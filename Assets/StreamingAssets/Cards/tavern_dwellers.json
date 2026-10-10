@@ -70,7 +70,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["shadow_money_wizards", "evergrowing_wild"],
-    "text": "Your spells and creatures that cost 6 or more cost 1 less. Power (2): Target creature gets +2/+2 until end of turn.",
+    "text": "Your spells and creatures that cost 6 or more cost 1 less. Power (2): Target creature gets +2/+2 until end of round.",
     "statics": [
       {"$type": "CostModifierAbility", "minPrintedCost": 6, "reduction": 1}
     ],
@@ -84,7 +84,7 @@
         "effects": [
           {"$type": "PumpTargetEffect", "power": 2, "health": 2}
         ],
-        "text": "(2) Target creature gets +2/+2 until end of turn."
+        "text": "(2) Target creature gets +2/+2 until end of round."
       }
     ]
   },
@@ -121,7 +121,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["goobers", "sensationalists"],
-    "text": "Whenever one of your creatures dies, deal 1 damage to each opponent. This triggers at most 3 times each turn. Power (1), sacrifice a creature: Draw a card.",
+    "text": "Whenever one of your creatures dies, deal 1 damage to each opponent. This triggers at most 3 times each round. Power (1), sacrifice a creature: Draw a card.",
     "triggers": [
       {
         "when": "CreatureDies",
@@ -179,7 +179,7 @@
     "rarity": "Legendary",
     "faction": "neutral",
     "tavernDwellerFactions": ["goobers", "glitterworld"],
-    "text": "Your Equipment spells cost 1 less. Power (2): Attach up to one target Equipment you control to target creature you control. If no Equipment became attached, that creature gets +1/+1 until end of turn.",
+    "text": "Your Equipment spells cost 1 less. Power (2): Attach up to one target Equipment you control to target creature you control. If no Equipment became attached, that creature gets +1/+1 until end of round.",
     "statics": [
       {"$type": "CostModifierAbility", "onlyType": "Equipment", "reduction": 1}
     ],
@@ -194,7 +194,7 @@
         "effects": [
           {"$type": "AttachEquipmentOrPumpEffect"}
         ],
-        "text": "(2) Attach up to one target Equipment you control to target creature you control. If none became attached, it gets +1/+1 until end of turn."
+        "text": "(2) Attach up to one target Equipment you control to target creature you control. If none became attached, it gets +1/+1 until end of round."
       }
     ]
   },

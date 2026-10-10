@@ -13,8 +13,8 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 ## Carried over from the samples
 | # | Name | Cost | Type | Rarity | Stats | Text | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | **Coin Juggler** | 2 | Creature: Wizard | C | 1/3 | Whenever you spend Gold, this gets +1/+0 until end of turn. | ✅ |
-| 2 | **Silver-Tongued Deal** | 3 | Instant | U | — | Gain control of target creature until end of turn. Untap it. Each opponent gains 2 Gold. | ✅ |
+| 1 | **Coin Juggler** | 2 | Creature: Wizard | C | 1/3 | Whenever you spend Gold, this gets +1/+0 until end of round. | ✅ |
+| 2 | **Silver-Tongued Deal** | 3 | Instant | U | — | Gain control of target creature until end of round. Untap it. Each opponent gains 2 Gold. | ✅ |
 | 3 | **The Grand Ledger** | 7 | Sorcery | R | — | Draw 4 cards. Invest 3: Draw 2 more and gain 3 life. | ✅ |
 
 ## Batch 1
@@ -23,7 +23,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 4 | **Ledger Imp** | 1 | Creature: Imp | C | 1/2 | Arrival: You may lose 2 life. If you do, gain 1 Gold. | A 1-drop shady deal: early Gold for life. Enables a turn-2 trick | ✅ |
 | 5 | **Hush Money** | 2 | Instant | U | — | Counter target spell unless its controller pays 3. If they pay, you gain 2 Gold. | You profit either way. It is the faction's counterspell, and it's weak late in the game on purpose | ✅ |
 | 6 | **Crooked Accountant** | 3 | Creature: Wizard | C | 2/3 | Whenever you cast a spell that costs 5 or more, draw a card. | Engine for the big-spell plan | ✅ |
-| 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of your turn, if you have 3 or more Gold, draw a card. | Rewards banking up to the cap | ✅ |
+| 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of each round, if you have 3 or more Gold, draw a card. | Rewards banking up to the cap | ✅ |
 | 8 | **Golden Handshake** | 5 | Sorcery | U | — | Return target creature to its owner's hand. Its controller gains Gold equal to its cost. | "Clean" removal of a big creature, but the opponent gets Gold (up to their cap of 3) to spend on tricks. Damage is wiped when the creature returns to hand | ✅ |
 
 ## Legendary
@@ -36,7 +36,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 |---|---|---|---|---|---|---|---|---|
 | 10 | **Pocket Change** | 1 | Instant | C | — | Look at the top 2 cards of your deck. Put one in your hand and the other on the bottom. Invest 1: Put both in your hand. | A cheap instant to spend leftover Gold on during an opponent's action | ✅ |
 | 11 | **Apprentice Forger** | 2 | Creature: Wizard | C | 1/2 | Flying. Arrival: Gain 1 Gold. | A simple, efficient Gold source | ✅ |
-| 12 | **Sticky Fingers** | 2 | Instant | C | — | Target creature gets -3/-0 until end of turn. Invest 1: Draw a card. | Defensive combat trick. It saves a blocker from permanent damage | ✅ |
+| 12 | **Sticky Fingers** | 2 | Instant | C | — | Target creature gets -3/-0 until end of round. Invest 1: Draw a card. | Defensive combat trick. It saves a blocker from permanent damage | ✅ |
 | 13 | **Debt Collector** | 4 | Creature: Wizard | U | 3/4 | Arrival: Each opponent loses up to 2 Gold. You gain that much Gold. | Takes back the Gold your shady deals handed out | ✅ |
 | 14 | **Grand Illusion** | 6 | Sorcery | R | — | Return all creatures to their owners' hands. Draw a card for each creature you owned that was returned. | A big, impressive reset. It also wipes all permanent damage, which makes it a comeback card | ✅ |
 
@@ -44,11 +44,11 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Status |
 |---|---|---|---|---|---|---|---|---|
 | 15 | **Gilded Rat** | 1 | Creature: Rat | C | 2/1 | Last Breath: Gain 2 Gold. | An aggressive 1-drop that pays out when it dies | ✅ |
-| 16 | **Card Shark** | 3 | Creature: Wizard | C | 3/3 | Whenever you cast your second spell each turn, draw a card. | Rewards spell-heavy turns | ✅ |
+| 16 | **Card Shark** | 3 | Creature: Wizard | C | 3/3 | Whenever you cast your second spell each round, draw a card. | Rewards spell-heavy turns | ✅ |
 | 17 | **Counterfeit Coin** | 3 | Instant | U | — | Counter target spell with cost 4 or less. Its controller gains Gold equal to its cost. | A hard counter, with the shady price that the opponent's mana isn't wasted | ✅ |
 | 18 | **Hired Enforcer** | 5 | Creature: Wizard | C | 5/4 | Flying. Arrival: Each opponent gains 2 Gold. | A big flier at a discount, paid for with a shady deal | ✅ |
 | 19 | **Tax Office** | 5 | Relic | U | — | Whenever an opponent casts a spell, they lose 1 Gold. If they couldn't, you gain 1 Gold. | Drains the Gold your deals handed out | ✅ |
-| 20 | **The Dealer** | 7 | Creature: Wizard | R | 3/5 | Flying. At the start of your turn, each opponent may give you 2 Gold. For each one who doesn't, draw a card. | "Pick your poison" every turn. A value creature, not a finisher | ✅ |
+| 20 | **The Dealer** | 7 | Creature: Wizard | R | 3/5 | Flying. At the start of each round, each opponent may give you 2 Gold. For each one who doesn't, draw a card. | "Pick your poison" every turn. A value creature, not a finisher | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 2 · 5: 3 · 6: 2 · 7+: 2 · Creatures: 10 · Spells/Relics: 10
@@ -93,4 +93,4 @@ Goal: players should have to count their mana out most rounds. Each faction gets
 | 33 | **Eviction Notice** | X+1 | Instant | C | — | Return target creature with cost X or less to its owner's hand. Draw a card. | Mana sink · scalable bounce: cheap early, answers bombs late | ✓ implemented | ✅ |
 | 34 | **Audit the Books** | 3 | Sorcery | U | — | Return target creature with cost 4 or less to its owner's hand. Invest 3: Draw two cards. | Big Invest · tempo now, cards with banked Gold | ✓ implemented | ✅ |
 | 35 | **Foreclosure** | X+3 | Sorcery | R | — | Each opponent loses X life. You gain X Gold. | Finisher (drain) · the debt comes due. The Gold refills your bank for counters next turn | ✓ implemented | ✅ |
-| 36 | **Loan Shark** | 6 | Creature: Wizard | R | 3/5 | Flying. At the end of your turn, each opponent loses life equal to the Gold you have. | Finisher (inevitability) · rewards banking (Gold ★). With a cap of 3-5 that's 3-5 life a turn | ✓ implemented | ✅ |
+| 36 | **Loan Shark** | 6 | Creature: Wizard | R | 3/5 | Flying. At the end of each round, each opponent loses life equal to the Gold you have. | Finisher (inevitability) · rewards banking (Gold ★). With a cap of 3-5 that's 3-5 life a turn | ✓ implemented | ✅ |

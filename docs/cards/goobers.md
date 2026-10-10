@@ -25,11 +25,11 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 9 | **Firecracker Volley** | 3 | Sorcery | U | — | Deal 3 damage divided as you choose among one, two or three targets (creatures and/or players). | Flexible burn: kill small creatures, or spread lasting damage | ✅ |
 | 10 | **Hog-Rider** | 3 | Creature: Goober | C | 3/3 | Trample. | A goblin on a war pig | ✅ |
 | 11 | **Gold-Snatcher Crew** | 3 | Creature: Goober | U | 2/2 | Whenever this deals combat damage to a player, that player loses up to 2 Gold and you gain that much. | Gold theft on a body | ✅ |
-| 12 | **Mob Rush** | 5 | Sorcery | U | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. | Instant pressure | ✅ |
+| 12 | **Mob Rush** | 5 | Sorcery | U | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of round. | Instant pressure | ✅ |
 | 13 | **Barrel Bomber** | 4 | Creature: Goober | C | 3/3 | Arrival: Deal 2 damage to any target. | Removal on a body | ✅ |
 | 14 | **Pit-Fighter** | 4 | Creature: Goober | C | 4/4 | Trample. | A solid mid-sized beater | ✅ |
 | 15 | **Goober Demolisher** | 5 | Creature: Goober | R | 4/5 | Trample. Whenever another Goober you control dies, deal 1 damage to each opponent. | Payoff for trading tokens away | ✅ |
-| 16 | **Overrun the Gates** | 5 | Sorcery | U | — | Your creatures get +2/+0 and Trample until end of turn. | A finisher for a wide board | ✅ |
+| 16 | **Overrun the Gates** | 5 | Sorcery | U | — | Your creatures get +2/+0 and Trample until end of round. | A finisher for a wide board | ✅ |
 | 17 | **Scrapheap Inferno** | 5 | Sorcery | R | — | Deal X damage to any target, where X is 2 plus the number of Goobers you control. | Burn that scales with your board. Can finish the opponent off | ✅ |
 | 18 | **Pit Champion** | 7 | Creature: Goober | R | 6/5 | Trample. | Big, immediate damage | ✅ |
 | 19 | **Grakka, Queen of the Rabble** | 7 | Creature: Goober | L | 5/6 | Your Goobers get +1/+1. Whenever you attack, create a 1/1 Goober that's tapped and attacking. | The face of the faction. Over budget on purpose (Legendary top-end exception) | ✅ |
@@ -54,12 +54,12 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 21 | **Kick 'Em While They're Down** | 2 | Sorcery | C | — | Deal 2 damage to target creature. If it was already damaged, deal 4 damage instead. | Goobers create damage, and this finishes off what they started. Plain 'damaged' text, not a keyword | ✓ implemented | ✅ |
 | 22 | **Loot Splitter** | 2 | Creature: Goober | C | 2/2 | Invest 2: Create a 1/1 Goober. | Stolen Gold turns into more bodies | ✓ implemented | ✅ |
 | 23 | **Goober Sapper** | 3 | Creature: Goober | C | 2/2 | Last Breath: Deal 1 damage to each enemy creature. | Trading it away wounds the whole enemy board, and those wounds stay | ✓ implemented | ✅ |
-| 24 | **Reckless Charge** | 1 | Instant | C | — | Target creature gets +2/+0 and Trample until end of turn. Invest 1: Your other Goobers get +1/+0 until end of turn. | A combat trick after blockers are declared, with a Gold-paid team version | ✓ implemented | ✅ |
+| 24 | **Reckless Charge** | 1 | Instant | C | — | Target creature gets +2/+0 and Trample until end of round. Invest 1: Your other Goobers get +1/+0 until end of round. | A combat trick after blockers are declared, with a Gold-paid team version | ✓ implemented | ✅ |
 | 25 | **Gold-Tooth Bruiser** | 4 | Creature: Goober | C | 4/3 | Trample. Whenever this deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold. | Steals Gold on a body that can trample through | ✓ implemented | ✅ |
 | 26 | **Pickpocket Boss** | 3 | Creature: Goober | U | 2/3 | Whenever another Goober you control deals combat damage to a player, that player loses 1 Gold and you gain 1 Gold. | Turns a wide attack into a Gold drain. Takes away the opponent's instant-speed answers | ✓ implemented | ✅ |
 | 27 | **Fling the Runt** | 1 | Instant | U | — | As an extra cost, sacrifice a creature. Deal damage equal to its Power to any target. | Sacrifice a Fuse Goober for a double hit. Can save a creature from a Curse by turning it into damage | ✓ implemented | ✅ |
-| 28 | **Rally Drummer** | 3 | Creature: Goober | U | 2/3 | Whenever you attack with three or more creatures, attacking creatures you control get +1/+0 until end of turn. | A team-wide temporary buff, the Goober way | ✓ implemented | ✅ |
-| 29 | **Chaos Engine** | 5 | Creature: Goober | R | 4/4 | At the start of your turn, deal 1 damage to each other creature. | Symmetric chip damage: it hurts your Goobers too, but they're cheap. Big creatures slowly erode | ✓ implemented | ✅ |
+| 28 | **Rally Drummer** | 3 | Creature: Goober | U | 2/3 | Whenever you attack with three or more creatures, attacking creatures you control get +1/+0 until end of round. | A team-wide temporary buff, the Goober way | ✓ implemented | ✅ |
+| 29 | **Chaos Engine** | 5 | Creature: Goober | R | 4/4 | At the start of each round, deal 1 damage to each other creature. | Symmetric chip damage: it hurts your Goobers too, but they're cheap. Big creatures slowly erode | ✓ implemented | ✅ |
 | 30 | **Grand Heist** | 3 | Sorcery | R | — | Each opponent loses all their Gold. Gain that much Gold. Invest 2: Create a 1/1 Goober for each Gold you gained this way. | Punishes banking. Your own Gold cap limits the take | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2

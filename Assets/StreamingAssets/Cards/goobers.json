@@ -117,7 +117,7 @@
     "cost": 5,
     "rarity": "Uncommon",
     "faction": "goobers",
-    "text": "Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn.",
+    "text": "Create three 1/1 Goobers. Your creatures get +1/+0 until end of round.",
     "spellEffects": [
       {"$type": "CreateTokensEffect", "tokenId": "goober_token", "count": 3},
       {"$type": "PumpYourCreaturesEffect", "power": 1}
@@ -163,7 +163,7 @@
     "cost": 5,
     "rarity": "Uncommon",
     "faction": "goobers",
-    "text": "Your creatures get +2/+0 and Trample until end of turn.",
+    "text": "Your creatures get +2/+0 and Trample until end of round.",
     "spellEffects": [
       {"$type": "PumpYourCreaturesEffect", "power": 2, "grants": "Trample"}
     ]
@@ -287,7 +287,7 @@
     "subtypes": ["Goober"],
     "rarity": "Rare",
     "faction": "goobers",
-    "text": "At the start of your turn, deal 1 damage to each other creature.",
+    "text": "At the start of each round, deal 1 damage to each other creature.",
     "triggers": [
       {
         "when": "StartOfYourTurn",
@@ -351,7 +351,7 @@
     "subtypes": ["Goober"],
     "rarity": "Uncommon",
     "faction": "goobers",
-    "text": "Whenever you attack with three or more creatures, attacking creatures you control get +1/+0 until end of turn.",
+    "text": "Whenever you attack with three or more creatures, attacking creatures you control get +1/+0 until end of round.",
     "triggers": [
       {
         "when": "PlayerAttacks",
@@ -370,7 +370,7 @@
     "cost": 1,
     "rarity": "Common",
     "faction": "goobers",
-    "text": "Target creature gets +2/+0 and Trample until end of turn. Invest 1: Your other Goobers get +1/+0 until end of turn.",
+    "text": "Target creature gets +2/+0 and Trample until end of round. Invest 1: Your other Goobers get +1/+0 until end of round.",
     "spellTargets": [
       {"spec": "Creature"}
     ],

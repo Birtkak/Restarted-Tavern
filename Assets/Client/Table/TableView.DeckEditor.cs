@@ -37,6 +37,9 @@ namespace RestartedTavern.Client.Table
         private int _edCost = -1;           // -1 all, 0-6, 7 = 7+
         private string _edSearch = "";
         private int _edPage;
+        /// <summary>The deck the editor was opened on (a built-in one opens as an unsaved copy).</summary>
+        private CardPool.DeckList _edFrom;
+        private int _edDeckPage;
         private string _edNote;
         private RectTransform _edZoom;
 
@@ -58,6 +61,7 @@ namespace RestartedTavern.Client.Table
         private void EditDeck(CardPool.DeckList from)
         {
             _edMode = EditorMode.Edit;
+            _edFrom = from;
             _edCards.Clear();
             _edId = from != null && from.Custom ? from.Id : null;
             _edName = from == null ? "My deck" : from.Custom ? from.Name : from.Name + " (copy)";
@@ -278,7 +282,17 @@ namespace RestartedTavern.Client.Table
             float y = 100f;
             if (_edMode == EditorMode.Decks)
             {
-                foreach (var d in decks.Take(11))
+                const int perPage = 10;
+                int deckPages = decks.Count > perPage + 1 ? (decks.Count + perPage - 1) / perPage : 1;
+                _edDeckPage = Mathf.Clamp(_edDeckPage, 0, deckPages - 1);
+                var shown = deckPages > 1 ? decks.Skip(_edDeckPage * perPage).Take(perPage) : decks;
+                if (deckPages > 1)
+                {
+                    Ui.Button(_overlay, "<", SideX + 24f, 980f, 44f, 50f, ButtonColor, () => { _edDeckPage--; _dirty = true; }, 22, _edDeckPage > 0);
+                    Ui.Tmp(_overlay, (_edDeckPage + 1) + " / " + deckPages, SideX + 72f, 980f, 76f, 50f, 18f, Ui.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
+                    Ui.Button(_overlay, ">", SideX + 152f, 980f, 44f, 50f, ButtonColor, () => { _edDeckPage++; _dirty = true; }, 22, _edDeckPage < deckPages - 1);
+                }
+                foreach (var d in shown)
                 {
                     var dweller = _db.Get(d.TavernDweller);
                     var fs = CardFaces.Style(dweller.TavernDwellerFactions.FirstOrDefault());
@@ -298,7 +312,8 @@ namespace RestartedTavern.Client.Table
                     _dirty = true;
                 }, 24);
             }
-            Ui.Tmp(_overlay, decks.Count(d => d.Custom) + " of your own", SideX + 30f, 980f, 180f, 50f, 18f, Ui.Gold, TextAnchor.MiddleLeft, FontStyle.Bold);
+            if (_edMode != EditorMode.Decks || decks.Count <= 11)
+                Ui.Tmp(_overlay, decks.Count(d => d.Custom) + " of your own", SideX + 30f, 980f, 180f, 50f, 18f, Ui.Gold, TextAnchor.MiddleLeft, FontStyle.Bold);
             Ui.Button(_overlay, _edMode == EditorMode.PickDweller ? "CANCEL" : "BACK", SideX + SideW - 200f, 976f, 170f, 58f, ButtonColor, () =>
             {
                 if (_edMode == EditorMode.PickDweller) _edMode = EditorMode.Decks;
@@ -374,7 +389,7 @@ namespace RestartedTavern.Client.Table
             if (_edNote != null || problem != null)
                 Ui.Tmp(_overlay, _edNote ?? problem, x, 928f, w, 40f, 15f, _edNote != null ? Ui.Hex("#80E080") : Ui.Hex("#FF9070"), TextAnchor.MiddleLeft);
 
-            Ui.Button(_overlay, "DONE", x, 976f, 150f, 58f, ContextOn, () => { if (EditorSave()) { _edMode = EditorMode.Decks; _dirty = true; } }, 24);
+            Ui.Button(_overlay, "DONE", x, 976f, 150f, 58f, ContextOn, () => { if (Untouched() || EditorSave()) { _edMode = EditorMode.Decks; _dirty = true; } }, 24);
             Ui.Button(_overlay, "SAVE", x + 158f, 976f, 110f, 58f, ButtonColor, () => EditorSave(), 20);
             Ui.Button(_overlay, "DELETE", x + 276f, 976f, w - 276f, 58f, Ui.Hex("#5A2A30"), EditorDelete, 18, _edId != null);
         }
@@ -436,6 +451,11 @@ namespace RestartedTavern.Client.Table
             }
         }
 
+        /// <summary>A built-in deck opened and left as it was: Done shouldn't save a copy of it.</summary>
+        private bool Untouched() =>
+            _edId == null && _edFrom != null && !_edFrom.Custom && _edName == _edFrom.Name + " (copy)"
+            && _edDweller == _edFrom.TavernDweller && _edCards.SequenceEqual(_edFrom.Cards);
+
         private void EditorDelete()
         {
             if (_edId == null) return;
@@ -444,7 +464,8 @@ namespace RestartedTavern.Client.Table
             {
                 CardPool.SaveCustomDecks(custom);
                 _edId = null;
-                _edNote = "Deleted (still here unsaved).";
+                _edNote = null;
+                _edMode = EditorMode.Decks; // back to the list, so Done can't save it again as a new copy
             }
             catch (Exception e) { _edNote = "Couldn't delete: " + e.Message; }
             for (int s = 0; s < 2; s++) _deck[s] = Mathf.Clamp(_deck[s], 0, CardPool.PrototypeDecks().Count - 1);
