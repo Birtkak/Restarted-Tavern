@@ -36,6 +36,32 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
+    /// "Attach up to one target Equipment you control to target creature you control. If no Equipment became attached,
+    /// that creature gets +P/+H until end of turn." (Sparkwrench's Power, 2026-10-10). The creature is target
+    /// <see cref="Effect.TargetIndex"/>, the optional Equipment the next one. Re-attaching an Equipment to the creature
+    /// it's already on attaches nothing, so the creature gets the bonus.
+    /// </summary>
+    public sealed class AttachEquipmentOrPumpEffect : Effect
+    {
+        public int Power { get; set; } = 1;
+        public int Health { get; set; } = 1;
+
+        public override void Resolve(EffectContext ctx)
+        {
+            var creature = ctx.CreatureAt(TargetIndex);
+            if (creature == null) return;
+            var t = ctx.TargetAt(TargetIndex + 1);
+            var equipment = t.HasValue && !t.Value.IsPlayer ? ctx.State.FindOnBattlefield(t.Value.Object) : null;
+            if (equipment != null && equipment.Controller == ctx.Controller && equipment.AttachedToObject != creature.Id)
+            {
+                ctx.Attach(equipment, creature);
+                if (equipment.AttachedToObject == creature.Id) return;
+            }
+            ctx.ModifyUntilEndOfTurn(creature.Id, Power, Health, Keyword.None);
+        }
+    }
+
+    /// <summary>
     /// "For each chosen creature, create a token copy of it. The copies gain Haste until end of
     /// turn." (Snik). Copies take the printed card (MTG 707.2): no damage, counters or buffs.
     /// </summary>

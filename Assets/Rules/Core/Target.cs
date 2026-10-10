@@ -52,6 +52,8 @@ namespace RestartedTavern.Rules
         public bool AttackingOrBlocking { get; set; }
         /// <summary>"with cost 4 or less": the printed cost of a creature or spell (Bounced Check, Counterfeit Coin). Null = any.</summary>
         public int? MaxCost { get; set; }
+        /// <summary>"target creature you control with Trample" (Mukk's Power): it has the keyword right now. None = any.</summary>
+        public Keyword Keyword { get; set; }
 
         public static TargetSlot Of(TargetSpec spec, bool optional = false, string subtype = null) =>
             new TargetSlot { Spec = spec, Optional = optional, Subtype = subtype };
@@ -60,7 +62,7 @@ namespace RestartedTavern.Rules
         public bool SameFilterAs(TargetSlot other) =>
             Spec == other.Spec && Subtype == other.Subtype && Damaged == other.Damaged
             && MaxRemainingHealth == other.MaxRemainingHealth && AttackingOrBlocking == other.AttackingOrBlocking
-            && MaxCost == other.MaxCost;
+            && MaxCost == other.MaxCost && Keyword == other.Keyword;
     }
 
     /// <summary>A chosen target: either a player or a game object.</summary>

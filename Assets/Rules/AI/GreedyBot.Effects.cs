@@ -265,6 +265,15 @@ namespace RestartedTavern.Rules.AI
                         v += EquipValue(s, me, Creature(s, target),
                             at.ToSource ? s.FindOnBattlefield(source) : Creature(s, T(at.TargetIndex + 1)));
                         break;
+                    case AttachEquipmentOrPumpEffect ap:
+                    {
+                        var creature = Creature(s, target);
+                        var equipment = Creature(s, T(ap.TargetIndex + 1));
+                        v += equipment != null && equipment.AttachedToObject != creature?.Id
+                            ? EquipValue(s, me, equipment, creature)
+                            : PumpValue(s, me, creature, ap.Power, ap.Health, Keyword.None);
+                        break;
+                    }
                     case CreateTokenCopiesEffect _:
                         foreach (var t in targets)
                         {

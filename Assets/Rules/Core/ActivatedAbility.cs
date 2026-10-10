@@ -26,6 +26,8 @@ namespace RestartedTavern.Rules
 
         /// <summary>"Activate only as a sorcery": your main phase, empty Chain.</summary>
         public bool SorcerySpeed { get; set; }
+        /// <summary>"Activate only if you have N or more Gold" (Auditor Prime), checked before paying. 0 = no condition.</summary>
+        public int ActivateOnlyWithGold { get; set; }
         /// <summary>"Activate only once each turn" (MTG: once in each turn, yours or not).</summary>
         public bool OncePerTurn { get; set; }
         /// <summary>Equip X (§10): sorcery speed, target creature you control, Equip cost modifiers apply.</summary>

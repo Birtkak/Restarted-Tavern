@@ -68,11 +68,12 @@ namespace RestartedTavern.Rules.Cards
             yield return mossbank;
 
             var auditor = TavernDweller("auditor_prime", "Auditor Prime", Wizards, Glitterworld,
-                "Your Invest and Equip costs are 1 lower (minimum 1). Power (1): Look at the top card of your deck. You may put it on the bottom.",
+                "Your Invest and Equip costs are 1 lower (minimum 1). Power (2): Draw a card. Activate only if you have 3 or more Gold.",
                 new ActivatedAbility
                 {
-                    Cost = 1, Effects = { new LookAtTopMayBottomEffect() },
-                    Text = "(1) Look at the top card of your deck. You may put it on the bottom.",
+                    // Changed 2026-10-10 (was "(1) Look at the top card, you may put it on the bottom"): rewards sitting on Gold.
+                    Cost = 2, ActivateOnlyWithGold = 3, Effects = { new DrawCardsEffect { Count = 1 } },
+                    Text = "(2) Draw a card. Activate only if you have 3 or more Gold.",
                 });
             auditor.Statics.Add(new CostModifierAbility { Kind = CostKind.Invest, Reduction = 1, NotBelowOne = true });
             auditor.Statics.Add(new CostModifierAbility { Kind = CostKind.Equip, Reduction = 1, NotBelowOne = true });
@@ -93,26 +94,31 @@ namespace RestartedTavern.Rules.Cards
             yield return skabba;
 
             var mukk = TavernDweller("mukk_the_grub_king", "Mukk the Grub King", Goobers, Wild,
-                "Your creatures with Trample get +1/+0. Power (2): A creature you control gains Trample until end of turn.",
+                "Your creatures with Trample get +1/+0. Power (3): Target creature you control with Trample fights target creature you don't control.",
                 new ActivatedAbility
                 {
-                    Cost = 2, Targets = { TargetSlot.Of(TargetSpec.CreatureYouControl) },
-                    Effects = { new PumpTargetEffect { Grants = Keyword.Trample } },
-                    Text = "(2) A creature you control gains Trample until end of turn.",
+                    // Changed 2026-10-10 (was "(2) A creature you control gains Trample until end of turn").
+                    Cost = 3,
+                    Targets =
+                    {
+                        new TargetSlot { Spec = TargetSpec.CreatureYouControl, Keyword = Keyword.Trample },
+                        TargetSlot.Of(TargetSpec.CreatureYouDontControl),
+                    },
+                    Effects = { new FightEffect() },
+                    Text = "(3) Target creature you control with Trample fights target creature you don't control.",
                 });
             mukk.Statics.Add(new AnthemAbility { RequiresKeyword = Keyword.Trample, Power = 1 });
             yield return mukk;
 
             var sparkwrench = TavernDweller("sparkwrench", "Sparkwrench", Goobers, Glitterworld,
-                "Your Equipment spells cost 1 less. Power (2): Attach an Equipment you control to another creature you control.",
+                "Your Equipment spells cost 1 less. Power (2): Attach up to one target Equipment you control to target creature you control. If no Equipment became attached, that creature gets +1/+1 until end of turn.",
                 new ActivatedAbility
                 {
+                    // Changed 2026-10-10 (was "(2) Attach an Equipment you control to another creature you control"): useful without Equipment.
                     Cost = 2,
-                    Targets = { TargetSlot.Of(TargetSpec.EquipmentYouControl), TargetSlot.Of(TargetSpec.CreatureYouControl) },
-                    // "another creature": not the one it's already attached to.
-                    TargetsAllowed = (s, source, t) => s.FindOnBattlefield(t[0].Object)?.AttachedToObject != t[1].Object,
-                    Effects = { new AttachTargetEquipmentEffect() },
-                    Text = "(2) Attach an Equipment you control to another creature you control.",
+                    Targets = { TargetSlot.Of(TargetSpec.CreatureYouControl), TargetSlot.Of(TargetSpec.EquipmentYouControl, optional: true) },
+                    Effects = { new AttachEquipmentOrPumpEffect() },
+                    Text = "(2) Attach up to one target Equipment you control to target creature you control. If none became attached, it gets +1/+1 until end of turn.",
                 });
             sparkwrench.Statics.Add(new CostModifierAbility { Kind = CostKind.Spell, OnlyType = CardType.Equipment, Reduction = 1 });
             yield return sparkwrench;

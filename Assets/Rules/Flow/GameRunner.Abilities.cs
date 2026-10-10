@@ -85,6 +85,7 @@ namespace RestartedTavern.Rules
                 if (ab.LimitedPerTurn && UsedThisTurn(source, i)) continue;
                 if (ab.TapCost && !CanPayTap(source)) continue;
                 if (ab.LifeCost > p.Life) continue;
+                if (p.Gold < ab.ActivateOnlyWithGold) continue;
 
                 var sacrifices = new List<ObjectId>();
                 if (ab.SacrificeCreatureCost)

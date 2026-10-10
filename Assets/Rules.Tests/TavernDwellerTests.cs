@@ -170,30 +170,38 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void Auditor_LowersInvestAndEquip_AndThePowerLooksAtTheTopCard()
+        public void Auditor_LowersInvestAndEquip_AndThePowerDrawsAtThreeGold()
         {
             var g = TestGame.Classic();
             var auditor = g.SetTavernDweller(g.Active, "auditor_prime");
             var ledger = g.AddToHand(g.Active, "the_grand_ledger"); // Invest 3
             g.SetMana(g.Active, 7);
             g.P(g.Active).Gold = 2;
-            Assert.IsTrue(g.Legal(g.Active).Any(a => a.Card == ledger.Id && a.Invest), "Invest 3 → 2");
+            Assert.IsTrue(g.Legal(g.Active).Any(a => a.Card == ledger.Id && a.Invest), "Invest 3 -> 2");
 
             var rail = g.AddToBattlefield(g.Active, "rail_cannon"); // Equip 3
             g.AddToBattlefield(g.Active, "hired_sellsword");
             g.SetMana(g.Active, 2);
             g.P(g.Active).Gold = 0;
-            Assert.AreEqual(1, g.Activations(g.Active, rail).Count, "Equip 3 → 2");
+            Assert.AreEqual(1, g.Activations(g.Active, rail).Count, "Equip 3 -> 2");
+        }
 
-            var top = g.P(g.Active).Deck[0].Id;
-            g.Do(g.Activations(g.Active, auditor).Single());
+        [Test]
+        public void Auditor_Power_OnlyWithThreeOrMoreGold_PaidGoldFirst()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            var auditor = g.SetTavernDweller(me, "auditor_prime");
+            g.SetMana(me, 2);
+            g.P(me).Gold = 2;
+            Assert.AreEqual(0, g.Activations(me, auditor).Count, "2 Gold: can't activate, even with mana to pay");
+            g.P(me).Gold = 3;
+            int hand = g.P(me).Hand.Count;
+            g.Do(g.Activations(me, auditor).Single());
+            Assert.AreEqual(1, g.P(me).Gold, "paid with Gold first");
+            Assert.AreEqual(2, g.P(me).Mana);
             g.PassRound();
-            Assert.AreEqual(DecisionKind.TopOrBottom, g.State.Pending.Kind);
-            Assert.AreEqual(top, g.State.Pending.Card);
-            g.Do(PlayerAction.ChooseOption(g.Active, 1));
-            Assert.AreNotEqual(top, g.P(g.Active).Deck[0].Id);
-            Assert.AreEqual("hired_sellsword", g.P(g.Active).Deck[g.P(g.Active).Deck.Count - 1].DefinitionId);
-            Assert.AreEqual(g.Active, g.State.PriorityPlayer, "priority comes back after the choice");
+            Assert.AreEqual(hand + 1, g.P(me).Hand.Count);
         }
 
         [Test]
@@ -212,19 +220,26 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void Mukk_TrampleCreaturesGetPlusOne_AndThePowerGivesTrample()
+        public void Mukk_TrampleCreaturesGetPlusOne_AndThePowerFightsWithATrampler()
         {
             var g = TestGame.AtFirstMainPhase();
-            var mukk = g.SetTavernDweller(g.Active, "mukk_the_grub_king");
-            var hog = g.AddToBattlefield(g.Active, "hog_rider");      // 3/3 Trample
-            var sword = g.AddToBattlefield(g.Active, "hired_sellsword"); // 2/3
+            var me = g.Active;
+            var mukk = g.SetTavernDweller(me, "mukk_the_grub_king");
+            var hog = g.AddToBattlefield(me, "hog_rider");      // 3/3 Trample
+            var sword = g.AddToBattlefield(me, "hired_sellsword"); // 2/3, no Trample
+            var enemy = g.AddToBattlefield(g.Other, "tavern_bouncer"); // 2/5
             Assert.AreEqual(4, g.Stats(hog).Power);
             Assert.AreEqual(2, g.Stats(sword).Power);
-            g.SetMana(g.Active, 2);
-            g.Do(g.Activations(g.Active, mukk).Single(a => a.Target == Target.ForObject(sword.Id)));
+            g.SetMana(me, 2);
+            Assert.AreEqual(0, g.Activations(me, mukk).Count, "costs 3");
+            g.SetMana(me, 3);
+            var fights = g.Activations(me, mukk);
+            Assert.AreEqual(1, fights.Count, "only the Trample creature can fight, only against their creature");
+            Assert.AreEqual(Target.ForObject(hog.Id), fights[0].Targets[0]);
+            g.Do(fights[0]);
             g.PassRound();
-            Assert.IsTrue(g.Stats(sword).Has(Keyword.Trample));
-            Assert.AreEqual(3, g.Stats(sword).Power, "granted Trample counts for the passive (layer 6 before 7c)");
+            Assert.AreEqual(4, enemy.Damage, "the passive's +1/+0 counts in the fight");
+            Assert.AreEqual(2, hog.Damage);
         }
 
         [Test]
@@ -245,11 +260,27 @@ namespace RestartedTavern.Rules.Tests
             g.PassToStep(Step.Main1, g.Other);
             g.P(me).Gold = 2;
             g.Pass();
-            var moves = g.Activations(me, wrench);
-            Assert.AreEqual(1, moves.Count, "only to another creature");
-            g.Do(moves[0]);
+            var uses = g.Activations(me, wrench);
+            Assert.AreEqual(4, uses.Count, "each creature, with or without the Equipment");
+            g.Do(uses.Single(u => u.Targets[0] == Target.ForObject(b.Id) && u.Targets.Length == 2));
             g.PassRound();
             Assert.AreEqual(b.Id, onField.AttachedToObject);
+        }
+
+        [Test]
+        public void Sparkwrench_PowerPumpsWhenNoEquipmentAttaches()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            var wrench = g.SetTavernDweller(me, "sparkwrench");
+            var a = g.AddToBattlefield(me, "hired_sellsword"); // 2/3
+            g.SetMana(me, 2);
+            var uses = g.Activations(me, wrench);
+            Assert.AreEqual(1, uses.Count, "no Equipment: just the creature");
+            g.Do(uses[0]);
+            g.PassRound();
+            Assert.AreEqual(3, g.Stats(a).Power);
+            Assert.AreEqual(4, g.Stats(a).MaxHealth);
         }
 
         [Test]

@@ -547,6 +547,7 @@ namespace RestartedTavern.Rules
                     if (slot.Subtype != null && !def.HasSubtype(slot.Subtype)) continue;
                     if (slot.Damaged && c.Damage <= 0) continue;
                     if (slot.MaxCost.HasValue && def.Cost > slot.MaxCost.Value) continue;
+                    if (slot.Keyword != Keyword.None && !Stats(c).Has(slot.Keyword)) continue;
                     if (slot.MaxRemainingHealth.HasValue && Stats(c).RemainingHealth > slot.MaxRemainingHealth.Value) continue;
                     if (slot.AttackingOrBlocking && (S.Combat == null || !(S.Combat.IsAttacking(c.Id) || S.Combat.IsBlocking(c.Id)))) continue;
                     bool ok;
