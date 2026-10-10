@@ -28,13 +28,13 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 11 | **Arc Welder** | 3 | Creature: Citizen | U | 2/3 | Whenever you pay an Equip cost, deal 1 damage to any target. | Ties the two themes together: equipping causes pings | ✅ |
 | 12 | **Rail Cannon** | 4 | Equipment | U | — | Equipped creature gets +3/+0 and has "Whenever this creature attacks, deal 1 damage to a creature." Equip 3. | Heavy weaponry | ✅ |
 | 13 | **Riot Suppressor** | 4 | Creature: Construct | U | 3/3 | Arrival: Deal 1 damage to each enemy creature. | A mini-sweeper on a body. Wrecks Goober tokens | ✅ |
-| 14 | **Grid Overload** | 4 | Sorcery | R | — | Deal 1 damage to each enemy creature three times. | From the samples. Each ping is a separate damage event | ✅ |
+| 14 | **Grid Overload** | 4 | Sorcery | R | — | Deal 1 damage to each enemy creature twice. | From the samples. Balance 2026-10-10: three times → twice. Each ping is a separate damage event | ✅ |
 | 15 | **Megacorp Exosuit** | 5 | Equipment | R | — | Equipped creature gets +3/+3 and has Flying and Trample. Equip 3. | Turns any citizen into a big threat | ✅ |
 | 16 | **Patrol Captain** | 5 | Creature: Citizen | U | 4/5 | Equipped creatures you control get +1/+1. | An Equipment "lord" | ✅ |
 | 17 | **Hover Tank** | 5 | Creature: Construct | C | 4/5 | Arrival: Deal 1 damage to a creature. | A sturdy body with a ping | ✅ |
 | 18 | **Orbital Strike Network** | 6 | Relic | R | — | At the start of your turn, deal 1 damage to each enemy creature and each opponent. | A ping engine that slowly grinds the opposing board down | ✅ |
 | 19 | **Titan-Frame Guardian** | 6 | Creature: Construct | R | 5/7 | Whenever an Equipment becomes attached to this, heal it fully and draw a card. | A huge Equipment carrier that repairs itself | ✅ |
-| 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. Your Equip costs are 0. At the end of your turn, deal 1 damage to any target for each Equipment you control. | The city's AI. Both themes at full power | ✅ |
+| 20 | **Archon Lumen, Mind of the City** | 7 | Creature: Construct | L | 5/7 | Flying. At the end of your turn, deal 1 damage to any target for each Equipment you control. | Balance 2026-10-10: lost "Your Equip costs are 0". The city's AI. Both themes at full power | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 3 · 5: 3 · 6: 2 · 7+: 1 · Creatures: 11 · Equipment: 5 · Spells/Relics: 4

@@ -43,7 +43,6 @@ namespace RestartedTavern.Rules
     {
         None = 0,
         Trample = 1 << 0,
-        Haste = 1 << 1,
         Flying = 1 << 2,
         Lifelink = 1 << 3,
         Reach = 1 << 4,

@@ -17,7 +17,7 @@ namespace RestartedTavern.Rules
         public bool HasX { get; set; }
         /// <summary>"Pay N Gold": paid only with Gold (decided 2026-10-09).</summary>
         public int GoldCost { get; set; }
-        /// <summary>"Tap: ..." Creatures can't use it the turn they arrive unless they have Haste (§7.4).</summary>
+        /// <summary>"Tap: ..." (no summoning sickness, §7.4: usable the round the permanent arrives).</summary>
         public bool TapCost { get; set; }
         /// <summary>"Sacrifice a creature: ..." The creature is chosen as part of the action.</summary>
         public bool SacrificeCreatureCost { get; set; }

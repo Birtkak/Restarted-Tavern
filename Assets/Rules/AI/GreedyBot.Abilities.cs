@@ -129,7 +129,7 @@ namespace RestartedTavern.Rules.AI
                 if (!blocked && attack != null && power > 0 && Stats(s, c).Power + power >= s.GetPlayer(attack.Defender).Life) return 100;
                 return blocked ? (power + health) * 0.6 + trample : power * 0.6;
             }
-            bool canAttack = !c.Tapped && (!c.SummoningSick || Stats(s, c).Has(Keyword.Haste));
+            bool canAttack = !c.Tapped;
             if (s.ActivePlayer == me && (s.Step == Step.Main1 || s.Step == Step.BeginCombat) && canAttack)
                 return 0.3 * (power + 0.5 * health) + 0.3 * trample;
             return 0;

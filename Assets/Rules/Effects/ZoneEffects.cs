@@ -75,12 +75,11 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
-    /// "Return target creature card from your graveyard to the battlefield. It gains Haste. At the end of your
-    /// turn, exile it." (Encore From Beyond)
+    /// "Return target creature card from your graveyard to the battlefield. At the end of your turn, exile it."
+    /// (Encore From Beyond)
     /// </summary>
     public sealed class ReanimateEffect : Effect
     {
-        public bool GainsHaste { get; set; }
         public bool ExileAtEndOfTurn { get; set; }
 
         private static readonly TriggeredAbility ExileIt = new TriggeredAbility
@@ -96,7 +95,6 @@ namespace RestartedTavern.Rules
             if (card == null || card.Zone != Zone.Graveyard) return;
             var permanent = ctx.PutOntoBattlefield(card);
             if (permanent == null) return;
-            if (GainsHaste) ctx.ModifyUntilEndOfTurn(permanent.Id, 0, 0, Keyword.Haste);
             if (ExileAtEndOfTurn) ctx.AddDelayedTrigger(ExileIt, permanent.Id);
         }
     }

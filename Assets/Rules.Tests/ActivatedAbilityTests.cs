@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace RestartedTavern.Rules.Tests
 {
-    /// <summary>Activated abilities (MTG 602): costs, payment (§5.2), timing, Tap and summoning sickness (§7.4), once each turn.</summary>
+    /// <summary>Activated abilities (MTG 602): costs, payment (§5.2), timing, Tap (no summoning sickness, §7.4), once each turn.</summary>
     public class ActivatedAbilityTests
     {
         [Test]
@@ -27,20 +27,16 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void TapAbility_NotOnTheTurnItArrives_UnlessHaste()
+        public void TapAbility_UsableTheRoundItArrives()
         {
             var g = TestGame.AtFirstMainPhase();
-            var elder = g.AddToBattlefield(g.Active, "grove_elder");
+            var elder = g.AddToHand(g.Active, "grove_elder");
             g.AddToBattlefield(g.Active, "tavern_bouncer", damage: 1);
-            elder.SummoningSick = true;
-            Assert.IsEmpty(g.Activations(g.Active, elder), "§7.4: summoning sick");
-
-            // Overclock Rig grants "Tap: Deal 1 damage" — a Haste creature can use it right away.
-            var rascal = g.AddToBattlefield(g.Active, "goober_rascal");
-            rascal.SummoningSick = true;
-            var rig = g.AddToBattlefield(g.Active, "overclock_rig");
-            rig.AttachedToObject = rascal.Id;
-            Assert.IsNotEmpty(g.Activations(g.Active, rascal), "Haste ignores summoning sickness");
+            g.SetMana(g.Active, 10);
+            g.Do(g.Legal(g.Active).First(a => a.Card == elder.Id));
+            g.PassRound();
+            var onField = g.OnBattlefield(g.Active, "grove_elder");
+            Assert.IsNotEmpty(g.Activations(g.Active, onField), "§7.4: no summoning sickness");
         }
 
         [Test]
@@ -167,7 +163,6 @@ namespace RestartedTavern.Rules.Tests
 
             var copies = g.P(me).Battlefield.Where(c => c.IsToken && c.DefinitionId == "goober_warchief").ToList();
             Assert.AreEqual(1, copies.Count);
-            Assert.IsTrue(g.Stats(copies[0]).Has(Keyword.Haste), "the copies gain Haste");
             Assert.AreEqual(3, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
         }
 

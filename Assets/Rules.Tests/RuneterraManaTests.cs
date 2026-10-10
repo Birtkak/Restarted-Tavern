@@ -11,12 +11,7 @@ namespace RestartedTavern.Rules.Tests
     /// </summary>
     public class RuneterraManaTests
     {
-        private static TestGame Game(bool summoningSickness = true)
-        {
-            var format = FormatConfig.RuneterraRotation();
-            format.NoSummoningSickness = !summoningSickness;
-            return TestGame.AtFirstMainPhase(format: format);
-        }
+        private static TestGame Game() => TestGame.AtFirstMainPhase(format: FormatConfig.RuneterraRotation());
 
         /// <summary>The seats of the next <paramref name="count"/> turns, starting with the current one.</summary>
         private static List<PlayerId> TurnOrder(TestGame g, int count)
@@ -161,19 +156,6 @@ namespace RestartedTavern.Rules.Tests
             g.Do(g.Legal(me).Single(a => a.Card == tab.Id && a.X == 1));
             Assert.AreEqual(2, g.P(me).Mana, "X = 1 Gold set aside; the cost took the other 2 Gold first, then 1 mana");
             Assert.AreEqual(0, g.P(me).Gold);
-        }
-
-        [Test]
-        public void SummoningSickness_CanBeTurnedOff()
-        {
-            var g = Game(summoningSickness: false);
-            var me = g.Active;
-            g.SetMana(me, 1);
-            var drone = g.AddToHand(me, "goober_rascal"); // cost 1
-            g.Do(g.Legal(me).First(a => a.Kind == ActionKind.PlayCard && a.Card == drone.Id));
-            g.PassRound(); // resolve it
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
-            Assert.IsTrue(g.Legal(me).Any(a => a.Kind == ActionKind.DeclareAttacker), "it can attack the turn it arrives");
         }
     }
 }

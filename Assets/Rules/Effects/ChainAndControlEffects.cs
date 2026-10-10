@@ -87,14 +87,13 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
-    /// "Gain control of target creature [until end of turn]. Untap it. It gains Haste [until end of turn]."
+    /// "Gain control of target creature [until end of turn]. Untap it."
     /// (Silver-Tongued Deal), "Its controller gains Gold equal to its cost and draws a card." (Hostile Takeover).
     /// </summary>
     public sealed class GainControlEffect : Effect
     {
         public bool UntilEndOfTurn { get; set; }
         public bool Untap { get; set; }
-        public bool GainsHaste { get; set; }
         public bool PreviousControllerGainsGoldEqualToCost { get; set; }
         public int PreviousControllerDraws { get; set; }
 
@@ -105,7 +104,6 @@ namespace RestartedTavern.Rules
             var previous = c.Controller;
             ctx.GainControl(c, UntilEndOfTurn);
             if (Untap) ctx.Untap(c);
-            if (GainsHaste) ctx.ModifyUntilEndOfTurn(c.Id, 0, 0, Keyword.Haste);
             if (previous == ctx.Controller) return;
             if (PreviousControllerGainsGoldEqualToCost) ctx.GainGold(previous, ctx.Cards.Get(c.DefinitionId).Cost);
             if (PreviousControllerDraws > 0) ctx.Draw(previous, PreviousControllerDraws);

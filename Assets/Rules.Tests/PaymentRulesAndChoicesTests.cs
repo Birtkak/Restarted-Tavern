@@ -244,7 +244,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void EncoreFromBeyond_ReturnsWithHaste_ThenIsExiledAtEndOfTurn()
+        public void EncoreFromBeyond_Returns_ThenIsExiledAtEndOfTurn()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
@@ -259,7 +259,6 @@ namespace RestartedTavern.Rules.Tests
             g.PassRound();
             var rider = g.OnBattlefield(me, "hog_rider");
             Assert.IsNotNull(rider);
-            Assert.IsTrue(g.Stats(rider).Has(Keyword.Haste));
             Assert.AreEqual(1, g.State.DelayedTriggers.Count);
 
             g.PassUntil(s => s.Step == Step.End && s.Chain.Count > 0);

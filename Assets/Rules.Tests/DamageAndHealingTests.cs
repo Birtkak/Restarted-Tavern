@@ -207,18 +207,18 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void NeonExecutioner_DestroysEnemiesLeftAtTwoOrLess()
+        public void NeonExecutioner_DestroysEnemiesLeftAtOneOrLess()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
             g.AddToBattlefield(me, "neon_executioner");
-            var big = g.AddToBattlefield(g.Other, "tavern_bouncer");            // 5 → 3 left after 2
-            var low = g.AddToBattlefield(g.Other, "tavern_bouncer", damage: 1); // 4 → 2 left after 2
+            var big = g.AddToBattlefield(g.Other, "tavern_bouncer", damage: 1); // 4 → 2 left after 2
+            var low = g.AddToBattlefield(g.Other, "tavern_bouncer", damage: 2); // 3 → 1 left after 2
             var mine = g.AddToBattlefield(me, "tavern_bouncer", damage: 1);
 
             Cast(g, me, "spark_snot", Target.ForObject(big.Id));
             g.PassRound();
-            Assert.AreEqual(0, g.State.Chain.Count, "3 left: no trigger");
+            Assert.AreEqual(0, g.State.Chain.Count, "2 left: no trigger (1 or less since the 2026-10-10 balance pass)");
             Cast(g, me, "spark_snot", Target.ForObject(low.Id));
             g.PassRound();
             Assert.AreEqual(1, g.State.Chain.Count);

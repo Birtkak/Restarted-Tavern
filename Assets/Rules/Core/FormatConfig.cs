@@ -51,12 +51,6 @@ namespace RestartedTavern.Rules
         /// <summary>The attack token (§6.1, Legends of Runeterra): only the round leader may attack in the round.</summary>
         public bool AttackToken { get; set; } = true;
 
-        /// <summary>
-        /// Creatures can attack and use Tap abilities the round they arrive (§7.4, Legends of Runeterra). With
-        /// alternating actions the opponent always gets an action in between. false: MTG summoning sickness.
-        /// </summary>
-        public bool NoSummoningSickness { get; set; } = true;
-
         /// <summary>Spells and abilities pay Gold first, then mana (§5.2, Runeterra spends spell mana first). Permanents use mana only.</summary>
         public bool GoldFirstAlways { get; set; } = true;
 
@@ -93,8 +87,8 @@ namespace RestartedTavern.Rules
         public static FormatConfig Standard() => new FormatConfig();
 
         /// <summary>
-        /// MTG turns (A B A B, everyone attacks on their own turn, summoning sickness, the first player skips their first
-        /// draw) with the round pool and Gold first. Measured 2026-10-10: the first player wins 75–85% of aggro mirrors.
+        /// MTG turns (A B A B, everyone attacks on their own turn, the first player skips their first draw) with the round
+        /// pool and Gold first. There is no summoning sickness in any format since 2026-10-10 (§7.4). Measured 2026-10-10: the first player wins 75–85% of aggro mirrors.
         /// </summary>
         public static FormatConfig MtgTurns() => new FormatConfig
         {
@@ -102,7 +96,6 @@ namespace RestartedTavern.Rules
             AlternatingActions = false,
             RotateRoundLeader = false,
             AttackToken = false,
-            NoSummoningSickness = false,
             FirstPlayerSkipsDraw = true,
         };
 

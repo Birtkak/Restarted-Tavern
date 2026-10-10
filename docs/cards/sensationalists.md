@@ -29,11 +29,11 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 13 | **Cult Choirmaster** | 4 | Creature: Human | U | 3/4 | Whenever another creature you control dies, each opponent loses 1 life and you gain 1 life. | The drain engine for sacrifice decks | ✅ |
 | 14 | **Curse of the Spotlight** | 4 | Curse | R | — | Attach to an opponent. Whenever a creature that player controls dies, they lose 2 life and you draw a card. | Puts an opponent "in the spotlight". A strong Curse on a player | ✅ |
 | 15 | **Midnight Ringmaster** | 5 | Creature: Human | C | 4/5 | Lifelink. Arrival: You may sacrifice another creature. If you do, draw 2 cards. | The ringmaster of a horror circus. A sturdy mid-game body | ✅ |
-| 16 | **Exhumation Broadcast** | 5 | Sorcery | R | — | Choose a creature card in each graveyard. Put them onto the battlefield under your control. | A live broadcast from the graveyard. Steals from opponents' graveyards too | ✅ |
+| 16 | **Exhumation Broadcast** | 8 | Sorcery | R | — | Choose a creature card in each graveyard. Put them onto the battlefield under your control. | Balance 2026-10-10: cost 5 → 8. A live broadcast from the graveyard. Steals from opponents' graveyards too | ✅ |
 | 17 | **Wraith Swarm** | 5 | Sorcery | U | — | Create three 1/1 Spirits with Flying. | Evasive pressure and sacrifice fodder | ✅ |
 | 18 | **Abyssal Headliner** | 6 | Creature: Horror | R | 6/6 | Flying. At the start of your turn, sacrifice another creature or lose 3 life. | A big creature with a drawback, as the faction pie calls for | ✅ |
 | 19 | **Mass Hysteria** | 6 | Sorcery | R | — | All creatures get -3/-3 until end of turn. You gain 1 life for each creature that dies this way. | Board wipe. With permanent damage, -3/-3 also kills big creatures that are already wounded | ✅ |
-| 20 | **Madame Morbida, Star of the Séance** | 8 | Creature: Human | L | 6/7 | Flying. Lifelink. Arrival: Return all creature cards with cost 3 or less from your graveyard to the battlefield. | Ultimate payoff: the whole cast comes back for an encore | ✅ |
+| 20 | **Madame Morbida, Star of the Séance** | 8 | Creature: Human | L | 6/7 | Flying. Arrival: Return all creature cards with cost 2 or less from your graveyard to the battlefield. | Balance 2026-10-10: lost Lifelink, cost 3 → 2 returns. Ultimate payoff: the whole cast comes back for an encore | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 3 · 5: 3 · 6: 2 · 7+: 1 · Creatures: 9 · Spells/Curses: 11 (3 Curses)
@@ -57,9 +57,9 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 24 | **Body Snatcher** | 3 | Creature: Horror | C | 3/3 | Arrival: Exile a creature card from a graveyard. If you do, gain 2 life. | Graveyard hate on a body (useful in the mirror). Heals the Tavern Dweller | ✓ implemented | ✅ |
 | 25 | **Blood Price** | 2 | Instant | C | — | As an extra cost, pay 3 life. Destroy target damaged creature. | Profits from damage others dealt. Cheap removal that only works on wounded creatures | ✓ implemented | ✅ |
 | 26 | **Hex of Hollow Bones** | 4 | Curse | U | — | Attach to an enemy creature. It gets -1/-1 for each creature card in your graveyard (up to -4/-4). | Grows with the graveyard. -X/-X lowers max Health, so it also finishes off damaged creatures | ✓ implemented | ✅ |
-| 27 | **Encore From Beyond** | 3 | Sorcery | U | — | Return target creature card from your graveyard to the battlefield. It gains Haste. At the end of your turn, exile it. | One last show: a free attack, or an Arrival trigger used again | ✓ implemented | ✅ |
+| 27 | **Encore From Beyond** | 3 | Sorcery | U | — | Return target creature card from your graveyard to the battlefield. At the end of your turn, exile it. | One last show: a free attack, or an Arrival trigger used again | ✓ implemented | ✅ |
 | 28 | **Stage Medium** | 4 | Creature: Human | U | 3/4 | Lifelink. Whenever a Curse you control is put into a graveyard from the battlefield, draw a card. | Curses fall off when their creature dies (GAME_DESIGN §10), and this turns that into cards | ✓ implemented | ✅ |
-| 29 | **The Final Act** | 7 | Sorcery | R | — | Destroy all creatures. Each opponent loses 1 life and you gain 1 life for each creature that died this way. | A board wipe with a drain | ✓ implemented | ✅ |
+| 29 | **The Final Act** | 7 | Sorcery | R | — | Destroy all creatures. | A board wipe. Balance 2026-10-10: the drain is gone | ✓ implemented | ✅ |
 | 30 | **Curse of Rot** | 5 | Curse | R | — | Attach to an opponent. At the start of that player's turn, deal 1 damage to each creature they control. Creatures they control can't be healed. | Permanent damage at its cruelest. A hard answer to Wild healing decks | ✓ implemented | ✅ |
 
 **v0.2 progress:** 10 approved · C 5 · U 3 · R 2

@@ -123,13 +123,8 @@ namespace RestartedTavern.Rules
             }
         }
 
-        /// <summary>§7.4: creatures can't pay a Tap cost the turn they arrive, unless they have Haste. Other permanents can.</summary>
-        private bool CanPayTap(CardInstance source)
-        {
-            if (source.Zone != Zone.Battlefield || source.Tapped) return false;
-            if (!Def(source).IsCreature) return true;
-            return !source.SummoningSick || S.Format.NoSummoningSickness || Stats(source).Has(Keyword.Haste);
-        }
+        /// <summary>An untapped permanent on the battlefield. No summoning sickness (§7.4): creatures can tap the round they arrive.</summary>
+        private bool CanPayTap(CardInstance source) => source.Zone == Zone.Battlefield && !source.Tapped;
 
         // ------------------------------------------------------------------ activation
 

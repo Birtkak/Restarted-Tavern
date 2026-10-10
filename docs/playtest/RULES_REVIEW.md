@@ -113,6 +113,40 @@ Healing your Tavern Dweller stops at starting life (§11.1). Lifelink "heals". T
 
 ---
 
+# Balance pass 1 (2026-10-10)
+
+Under Runeterra rounds, cross-faction balance was poor: Goober 71%, Zoo 69%, Jungle 66%, Vesper 42%, Sparkwrench 28%, Auditor 23% against the other five decks (spread 18.9 points, worst matchup 94%). Target agreed with the user: **each deck 45–55% against the field, no matchup past 65%**.
+
+**Method** (SimRunner, Greedy bots, Standard rules):
+- `-scan`: every card in the pool (4 copies) in each prototype deck's weakest slot, against the field; power = win% change against a plain 2/3 filler. Table: [CARD_POWER.md](CARD_POWER.md).
+- `-optimize`: for a deck, find its weakest card, screen every legal replacement, confirm the best on fresh seeds.
+- `-balance`: the win-rate matrix; card tweaks tested on a copy of the card files (`-data`) before anything changed.
+
+**Findings**
+- The pool had bombs the prototype decks didn't play: one swap moved a deck by 15–31 points (Madame Morbida, The Final Act, Grid Overload, Archon Lumen, Snik, Hush Money, Exhumation Broadcast). Deck-only tuning just became an arms race (Vesper reached 94%).
+- Many non-creature cards are worse than a vanilla 2/3 for 2 (Relics, Equipment, Gold cards: Insider Trading −17, Golden Parachute −13, Mercenary Contract −13). Part of that may be the bot.
+
+**Decisions** (user, Decision Log 2026-10-10)
+
+| Change | Measured |
+|---|---|
+| Madame Morbida: no Lifelink, returns cost 2 or less | power +17.6 → +9.8 |
+| The Final Act: "Destroy all creatures." (no drain) | +16.3 → +7.2 |
+| Exhumation Broadcast: cost 5 → 8 | +13.6 → +7.9 |
+| Grid Overload: twice instead of three times | +11.7 → +3.8 |
+| The Dealer: 7 mana 3/5 (was 6, 4/6) | +10.4 → +1.3 |
+| Archon Lumen: no "Equip costs are 0" | +9.3 → +7.8 |
+| Neon Executioner: 7 mana, destroys at 1 Health or less | Zoo vs Sparkwrench 72% → 67% |
+| Haste and summoning sickness removed from the game | Haste did nothing under the rounds |
+| Deck swaps: Auditor (Rail Cannon → Hush Money, Overclock Rig → Archon Lumen), Sparkwrench (Fuse Goober → Snik, Marksman Scope → Retired Champion), Vesper (Fatal Rumor → Retired Champion) | spread 18.5 → 3.9 |
+| Kept as printed: Final Broadcast (X+3 measured +7.7), Hush Money (every version stayed +9 to +11), Mob Rush (two Goobers: Goober 57% → 52%) | |
+
+**Result** (2,000 games per pairing): Goober 58.4%, Sparkwrench 51.8%, Auditor 48.2%, Zoo 48.1%, Vesper 47.2%, Jungle 46.3%; spread 3.4 points. Past 65%: Goober vs Auditor 69.4%, Auditor vs Zoo 67.5%. Goober was left at 58% by choice; swapping Mob Rush out of the Goober list for Chaos Engine measured 52.4% (spread 2.0) if it's wanted later.
+
+**Next**: Sproutling (+12.3: it grows every round now), Final Broadcast (+12.5), the bottom of the power table (buffs), then re-tune the decks.
+
+---
+
 # Design review (2026-10-10): Runeterra-style mana
 
 A read-through of the Standard rules after the switch to Runeterra-style mana (GAME_DESIGN §5–6.1), using the bot runs in [SIMULATION_REPORT.md](SIMULATION_REPORT.md) ("Runeterra-style mana") and [PLAYTEST.md](PLAYTEST.md). Numbers are from mirrors only; cross-faction games under these rules haven't been measured yet.
@@ -122,7 +156,7 @@ A read-through of the Standard rules after the switch to Runeterra-style mana (G
 | Flaw | Decision |
 |---|---|
 | R1, R3. Double turns, going first | ✅ **Legends of Runeterra rounds** (GAME_DESIGN §6): alternating single actions, the round leader holds the attack token (passes every round), no summoning sickness, everyone draws in round 1, no going-first compensation. Measured below. |
-| R2. Attack token and card values | Token kept (real LoR). Still open: "whenever you attack" cards trigger every other round, and **Haste is now blank** (GAME_DESIGN §7.4, 12 cards). Tavern Dweller Powers are now once each round instead of up to twice. Card pass needed. |
+| R2. Attack token and card values | Token kept (real LoR). Still open: "whenever you attack" cards trigger every other round, and Haste was removed from the game (GAME_DESIGN §7.4). Tavern Dweller Powers are now once each round instead of up to twice. Card pass needed. |
 | R4. Multiplayer | Still open (GAME_DESIGN §13). The engine's multiplayer format keeps MTG turns for now. |
 | 8. Invest payment bug | ✅ Fixed: Gold-only parts are set aside before the cost takes Gold first (`Payment.TrySplit`, GAME_DESIGN §5.2). |
 | 11. Weak Tavern Dwellers | ✅ New Powers for Mukk, Sparkwrench and Auditor Prime (cards/tavern_dwellers.md). |

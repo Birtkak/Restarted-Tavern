@@ -178,7 +178,7 @@ Gold spent per game is identical for caps 3, 5, 7 and 10. Only the wasted mana c
 
 ## What to look for in human playtests
 
-1. **Runeterra rounds** (Standard since 2026-10-10, GAME_DESIGN §6): does trading single actions feel good, or slow? Do you hold back to answer, or pass to make the opponent commit first? Does either seat feel stronger? With no summoning sickness, do new creatures attacking right away feel fair? Do the Haste and "whenever you attack" cards feel weak?
+1. **Runeterra rounds** (Standard since 2026-10-10, GAME_DESIGN §6): does trading single actions feel good, or slow? Do you hold back to answer, or pass to make the opponent commit first? Does either seat feel stronger? With no summoning sickness, do new creatures attacking right away feel fair? Do the "whenever you attack" cards feel weak?
 2. **Gold**: do you ever hold mana back on purpose to bank Gold? When does the cap of 3 bite? Does "Gold first" ever pay with Gold you wanted to keep?
 3. **Permanent damage**: do wounded creatures change your decisions (attack, block, heal)? Is it readable on the table?
 4. **Curve**: are there turns where you have nothing to do? Does the 7-card hand limit force discards?

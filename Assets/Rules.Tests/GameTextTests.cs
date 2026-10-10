@@ -21,13 +21,11 @@ namespace RestartedTavern.Rules.Tests
         {
             var g = TestGame.AtFirstMainPhase();
             var bomber = g.AddToBattlefield(g.Active, "barrel_bomber", damage: 1);
-            bomber.SummoningSick = true;
             var text = new GameText(g.Engine.Cards);
             string details = text.Details(g.State, bomber);
             StringAssert.StartsWith("Barrel Bomber\nCost 4 · Creature — Goober · Goobers · Common\nPower/Health 3/3\n", details);
             StringAssert.Contains("Damage 1: 2 Health left", details);
             StringAssert.Contains(g.Engine.Cards.Get("barrel_bomber").Text, details);
-            StringAssert.Contains("summoning sick", details);
             Assert.AreEqual("Main phase 1", GameText.StepName(Step.Main1));
         }
 

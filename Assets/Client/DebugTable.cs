@@ -565,9 +565,7 @@ namespace RestartedTavern.Client
             "• Passing gives the action to the other player. When both pass in a row, the round ends.\n\n" +
             "ATTACKING\n" +
             "• Only the player with the attack token can attack, once per round, as one of their actions. The token passes every round.\n" +
-            (_state.Format.NoSummoningSickness
-                ? "• Creatures can attack the round they arrive.\n\n"
-                : "• Creatures can't attack the round they arrive (summoning sickness), unless they have Haste.\n\n") +
+            "• Creatures can attack the round they arrive.\n\n" +
             "MANA AND GOLD\n" +
             "• Mana lasts the whole round. At the end of the round, unspent mana becomes Gold (up to 3).\n" +
             "• Gold pays for Instants, Sorceries, abilities, Tavern Dweller Powers and Invest, and it is spent FIRST, before mana.\n" +
@@ -594,9 +592,7 @@ namespace RestartedTavern.Client
                 : "TURNS\n" +
                   "• A round is one turn for each player, A B A B like MTG. Everyone may attack on their own turn. " +
                   "The first player skips their first draw.\n") +
-            (_state.Format.NoSummoningSickness
-                ? "• Creatures can attack the turn they arrive.\n\n"
-                : "• Creatures can't attack the turn they arrive (summoning sickness), unless they have Haste.\n\n") +
+            "• Creatures can attack the turn they arrive.\n\n" +
             "MANA\n" +
             "• At the start of each round BOTH players get +1 max mana (up to 10) and refill.\n" +
             "• That mana lasts the whole round: spend it on your turn, or keep it for Instants and abilities on the opponent's turn.\n" +

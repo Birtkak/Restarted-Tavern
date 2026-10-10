@@ -187,9 +187,8 @@ Design consequences:
 - Design rule 🟡: every faction needs *some* answer to accumulated damage (healing, sacrifice-for-value, or just cheap creatures you don't mind losing), so that no faction is stuck with crippled creatures.
 - Damage needs clear UI support: show current/max health.
 
-### 7.4 Summoning sickness 🔒 none (Legends of Runeterra, 2026-10-10)
-Creatures can attack, and use Tap abilities, the round they enter the battlefield. The opponent always gets at least one action between a creature arriving and attacking (§6).
-❓ **Haste** does nothing under these rules. The cards with Haste (Goober Rascal, Brawling Runt, Pit Champion, Goober Sapper, Chaos Engine, Gold Snatcher Crew, Grakka, Goober Bookie, Mob Rush, Goober Avalanche, Encore From Beyond, Silver-Tongued Deal) need a look: the keyword can go, and the cards may need something else to stay worth their cost.
+### 7.4 No summoning sickness, no Haste 🔒 (2026-10-10)
+Creatures can attack, and use Tap abilities, the round they enter the battlefield. With alternating actions (§6) the opponent always gets at least one action between a creature arriving and attacking. **Haste** doesn't exist: it was removed from every card and from the rules (decided 2026-10-10, no compensation for the cards that had it).
 
 ---
 
@@ -232,7 +231,7 @@ There are **5 factions**. Every card belongs to one faction or is **Neutral** (p
 | Faction | Inspired by | Identity | Plays like |
 |---|---|---|---|
 | **Shadow Money Wizards** | — | Shady wizards who deal in money and magic | Big, impressive spells; wizard creatures that bring **value** (card draw, Gold, effects) but are rarely game-enders themselves. **Shady deals** 🔒: trading life or cards for Gold, or handing opponents Gold in exchange for a big effect |
-| **Goobers** | MTG red + LoR Noxus | Goblins | Aggressive, wide boards, Haste, burn, raw strength, chaos |
+| **Goobers** | MTG red + LoR Noxus | Goblins | Aggressive, wide boards, burn, raw strength, chaos |
 | **Sensationalists** | MTG black + LoR Shadow Isles | Occult humans | Death, sacrifice, graveyard, draining life, Last Breath, curses |
 | **Evergrowing Wild** | MTG green + LoR Freljord | A jungle planet, from tiny critters to the biggest, scariest creatures in the universe | Creatures that grow, huge bodies, **Trample**, toughness |
 | **Glitterworld** | — | A huge high-tech city that houses every kind of creature in the game | A bit of everything, but focused on **pings** (small direct damage, which sticks because damage is permanent) and **buffing with Equipment** |
@@ -270,7 +269,6 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | Keyword | Meaning | Status |
 |---|---|---|
 | **Trample** | Combat damage beyond what's needed to kill the blockers goes to the attacked player | 🔒 |
-| **Haste** | Can attack the turn it enters. ❓ No effect under the Standard rules (no summoning sickness, §7.4) | ❓ |
 | **Flying** | Can only be blocked by Flying / Reach | 🟡 |
 | **Lifelink** | Damage dealt also heals its controller | 🟡 |
 | **Invest X: …** | Optional extra cost, paid only with Gold, for a bonus effect | 🔒 |
@@ -291,7 +289,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 - **Destroys a creature in combat** (Champion's Belt): it dealt combat damage to that creature, and the creature now has lethal damage. It triggers once for each creature destroyed, even if both creatures die.
 - **"Can't be dealt more than N damage each turn"** (Hardlight Aegis): damage over the limit is prevented, so it isn't dealt (no Lifelink, no "is dealt damage" triggers). Damage the creature took earlier in the same turn counts, even if the effect started later (MTG). Trample still assigns lethal damage as if nothing were prevented (MTG 702.19c).
 - **Counter** (MTG 701.5): a countered spell goes to its owner's graveyard without resolving; a countered ability does nothing. A countered "once each turn" ability or Tavern Dweller Power still counts as used. A tax ("unless its controller pays 3") is paid with mana first, then Gold (§5.2), and Gold paid this way is spent.
-- **Gain control** (MTG): the permanent keeps its damage and counters. With summoning sickness (MTG turns), a creature can't attack or use Tap abilities until its new controller's next turn, unless it has Haste (MTG 302.6); the Standard rules have none (§7.4). A creature that changes controller leaves combat. "Until end of turn" control ends in the cleanup step. When a player leaves the game, what they controlled but didn't own goes back to its owner.
+- **Gain control** (MTG): the permanent keeps its damage and counters. It can attack and use Tap abilities for its new controller right away (no summoning sickness, §7.4). A creature that changes controller leaves combat. "Until end of turn" control ends in the cleanup step. When a player leaves the game, what they controlled but didn't own goes back to its owner.
 - **Return to hand** (bounce): the card comes back as a new object, so its damage is gone. A token stops existing.
 - **Token**: a creature created by an effect. It doesn't exist outside the battlefield: when a token leaves the battlefield, it disappears.
 - **Activated abilities** 🔒 (MTG 602): "[Cost]: [Effect]." Activating one puts it on the Chain; it resolves even if its source has left (MTG 113.7a). A **generic cost** ("(2)", "Equip 2", "X") is paid with Gold first, then mana (§5.2). **"Pay N Gold"** is paid **only with Gold**, like Invest (decided 2026-10-09). "Activate only once each turn" means once in each turn, yours or not (MTG). "Only as a sorcery" means as one of your actions, with an empty Chain (§6).
@@ -324,6 +322,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Balance pass 1** (playtest/RULES_REVIEW.md, "Balance pass"; numbers from the card power scan, playtest/CARD_POWER.md). **Haste and summoning sickness are removed** from the game (§7.4): the 12 Haste cards lose the keyword, no compensation. **Nerfs**: Madame Morbida (no Lifelink, returns cost 2 or less), The Final Act (just "Destroy all creatures"), Exhumation Broadcast (cost 8), Grid Overload (twice), The Dealer (7 mana 3/5), Archon Lumen (no free Equip), Neon Executioner (7 mana, destroys at 1 Health or less). Final Broadcast, Hush Money and Mob Rush stay as printed. **Deck swaps**: Auditor's Arsenal (Rail Cannon → Hush Money, Overclock Rig → Archon Lumen), Sparkwrench Scrappers (Fuse Goober → Snik, Marksman Scope → Retired Champion), Vesper's Ledger (Fatal Rumor → Retired Champion). |
 | 2026-10-10 | **Legends of Runeterra rounds** replace the turn structure (§6, §6.1, §7.4), after the design review (playtest/RULES_REVIEW.md, "Design review 2026-10-10"). A round is everyone's turn: everyone refills, untaps and draws, then players **alternate single actions** from the round leader; the leader holds the **attack token** and may use one action to attack; the token passes every round; **no summoning sickness**; everyone discards to 7 at the end of the round; **no going-first compensation** (everyone draws in round 1). "Turn" in the MTG rules and on cards means "round" (Powers: once each round). Measured with bots first: MTG turns (A B A B) with the round pool gave the first player 75–85% in aggro mirrors and no compensation fixed it without overshooting (+1 mana on the second player's first 3 turns: 37–57%); the rounds give 45–54% in every mirror. Open follow-ups: Haste is blank (§7.4), multiplayer rounds (§13). |
 | 2026-10-10 | **Gold-only parts are set aside first** (§5.2): Invest and "pay any amount of Gold (X)" keep their Gold before the spell's cost takes Gold first (fixes a bug found in the design review: Gold first could eat the Invest Gold). |
 | 2026-10-10 | **Cards are data**: every card and the prototype decks live in JSON files (`Assets/StreamingAssets/Cards`, `Decks`), built from the engine's building blocks (DEVELOPMENT §3). Changing a card no longer needs code. |

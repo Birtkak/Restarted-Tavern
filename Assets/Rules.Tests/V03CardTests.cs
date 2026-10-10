@@ -55,7 +55,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void GooberAvalanche_CreatesXHastyGoobers()
+        public void GooberAvalanche_CreatesXGoobers()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
@@ -65,7 +65,6 @@ namespace RestartedTavern.Rules.Tests
             Resolve(g);
             var goobers = g.P(me).Battlefield.Where(c => c.DefinitionId == CardPool.GooberToken).ToList();
             Assert.AreEqual(3, goobers.Count);
-            Assert.IsTrue(goobers.All(c => g.Stats(c).Has(Keyword.Haste)));
         }
 
         [Test]

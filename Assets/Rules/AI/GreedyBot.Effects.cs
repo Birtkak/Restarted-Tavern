@@ -312,10 +312,9 @@ namespace RestartedTavern.Rules.AI
                         // Only worth it right before combat, scaled by how many creatures can attack.
                         if (s.Step == Step.Main1 && s.ActivePlayer == me)
                         {
-                            int attackers = s.GetPlayer(me).Battlefield.Count(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped
-                                && (!c.SummoningSick || Stats(s, c).Has(Keyword.Haste)));
-                            // Tokens made by the same spell also attack (Mob Rush gives them Haste).
-                            attackers += effects.OfType<CreateTokensEffect>().Where(t => t.GrantUntilEndOfTurn.HasFlag(Keyword.Haste)).Sum(t => t.Count);
+                            int attackers = s.GetPlayer(me).Battlefield.Count(c => Db.Get(c.DefinitionId).IsCreature && !c.Tapped);
+                            // Tokens made by the same spell also attack (Mob Rush): no summoning sickness.
+                            attackers += effects.OfType<CreateTokensEffect>().Sum(t => t.Count);
                             v += attackers * (pump.Power + (pump.Grants.HasFlag(Keyword.Trample) ? 0.5 : 0)) * (attackers >= 2 ? 1.0 : 0.3);
                         }
                         break;

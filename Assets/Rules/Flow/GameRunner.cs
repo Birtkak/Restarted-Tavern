@@ -188,7 +188,7 @@ namespace RestartedTavern.Rules
             {
                 case Step.Start:
                     // §5.1: +1 max mana (cap 10), refill: your own turn, or with the round pool every player when a round starts.
-                    // MTG 502: untap. §7.4: summoning sickness ends.
+                    // MTG 502: untap.
                     if (!S.Format.ManaPerRound)
                     {
                         if (S.Format.ManaUntilYourNextTurn) BankMana(ap);
@@ -206,11 +206,7 @@ namespace RestartedTavern.Rules
                         Emit(new ManaChangedEvent { Player = ap.Id, Mana = ap.Mana, MaxMana = ap.MaxMana });
                     }
                     foreach (var p in TurnPlayers())
-                        foreach (var c in p.Battlefield)
-                        {
-                            c.Tapped = false;
-                            c.SummoningSick = false;
-                        }
+                        foreach (var c in p.Battlefield) c.Tapped = false;
                     ForEachTurnPlayer(() => QueueTurnTriggers(TriggerEvent.StartOfYourTurn));
                     GivePriority(ap.Id);
                     break;

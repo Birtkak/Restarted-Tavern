@@ -145,7 +145,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void ArchonLumen_FreeEquip_AndOnePingPerEquipment()
+        public void ArchonLumen_OnePingPerEquipment()
         {
             var g = TestGame.AtFirstMainPhase();
             g.AddToBattlefield(g.Active, "archon_lumen");
@@ -153,9 +153,8 @@ namespace RestartedTavern.Rules.Tests
             var cannon = g.AddToBattlefield(g.Active, "rail_cannon"); // Equip 3
             g.AddToBattlefield(g.Active, "neon_shiv");
             g.SetMana(g.Active, 0);
-
-            Equip(g, cannon, sword);
-            Assert.AreEqual(5, g.Stats(sword).Power, "Equip cost 0");
+            Assert.IsFalse(g.Legal(g.Active).Any(a => a.Kind == ActionKind.ActivateAbility && a.Card == cannon.Id),
+                "Equip isn't free any more (balance 2026-10-10)");
 
             g.PassUntil(s => s.Step == Step.End && s.Pending != null);
             for (int i = 0; i < 2; i++)

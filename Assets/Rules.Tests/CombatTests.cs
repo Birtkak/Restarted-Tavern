@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace RestartedTavern.Rules.Tests
 {
-    /// <summary>GAME_DESIGN §7: blocking, permanent damage, Trample, Flying/Reach, summoning sickness.</summary>
+    /// <summary>GAME_DESIGN §7: blocking, permanent damage, Trample, Flying/Reach, no summoning sickness.</summary>
     public class CombatTests
     {
         private static CardDefinition Bat => new CardDefinition
@@ -97,21 +97,18 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void SummoningSickness_OnlyHasteCanAttack()
+        public void NoSummoningSickness_NewCreaturesCanAttack()
         {
             var g = TestGame.AtFirstMainPhase();
             g.SetMana(g.Active, 4);
-            var runt = g.AddToHand(g.Active, "brawling_runt");
             var sword = g.AddToHand(g.Active, "hired_sellsword");
-            g.Do(PlayerAction.Play(g.Active, runt.Id));
-            g.PassRound();
             g.Do(PlayerAction.Play(g.Active, sword.Id));
             g.PassRound();
 
             ToDeclareAttackers(g);
             var attackers = g.Legal(g.Active).Where(a => a.Kind == ActionKind.DeclareAttacker)
                 .Select(a => g.State.FindObject(a.Card).DefinitionId).ToList();
-            CollectionAssert.AreEqual(new[] { "brawling_runt" }, attackers);
+            CollectionAssert.AreEqual(new[] { "hired_sellsword" }, attackers, "§7.4: no summoning sickness");
         }
 
         [Test]

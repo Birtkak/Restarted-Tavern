@@ -36,7 +36,6 @@ Starting values for the budget, to be tuned in playtesting.
 | Ability | Cost in stat points |
 |---|---|
 | Flying, Trample, Lifelink | ~1 each |
-| Haste | 0 under the Standard rules (no summoning sickness, GAME_DESIGN §7.4) ❓ |
 | Small Arrival effect (1 damage, draw if X, +1/+1 to another) | ~2 |
 | Card draw (1 card) | ~2–3 |
 | Removal on a creature (kills something) | most of the budget |
@@ -82,7 +81,7 @@ What each faction **does best** (primary), **can do** (secondary), and **never d
 | **Big creatures** | — | — | a few, with drawbacks | ★ primary | via Equipment |
 | **Go wide (many small creatures)** | — | ★ primary | spawn tokens from deaths | critter swarms | — |
 | **Buffs** | — | team-wide, temporary | — | +1/+1 counters | ★ Equipment |
-| **Keywords** | Flying | Haste, Trample | Flying, Lifelink | Trample | Flying (drones) |
+| **Keywords** | Flying | Trample | Flying, Lifelink | Trample | Flying (drones) |
 | **Graveyard** | — | — | ★ primary | — | — |
 
 ---
@@ -96,15 +95,15 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
 | **Back-Alley Appraiser** | 2 | Creature: Wizard (C) | 1/3 | Arrival: You may discard a card. If you do, gain 2 Gold. |
-| **Silver-Tongued Deal** | 3 | Instant (U) | — | Gain control of target creature until end of turn. Untap it. It gains Haste. Each opponent gains 2 Gold. |
+| **Silver-Tongued Deal** | 3 | Instant (U) | — | Gain control of target creature until end of turn. Untap it. Each opponent gains 2 Gold. |
 | **The Grand Ledger** | 7 | Sorcery (R) | — | Draw 4 cards. Invest 3: Draw 2 more and gain 3 life. |
 
 ### Goobers
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
-| **Goober Rascal** | 1 | Creature: Goober (C) | 2/1 | Haste. Can't block. |
+| **Goober Rascal** | 1 | Creature: Goober (C) | 2/1 | Can't block. |
 | **Fuse Goober** | 2 | Creature: Goober (C) | 1/2 | Last Breath: Deal 2 damage to any target. |
-| **Mob Rush** | 4 | Sorcery (U) | — | Create three 1/1 Goobers with Haste. Your creatures get +1/+0 until end of turn. |
+| **Mob Rush** | 4 | Sorcery (U) | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. |
 
 ### Sensationalists
 | Name | Cost | Type | Stats | Text |

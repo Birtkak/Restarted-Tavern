@@ -64,7 +64,6 @@ namespace RestartedTavern.Rules
                 moved = NewObject(card.DefinitionId, card.Owner, to);
                 moved.IsToken = card.IsToken;
                 moved.Controller = to == Zone.Battlefield || to == Zone.Chain ? controller ?? card.Owner : card.Owner;
-                if (to == Zone.Battlefield) moved.SummoningSick = true;
 
                 switch (to)
                 {
@@ -136,7 +135,6 @@ namespace RestartedTavern.Rules
         {
             var token = NewObject(definitionId, controller, Zone.Battlefield);
             token.IsToken = true;
-            token.SummoningSick = true;
             S.GetPlayer(controller).Battlefield.Add(token);
             Emit(new TokenCreatedEvent { Controller = controller, Token = token.Id, DefinitionId = definitionId });
             ApplyEntersReplacements(token);
@@ -400,7 +398,6 @@ namespace RestartedTavern.Rules
             S.GetPlayer(from).Battlefield.Remove(permanent);
             S.GetPlayer(to).Battlefield.Add(permanent);
             permanent.Controller = to;
-            permanent.SummoningSick = true;
             S.Combat?.Remove(permanent.Id);
             Emit(new ControlChangedEvent { Card = permanent.Id, DefinitionId = permanent.DefinitionId, From = from, To = to });
         }

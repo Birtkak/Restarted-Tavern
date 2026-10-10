@@ -14,7 +14,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | # | Name | Cost | Type | Rarity | Stats | Text | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | **Coin Juggler** | 2 | Creature: Wizard | C | 1/3 | Whenever you spend Gold, this gets +1/+0 until end of turn. | ✅ |
-| 2 | **Silver-Tongued Deal** | 3 | Instant | U | — | Gain control of target creature until end of turn. Untap it. It gains Haste. Each opponent gains 2 Gold. | ✅ |
+| 2 | **Silver-Tongued Deal** | 3 | Instant | U | — | Gain control of target creature until end of turn. Untap it. Each opponent gains 2 Gold. | ✅ |
 | 3 | **The Grand Ledger** | 7 | Sorcery | R | — | Draw 4 cards. Invest 3: Draw 2 more and gain 3 life. | ✅ |
 
 ## Batch 1
@@ -48,7 +48,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 17 | **Counterfeit Coin** | 3 | Instant | U | — | Counter target spell with cost 4 or less. Its controller gains Gold equal to its cost. | A hard counter, with the shady price that the opponent's mana isn't wasted | ✅ |
 | 18 | **Hired Enforcer** | 5 | Creature: Wizard | C | 5/4 | Flying. Arrival: Each opponent gains 2 Gold. | A big flier at a discount, paid for with a shady deal | ✅ |
 | 19 | **Tax Office** | 5 | Relic | U | — | Whenever an opponent casts a spell, they lose 1 Gold. If they couldn't, you gain 1 Gold. | Drains the Gold your deals handed out | ✅ |
-| 20 | **The Dealer** | 6 | Creature: Wizard | R | 4/6 | Flying. At the start of your turn, each opponent may give you 2 Gold. For each one who doesn't, draw a card. | "Pick your poison" every turn. A value creature, not a finisher | ✅ |
+| 20 | **The Dealer** | 7 | Creature: Wizard | R | 3/5 | Flying. At the start of your turn, each opponent may give you 2 Gold. For each one who doesn't, draw a card. | "Pick your poison" every turn. A value creature, not a finisher | ✅ |
 
 **Progress:** 20 / 20 · C 9/9 · U 6/6 · R 4/4 · L 1/1
 **Curve:** 1-drops: 3 · 2: 4 · 3: 4 · 4: 2 · 5: 3 · 6: 2 · 7+: 2 · Creatures: 10 · Spells/Relics: 10

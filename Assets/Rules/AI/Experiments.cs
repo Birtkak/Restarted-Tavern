@@ -103,13 +103,11 @@ namespace RestartedTavern.Rules.AI
             {
                 Title = "Turn structure and going first (GAME_DESIGN §3, §6)",
                 Question = "First-player win% in mirrors (50% is fair). Standard = Legends of Runeterra rounds: everyone refills, untaps and "
-                           + "draws when a round starts, players alternate actions, the round leader holds the attack token, no summoning "
-                           + "sickness. Turns = rounds with Runeterra rounds (one round is everyone's turn), turns otherwise.",
+                           + "draws when a round starts, players alternate actions, the round leader holds the attack token. Turns = rounds with Runeterra rounds (one round is everyone's turn), turns otherwise.",
             };
             foreach (var d in decks)
             {
                 turns.Configs.Add(M(d.Name + " mirror, Runeterra rounds (Standard)", d, d));
-                turns.Configs.Add(M(d.Name + " mirror, rounds with summoning sickness", d, d, f => f.NoSummoningSickness = false));
                 turns.Configs.Add(M(d.Name + " mirror, rounds, everyone attacks once a round", d, d, f => f.AttackToken = false));
                 turns.Configs.Add(M(d.Name + " mirror, MTG turns (A B A B), draw skip", d, d, f => Copy(FormatConfig.MtgTurns(), f)));
                 turns.Configs.Add(M(d.Name + " mirror, MTG turns, 2nd player +1 mana on their first 3 turns", d, d,

@@ -51,6 +51,11 @@ namespace RestartedTavern.Rules.AI
         public long ChipCarried, ChipThatKilled;
         /// <summary>At each turn start: creatures on the battlefield, and how many of them carried damage.</summary>
         public long CreatureTurnSamples, WoundedTurnSamples;
+        /// <summary>
+        /// Per card (balance): in how many decided games each side cast it at least once, and how many of those that side
+        /// won. Keys are "A:card_id" / "B:card_id"; Tavern Dweller Powers are "A:power".
+        /// </summary>
+        public Dictionary<string, int> CardGames = new Dictionary<string, int>(), CardWins = new Dictionary<string, int>();
 
         public int Decided => WinsA + WinsB;
         public double WinRateA => Games == 0 ? 0 : (double)WinsA / Games;
@@ -91,6 +96,8 @@ namespace RestartedTavern.Rules.AI
             DamageToCreatures += o.DamageToCreatures; DamageToPlayers += o.DamageToPlayers;
             DamageOnDeath += o.DamageOnDeath; ChipCarried += o.ChipCarried; ChipThatKilled += o.ChipThatKilled;
             CreatureTurnSamples += o.CreatureTurnSamples; WoundedTurnSamples += o.WoundedTurnSamples;
+            foreach (var kv in o.CardGames) CardGames[kv.Key] = CardGames.TryGetValue(kv.Key, out int n) ? n + kv.Value : kv.Value;
+            foreach (var kv in o.CardWins) CardWins[kv.Key] = CardWins.TryGetValue(kv.Key, out int n) ? n + kv.Value : kv.Value;
         }
     }
 
@@ -144,11 +151,18 @@ namespace RestartedTavern.Rules.AI
                 var t = new Tracker();
 
                 Tally(r, state, events, db, t);
+                var cast = new HashSet<string>();
                 while (!state.IsGameOver && state.TurnNumber <= cfg.MaxTurns)
                 {
                     var who = engine.WaitingOn(state).Value;
                     var bot = who == deckAPlayer ? botA : botB;
-                    Tally(r, state, engine.Apply(state, bot.Choose(state, who)), db, t);
+                    var applied = engine.Apply(state, bot.Choose(state, who));
+                    foreach (var e in applied)
+                    {
+                        if (e is SpellCastEvent c) cast.Add((c.Player == deckAPlayer ? "A:" : "B:") + c.DefinitionId);
+                        else if (e is AbilityActivatedEvent a && a.IsTavernDwellerPower) cast.Add((a.Player == deckAPlayer ? "A:" : "B:") + "power");
+                    }
+                    Tally(r, state, applied, db, t);
                 }
                 foreach (var carried in t.Carried.Values) r.ChipCarried += carried; // survivors: their chip never killed
 
@@ -160,6 +174,12 @@ namespace RestartedTavern.Rules.AI
                     return r;
                 }
                 var winner = state.Winners[0];
+                foreach (var key in cast)
+                {
+                    r.CardGames[key] = r.CardGames.TryGetValue(key, out int n) ? n + 1 : 1;
+                    bool sideWon = (key[0] == 'A') == (winner == deckAPlayer);
+                    if (sideWon) r.CardWins[key] = r.CardWins.TryGetValue(key, out int w) ? w + 1 : 1;
+                }
                 if (winner == firstPlayer) r.FirstPlayerWins++;
                 if (winner == deckAPlayer) r.WinsA++;
                 else r.WinsB++;

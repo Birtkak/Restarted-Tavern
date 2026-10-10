@@ -5,12 +5,8 @@ namespace RestartedTavern.Rules
     /// <summary>Combat (GAME_DESIGN §7.2, MTG CR 506–510).</summary>
     internal sealed partial class GameRunner
     {
-        /// <summary>Untapped, and not summoning sick unless it has Haste (§7.4).</summary>
-        private bool CanAttack(CardInstance c)
-        {
-            if (!Def(c).IsCreature || c.Tapped) return false;
-            return !c.SummoningSick || S.Format.NoSummoningSickness || Stats(c).Has(Keyword.Haste);
-        }
+        /// <summary>An untapped creature. There's no summoning sickness (§7.4).</summary>
+        private bool CanAttack(CardInstance c) => Def(c).IsCreature && !c.Tapped;
 
         /// <summary>FormatConfig.AttackToken: only the player who started the round may attack in it.</summary>
         private bool HasAttackToken(PlayerState p) => !S.Format.AttackToken || p.Id == RoundLeader().Id;

@@ -176,7 +176,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void SilverTonguedDeal_StealsUntilEndOfTurn_WithHaste()
+        public void SilverTonguedDeal_StealsUntilEndOfTurn()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
@@ -192,8 +192,6 @@ namespace RestartedTavern.Rules.Tests
             Assert.IsTrue(g.P(me).Battlefield.Contains(victim));
             Assert.IsFalse(victim.Tapped, "untapped");
             Assert.AreEqual(2, g.P(other).Gold);
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
-            Assert.IsTrue(g.Legal(me).Any(a => a.Kind == ActionKind.DeclareAttacker && a.Card == victim.Id), "Haste: it can attack for us");
 
             g.PassUntil(s => s.ActivePlayer == other);
             Assert.AreEqual(other, victim.Controller, "control ends in the cleanup step");
@@ -215,14 +213,13 @@ namespace RestartedTavern.Rules.Tests
             Assert.AreEqual(me, victim.Controller);
             Assert.AreEqual(5, g.P(other).Gold, "6 Gold, capped at 5");
             Assert.AreEqual(hand + 1, g.P(other).Hand.Count);
-            Assert.IsTrue(victim.SummoningSick, "MTG 302.6: not under our control since the turn began");
 
             g.PassUntil(s => s.ActivePlayer == other && s.Step == Step.Main1 && s.PriorityPlayer.HasValue);
             Assert.AreEqual(me, victim.Controller, "still ours");
         }
 
         [Test]
-        public void TheFinalAct_DestroysAll_AndDrainsPerCreature()
+        public void TheFinalAct_DestroysAllCreatures()
         {
             var g = TestGame.AtFirstMainPhase();
             var me = g.Active;
@@ -235,8 +232,8 @@ namespace RestartedTavern.Rules.Tests
             g.Do(PlayerAction.Play(me, act.Id));
             g.PassRound();
             Assert.IsFalse(g.State.AllPermanents().Any());
-            Assert.AreEqual(27, g.P(g.Other).Life);
-            Assert.AreEqual(23, g.P(me).Life);
+            Assert.AreEqual(30, g.P(g.Other).Life, "no drain since the 2026-10-10 balance pass");
+            Assert.AreEqual(20, g.P(me).Life);
         }
 
         [Test]

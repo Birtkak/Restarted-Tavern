@@ -18,7 +18,7 @@ namespace RestartedTavern.Rules.Data
     /// <summary>
     /// Card definitions to and from JSON (DEVELOPMENT §3). The mapping is plain reflection over the rules classes:
     /// every public read-write property is a JSON property (camelCase), values equal to the class's defaults are left
-    /// out, enums are written by name ("Haste, Trample" for flags), and an object whose class isn't the declared one
+    /// out, enums are written by name ("Flying, Trample" for flags), and an object whose class isn't the declared one
     /// (the effect and static ability building blocks) gets a "$type" with its class name. Reading fails loudly on an
     /// unknown class, property or enum name, so a typo in a card file never goes unnoticed.
     /// </summary>

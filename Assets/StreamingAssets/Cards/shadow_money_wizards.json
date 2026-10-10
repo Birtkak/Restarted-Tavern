@@ -292,12 +292,12 @@
     "cost": 3,
     "rarity": "Uncommon",
     "faction": "shadow_money_wizards",
-    "text": "Gain control of target creature until end of turn. Untap it. It gains Haste. Each opponent gains 2 Gold.",
+    "text": "Gain control of target creature until end of turn. Untap it. Each opponent gains 2 Gold.",
     "spellTargets": [
       {"spec": "Creature"}
     ],
     "spellEffects": [
-      {"$type": "GainControlEffect", "untilEndOfTurn": true, "untap": true, "gainsHaste": true},
+      {"$type": "GainControlEffect", "untilEndOfTurn": true, "untap": true},
       {"$type": "GainGoldEffect", "amount": 2, "eachOpponent": true}
     ]
   },
@@ -492,9 +492,9 @@
     "id": "the_dealer",
     "name": "The Dealer",
     "type": "Creature",
-    "cost": 6,
-    "power": 4,
-    "health": 6,
+    "cost": 7,
+    "power": 3,
+    "health": 5,
     "keywords": "Flying",
     "subtypes": ["Wizard"],
     "rarity": "Rare",

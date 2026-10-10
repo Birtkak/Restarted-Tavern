@@ -87,8 +87,7 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
-    /// "For each chosen creature, create a token copy of it. The copies gain Haste until end of
-    /// turn." (Snik). Copies take the printed card (MTG 707.2): no damage, counters or buffs.
+    /// "For each chosen creature, create a token copy of it." (Snik). Copies take the printed card (MTG 707.2): no damage, counters or buffs.
     /// </summary>
     public sealed class CreateTokenCopiesEffect : Effect
     {

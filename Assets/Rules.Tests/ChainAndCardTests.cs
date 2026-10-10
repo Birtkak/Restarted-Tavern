@@ -20,7 +20,6 @@ namespace RestartedTavern.Rules.Tests
             var onField = g.OnBattlefield(g.Active, "hired_sellsword");
             Assert.IsNotNull(onField);
             Assert.AreNotEqual(sword.Id, onField.Id, "new object after each zone change");
-            Assert.IsTrue(onField.SummoningSick);
         }
 
         [Test]
@@ -108,7 +107,7 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void MobRush_HastyTokens_AndTheBuffEndsAtEndOfTurn()
+        public void MobRush_Tokens_AndTheBuffEndsAtEndOfTurn()
         {
             var g = TestGame.AtFirstMainPhase();
             var rush = g.AddToHand(g.Active, "mob_rush");
@@ -118,14 +117,10 @@ namespace RestartedTavern.Rules.Tests
 
             var tokens = g.P(g.Active).Battlefield.Where(c => c.IsToken).ToList();
             Assert.AreEqual(3, tokens.Count);
-            Assert.IsTrue(tokens.All(t => g.Stats(t).Power == 2 && g.Stats(t).Has(Keyword.Haste)));
-
-            g.PassUntil(s => s.Pending?.Kind == DecisionKind.DeclareAttackers);
-            Assert.AreEqual(3, g.Legal(g.Active).Count(a => a.Kind == ActionKind.DeclareAttacker), "tokens have Haste");
-            g.Do(PlayerAction.FinishAttacks(g.Active));
+            Assert.IsTrue(tokens.All(t => g.Stats(t).Power == 2));
 
             g.PassToStep(Step.Main1, g.Other);
-            Assert.IsTrue(tokens.All(t => g.Stats(t).Power == 1 && !g.Stats(t).Has(Keyword.Haste)));
+            Assert.IsTrue(tokens.All(t => g.Stats(t).Power == 1));
         }
 
         [Test]

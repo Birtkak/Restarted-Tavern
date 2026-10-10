@@ -92,9 +92,8 @@
     "cost": 4,
     "rarity": "Rare",
     "faction": "glitterworld",
-    "text": "Deal 1 damage to each enemy creature three times.",
+    "text": "Deal 1 damage to each enemy creature twice.",
     "spellEffects": [
-      {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1},
       {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1},
       {"$type": "DealDamageToEachEnemyCreatureEffect", "amount": 1}
     ]
@@ -571,7 +570,7 @@
     "subtypes": ["Construct"],
     "rarity": "Legendary",
     "faction": "glitterworld",
-    "text": "Flying. Your Equip costs are 0. At the end of your turn, deal 1 damage to any target for each Equipment you control.",
+    "text": "Flying. At the end of your turn, deal 1 damage to any target for each Equipment you control.",
     "triggers": [
       {
         "when": "EndOfYourTurn",
@@ -581,9 +580,6 @@
         ],
         "repeatCount": {"kind": "EquipmentYouControl"}
       }
-    ],
-    "statics": [
-      {"$type": "CostModifierAbility", "kind": "Equip", "setToZero": true}
     ]
   },
   {
@@ -704,21 +700,21 @@
     "id": "neon_executioner",
     "name": "Neon Executioner",
     "type": "Creature",
-    "cost": 6,
+    "cost": 7,
     "power": 4,
     "health": 6,
     "subtypes": ["Construct"],
     "rarity": "Rare",
     "faction": "glitterworld",
-    "text": "Whenever an enemy creature is dealt damage, if it has 2 or less Health remaining, destroy it.",
+    "text": "Whenever an enemy creature is dealt damage, if it has 1 or less Health remaining, destroy it.",
     "triggers": [
       {
         "when": "CreatureDealtDamage",
         "effects": [
-          {"$type": "DestroyEventCreatureEffect", "maxRemainingHealth": 2}
+          {"$type": "DestroyEventCreatureEffect", "maxRemainingHealth": 1}
         ],
         "subject": "Opponents",
-        "maxRemainingHealth": 2
+        "maxRemainingHealth": 1
       }
     ]
   },

@@ -21,8 +21,6 @@ namespace RestartedTavern.Rules
         public int Damage { get; set; }
 
         public bool Tapped { get; set; }
-        /// <summary>True until its controller starts a turn with it (MTG 302.6, GAME_DESIGN §7.4).</summary>
-        public bool SummoningSick { get; set; }
         public int PlusOneCounters { get; set; }
         /// <summary>Keywords this object gained for as long as it stays on the battlefield (Gilded Mercenary's Invest).</summary>
         public Keyword GrantedKeywords { get; set; }

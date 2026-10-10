@@ -6,64 +6,60 @@ Paste everything below the line into a new session.
 
 You're continuing work on Restarted Tavern, a Unity 6 (6000.6.4f1) + C# trading-card game.
 Repo: C:\Users\Birre\Desktop\Claude shizzle\Restarted-Tavern (GitHub: Birtkak/Restarted-Tavern, main).
+Run `git status` and `git log origin/main..` first and tell the user what's pending.
 
-STATE AT THE END OF THE LAST SESSION (2026-10-10), 249 EditMode tests, all green:
-- **Standard rules = Runeterra-style mana** (GAME_DESIGN §5–6, §6.1): a round pool (everyone gains +1 max mana and
-  refills when a round starts; mana lasts the round), unspent mana becomes Gold at the end of the round, Gold cap 3,
-  spells and abilities pay **Gold first**, the round leader rotates (A B | B A) and only the round leader may attack
-  (attack token). `FormatConfig.Classic()` keeps the old rules; `TestGame.Classic()` runs old card tests under them.
-- Gold first solved RULES_REVIEW #6 (the sequencing trap). Gold-only parts (Invest, "pay X Gold") are set aside
-  before the cost takes Gold (`Payment.TrySplit`). Velvet Embezzler draws at 3+ Gold; Compound Interest checks
-  "if 3 or more Gold was spent to cast it".
-- New Powers: Mukk (3) a Trample creature you control fights a creature you don't control; Sparkwrench (2) attach up to
-  one Equipment to a creature you control, else it gets +1/+1; Auditor Prime (2) draw a card, only with 3+ Gold.
-- Snik chooses its Goobers on resolution (`DecisionKind.ChooseUpTo`, MTG 608.2d).
-- **Replacement effects** (GAME_DESIGN §8.1, MTG 614–616): dying, damage, entering, drawing, gaining life / Gold.
-  Fixed order (self-replacement, then oldest first); the affected player doesn't choose yet.
-- **Cards are data**: every card is in `Assets/StreamingAssets/Cards/*.json`, the decks in
-  `Assets/StreamingAssets/Decks/prototype_decks.json` (DEVELOPMENT §3). C# only has the building blocks.
-  Editing a card = editing JSON, then run the tests (`CardDataTests` checks the canonical format).
+STATE AT THE END OF THE LAST SESSION (2026-10-10), 254 EditMode tests, all green:
+- **Standard rules = Legends of Runeterra rounds** (GAME_DESIGN §6, §6.1): a round is everyone's turn. Everyone gets
+  +1 max mana, refills, untaps and draws; then players alternate single actions (play a card of any type, use an
+  ability or Power, attack, or pass) from the round leader; responses on the Chain don't use an action; two passes in a
+  row end the round. The round leader holds the attack token (one attack per round, passes every round). No going-first
+  compensation (first player 45–54% in all bot mirrors). Unspent mana becomes Gold at round end (cap 3), Gold is spent
+  first on spells and abilities, permanents use mana only.
+- **No summoning sickness and no Haste** (§7.4): removed from the engine and every card.
+- "Turn" in MTG rules and on cards means "round" (Powers once each round, "until end of turn" = the round).
+- Earlier structures stay as `FormatConfig.MtgTurns()`, `RuneterraRotation()`, `Classic()`. Card tests run under
+  `MtgTurns()` (`TestGame.AtFirstMainPhase`); the rounds have `RoundsTests`.
+- **Balance pass 1** (playtest/RULES_REVIEW.md "Balance pass 1", Decision Log): 6 nerfs (Madame Morbida, The Final Act,
+  Exhumation Broadcast, Grid Overload, The Dealer, Archon Lumen, Neon Executioner) and 5 deck swaps. Prototype decks
+  vs the field: Goober 58% (user kept it), the others 46–52%, spread 3.4. Matchups past 65%: Goober vs Auditor 69%,
+  Auditor vs Zoo 68%.
+- Cards are data (`Assets/StreamingAssets/Cards/*.json`, decks in `Decks/prototype_decks.json`, DEVELOPMENT §3).
 
 GOAL OF THIS SESSION: ask the user what's next (AskUserQuestion, multiple choice, recommended option first).
 
 CANDIDATE NEXT STEPS
-0. **The 2026-10-10 design review** (docs/handoff/NEXT_DESIGN_FLAWS.md, written by a parallel session): flaws 1–7, 9
-   and 10 are open design questions (double turns and the attack token, going first under rotation, multiplayer, Gold
-   cap waste, permanent damage, stalls, shady deals at cap 3, Health buffs). Offer it next to the visual client.
-1. **Visual client** (DEVELOPMENT §5 roadmap step 4, recommended; the user wanted the to-dos done first and they are):
-   a real Unity hot-seat table for human playtests.
-2. Human playtests of the new Standard rules on the debug table (Going first stays the MTG default until
-   playtests judge it; RULES_REVIEW #1).
-3. Balance pass with the new Powers and the 3-Gold changes (sims are fine to run, see below).
-4. Smaller engine gaps (DEVELOPMENT §7 "Not yet implemented"): the affected player choosing the order of
-   replacement effects, filtering events by hidden information, a targetable Tavern Dweller zone (design question).
-5. Generate rules text from the card data, so text and behavior can't disagree (DEVELOPMENT §3).
+1. **Balance pass 2**: card power table (playtest/CARD_POWER.md). Top: Final Broadcast +12.5 (user kept it once),
+   Sproutling +12.3 (grows every round now), Tusked Mammoth, The Final Act, Ironbark Grizzly. Bottom (worse than a
+   vanilla 2/3): Insider Trading, Golden Parachute, Mercenary Contract, Watering Hole, Satellite Uplink, most Relics and
+   Equipment, Gold cards. Propose nerfs/buffs in batches, measure each, then re-tune the decks. Goober Mob at 58%: the
+   user declined both a Mob Rush nerf and a deck swap (Mob Rush → Chaos Engine gave 52%); ask again after playtests.
+2. **Open design flaws** (RULES_REVIEW, design review 2026-10-10): R2 ("whenever you attack" cards trigger every other
+   round, Powers once per round), R4 (multiplayer rounds and the attack token), R5 (Gold cap waste: 26% of leftover
+   mana), R6 (permanent damage barely matters outside ping decks), R7 (stalls), R9 (Gold cap 3 vs "gain 5 Gold"
+   downsides), R10 (repeatable Health buffs).
+3. **Visual client** (DEVELOPMENT §5 roadmap step 4): a real Unity hot-seat table for human playtests of the rounds.
+4. **Bot**: attack timing in rounds (`BotStyle.AttackFirstInRound` is deck-dependent; a per-round decision would help);
+   the bot sometimes "attacks" with nothing.
 
-READ FIRST
-- docs/GAME_DESIGN.md: the rules. MTG Comprehensive Rules are the backbone (§1.1). The Decision Log is the source of truth.
-- docs/DEVELOPMENT.md §3 (card data) and §7 (engine status, "Not yet implemented").
-- docs/cards/*.md: the card lists (design docs). The engine's truth is the JSON in Assets/StreamingAssets/Cards.
-- docs/playtest/PLAYTEST.md and RULES_REVIEW.md.
-
-NAMING: "Tavern Dweller" (never "Patron"); `TavernDweller` in code. Card text says "an opponent" / "each opponent".
+TOOLS (Tools/SimRunner, run freely, ~15 s–5 min)
+- Build: "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build Tools/SimRunner -c Release
+- Run: Tools/SimRunner/bin/Release/net8.0/SimRunner.exe
+  - (no mode) the report (docs/playtest/SIMULATION_REPORT.md); `-balance [-cards]` win matrix (+ per-card cast stats);
+  - `-scan [-only ids] [-out file]` card power table; `-impact -decks 0,2` each card vs a 2/3 filler;
+  - `-optimize -decks 5 -swaps 3 -target 0.5` deck tuning by measurement; `-goingfirst`; `-h2h [-off Switch]`; `-trace`;
+  - `-data <folder>` loads a copy of StreamingAssets (test card changes without editing the repo);
+  - `-rules standard|mtg|rotation|classic`. Decks: 0 Goober, 1 Jungle, 2 Zoo, 3 Vesper, 4 Sparkwrench, 5 Auditor.
 
 HOW TO WORK WITH THIS USER
-- The user has the vision and wants Claude to propose details. For design questions, use AskUserQuestion with
-  multiple-choice options, recommended option first, and show the MTG default next to alternatives. Record every
-  decision in the docs and the Decision Log.
-- Simulations and bot experiments may be run without asking (quick now; the user lifted the old rule on 2026-10-10). Unit tests are expected.
-- Commit when a piece of work is done; ask before pushing to GitHub.
+- The user has the vision and wants Claude to propose details. Ask design questions with AskUserQuestion, recommended
+  option first, MTG default next to alternatives. Record every decision in GAME_DESIGN.md and its Decision Log.
+- Simulations and bot experiments may be run without asking. Unit tests are expected.
+- Card text says "an opponent" / "each opponent", never "your opponent". Say "Tavern Dweller", never "Patron".
+- Commit when a piece of work is done; ask before pushing.
 
 PRACTICAL NOTES
-- Run tests headless (~40 s): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics
-  -projectPath <repo> -runTests -testPlatform EditMode -testResults <file>.xml -logFile <log>
-  Only one Unity instance can open the project at a time. Write results/logs outside the repo.
-- Build the debug table: -executeMethod RestartedTavern.Client.Editor.DebugTableBuilder.BuildWindows
-  (Builds/DebugTable/RestartedTavern.exe; it reads the card files from RestartedTavern_Data/StreamingAssets).
-  `-autoshot <png>` takes a screenshot and quits.
-- SimRunner (~15-30 s, run freely): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Data/DotNetSdk/dotnet.exe" build
-  Tools/SimRunner -c Release, then Tools/SimRunner/bin/Release/net8.0/SimRunner.exe [-balance] [-trace] [-h2h] ...
-  It finds the card files by walking up from the working directory to Assets/StreamingAssets.
-- Multi-line edits: write a Python script to the scratchpad and run it; open files with newline='' (the repo keeps
-  .cs/.md/.json as LF). Bash heredocs that contain apostrophes sometimes break in this shell.
+- Tests headless (~40 s): "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics
+  -projectPath <repo> -runTests -testPlatform EditMode -testResults <file>.xml -logFile <log> (results outside the repo).
+- Multi-line edits: Python scripts in the scratchpad, files opened with newline='' (LF). Card JSON: edit by exact text
+  replacement to keep the canonical format (`CardDataTests`).
 - New files get .meta files on the next Unity run: commit them together.
