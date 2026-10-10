@@ -43,19 +43,23 @@ namespace RestartedTavern.Client.Table
 
             float y = 346f;
             bool inGame = _battleStarted && !_s.State.IsGameOver;
+            float step = inGame ? 112f : 122f; // six tiles with Continue
             if (inGame)
             {
                 MenuTile(left, y, "CONTINUE", TutorialRunning ? "Back to the tutorial" : "Back to your game (round " + _s.State.RoundNumber + ")",
                     ContextOn, () => { _menuOpen = false; _dirty = true; }, "RESUME");
-                y += 122f;
+                y += step;
             }
             MenuTile(left, y, "PLAY", "Pick your deck and Tavern Dweller, then battle the AI or a friend", inGame ? ButtonColor : ContextOn,
                 () => { _menuPage = MenuPage.Play; _dirty = true; });
-            y += 122f;
+            y += step;
             MenuTile(left, y, "TUTORIAL", "New here? Learn the rules in three guided rounds", Ui.Hex("#2A6A50"), StartTutorial, "START HERE");
-            y += 122f;
+            y += step;
             MenuTile(left, y, "DECK EDITOR", "Build your own decks from every faction", ButtonColor, () => OpenEditor());
-            y += 122f;
+            y += step;
+            MenuTile(left, y, "TAVERN GUIDE", "Every rule, searchable", Ui.Hex("#2A5A6A"), () => OpenGuide(), w: 296f);
+            MenuTile(left + 304f, y, "SETTINGS", "Speed, window, hints", ButtonColor, OpenSettings, w: 296f);
+            y += step;
             MenuTile(left, y, "QUIT", "Leave the tavern", Ui.Hex("#4A2420"), Application.Quit);
 
             DrawShowcase();
@@ -64,12 +68,12 @@ namespace RestartedTavern.Client.Table
         }
 
         /// <summary>One home tile: a big gold-rimmed button with a title, a line under it and an optional badge.</summary>
-        private void MenuTile(float x, float y, string title, string subtitle, Color color, Action click, string badge = null)
+        private void MenuTile(float x, float y, string title, string subtitle, Color color, Action click, string badge = null, float w = 600f)
         {
-            const float w = 600f, h = 106f;
+            const float h = 106f;
             var b = Ui.Button(_overlay, "", x, y, w, h, color, click);
             Ui.Panel(b.transform, "Accent", 14, 16, 6, h - 32, Ui.Gold);
-            Ui.Tmp(b.transform, title, 40, 12, w - 80, 50, 36f, Ui.Cream, TextAnchor.MiddleLeft, FontStyle.Bold, outline: true);
+            Ui.Tmp(b.transform, title, 40, 12, w - 110, 50, w < 600f ? 30f : 36f, Ui.Cream, TextAnchor.MiddleLeft, FontStyle.Bold, outline: true);
             Ui.Tmp(b.transform, subtitle, 42, 60, w - 90, 32, 18f, Ui.Cream * new Color(1, 1, 1, 0.75f), TextAnchor.MiddleLeft);
             Ui.Tmp(b.transform, ">", w - 60, 0, 40, h, 54f, Ui.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
             if (badge == null) return;

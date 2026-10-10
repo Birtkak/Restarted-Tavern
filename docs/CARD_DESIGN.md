@@ -1,9 +1,11 @@
 # Restarted Tavern — Card Design Guide
 
 How to design cards that fit the rules ([GAME_DESIGN.md](GAME_DESIGN.md)) and each other.
-Status tags: 🔒 locked, 🟡 proposed, ❓ open.
+Status tags: 🔒 locked (a rule for card design). Untagged sections are guidance, tuned with playtests and sims.
 
 ---
+
+New cards are the main way the game grows after the v1.0 rules freeze (GAME_DESIGN §0): they may add mechanics and keywords, never change the rules. A new keyword or rules term also gets a GAME_DESIGN §11 entry and a Tavern Guide page (`Assets/Client/Logic/TavernGuide.cs`).
 
 ## 1. Rarity 🔒
 
@@ -30,7 +32,7 @@ Status tags: 🔒 locked, 🟡 proposed, ❓ open.
 | 7 | 7/8 |
 | 10 | 10/11 |
 
-### 2.1 Ability costs (stat points) 🟡
+### 2.1 Ability costs (stat points)
 Starting values for the budget, to be tuned in playtesting.
 
 | Ability | Cost in stat points |
@@ -42,16 +44,16 @@ Starting values for the budget, to be tuned in playtesting.
 | Drawback (lose life, discard, give opponents Gold) | gives back ~1–2 |
 | Invest | Not counted against the base stats. The **Invest** bonus is priced on its own: about 1 Gold ≈ 1 stat point of effect |
 
-### 2.2 Guidelines 🟡
+### 2.2 Guidelines
 - **Health matters more than usual**: damage is permanent, so extra Health is worth more over a game than extra Power. A 2/3 is noticeably better than a 3/2.
 - **Pings** (1 damage) are strong here: they leave lasting damage. Price them higher than in Hearthstone.
 - **Healing** cards should be efficient. Healing is card-only, so an overcosted heal is never played.
 - **Top-end exception**: Legendary creatures costing 7+ may go about 3 points over budget. They are the payoff for surviving to 10 mana.
-- **Gold is worth less than mana**: it has a cap (3) and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold. A player already at the cap gains nothing, so "gains N Gold" downsides are smaller than they look (❓ see playtest/RULES_REVIEW.md, design review 2026-10-10, R9).
+- **Gold is worth less than mana**: it has a cap (3) and can only pay for some things, so 1 Gold ≈ 0.7 mana when pricing effects that give Gold. A player already at the cap gains nothing, so "gains N Gold" downsides are smaller than they look (see playtest/RULES_REVIEW.md, design review 2026-10-10, R9).
 - **"May" means a choice** (Decision Log 2026-10-10): a card lets you choose only if its text says "may" or "up to". Otherwise it's forced: an Arrival or a spell's effect simply happens. Use "may" where skipping is a real choice (a fight that could kill your creature, paying life or Gold). `CardDataTests.MayInTheText_MatchesTheOptionalFlags` checks the text against the data.
 - **Spells and abilities are effectively cheaper**: Instants, Sorceries, Equip and activated abilities spend banked Gold first (GAME_DESIGN §5.2). That's up to 3 extra "mana" on a burst turn. Permanents can't use Gold, so a creature-heavy turn can't be stretched. Price spells, Equip costs and abilities with that in mind.
 
-### 2.3 Trigger count 🟡 (Decision Log 2026-10-10)
+### 2.3 Trigger count 🔒 (Decision Log 2026-10-10)
 - One source triggering for several things at once puts **one** item on the Chain that does it once per event (shown "×N"). So a sweeper into a death watcher is one trigger, not five.
 - Trigger count is a resource for future archetypes (pinging, "whenever you cast a spell" chains, storm). Those triggers get `"separate": true` and say "each" in the text. Keep the list short and deliberate.
 - Separate-trigger cards today: **none**. Targeted triggers are one per event anyway (each picks its own target).
@@ -72,7 +74,7 @@ Starting values for the budget, to be tuned in playtesting.
 
 🔒 **Set v0.3 (approved 2026-10-09): mana scarcity.** +6 cards per faction and +6 Neutral (36), 2 C / 2 U / 2 R each: 2 card draw, 2 mana sinks (X spells, repeatable "(N): ..." or "(X): ..." abilities, Invest 3), 2 finishers (X burn to face, drains, inevitability). Pricing: X spells cost about X+1 for X damage or X cards; repeatable abilities cost 2-4 per use; Invest stays at 3 or less (Gold cap 3 with Runeterra mana).
 
-🟡 Mana curve for each faction's 20 cards: about 3 one-drops, 4 two-drops, 4 three-drops, 3 four-drops, 3 five-drops, 2 six-drops, and 1 card at 7–10. Plus about 6 non-creature cards spread across the curve.
+Guidance: mana curve for each faction's 20 cards: about 3 one-drops, 4 two-drops, 4 three-drops, 3 four-drops, 3 five-drops, 2 six-drops, and 1 card at 7–10. Plus about 6 non-creature cards spread across the curve.
 
 ---
 
@@ -93,24 +95,24 @@ What each faction **does best** (primary), **can do** (secondary), and **never d
 
 ---
 
-## 5. Sample Cards 🟡
-Three per faction, to set the tone. Numbers follow §2.
+## 5. Sample Cards
+Three per faction, to set the tone, as they are in the game now (the card lists in docs/cards are the full source).
 
 Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that also helps opponents) and **Apex of the Green Deep** (huge, game-ending top-end payoffs). Push more cards in these directions.
 
 ### Shadow Money Wizards
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
-| **Back-Alley Appraiser** | 2 | Creature: Wizard (C) | 1/3 | Arrival: You may discard a card. If you do, gain 2 Gold. |
+| **Apprentice Forger** | 2 | Creature: Wizard (C) | 1/2 | Flying. Arrival: Gain 1 Gold. |
 | **Silver-Tongued Deal** | 3 | Instant (U) | — | Gain control of target creature until end of turn. Untap it. Each opponent gains 2 Gold. |
 | **The Grand Ledger** | 7 | Sorcery (R) | — | Draw 4 cards. Invest 3: Draw 2 more and gain 3 life. |
 
 ### Goobers
 | Name | Cost | Type | Stats | Text |
 |---|---|---|---|---|
-| **Goober Rascal** | 1 | Creature: Goober (C) | 2/1 | Can't block. |
+| **Goober Rascal** | 1 | Creature: Goober (C) | 1/1 | Can't block. |
 | **Fuse Goober** | 2 | Creature: Goober (C) | 1/2 | Last Breath: Deal 2 damage to any target. |
-| **Mob Rush** | 4 | Sorcery (U) | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. |
+| **Mob Rush** | 5 | Sorcery (U) | — | Create three 1/1 Goobers. Your creatures get +1/+0 until end of turn. |
 
 ### Sensationalists
 | Name | Cost | Type | Stats | Text |
@@ -131,7 +133,7 @@ Favorites so far: **Silver-Tongued Deal** (shady deals: a strong effect that als
 |---|---|---|---|---|
 | **Spark Drone** | 2 | Creature: Construct (C) | 1/1 | Flying. Arrival: Deal 1 damage to target creature. |
 | **Pulse Blade** | 2 | Equipment (C) | — | Equipped creature gets +1/+1 and has "Whenever this creature attacks, deal 1 damage to target creature." Equip 2. |
-| **Grid Overload** | 4 | Sorcery (R) | — | Deal 1 damage to each enemy creature three times. |
+| **Grid Overload** | 4 | Sorcery (R) | — | Deal 1 damage to each enemy creature twice. |
 
 ### Neutral
 | Name | Cost | Type | Stats | Text |

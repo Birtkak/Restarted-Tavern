@@ -2,7 +2,7 @@
 
 How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this document covers architecture and how we work.
 
-**Status:** engine prototype. Sets v0.1 and v0.2 are designed and every card runs in the rules engine (254 passing EditMode tests). A hot-seat **debug table** in Unity can play it, against itself or the GreedyBot (§7).
+**Status (2026-10-10): v1.0 playable.** The rules are frozen (GAME_DESIGN §0). Every card of sets v0.1–v0.3 runs in the rules engine, and the Windows client (`Builds/Table/RestartedTavern.exe`) plays hot-seat or against the GreedyBot, with a main menu, tutorial, deck editor, settings, bug reports and the Tavern Guide. Handover and how to share the game: [HANDOVER.md](HANDOVER.md).
 
 ---
 
@@ -16,7 +16,7 @@ How the game will be built. Rules live in [GAME_DESIGN.md](GAME_DESIGN.md); this
 | Online | **Local first** (hot-seat and vs. AI). The engine is built online-ready (deterministic, per-player hidden-information views). An authoritative server comes later, reusing the same rules library |
 | Tests | NUnit through the **Unity Test Framework** (EditMode tests). They can run headless from the command line with `-runTests` |
 
-### 0.1 Project layout 🟡
+### 0.1 Project layout 🔒
 ```
 Restarted-Tavern/
 ├─ docs/                          design + development docs, card lists
@@ -33,10 +33,17 @@ Restarted-Tavern/
 │  ├─ Rules.Tests/                RestartedTavern.Rules.Tests.asmdef (EditMode, NUnit)
 │  ├─ StreamingAssets/Cards/      card data: one JSON file per faction + tavern_dwellers.json (§3)
 │  ├─ StreamingAssets/Decks/      prototype_decks.json
-│  ├─ Client/                     RestartedTavern.Client.asmdef: DebugTable.cs (IMGUI debug table); Editor/ builds the scene and the exe
-│  │   ├─ Logic/                  RestartedTavern.Client.Logic.asmdef (noEngineReferences): session, snapshot, picker, combat stage (CLIENT_DESIGN §2)
-│  │   └─ Logic.Tests/            its EditMode tests
-│  └─ Scenes/                     DebugTable.unity
+│  ├─ Client/                     RestartedTavern.Client.asmdef
+│  │   ├─ Table/                  the game client: TableView (uGUI built from code) and its partials (Board, Beats, Menu,
+│  │   │                          Tutorial, DeckEditor, Settings, Guide, BugReport, Debug, Shots), CardFaces, Ui (CLIENT_DESIGN §2.2)
+│  │   ├─ Logic/                  RestartedTavern.Client.Logic.asmdef (noEngineReferences): session, snapshot, picker, combat
+│  │   │                          stage, tutorial script, keyword glossary, Tavern Guide content (CLIENT_DESIGN §2)
+│  │   ├─ Logic.Tests/            its EditMode tests
+│  │   ├─ Editor/                 TableBuilder (scene + Windows build), Guide image importer, simulation menu
+│  │   └─ DebugTable.cs           the old IMGUI rules-testing table (kept as a tool)
+│  ├─ Resources/Guide/            Tavern Guide screenshots (made by Tools/GuideShots)
+│  └─ Scenes/                     Table.unity (the game), DebugTable.unity
+├─ Tools/                         BugHunt, SimRunner, RulesTests (.NET 8, compile Assets/Rules), GuideShots (Python)
 └─ Server/  (later)               a .NET host that compiles the same Assets/Rules source files
 ```
 - `noEngineReferences: true` on the Rules assembly **enforces** at compile time that rules code can't touch `UnityEngine`. This keeps it portable to a server and fast to test.
@@ -46,7 +53,7 @@ Restarted-Tavern/
 
 ---
 
-## 1. Core Architectural Principles 🟡
+## 1. Core Architectural Principles 🔒
 
 1. **The rules engine is separate from the presentation.** The game logic is a pure, UI-free library. The client (whatever engine we choose) only renders the state and sends player *actions*. This lets us run the same rules for AI, tests, servers and replays.
 2. **Deterministic.** Given the same starting state, seed and action list, the result is always the same. All randomness goes through one seeded RNG. This makes replays, bug reports and networking possible.
@@ -65,7 +72,7 @@ Restarted-Tavern/
 
 8. **Structure the engine like the MTG Comprehensive Rules.** MTG is the rules foundation (GAME_DESIGN §1.1), so the engine should mirror its architecture: a priority/stack loop (the Chain), **state-based actions** checked whenever a player would receive priority (a creature at 0 Health dies, a player at 0 life loses, the Legendary rule, unattached Curses go to the graveyard), a **layer system** for continuous effects, and replacement effects. Rule code should cite the matching GAME_DESIGN section, or the MTG CR rule number when it implements default MTG behavior.
 
-## 2. Core Model (draft)
+## 2. Core Model (sketch; the code is the reference)
 
 ```
 FormatConfig   { deckSize, copyLimit, minPlayers, maxPlayers, startingLife,
@@ -87,7 +94,7 @@ CardInstance   { objectId, definitionId, owner, controller,
                  currentHealth, tapped, counters{}, attachments[] }
 ```
 
-- 🟡 Implemented as `CardInstance.Damage`: damage that **never wears off** (no "damage marked this turn"). Remaining Health is computed as max Health − Damage. This matches MTG's damage counters except for the cleanup reset. 🔒 Exception (GAME_DESIGN §7.3): when a Health buff ends, damage is capped at max Health − 1, so losing a buff can't kill.
+- Implemented as `CardInstance.Damage`: damage that **never wears off** (no "damage marked this turn"). Remaining Health is computed as max Health − Damage. This matches MTG's damage counters except for the cleanup reset. 🔒 Exception (GAME_DESIGN §7.3): when a Health buff ends, damage is capped at max Health − 1, so losing a buff can't kill.
 - `chain` is a LIFO list of pending spells/abilities. When every player has passed in a row (`passesInRow == players.length`), the top item resolves. The engine auto-passes for players who have no legal response.
 - Curses can attach to a creature *or* a player, so attachments target `ObjectId | PlayerId`.
 - `objectId` is new every time a card changes zone (as in MTG), so "that creature" effects stop applying once it leaves.
@@ -140,11 +147,11 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
   something new still needs a new building block in C# first (a new effect class or a new field).
 - Conditions and counts are data too: `TriggerCondition` (`SourceHasNoDamage`, `YouHaveGoldAtLeast`,
   `EachOpponentHasLifeAtMost`) and `DynamicCount` (`EquipmentYouControl`, `CreatureCardsInYourGraveyard`).
-- 🟡 The rules `text` is still written by hand. Generating it from the abilities would keep text and behavior from disagreeing.
+- The rules `text` is written by hand; `CardDataTests` checks it against the data where it can ("may", targets). Generating it from the abilities is a possible later improvement.
 
 ---
 
-## 4. Testing Strategy 🟡
+## 4. Testing Strategy 🔒
 - **Rules unit tests** for every rule in GAME_DESIGN.md. When a rule changes, its test changes in the same commit.
 - **Card tests**: each card with a scripted effect gets at least one scenario test.
 - **Random-play soak tests**: run thousands of games between random-action bots and check invariants (no negative mana, the total number of cards is conserved, the game always ends).
@@ -152,19 +159,19 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 
 ---
 
-## 5. Roadmap (draft)
-1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Tavern Dwellers.
-2. ✅ **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards (§7).
-3. 🚧 **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage. *Bot simulations and the first findings are in [playtest/PLAYTEST.md](playtest/PLAYTEST.md); human playtests are next.*
-4. 🚧 **Visual client** in Unity (Windows build): hot-seat 1v1 and vs. the bot. Direction and client logic: [CLIENT_DESIGN.md](CLIENT_DESIGN.md) (logic layer in `Assets/Client/Logic`, 2026-10-10); the table scene is next.
-5. ✅ Implement the full first set (120 cards) and a basic AI. *All v0.1 and v0.2 cards run in the engine (2026-10-09); GreedyBot plays them.*
-6. Later: multiplayer (3–4 players), singleton format, online play.
+## 5. Roadmap
+1. ✅ **Rules and first sets**: v0.1–v0.3 (216 cards, 10 Tavern Dwellers), all in the engine.
+2. ✅ **Rules engine** with EditMode tests, bot simulations and BugHunt.
+3. ✅ **Visual client** (Windows): LoR-style table, MTG Arena hand and board, animations, hot-seat and vs. the bot.
+4. ✅ **v1.0 for friends** (2026-10-10): rules frozen, main menu, tutorial, deck editor, settings, Tavern Guide, bug reports.
+5. 🚧 **Friends playtest**: gather bug reports and balance notes ([HANDOVER.md](HANDOVER.md)).
+6. Later, as additions on top of the frozen rules: card art, sound, new cards and sets, new keywords, multiplayer (3–4), singleton, online play.
 
 ---
 
-## 6. Open Technical Questions ❓
-- Card art pipeline and card frame rendering.
-- AI approach for vs.-AI play (rule-based first? Monte Carlo search, which works because the engine is deterministic?).
+## 6. Open Technical Questions (for later releases)
+- Card art pipeline: art drops in at `Resources/CardArt/<card id>.png`; who paints is open.
+- A stronger AI: the GreedyBot is rule-based; Monte Carlo search would work because the engine is deterministic.
 - CI: GitHub Actions runs the rules tests without Unity (`Tools/RulesTests`, .NET 8 + NUnit, `.github/workflows/dotnet.yml`) and builds SimRunner on Windows with a short simulation smoke test, uploading it as an artifact (`dotnet-desktop.yml`). Running the Unity tests themselves (client logic, the scene) would need a Unity license setup (GameCI).
 - Online (later): hosting, and how matchmaking works.
 
@@ -206,12 +213,18 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 - **Replacement effects** (MTG 614–616, `Core/Replacement.cs`, `Flow/GameRunner.Replacements.cs`): `ReplacementAbility` (a static, all data: event, filters, outcome) for dying, damage, entering, drawing, gaining life and gaining Gold; temporary ones from `AddReplacementEffect` live in `GameState.Replacements` ("until end of turn", "the next time"). Self-replacement first, then oldest first; each applies once per event and the rest are re-checked. The affected player doesn't choose the order yet (game actions can't pause). Keeper Z-00 uses it.
 - `GameEngine.CacheLegalActions` (opt-in, used by `MatchRunner`): the bot's legal-action list is reused by `Apply`'s validation, so it isn't enumerated twice.
 
-**Tests** (`Assets/Rules.Tests` and `Assets/Client/Logic.Tests`, 256 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
+**Tests** (`Assets/Rules.Tests` and `Assets/Client/Logic.Tests`, about 275 tests): rules unit tests per area, card scenario tests, a **random-play soak test** (100 full games between random bots with invariant checks after every action) and **determinism** tests (same seed and actions give the same game). Run them headless:
 ```
 "C:/Program Files/Unity/Hub/Editor/6000.6.4f1/Editor/Unity.exe" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults TestResults.xml
 ```
 
-**Debug table** (`Assets/Client/DebugTable.cs`, scene `Assets/Scenes/DebugTable.unity`). This is a hot-seat IMGUI table for 1v1 with the six prototype decks (`CardPool`); the P1/P2 deck buttons choose them for the next game.
+**The game client** is the Table scene (CLIENT_DESIGN §2.2). Build it with **Restarted Tavern → Build Windows** or headless:
+```
+Unity.exe -batchmode -quit -projectPath . -executeMethod RestartedTavern.Client.Editor.TableBuilder.BuildWindows
+```
+It writes `Builds/Table/RestartedTavern.exe` (git-ignored; zip the whole `Builds/Table` folder to share it).
+
+**Old debug table** (`Assets/Client/DebugTable.cs`, scene `Assets/Scenes/DebugTable.unity`, kept as a rules-testing tool). This is a hot-seat IMGUI table for 1v1 with the six prototype decks (`CardPool`); the P1/P2 deck buttons choose them for the next game.
 - Waiting on someone: the top bar names them and their header turns green.
 - Your options: their legal actions are listed as buttons. Cards they can act with are tinted green, and clicking a card filters the list to the actions that involve it.
 - What's on the table: each player's Tavern Dweller (text, factions, "Power used this turn"), the board with Power/Health, damage, keywords, tapped/sick/attacking/blocking/equipped states and what each Equipment is attached to, plus the Chain (top first, with ability texts and Tavern Dweller Powers marked) and the current combat. Abilities and Powers appear in the action list like any other action; click the Tavern Dweller or a permanent to see only its actions.
@@ -239,7 +252,7 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 - **Simulations outside Unity**: `Tools/SimRunner` (a .NET 8 console app built with the SDK in Unity's `Editor/Data/DotNetSdk`) compiles the `Assets/Rules` sources and runs the simulation report in ~35 s instead of several minutes in Unity (Mono's GC keeps the parallel games from scaling). See [playtest/PLAYTEST.md](playtest/PLAYTEST.md) "How to run". `-trace` prints one readable bot game; `-h2h` plays the current GreedyBot against `BotStyle.Baseline()` (or, with `-off Switch`, against itself minus one switch) in every mirror. Balance tools: `-balance [-cards]` (win matrix, per-card cast stats), `-scan` (card power table, playtest/CARD_POWER.md), `-impact`, `-optimize` (deck tuning by measurement), and `-data <folder>` to load a changed copy of StreamingAssets; `MatchResult.CardGames/CardWins` track which cards each side cast.
 - `GameText` (in Rules) turns cards, actions and events into readable text. It is also used by tests and will be useful for replays.
 
-**Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))
-- A Tavern Dweller zone that can be targeted or removed (v0.1: it can't), and Tavern Dwellers in multiplayer politics.
-- Filtering events by hidden information. The affected player choosing the order of replacement effects (GAME_DESIGN §8.1).
+**Not implemented** (later releases; see [HANDOVER.md](HANDOVER.md))
+- Multiplayer (3–4 players) in the client, and online play.
+- Filtering events by hidden information (needed for online play).
 

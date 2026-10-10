@@ -1,11 +1,23 @@
-# Restarted Tavern — Game Design
+# Restarted Tavern — Game Design (Rules v1.0)
 
-The game's rules: what players see and do. This is a living document, built up through design sessions.
+The game's rules: what players see and do. The in-game **Tavern Guide** explains the same rules to players, with pictures.
 
-**Status tags**
-- 🔒 **LOCKED**: decided. Change it only on purpose, and log the change in the Decision Log.
-- 🟡 **PROPOSED**: the current best idea, not yet confirmed.
-- ❓ **OPEN**: still needs a decision.
+## 0. Rules freeze v1.0 🔒 (2026-10-10)
+
+**The fundamentals in this document are permanently locked.** Future releases add **cards, keywords, mechanics and formats**, built on top of these rules. They do not change them.
+
+**Locked (never changes):** the round structure and attack token (§6), mana and Gold (§5), permanent damage and "losing a buff can't kill" (§7.3), combat (§7), the Chain and timing (§8), Tavern Dwellers and the deck rules (§9), the card types (§10), the rules terms (§11.1), the Standard format numbers (§2–3), win and loss (§12), and MTG as the default for everything not covered (§1.1).
+
+**May be added in future releases:**
+- New cards, sets and Tavern Dwellers (same factions; new factions only as an addition).
+- New keywords and rules terms, defined with MTG as the backbone (§1.1) and added to §11 and the Tavern Guide.
+- New card types, as long as they fit §10's timing and payment rules.
+- New formats (§2, §13): they may change the format numbers (life, deck size, copies) but not the core rules.
+- Card balance changes (costs, stats, text). Balance is fixed with cards, never with the rules.
+
+**How to change something anyway:** only on purpose, as a new rules version (v2.0), with a Decision Log entry that says why. A bug where the engine disagrees with this document is fixed in the engine, not here.
+
+Every rule below is 🔒 unless it's marked **future** (formats not in v1.0).
 
 ---
 
@@ -34,6 +46,7 @@ This game only **deviates** from MTG in these areas:
 | **Life gain** | Uncapped | Gaining life (Lifelink, drains) can't take you above your starting life (§11.1) |
 | *Format numbers* | 20 life | 30 life (40 in multiplayer), 60 cards, 4 copies |
 | *Deck identity* | Colors (Commander uses a command zone) | A **Tavern Dweller** in the Tavern Dweller zone sets the factions and acts as the player's face, with a Power paid like any activated ability (§9). It works like a commander that never enters the battlefield |
+| *Replacement order* | The affected player chooses (616.1) | Fixed: self-replacement first, then oldest first (§8.1) |
 | *Going first* | The first player skips their draw | No compensation: the rounds share out going first (everyone draws in round 1, §3) |
 
 Renamed terms, which work exactly as in MTG: the **Chain** is the stack, **Arrival** is an enters-the-battlefield trigger, **Last Breath** is a dies trigger, **Relic** is a non-creature artifact or enchantment, a **Curse** is an Aura attached to an enemy creature or player, and **Health** is toughness (plus remaining-damage tracking).
@@ -49,11 +62,11 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Format | Deck size | Copy limit | Players | Starting life | Status |
 |---|---|---|---|---|---|
 | **Standard** | exactly 60 | max 4 of each card | 2 | 30 | 🔒 |
-| Singleton / big deck | ❓ (100?) | 1 of each | 2–4 | ❓ | future |
+| Singleton / big deck | open (100?) | 1 of each | 2–4 | open | future |
 | Multiplayer Standard | 60 | 4 | 3–4 | 40 🔒 | future |
-| Teams (2v2) | 60 | 4 | 4 | ❓ | future (the engine supports teams from the start) |
+| Teams (2v2) | 60 | 4 | 4 | open | future (the engine supports teams from the start) |
 
-🟡 Rule-writing principle: card text never says "your opponent". It says "an opponent", "each opponent" or "target opponent", so every card works in multiplayer without needing errata.
+🔒 Rule-writing principle: card text never says "your opponent". It says "an opponent", "each opponent" or "target opponent", so every card works in multiplayer without needing errata.
 
 ---
 
@@ -65,7 +78,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Starting hand | 7 | 🔒 |
 | Maximum hand size | 7 (every player discards down to 7 at the end of the round) | 🔒 |
 | Mulligan | **London mulligan**: shuffle and draw 7, then put 1 card on the bottom for each mulligan taken | 🔒 |
-| Who goes first | Random | 🟡 |
+| Who goes first | Random (a coin toss shows it) | 🔒 |
 | Going-first compensation | **None.** Everyone draws when a round starts, round 1 included. The round leader (who acts first and holds the attack token) changes every round (§6.1), which evens out going first: 45–54% first-player wins in all six bot mirrors | 🔒 |
 
 ---
@@ -165,13 +178,13 @@ Creatures have **Power / Health**. Damage stays on the creature (it isn't remove
 ### 7.2 Combat model 🔒 MTG-style blocking
 1. **Declare attackers**: the attack token holder (§6.1) taps untapped creatures to attack (not with Vigilance). They stay tapped until their controller's next attack round (§6 step 1), so attacking costs you those blockers. Each attacker attacks a **player** (in multiplayer, the attacker picks which opponent for each creature).
 2. **Response window** (§8).
-3. **Declare blockers**: each defending player assigns their untapped creatures as blockers. 🟡 Each blocker blocks one attacker; one attacker can be blocked by several blockers.
+3. **Declare blockers**: each defending player assigns their untapped creatures as blockers. Each blocker blocks one attacker (unless a card says it can block more, like Retired Champion); one attacker can be blocked by several blockers.
 4. **Response window** (§8).
 5. **Damage**: all combat damage is dealt at the same time. Unblocked attackers damage the player they attacked. Blocked attackers and their blockers damage each other.
 6. 🔒 When several creatures block one attacker, the attacker's controller divides its damage among the blockers however they like (like MTG since 2024, no damage-assignment order). A creature blocking several attackers divides its damage the same way, chosen by its controller. With **Trample**, damage only goes to the player once every blocker has been assigned lethal damage (MTG 702.19b). The attacking player divides first, then each defender in turn order (MTG 510.1). The game only asks when the creature can't give each of them lethal damage; otherwise each gets lethal damage and the rest goes to the player (Trample) or onto the first blocker.
 
-🟡 Blocking does not tap the blocker.
-🟡 Damage dealt to a creature that has no Health left beyond what it needed to die is lost, unless the attacker has **Trample**.
+🔒 Blocking does not tap the blocker.
+🔒 Damage dealt to a creature that has no Health left beyond what it needed to die is lost, unless the attacker has **Trample**.
 
 ### 7.3 Permanent damage 🔒
 Damage stays on a creature until it is healed or the creature dies. Health can't go above its max unless an effect says so.
@@ -182,7 +195,7 @@ Design consequences:
 - Chip damage builds up, so big creatures are worn down over time instead of being a wall you have to "answer or lose to".
 - Healing becomes a real card role. It needs to be common enough that big creatures aren't just liabilities.
 - 🔒 **No built-in healing.** Healing only comes from cards: healing spells, **Lifelink**-style effects and Tavern Dweller powers.
-- Design rule 🟡: every faction needs *some* answer to accumulated damage (healing, sacrifice-for-value, or just cheap creatures you don't mind losing), so that no faction is stuck with crippled creatures.
+- Design rule 🔒: every faction needs *some* answer to accumulated damage (healing, sacrifice-for-value, or just cheap creatures you don't mind losing), so that no faction is stuck with crippled creatures.
 - Damage needs clear UI support: show current/max health.
 
 ### 7.4 No summoning sickness, no Haste 🔒
@@ -197,15 +210,15 @@ Creatures can attack, and use Tap abilities, the round they enter the battlefiel
 - When **all players pass in a row**, the **top** item of the Chain resolves (last in, first out). Then the active player gets priority again, and the loop continues until the Chain is empty.
 - If **all** of a spell's targets are no longer valid when it resolves, it **fizzles** (it goes to the graveyard and does nothing). If only some are, it resolves and skips the illegal ones (MTG 608.2b).
 - Triggered abilities (Arrival, Last Breath…) also go on the Chain, so they can be responded to.
-- **Fixed windows** where players get priority even when the Chain is empty: 🟡 the action phase (§6: whoever has the action), the start of combat, after attackers are declared, after blockers are declared, and the end of the round.
-- 🟡 UX note: the client should auto-pass for players who have no legal response (or who choose "auto-pass this round"), so the back-and-forth stays fast, especially with 4 players.
+- **Fixed windows** where players get priority even when the Chain is empty: the round start, the draw, the action phase (§6: whoever has the action), the start of combat, after attackers are declared, after blockers are declared, after combat damage, and the end of the round.
+- The game **auto-passes** for a player whose only legal option is to pass, so the back-and-forth stays fast (`GameState.AutoPass`).
 
 ### 8.1 Replacement effects 🔒 (MTG 614–616)
 "If [something] would happen, [something else] happens instead." They don't use the Chain; they change the event as it happens.
 - Events that can be replaced: a creature **dying**, **damage** being dealt (prevention, "double", "that much plus 1"), a permanent **entering** (with counters, tapped), **drawing** a card, **gaining life**, **gaining Gold** (banking included).
 - They come from permanents and Tavern Dwellers (static abilities), or from spells and abilities for a while ("until end of turn", "the next time ...").
 - Each replacement changes an event **at most once** (MTG 614.5). After one applies, the others are checked again: once a creature is exiled instead of dying, "if it would die" effects no longer apply.
-- **Order** when several apply: self-replacement effects first (MTG 614.15), then the others **oldest first**. ❓ MTG lets the affected player choose this order (616.1); the engine uses the fixed order until game actions can pause for a choice. Decide this when the first card that needs it is designed.
+- **Order** when several apply: self-replacement effects first (MTG 614.15), then the others **oldest first**. This fixed order is the rule (decided in the v1.0 freeze): unlike MTG 616.1, the affected player doesn't choose.
 - Keeper Z-00's "Your creatures with 5 or more Health enter with a +1/+1 counter" is a replacement effect.
 
 ---
@@ -218,13 +231,13 @@ Every deck is led by a **Tavern Dweller**, a tavern regular you play *as*. The T
 - The Tavern Dweller **is the player**: your 30 life is the Tavern Dweller's life, and "attack a player" means attacking their Tavern Dweller.
 - The Tavern Dweller sits in the **Tavern Dweller zone** (public). In v0.1 it can't be removed from the game.
 - **Tavern Dweller Power**: each Tavern Dweller has a unique activated power, paid with mana and/or Gold like any activated ability (Gold first, §5.2) 🔒. 🔒 It can be used **once each round** (§6), at instant speed, through the Chain, so opponents can respond to it.
-- **Passive**: 🟡 each Tavern Dweller has one always-on ability: a triggered ability, a static ability, or a cost change. It works from the Tavern Dweller zone.
+- **Passive**: each Tavern Dweller has one always-on ability: a triggered ability, a static ability, or a cost change. It works from the Tavern Dweller zone.
 - 🔒 **Deck rule**: every deck has exactly one Tavern Dweller, and every card in it is from one of the Tavern Dweller's two factions or Neutral.
 - 🔒 The Tavern Dweller **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
 - Future singleton format: the Tavern Dweller becomes the commander-style deck leader.
 
 ### 9.2 Factions 🔒
-There are **5 factions**. Every card belongs to one faction or is **Neutral** (playable in any deck). Each Tavern Dweller unlocks a **fixed pair** of factions, giving 10 possible pairs. 🟡 There may be several Tavern Dwellers per pair over time.
+There are **5 factions**. Every card belongs to one faction or is **Neutral** (playable in any deck). Each Tavern Dweller unlocks a **fixed pair** of factions, giving 10 possible pairs. Future releases may add more Tavern Dwellers per pair (§0).
 
 | Faction | Inspired by | Identity | Plays like |
 |---|---|---|---|
@@ -234,13 +247,13 @@ There are **5 factions**. Every card belongs to one faction or is **Neutral** (p
 | **Evergrowing Wild** | MTG green + LoR Freljord | A jungle planet, from tiny critters to the biggest, scariest creatures in the universe | Creatures that grow, huge bodies, **Trample**, toughness |
 | **Glitterworld** | — | A huge high-tech city that houses every kind of creature in the game | A bit of everything, but focused on **pings** (small direct damage, which sticks because damage is permanent) and **buffing with Equipment** |
 
-🟡 How each faction relates to permanent damage:
+How each faction relates to permanent damage (design guidance):
 - **Goobers** create damage (and accept losing their small creatures).
 - **Glitterworld** spreads damage with pings, then finishes damaged creatures off.
 - **Wild** creatures are big enough to *survive* chip damage.
 - **Sensationalists** don't care about damage: they profit when things die.
 - **Wizards** avoid combat and win through value and spells.
-- 🟡 Healing (cards only) is spread out: Wild (creatures that endure), Sensationalists (drain/lifelink), Glitterworld (repair *machines*).
+- Healing (cards only) is spread out: Wild (creatures that endure), Sensationalists (drain/lifelink), Glitterworld (repair *machines*).
 
 ### 9.3 Tavern Dweller list
 The 10 Tavern Dwellers (one per faction pair) are in [cards/tavern_dwellers.md](cards/tavern_dwellers.md). That list is the source of truth.
@@ -261,20 +274,21 @@ Locations were considered and rejected for now (they may return later).
 
 ---
 
-## 11. Keywords (starting set) 🟡
-Kept deliberately **small**. 🔒 Trample is the only damage-related core keyword; mechanics like Bloodied, Wound and Pristine were considered and rejected for now.
+## 11. Keywords 🔒
+Kept deliberately **small**; new keywords may be added in future releases (§0). Trample is the only damage-related core keyword; mechanics like Bloodied, Wound and Pristine were considered and rejected for now.
 
 | Keyword | Meaning | Status |
 |---|---|---|
 | **Trample** | Combat damage beyond what's needed to kill the blockers goes to the attacked player | 🔒 |
-| **Flying** | Can only be blocked by Flying / Reach | 🟡 |
-| **Lifelink** | Damage dealt also heals its controller | 🟡 |
+| **Flying** | Can only be blocked by Flying / Reach | 🔒 |
+| **Lifelink** | Damage dealt also heals its controller | 🔒 |
 | **Invest X: …** | Optional extra cost, paid only with Gold, for a bonus effect | 🔒 |
-| **Arrival** | Triggers when this creature enters the battlefield | 🟡 |
-| **Last Breath** | Triggers when this creature dies | 🟡 |
-| **Reach** | Can block creatures with Flying | 🟡 |
-| **Vigilance** | Attacking doesn't tap it, so it can still block in the opponent's attack round (MTG). On defensive creatures (Decision Log 2026-10-10) | 🟡 |
-| **Equip X** | (Glitterworld) Pay X: attach this Equipment to a creature you control. Only as one of your actions | 🟡 |
+| **Arrival** | Triggers when this creature enters the battlefield | 🔒 |
+| **Last Breath** | Triggers when this creature dies | 🔒 |
+| **Reach** | Can block creatures with Flying | 🔒 |
+| **Vigilance** | Attacking doesn't tap it, so it can still block in the opponent's attack round (MTG). On defensive creatures (Decision Log 2026-10-10) | 🔒 |
+| **Can't block** | This creature can't be declared as a blocker | 🔒 |
+| **Equip X** | (Glitterworld) Pay X: attach this Equipment to a creature you control. Only as one of your actions | 🔒 |
 
 ---
 
@@ -302,25 +316,28 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 
 ---
 
-## 13. Multiplayer (3–4 players) 🔒 (future format)
-- ❓ **Rounds in multiplayer**: how the action rounds and the attack token work with 3–4 players is open (with a rotating token, each player attacks once every 3–4 rounds). Until it's decided, the engine's multiplayer format uses the 1v1 rounds as they are: the token moves one seat each round.
+## 13. Multiplayer (3–4 players): future format, not part of v1.0
+The engine is built for it, but nothing here ships in v1.0. The items below are drafts for a future release; when it ships, the 🔒 core rules above still apply unchanged.
+- **Open: rounds in multiplayer**: how the action rounds and the attack token work with 3–4 players is open (with a rotating token, each player attacks once every 3–4 rounds). Until it's decided, the engine's multiplayer format uses the 1v1 rounds as they are: the token moves one seat each round.
 - **Seating**: actions and the round leader go clockwise. Priority on the Chain also goes clockwise, starting from the player who has the action.
 - **Starting life: 40.**
 - **Going-first compensation: none**, as in 1v1: everyone draws in round 1.
 - **Attacking**: free-for-all. **Each attacking creature chooses any opponent** to attack. Each defending player only declares blockers against attackers that are attacking *them*.
-- **Elimination** 🟡: when a player loses, they leave the game. All cards they **own** leave with them, any of their spells or abilities on the Chain are removed, and control of anything of theirs that someone else controls ends. Effects that player controlled stop ("until end of turn" effects end immediately).
-- 🟡 Card wording for multiplayer: "each opponent", "target opponent", "the player to your left/right". Effects like "each player" include you.
-- 🟡 Politics are allowed (deals, threats), but deals are not binding in the rules.
+- **Elimination** (draft): when a player loses, they leave the game. All cards they **own** leave with them, any of their spells or abilities on the Chain are removed, and control of anything of theirs that someone else controls ends. Effects that player controlled stop ("until end of turn" effects end immediately).
+- Card wording for multiplayer: "each opponent", "target opponent", "the player to your left/right". Effects like "each player" include you.
+- (draft) Politics are allowed (deals, threats), but deals are not binding in the rules.
 
-### 13.1 Teams (2v2) ❓ future
+### 13.1 Teams (2v2): future
 - The engine gives every player a `teamId` from the start.
-- 🟡 Draft idea: teammates sit across from each other, so actions alternate between teams. Life, Gold and hands are separate. You can't attack or target your teammate with "opponent" effects.
+- Draft idea: teammates sit across from each other, so actions alternate between teams. Life, Gold and hands are separate. You can't attack or target your teammate with "opponent" effects.
 
 ---
 
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Rules v1.0 frozen** (user: "fully permanently lock in the game design"). Every rule of the Standard format is 🔒 (§0); future releases add cards, keywords, mechanics and formats but don't change the fundamentals. Settled in the freeze: who goes first is random (coin toss); each blocker blocks one attacker unless a card says otherwise; blocking doesn't tap; excess damage is lost without Trample; all keywords in §11 locked (Can't block added to the table); replacement effects use the fixed order (self-replacement, then oldest first; a deviation from MTG 616.1); the fixed priority windows are the engine's (round start, draw, action, combat steps, end). Multiplayer, singleton and teams are future formats, not part of v1.0. Also built: the **Tavern Guide** (in-game encyclopedia: search, screenshots, example cards) and the phase tracker's "Combat damage" chip. |
+| 2026-10-10 | **Settings and Report bug everywhere.** A Settings panel (animation speed, fullscreen / windowed, resolution, VSync, keyword hints, coin toss show / skip; saved in PlayerPrefs) opens from a main menu tile and in game with **Escape** when there's nothing to cancel (the game waits; Resume / Main menu). **Report bug** is on every screen (table, menu, deck editor, game over, handoff) and on **F2**. Fixed: the deck editor's search field took no typing (the table cleared the UI focus every frame). |
 | 2026-10-10 | **Main menu overhaul, tutorial, coin toss.** Home screen: title and big tiles (Continue, Play, Tutorial, Deck editor, Quit) with a fan of one showcase card per faction; Play opens the old deck / Tavern Dweller setup page. Tutorial: a real game, Goober Mob (Skabba) against Jungle Stampede (Mukk), stacked decks and you first; both hands and every play are scripted for 3 rounds (play a creature, attack, end the round; Mukk attacks, you block and trade, damage stays, Skabba pings; Spark Snot finishes the damaged Spider, Gob Gang, attack wide), each step allows only the action it teaches, then "Try and beat the AI now!" and the bot plays freely. Every game opens with a coin toss that shows who goes first (still random, §3; the tutorial's lands on you). |
 | 2026-10-10 | **Playtest fixes after the tutorial** (bug reports 155104–155716). A spell or ability with **one legal target still asks for it**: the player clicks (or drops on) the target, so nothing casts by surprise. **Keyword explanations** (`KeywordGlossary`): the card zoom and a lifted hand card show a box per keyword and rules word (Flying, Trample, Arrival, Invest, Instant…); the zoom can be hovered without closing. A **phase tracker** at the lane's right end (Action, Attackers, Blockers, Damage; "You block" / "They attack") and banners when the opponent attacks or blocks. Tutorial Info boxes wait for the animation before them and ignore the context button and the first half second, so they can't be skipped unread. |
 | 2026-10-10 | **Card type always on the card.** The top tab always names the card type, then the subtypes after a dash (CREATURE — CRITTER, TOKEN CREATURE — GOOBER, EQUIPMENT, CURSE), so effects that care about permanent types (board wipes, artifact removal) are clear. |
@@ -333,7 +350,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 | 2026-10-10 | **Arena board presentation** (user; NEXT_ARENA.md Phases 2-4). Tapped units lie **sideways**, and **attacking taps** them on the table as in the rules: declared attackers lie sideways in the combat lane (staged ones stay upright until confirmed). Untapping plays at the round start, after the gems refill. **Equipment and Curses on a creature are tucked behind it** (title strips peek out above, a gold "E" pip on the host); hovering the host fans them out, clicking one uses it. **Each side scales down as it fills** (one line down to half size, then two lines, then overlap). Player Curses stay in the row with an "on Player" tag for now. |
 | 2026-10-10 | **Playtest fixes and the "may" rule** (user). **Archon Lumen**: one trigger, "At the end of your turn, if you control any Equipment, deal X damage to any target, where X is the number of Equipment you control." (`repeatCount` removed from the engine). **Ambush Predator**: "Arrival: This may fight up to one target creature you don't control." (no longer "damaged"; the card scan still has it below filler, -5.5, so no nerf). **Sabretooth Prowler**: "may fight" too (its text said "up to one", but the engine forced the fight). **Rule:** a card lets you choose only if its text says "may" or "up to" (or offers "one, two or three targets" / "… or lose N life"); everything else is forced. "Loses up to 2 Gold" is a cap, not a choice. A test keeps text and data in line. A declined or targetless trigger now says so on the table ("Ambush Predator: no target"), and a "may" trigger asks "Use <card>? Pick a target" / "Don't use <card>". |
 | 2026-10-10 | **Trigger batching built** (user chose "one trigger with a count"). The same ability of the same source, triggered by several events before anyone gets priority (a sweeper kills 5 creatures and Scrap Collector watches), goes on the Chain as **one item that does it once per event**: totals stay exact, and per-creature effects still hit each creature. The table shows "×N". Targeted triggers stay one per event (each needs its target), and `"separate": true` on a trigger keeps them apart for future ping / storm cards (none yet; CARD_DESIGN §2.3). The engine counts triggers resolved per player each round (`UsesThisTurn["triggers:N"]`), next to spells cast. No card text changed. |
-| 2026-10-10 | **Trigger count is a design resource.** One source should not flood the Chain with identical triggers for the same thing: by default they become **one trigger** that does it X times or with X as the amount (Archon Lumen next). This is a default, not a ban. Regions built around pinging, spell chains or a future **storm** playstyle get separate triggers on purpose, through an explicit per-trigger switch and text that says "each". The engine keeps exact counts (spells cast, triggers resolved, pings) so those cards can count them. Plan: docs/handoff/NEXT_ARENA.md Phase 1. |
+| 2026-10-10 | **Trigger count is a design resource.** One source should not flood the Chain with identical triggers for the same thing: by default they become **one trigger** that does it X times or with X as the amount (Archon Lumen next). This is a default, not a ban. Regions built around pinging, spell chains or a future **storm** playstyle get separate triggers on purpose, through an explicit per-trigger switch and text that says "each". The engine keeps exact counts (spells cast, triggers resolved, pings) so those cards can count them. (The old session plan for this, docs/handoff/NEXT_ARENA.md, was retired in the v1.0 doc cleanup.) |
 | 2026-10-10 | **Bug hunt round 1** (Tools/BugHunt, 15,000+ games). **Scrap Collector** now reads "Whenever an equipped creature you control dies, gain 1 Gold." Before, moving an Equipment counted as unattaching it, so each Equip 1 refunded itself: infinite Equips, and infinite damage with Arc Welder. **Combat damage split** (§7.2.6) is now **asked one recipient at a time** ("how much to this blocker?"), and a recipient never gets more than lethal. Before, every whole split was listed at once: 10 damage into 10 blockers was ~40,000 options, which froze the game. The rules are unchanged; a whole split given in one action is still accepted. |
 | 2026-10-10 | **Targets are always spelled out.** Every card that targets says so in its text: "target creature", "target enemy creature", "target opponent", "target spell", "target creature card", "any target"... (27 cards reworded, text only; Equip keeps the keyword shorthand). **The Chain is shown LoR-style** in the middle of the table as card bubbles, each one targetable (counters) and with lines to what it targets. |
 | 2026-10-10 | **Playtest bug reports, round 1.** Activated abilities stay **instant speed by default**; the engine already allowed them after blocks (the Titan report was a clarity problem, now fixed in the client). **Equip and "only as a sorcery" stay sorcery speed** (MTG backbone; Equip mid-combat would be a big swing for 1 mana). The free Gilded Knuckles was Sparkwrench's "Equipment spells cost 1 less", not a bug: hand cards now show their current cost (green = cheaper). **LoR presentation** ([LOR_PRESENTATION.md](LOR_PRESENTATION.md)): steps 1+2 built together, tweens with **PrimeTween**. |

@@ -138,12 +138,23 @@ namespace RestartedTavern.Client.Table
                     case "-tutorialstep": int.TryParse(next, out _tutorialAt); break;
                     case "-editor": _menuOpen = true; _editorAtStart = true; break;
                     case "-debug": _debugOpen = true; break;
+                    case "-settings": _settingsOpen = true; break;
+                    case "-place": _place = next; break;
+                    case "-placeopp": _placeOpp = next; break;
+                    case "-gold": int.TryParse(next, out _goldShot); break;
+                    case "-act": _actShot = next; break;
+                    case "-stage": _stageShot = true; break;
+                    case "-settle": _settleShot = true; break;
+                    case "-nocoach": _noCoach = true; break;
+                    case "-bugopen": _bugOpen = true; break;
+                    case "-guide": _guideAtStart = next ?? ""; break;
                     case "-reveal": _revealHands = true; break;
                     case "-bugreport": _bugNote = next ?? ""; _autoBugReport = true; break;
                 }
             }
             if (_seed == 0) _seed = (ulong)(Environment.TickCount & 0x7fffffff) % 1000000 + 1;
             BuildCanvas();
+            LoadSettings();
 
             // Loading screen while the cards and decks are read (skipped for automated screenshots).
             bool interactive = _autoshot == null && _autoplay == 0;
@@ -205,6 +216,8 @@ namespace RestartedTavern.Client.Table
                 }
                 _dirty = true;
             }
+            ApplyShotActions();
+            if (_guideAtStart != null) OpenGuide(_guideAtStart);
             if (_autoBugReport)
             {
                 Refresh();
@@ -235,7 +248,7 @@ namespace RestartedTavern.Client.Table
             HookBeats();
             OnSessionChanged();
             StartLog();
-            if (toss) StartToss();
+            if (toss && _coinToss) StartToss();
             else EndToss();
         }
 
@@ -271,6 +284,7 @@ namespace RestartedTavern.Client.Table
             _fxLayer = Ui.Fill(_root, "Fx");
             _zoomLayer = Ui.Fill(_root, "Zoom");
             _overlay = Ui.Fill(_root, "Overlay");
+            _guideLayer = Ui.Fill(_root, "Guide");
             _tossLayer = Ui.Fill(_root, "Toss");
             _dragLayer = Ui.Fill(_root, "Drag");
 
@@ -369,6 +383,7 @@ namespace RestartedTavern.Client.Table
             if (_s == null) return;
             UpdateDebug();
             UpdateToss();
+            UpdateGuide();
 
             if (_shotFrame >= 0)
             {
@@ -386,7 +401,9 @@ namespace RestartedTavern.Client.Table
                 {
                     var card = _widgets.FirstOrDefault(x => x != null && x.Kind == WidgetKind.HandCard && x.View?.DefinitionId == _hoverShot);
                     _hoverShot = null;
+                    _shotHover = true;
                     if (card != null) OnHover(card, true);
+                    _shotHover = false;
                 }
                 _shotFrame++;
                 if (_shotAt >= 0f)
@@ -405,9 +422,23 @@ namespace RestartedTavern.Client.Table
                 return;
             }
 
-            // Keyboard shortcuts act on the table, never on the last clicked button.
-            if (EventSystem.current != null && !_bugOpen) EventSystem.current.SetSelectedGameObject(null);
-            if (_dragging == null && !_menuOpen && !_bugOpen && !Tossing)
+            // Keyboard shortcuts act on the table, never on the last clicked button. A text field keeps the focus while
+            // it's being typed in (the deck editor's search, the bug report), and then the shortcuts are off.
+            var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            bool typing = selected != null && selected.GetComponent<InputField>() != null;
+            if (selected != null && !typing && !_bugOpen) EventSystem.current.SetSelectedGameObject(null);
+            if (Input.GetKeyDown(KeyCode.F2) && !_bugOpen) OpenBugReport();
+            if (Input.GetKeyDown(KeyCode.F3) && !_bugOpen) { if (_guideOpen) CloseGuide(); else OpenGuide(); }
+            // Escape closes the guide or the settings; on the menu it opens the settings, at the table when there's nothing to cancel.
+            bool escape = Input.GetKeyDown(KeyCode.Escape) && !_bugOpen && _dragging == null && (!typing || _guideOpen);
+            if (escape && _guideOpen) { CloseGuide(); escape = false; }
+            else if (escape && _settingsOpen) { CloseSettings(); escape = false; }
+            else if (escape && (_menuOpen || !_picker.IsPicking && _selectedBlocker.IsNone && _pinnedZoom.IsNone && !Tossing))
+            {
+                OpenSettings();
+                escape = false;
+            }
+            if (_dragging == null && !_menuOpen && !_bugOpen && !_settingsOpen && !_guideOpen && !Tossing && !typing)
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
@@ -415,13 +446,13 @@ namespace RestartedTavern.Client.Table
                     else PressContext();
                 }
                 else if (Busy && Input.GetMouseButtonDown(0)) SkipBeats();
-                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1) && _picker.IsPicking)
+                if (escape || Input.GetMouseButtonDown(1) && _picker.IsPicking)
                 {
                     _cancelFrame = Time.frameCount;
                     CancelPicking();
                 }
                 // A pinned zoom closes on the next left click or Escape.
-                if (!_pinnedZoom.IsNone && (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Escape)))
+                if (!_pinnedZoom.IsNone && (Input.GetMouseButtonDown(0) || escape))
                 {
                     _pinnedZoom = ObjectId.None;
                     Ui.Clear(_zoomLayer);
@@ -440,7 +471,7 @@ namespace RestartedTavern.Client.Table
             UpdateFan();
             UpdateBeats();
             UpdateTutorial();
-            if (_s.BotToAct && _dragging == null && !_menuOpen && !_bugOpen && !Tossing && !TutorialFrozen && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
+            if (_s.BotToAct && _dragging == null && !_menuOpen && !_bugOpen && !_settingsOpen && !_guideOpen && !Tossing && !TutorialFrozen && _bugShotFrame < 0 && Time.unscaledTime >= _nextBot)
             {
                 try { _s.StepBot(); }
                 catch (Exception e) { Debug.LogException(e); }
@@ -516,6 +547,12 @@ namespace RestartedTavern.Client.Table
             else if (_snap.IsGameOver) DrawGameOver();
             else if (_s.HandoffPending) DrawHandoff();
             DrawDebug();
+            DrawSettings();
+            // The menu, deck editor, game over and handoff screens cover the top bar: their own Report bug button.
+            if (_menuOpen && _editorOpen)
+                Ui.Button(_overlay, "Report bug", 1300, 36, 140, 40, Ui.Hex("#7A2A20"), OpenBugReport, 16);
+            else if (_menuOpen || _snap.IsGameOver || _s.HandoffPending)
+                Ui.Button(_overlay, "Report bug", Ui.Width - 136, 6, 128, 30, Ui.Hex("#7A2A20"), OpenBugReport, 15);
             DrawBugDialog();
             DrawToast();
         }
@@ -969,9 +1006,8 @@ namespace RestartedTavern.Client.Table
                 Ui.Label(_dynamic, b.Hint, 1636, 596, 190, 60, 14, b.Enabled ? Ui.Hex("#FFE8C0") : Ui.Hex("#A89880"), TextAnchor.UpperCenter);
         }
 
-        private static readonly string[] PhaseNames = { "ACTION", "ATTACKERS", "BLOCKERS", "DAMAGE" };
 
-        /// <summary>Which of <see cref="PhaseNames"/> the round is in, or -1 (round start / end, mulligan).</summary>
+        /// <summary>The round's phase for the tracker: 0 action, 1 attackers, 2 blockers, 3 combat damage, -1 round start / end, mulligan.</summary>
         private int CurrentPhase()
         {
             switch (_snap.Step)
@@ -988,33 +1024,41 @@ namespace RestartedTavern.Client.Table
         }
 
         /// <summary>
-        /// The phase tracker at the lane's right end: action, attackers, blockers, damage, top to bottom, the current one lit
-        /// (playtest 2026-10-10_155716: "a better indicator when main phase / declare attacks / declare blocks happen").
+        /// The phase tracker at the lane's right end (playtest 2026-10-10_155716): the current phase as a lit chip, and under
+        /// it, smaller and faded, the phase that comes next (user: less screen space, still an overview).
         /// </summary>
         private void DrawPhases()
         {
             if (_snap.IsGameOver) return;
             int current = CurrentPhase();
-            const float cw = 122f, ch = 30f, gap = 6f;
-            float total = PhaseNames.Length * ch + (PhaseNames.Length - 1) * gap;
-            float x = CenterRight - cw - 8f, y = LaneMid - total / 2f;
             var attacker = _snap.Players.FirstOrDefault(p => p.HasAttackToken);
             bool mine = attacker != null && attacker.Id == _snap.Viewer;
-            for (int i = 0; i < PhaseNames.Length; i++)
+            string now, next;
+            Color color;
+            switch (current)
             {
-                bool on = i == current;
-                // Combat chips say whose attack it is.
-                string name = PhaseNames[i];
-                if (on && i == 1) name = mine ? "YOU ATTACK" : "THEY ATTACK";
-                if (on && i == 2) name = mine ? "THEY BLOCK" : "YOU BLOCK";
-                var chip = Ui.Panel(_dynamic, "Phase", x, y, cw, ch, on ? (i == 0 ? Ui.Hex("#2A7AB0") : Ui.Hex("#C0402A")) : new Color(0f, 0f, 0f, 0.35f));
-                chip.raycastTarget = false;
-                Ui.AddOutline(chip.gameObject, on ? Ui.Hex("#FFE0A0") : new Color(1f, 0.85f, 0.6f, 0.25f), on ? 2f : 1f);
-                var label = Ui.FillLabel(chip.transform, name, on ? 16 : 13, on ? Color.white : new Color(1f, 0.85f, 0.6f, 0.45f), TextAnchor.MiddleCenter, FontStyle.Bold);
-                label.raycastTarget = false;
-                if (on) Pulse(chip.transform, 0.04f);
-                y += ch + gap;
+                case 0:
+                    now = "ACTION"; color = Ui.Hex("#2A7AB0");
+                    next = _snap.AttackUsed || attacker == null ? "ROUND END" : "ATTACKERS";
+                    break;
+                case 1: now = mine ? "YOU ATTACK" : "THEY ATTACK"; color = Ui.Hex("#C0402A"); next = "BLOCKERS"; break;
+                case 2: now = mine ? "THEY BLOCK" : "YOU BLOCK"; color = Ui.Hex("#C0402A"); next = "COMBAT DAMAGE"; break;
+                case 3: now = "COMBAT DAMAGE"; color = Ui.Hex("#C0402A"); next = "ACTION"; break;
+                default:
+                    bool start = _snap.Step == Step.Start || _snap.Step == Step.Draw || _snap.Step == Step.Mulligan;
+                    now = start ? "ROUND START" : "ROUND END"; color = Ui.Hex("#6A5A30");
+                    next = start ? "ACTION" : "NEXT ROUND";
+                    break;
             }
+            const float cw = 150f, ch = 32f, nw = 124f, nh = 22f;
+            float x = CenterRight - cw - 8f, y = LaneMid - (ch + 4f + nh) / 2f;
+            var chip = Ui.Panel(_dynamic, "Phase", x, y, cw, ch, color);
+            Ui.AddOutline(chip.gameObject, Ui.Hex("#FFE0A0"), 2f);
+            Ui.FillLabel(chip.transform, now, 16, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold).raycastTarget = false;
+            Pulse(chip.transform, 0.04f);
+            var after = Ui.Panel(_dynamic, "NextPhase", x + (cw - nw) / 2f, y + ch + 4f, nw, nh, new Color(0f, 0f, 0f, 0.3f));
+            Ui.AddOutline(after.gameObject, new Color(1f, 0.85f, 0.6f, 0.2f), 1f);
+            Ui.FillLabel(after.transform, "next: " + next.ToLowerInvariant(), 11, new Color(1f, 0.85f, 0.6f, 0.45f), TextAnchor.MiddleCenter, FontStyle.Bold).raycastTarget = false;
         }
 
         private static Color ButtonColorFor(ButtonMode mode)
@@ -1040,11 +1084,11 @@ namespace RestartedTavern.Client.Table
             Ui.Button(_dynamic, "Menu", 94, 8, 110, 32, ButtonColor, OpenMenu, 16);
             Ui.Button(_dynamic, "Debug", 210, 8, 66, 32, _debugOpen ? ContextOn : ButtonColor, ToggleDebug, 14);
             Ui.Button(_dynamic, "Report bug", 290, 8, 120, 32, Ui.Hex("#7A2A20"), OpenBugReport, 15);
+            Ui.Button(_dynamic, "Guide", 416, 8, 90, 32, Ui.Hex("#2A6A50"), () => OpenGuide(), 15);
             Ui.Label(_dynamic, "Seed " + _seed, 126, 1040, 150, 32, 14, Ui.Hex("#A08060"), TextAnchor.MiddleLeft);
             Ui.Button(_dynamic, "Speed " + _speed + "x", 8, 1040, 110, 32, ButtonColor, () =>
             {
-                _speed = _speed >= 4f ? 0.5f : _speed * 2f;
-                _dirty = true;
+                SetSpeed(_speed >= 4f ? 0.5f : _speed * 2f);
             }, 16);
         }
 
@@ -1251,6 +1295,7 @@ namespace RestartedTavern.Client.Table
         private float DrawGlossary(CardView v, float x, float y)
         {
             float top = y;
+            if (!_keywordHints) return 0f;
             foreach (var (name, text) in KeywordGlossary.For(v))
             {
                 var box = Ui.Panel(_zoomLayer, "Keyword", x, y, GlossaryW, 40f, new Color(0.06f, 0.07f, 0.1f, 0.95f));
@@ -1272,6 +1317,7 @@ namespace RestartedTavern.Client.Table
         public void OnHover(CardWidget w, bool enter)
         {
             if (_dragging != null) return;
+            if (_autoshot != null && !_shotHover) return; // screenshots ignore the real mouse (only -hover hovers)
             if (w.Kind == WidgetKind.HandCard && w.View != null && w.View.Zone == Zone.Hand)
             {
                 PrimeTween.Tween.StopAll(w.Rect);

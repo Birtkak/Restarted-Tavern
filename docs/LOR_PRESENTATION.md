@@ -1,6 +1,6 @@
 # LoR-Style Presentation: Research and Plan
 
-Status: 🟡 research 2026-10-10. Steps 1–4 of §4 are built (see §6). This feeds build step 4 (animations) in [CLIENT_DESIGN.md](CLIENT_DESIGN.md) §3.
+Status: research doc (2026-10-10), kept for the reasoning. Steps 1–4 of §4 are built (see §6); step 5 (juice: particles, sound) is for a later release. The client as built is described in [CLIENT_DESIGN.md](CLIENT_DESIGN.md).
 
 **The problem.** Playtest 2026-10-10 showed that the table is hard to read:
 - It isn't obvious whose action it is.
@@ -99,9 +99,8 @@ The rules engine stays Unity-free. Its only change is the new `PriorityPassedEve
 
 ---
 
-## 5. Open ❓ (for the user)
-- The after-blocks button says **"To damage"** for now. "Fight!" or "OK" are other options.
-- Sound now (placeholder CC0) or later?
+## 5. Later releases
+- Sound (placeholder CC0 or commissioned).
 - Steps 3 and 4 are done (round ceremony, Chain bubbles, history strip). Left: step 5 juice (particles, glow sprites, screen shake on big hits, SFX) and real art.
 
 ## 6. Built (2026-10-10)

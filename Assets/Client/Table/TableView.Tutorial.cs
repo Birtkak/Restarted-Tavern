@@ -60,7 +60,7 @@ namespace RestartedTavern.Client.Table
         /// <summary>The player's passes outside the lesson (opening Keep, the opponent's spells resolving, combat windows).</summary>
         private void UpdateTutorial()
         {
-            if (!TutorialRunning || _menuOpen || Tossing || _dragging != null || Time.unscaledTime < _nextBot) return;
+            if (!TutorialRunning || _menuOpen || _settingsOpen || _guideOpen || Tossing || _dragging != null || Time.unscaledTime < _nextBot) return;
             var auto = _tutorial.AutoHumanAction();
             if (auto != null) Submit(auto);
         }
@@ -71,7 +71,7 @@ namespace RestartedTavern.Client.Table
         /// </summary>
         private void DrawTutorial()
         {
-            if (!TutorialRunning || _menuOpen || Tossing) return;
+            if (!TutorialRunning || _menuOpen || Tossing || _noCoach) return;
             var step = _tutorial.Current;
             if (step == null) return;
             bool info = step.Kind == TutorialStepKind.Info;
