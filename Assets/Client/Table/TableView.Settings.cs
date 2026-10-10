@@ -27,6 +27,7 @@ namespace RestartedTavern.Client.Table
             _volume = PlayerPrefs.GetFloat("volume", 0.6f);
             _passSound = PlayerPrefs.GetInt("passSound", 1) == 1;
             _triggerSound = PlayerPrefs.GetInt("triggerSound", 1) == 1;
+            _buttonSound = PlayerPrefs.GetInt("buttonSound", 1) == 1;
         }
 
         private void OpenSettings()
@@ -57,7 +58,7 @@ namespace RestartedTavern.Client.Table
             if (!_settingsOpen) return;
             if (_soundBoard) { DrawSoundBoard(); return; }
             Ui.FillPanel(_overlay, "SettingsDim", new Color(0, 0, 0, 0.6f), 0f, raycast: true);
-            const float w = 860f, h = 830f;
+            const float w = 860f, h = 900f;
             float x = (Ui.Width - w) / 2f, y = (Ui.Height - h) / 2f;
             var panel = Ui.Panel(_overlay, "Settings", x, y, w, h, CoachColor, raycast: true);
             panel.sprite = Ui.GradientSprite;
@@ -99,6 +100,11 @@ namespace RestartedTavern.Client.Table
                 _triggerSound = i == 0;
                 PlayerPrefs.SetInt("triggerSound", _triggerSound ? 1 : 0);
                 PlaySfx(SfxKind.Trigger, "glitterworld");
+            });
+            Row("Button sounds", new[] { "On", "Off" }, _buttonSound ? 0 : 1, i =>
+            {
+                _buttonSound = i == 0;
+                PlayerPrefs.SetInt("buttonSound", _buttonSound ? 1 : 0);
             });
             Row("Animation speed", new[] { "0.5x", "1x", "2x", "4x" }, Array.IndexOf(Speeds, _speed), i => SetSpeed(Speeds[i]));
             Row("Window", new[] { "Fullscreen", "Windowed" }, Screen.fullScreen ? 0 : 1, i =>

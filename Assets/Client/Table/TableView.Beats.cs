@@ -108,9 +108,17 @@ namespace RestartedTavern.Client.Table
                 : " \u2192 " + string.Join(", ", targets.Select(t => t.IsPlayer ? (t.Player == _s.Viewer ? "you" : "opponent") : _s.Text.Name(state, t.Object)));
             int attackers = 0;
             PlayerId attacker = default;
+            var returned = new List<string>(); // cards a resolving spell or ability brought back from a graveyard
+            string resolvedSource = null;
             foreach (var e in events)
                 switch (e)
                 {
+                    case ZoneChangedEvent z when z.From == Zone.Graveyard && (z.To == Zone.Battlefield || z.To == Zone.Hand):
+                        returned.Add(_s.Text.Name(z.DefinitionId));
+                        break;
+                    case ChainItemResolvedEvent r:
+                        resolvedSource = r.SourceDefinitionId;
+                        break;
                     case SpellCastEvent c:
                         _playLog.Add(new PlayEntry { Player = c.Player, DefinitionId = c.DefinitionId, Text = Who(c.Player) + ": " + _s.Text.Name(c.DefinitionId) + At(c.Targets) });
                         break;
@@ -123,6 +131,13 @@ namespace RestartedTavern.Client.Table
                         attacker = state.FindObject(ad.Attacker)?.Controller ?? attacker;
                         break;
                 }
+            // What came back from a graveyard goes on the play that did it (playtest 2026-10-10_173434: Exhumation
+            // Broadcast didn't say which creatures it took).
+            if (returned.Count > 0)
+            {
+                var play = _playLog.LastOrDefault(p => resolvedSource != null && p.DefinitionId == resolvedSource);
+                if (play != null) play.Text += " → " + string.Join(", ", returned);
+            }
             if (attackers > 0)
                 _playLog.Add(new PlayEntry { Player = attacker, Text = Who(attacker) + ": attack with " + attackers + (attackers == 1 ? " unit" : " units") });
             if (_playLog.Count > 30) _playLog.RemoveRange(0, _playLog.Count - 30);

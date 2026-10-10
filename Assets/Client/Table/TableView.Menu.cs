@@ -60,7 +60,7 @@ namespace RestartedTavern.Client.Table
             MenuTile(left, y, "TAVERN GUIDE", "Every rule, searchable", Ui.Hex("#2A5A6A"), () => OpenGuide(), w: 296f);
             MenuTile(left + 304f, y, "SETTINGS", "Speed, window, hints", ButtonColor, OpenSettings, w: 296f);
             y += step;
-            MenuTile(left, y, "QUIT", "Leave the tavern", Ui.Hex("#4A2420"), Application.Quit);
+            MenuTile(left, y, "QUIT", "Leave the tavern", Ui.Hex("#4A2420"), () => { Debug.Log("Quit: the menu's QUIT tile"); Application.Quit(); });
 
             DrawShowcase();
             Ui.Tmp(_overlay, "Prototype · " + CardPool.PrototypeDecks().Count + " decks · " + _db.All.Count(d => !d.IsToken && !d.IsTavernDweller) + " cards",

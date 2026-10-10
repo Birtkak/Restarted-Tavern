@@ -50,6 +50,18 @@ namespace RestartedTavern.Client.Table
             return tucked;
         }
 
+        /// <summary>
+        /// One side's row: its own permanents, except Curses it put on the other player, plus the Curses on this player.
+        /// A Curse sits with the player it's on (MTG Arena style); its caster still controls it (playtest 2026-10-10_173005).
+        /// </summary>
+        private static List<CardView> RowFor(PlayerView side, PlayerView other, HashSet<ObjectId> inLane, HashSet<ObjectId> tucked)
+        {
+            bool Shown(CardView c) => !inLane.Contains(c.Id) && !tucked.Contains(c.Id);
+            return side.Battlefield.Where(c => Shown(c) && (c.AttachedToPlayer == null || c.AttachedToPlayer == side.Id))
+                .Concat(other.Battlefield.Where(c => Shown(c) && c.AttachedToPlayer == side.Id))
+                .ToList();
+        }
+
         /// <summary>How wide a card is on the table at full size: a tapped unit lies sideways.</summary>
         private static float Footprint(bool tilted) => tilted ? UnitW + 30f : UnitW; // a 12 degree tilt is ~30 wider
 
@@ -136,8 +148,11 @@ namespace RestartedTavern.Client.Table
             }
             if (c.AttachedToPlayer != null)
             {
-                var tag = Ui.Panel(widget.transform, "Attached", 4, h - 4, w - 8, 18, new Color(0, 0, 0, 0.75f));
-                Ui.FillLabel(tag.transform, "on " + c.AttachedToPlayer, 12, Color.white);
+                // It sits on the cursed player's side, so the tag says whose it is (the caster controls it).
+                bool mine = c.Controller == _snap.Viewer;
+                var tag = Ui.Panel(widget.transform, "Attached", 4, h - 4, w - 8, 18,
+                    mine ? new Color(0.1f, 0.3f, 0.6f, 0.9f) : new Color(0.6f, 0.12f, 0.1f, 0.9f));
+                Ui.FillLabel(tag.transform, mine ? "Your Curse" : "Their Curse", 12, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
             }
             return widget;
         }

@@ -15,7 +15,8 @@ namespace RestartedTavern.Client.Table
         private readonly Dictionary<(SfxKind, string), AudioClip> _clips = new Dictionary<(SfxKind, string), AudioClip>();
         private readonly List<AudioSource> _voices = new List<AudioSource>();
         private float _volume = 0.6f;
-        private bool _passSound = true, _triggerSound = true;
+        private bool _passSound = true, _triggerSound = true, _buttonSound = true;
+        private float _lastHoverSound;
         private static readonly float[] Volumes = { 0f, 0.3f, 0.6f, 1f };
 
         private void SetupAudio()
@@ -29,6 +30,20 @@ namespace RestartedTavern.Client.Table
                 _voices.Add(src);
             }
             AudioListener.volume = _volume;
+            Ui.ButtonSound = OnButtonSound;
+        }
+
+        /// <summary>Buttons tick on hover and tap on click (playtest 2026-10-10_173612); a sweep over a row ticks once.</summary>
+        private void OnButtonSound(bool hover)
+        {
+            if (!_buttonSound) return;
+            if (hover)
+            {
+                if (Time.unscaledTime - _lastHoverSound < 0.06f) return;
+                _lastHoverSound = Time.unscaledTime;
+                PlaySfx(SfxKind.UiHover, null, 0f, 0.35f);
+            }
+            else PlaySfx(SfxKind.UiClick, null, 0f, 0.6f);
         }
 
         private void SetVolume(float v)

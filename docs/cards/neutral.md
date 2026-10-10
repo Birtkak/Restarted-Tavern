@@ -60,7 +60,7 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 | 26 | **Dice Game** | 2 | Sorcery | U | — | Each player may pay any amount of Gold. The player who paid the most draws two cards. If players tie for the most, each of them draws one card. | Multiplayer politics: a Gold auction | ✓ implemented | ✅ |
 | 27 | **Shady Moneylender** | 3 | Creature: Human | R | 2/3 | You may spend Gold as though it were mana to cast creature spells. Whenever you do, each opponent gains 1 Gold. | Breaks the 'Gold can't buy creatures' rule for a price. A test of how strong that rule is | ✓ implemented | ✅ |
 | 28 | **Champion's Belt** | 3 | Equipment | R | — | Equipped creature gets +2/+2. Whenever equipped creature destroys a creature in combat, heal it fully. Equip 3. | Equipment for every deck. A champion who wins fights stays fresh | ✓ implemented | ✅ |
-| 29 | **Grizzled Innkeeper** | 4 | Creature: Human | R | 3/5 | Whenever you bank Gold, heal that much from target creature you control. | Banking and healing in one card: not spending mana repairs your board | ✓ implemented | ✅ |
+| 29 | **Grizzled Innkeeper** | 4 | Creature: Human | R | 3/5 | Whenever you bank Gold, heal 1 from target creature you control for each Gold you banked. | Banking and healing in one card: not spending mana repairs your board | ✓ implemented | ✅ |
 | 30 | **Tavern Brawl Night** | 5 | Sorcery | R | — | Deal 2 damage to each creature. Then heal 2 from each creature you control. | Rules depth: state-based actions are only checked after the spell, so your creatures at 2 Health survive while theirs die | ✓ implemented | ✅ |
 
 **v0.2 progress:** 20 approved · C 10 · U 6 · R 4

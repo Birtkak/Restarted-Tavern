@@ -123,6 +123,26 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
+        public void ExcessDamageToALoneBlocker_IsOneHit()
+        {
+            // Playtest 2026-10-10_173612: 4 power into a blocker with 2 Health left was dealt as "2" then "2".
+            var g = TestGame.AtFirstMainPhase();
+            var hog = g.AddToBattlefield(g.Active, "hired_sellsword");                // 2/3
+            var wounded = g.AddToBattlefield(g.Other, "hired_sellsword", damage: 2);  // 1 left
+            ToDeclareAttackers(g);
+            g.Do(PlayerAction.Attack(g.Active, hog.Id, g.Other));
+            g.Do(PlayerAction.FinishAttacks(g.Active));
+            ToDeclareBlockers(g);
+            g.Do(PlayerAction.Block(g.Other, wounded.Id, hog.Id));
+            g.Do(PlayerAction.FinishBlocks(g.Other));
+            g.FinishCombat();
+
+            var hits = g.Events.OfType<DamageDealtEvent>().Where(d => d.Source == hog.Id).ToList();
+            Assert.AreEqual(1, hits.Count, "one damage event");
+            Assert.AreEqual(2, hits[0].Amount);
+        }
+
+        [Test]
         public void Flying_CanOnlyBeBlockedByFlyingOrReach()
         {
             var g = TestGame.AtFirstMainPhase(extraCards: new[] { Bat });

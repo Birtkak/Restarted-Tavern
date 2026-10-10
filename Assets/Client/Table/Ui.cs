@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace RestartedTavern.Client.Table
@@ -108,9 +109,16 @@ namespace RestartedTavern.Client.Table
             b.colors = colors;
             b.interactable = interactable;
             if (onClick != null) b.onClick.AddListener(() => onClick());
+            b.onClick.AddListener(() => ButtonSound?.Invoke(false));
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => { if (b.interactable) ButtonSound?.Invoke(true); });
+            img.gameObject.AddComponent<EventTrigger>().triggers.Add(enter);
             FillLabel(img.transform, label, fontSize, Cream, TextAnchor.MiddleCenter, FontStyle.Bold, 6f);
             return b;
         }
+
+        /// <summary>Every button calls this on hover (true) and click (false); the table plays the UI sounds.</summary>
+        public static Action<bool> ButtonSound;
 
         private static Sprite _circle;
 

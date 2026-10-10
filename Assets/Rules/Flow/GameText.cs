@@ -400,6 +400,8 @@ namespace RestartedTavern.Rules
                 case GameStartedEvent s: return "Game started. " + s.StartingPlayer + " goes first.";
                 case ZoneChangedEvent z:
                     if (z.To == Zone.Graveyard && z.From == Zone.Hand) return Name(z.DefinitionId) + " is discarded";
+                    if (z.From == Zone.Graveyard && z.To == Zone.Battlefield) return Name(z.DefinitionId) + " returns from the graveyard to the battlefield";
+                    if (z.From == Zone.Graveyard && z.To == Zone.Hand) return Name(z.DefinitionId) + " returns from the graveyard to its owner's hand";
                     return null; // other zone changes are covered by more specific events
                 default: return null; // step/mana changes are too noisy for the log
             }

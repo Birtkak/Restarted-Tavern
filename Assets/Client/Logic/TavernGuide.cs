@@ -272,7 +272,9 @@ namespace RestartedTavern.Client.Logic
 
                 E("curses", "Curses", "Cards",
                     "A <b>Curse</b> is attached to an <b>enemy creature</b> or an <b>opponent</b> and does something bad to it. Played as your action, with mana only.\n\n"
-                    + "If what it's attached to leaves, the Curse goes to the graveyard. The Sensationalists' speciality.",
+                    + "A Curse on a creature is tucked behind it; a Curse on a player sits on <b>that player's side</b> of the table, tagged <b>Your Curse</b> or <b>Their Curse</b>. "
+                    + "The player who cast it still controls it.\n\n"
+                    + "If what it's attached to leaves, the Curse goes to its owner's graveyard. The Sensationalists' speciality.",
                     new[] { "curse", "hex", "aura", "debuff" },
                     new[] { "hex_of_withering", "curse_of_rot" },
                     new[] { F("curse", "Hex of Withering tucked behind the creature it's on."), F("curse2", "The cursed creature's zoom shows the lost Power.") },

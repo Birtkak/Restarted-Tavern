@@ -1,5 +1,21 @@
 # Release notes
 
+## v1.0.1 (2026-10-10): first playtest fixes
+
+Fixes from the first bug reports. No rules changes.
+
+- **Curses on a player sit on that player's side** of the table, tagged **Your Curse** / **Their Curse** (the caster
+  still controls it, as in MTG). They used to stay on the caster's side with a small "on P2" label.
+- **Choosing a target**: hovering a card that isn't a legal target no longer opens its zoom, which could cover the card
+  you wanted to click.
+- **Recent plays** show which cards came back from a graveyard (e.g. "You: Exhumation Broadcast → Interest Broker,
+  Courier Bot"); the game log says so too.
+- **Button sounds**: a soft tick on hover and a tap on click (Settings → Button sounds to turn them off).
+- **Grizzled Innkeeper** reads more clearly: "heal 1 from target creature you control for each Gold you banked" (same
+  ability).
+- **Engine**: an attacker with more power than its lone blocker needed dealt the damage as two hits; it's one hit now
+  (it only matters for "is dealt damage" triggers).
+
 ## v1.0 (2026-10-10): first release for friends
 
 A 1v1 trading card game: MTG-style rules with Legends of Runeterra rounds, **permanent damage** on creatures, and

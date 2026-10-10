@@ -225,8 +225,13 @@ namespace RestartedTavern.Rules
                 left -= dmg;
             }
             if (left <= 0) return;
-            if (trampleTo.HasValue) hits.Add((dealer, trampleTo.Value, left));
-            else hits.Add((dealer, Target.ForObject(recipients[0].Id), left));
+            if (trampleTo.HasValue) { hits.Add((dealer, trampleTo.Value, left)); return; }
+            // The rest goes onto the first recipient in the same hit: one damage event, not two (playtest
+            // 2026-10-10_173612: "deals 2 ... deals 2" to one blocker, which would trigger "is dealt damage" twice).
+            var first = Target.ForObject(recipients[0].Id);
+            int i = hits.FindIndex(h => h.source == dealer && h.target.Equals(first));
+            if (i >= 0) hits[i] = (dealer, first, hits[i].amount + left);
+            else hits.Add((dealer, first, left));
         }
 
         /// <summary>Use the division the controller chose, if there was a choice. Returns false if there wasn't.</summary>

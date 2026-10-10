@@ -416,11 +416,11 @@ namespace RestartedTavern.Client.Table
                         ScreenCapture.CaptureScreenshot(_autoshot);
                         _shotFrame = 1000000;
                     }
-                    if (_shotFrame > 1000008) Application.Quit();
+                    if (_shotFrame > 1000008) { Debug.Log("Quit: timed screenshot taken"); Application.Quit(); }
                     return;
                 }
                 if (_shotFrame == 5) ScreenCapture.CaptureScreenshot(_autoshot);
-                if (_shotFrame == 12) Application.Quit();
+                if (_shotFrame == 12) { Debug.Log("Quit: screenshot taken"); Application.Quit(); }
                 return;
             }
 
@@ -770,8 +770,8 @@ namespace RestartedTavern.Client.Table
             var inLane = new HashSet<ObjectId>(laneAttackers.Select(c => c.Id).Concat(laneBlockers.Select(b => b.unit.Id)));
             var tucked = CollectAttachments(); // drawn behind their host, wherever it stands
 
-            DrawRow(opp.Battlefield.Where(c => !inLane.Contains(c.Id) && !tucked.Contains(c.Id)).ToList(), OppRowY, false);
-            DrawRow(me.Battlefield.Where(c => !inLane.Contains(c.Id) && !tucked.Contains(c.Id)).ToList(), MyRowY, true);
+            DrawRow(RowFor(opp, me, inLane, tucked), OppRowY, false);
+            DrawRow(RowFor(me, opp, inLane, tucked), MyRowY, true);
 
             // Attackers in a row across the lane, tilted once declared (attacking taps them, but lying sideways took too
             // much room, playtest 2026-10-10_144700); each blocker stands in front of its attacker. Staged attackers stay
@@ -1348,6 +1348,9 @@ namespace RestartedTavern.Client.Table
             }
             if (enter) FanOnHover(w);
             if (!_pinnedZoom.IsNone) return;
+            // Choosing a target: only the legal targets zoom, so a neighbour's zoom can't cover the card you want to
+            // click (playtest 2026-10-10_173257: Curse of Rot's zoom lay over Interest Broker).
+            if (enter && _picker.IsPicking && !TargetsOf(w).Any(_targets.Contains)) return;
             if (enter) { _hovered = w; _hoverRect = null; ShowZoom(w); }
             else if (_hovered == w && !MouseOverZoom()) { _hovered = null; Ui.Clear(_zoomLayer); }
         }

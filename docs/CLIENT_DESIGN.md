@@ -168,12 +168,12 @@ The in-game encyclopedia (user: "search for any mechanic in the game and get a v
   with its own attack, chorus, vibrato and breath; gestures add pads, bells, muffled metal, low booms, a rumble and
   band-pass whooshes; then a small Schroeder hall reverb, a low-pass, a soft limiter and levelling to -18 dB RMS.
   Kinds (`SfxKind`, named after LoR's sound events): Creature (summon), Instant, Sorcery, Equipment, Relic, Curse,
-  Ability, Power, Trigger, Equip, Countered, Pass, RoundStart, Attack (attack declare), Block (block declare), Death. `SfxSynthTests`: every sound audible, in range, short, fading out (no click), different per faction, deterministic.
+  Ability, Power, Trigger, Equip, Countered, Pass, RoundStart, Attack (attack declare), Block (block declare), Death, UiHover and UiClick (every `Ui.Button` through `Ui.ButtonSound`). `SfxSynthTests`: every sound audible, in range, short, fading out (no click), different per faction, deterministic.
 - **Playback** (`TableView.Audio.cs`): clips are made on first use and cached; 12 `AudioSource`s; `SoundFor` is called
   for each event in `PlayBeats` with the beat's time, so a sound plays when its animation does (`PlayDelayed`). Attack,
   block and death play once per batch of events (one war drum for a whole attack). Pass
   sound only for real passes with an empty Chain in the action phase (not the engine's automatic ones).
-- **Settings**: Sound (Off / Low / Medium / High, `AudioListener.volume`), Pass sound, Trigger ticks; **Sound board**
+- **Settings**: Sound (Off / Low / Medium / High, `AudioListener.volume`), Pass sound, Trigger ticks, Button sounds; **Sound board**
   (Settings → Sound board, `-soundboard`) plays every kind in every faction voice.
 - **Checking sounds without ears**: Restarted Tavern → Export Sound Preview (`SfxPreview.Export`) writes
   `Builds/sfx_preview.wav` and one WAV per sound in `Builds/sfx/`; `python Tools/SoundCheck/sound_check.py` draws a

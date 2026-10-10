@@ -21,7 +21,7 @@ SFX = os.path.join(ROOT, "Builds", "sfx")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "Builds")
 KINDS = ["Creature", "Instant", "Sorcery", "Equipment", "Relic", "Curse", "Ability", "Power", "Death", "Trigger"]
 FACTIONS = ["goobers", "evergrowing_wild", "glitterworld", "sensationalists", "shadow_money_wizards", "neutral"]
-SHARED = ["Pass", "RoundStart", "Attack", "Block", "Equip", "Countered"]
+SHARED = ["Pass", "RoundStart", "Attack", "Block", "Equip", "Countered", "UiHover", "UiClick"]
 
 
 def load(path):

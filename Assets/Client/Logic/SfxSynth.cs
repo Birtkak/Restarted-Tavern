@@ -32,6 +32,10 @@ namespace RestartedTavern.Client.Logic
         Block,
         /// <summary>LoR "death".</summary>
         Death,
+        /// <summary>The mouse moves onto a button: a faint high tick (playtest 2026-10-10_173612).</summary>
+        UiHover,
+        /// <summary>A button is pressed: a short wooden tap.</summary>
+        UiClick,
     }
 
     /// <summary>
@@ -196,6 +200,14 @@ namespace RestartedTavern.Client.Logic
                     reverb = 0.18;
                     break;
                 }
+                case SfxKind.UiHover: // a faint high tick
+                    Note(buf, neutral, 0, 0.12, 1568, 0.3, rng);
+                    reverb = 0.05;
+                    break;
+                case SfxKind.UiClick: // a short wooden tap
+                    Note(buf, VoiceOf("evergrowing_wild"), 0, 0.2, 523, 0.4, rng);
+                    reverb = 0.08;
+                    break;
                 case SfxKind.RoundStart: // a new round: a deep boom, a swell and a bright open chord
                     Boom(buf, 0, 0.9, 0.7, 50);
                     Whoosh(buf, 0, 0.6, 0.25, 200, 2500, rng);
@@ -234,6 +246,8 @@ namespace RestartedTavern.Client.Logic
         {
             switch (kind)
             {
+                case SfxKind.UiHover: return 0.15;
+                case SfxKind.UiClick: return 0.25;
                 case SfxKind.Trigger: return 0.5;
                 case SfxKind.Pass: return 0.7;
                 case SfxKind.Ability: return 0.75;

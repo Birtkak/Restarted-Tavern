@@ -17,7 +17,7 @@ namespace RestartedTavern.Client.Table
 
         /// <summary>
         /// Puts the -place cards onto P1's battlefield and the -placeopp cards onto P2's. An Equipment goes on the last
-        /// creature placed on its side; a Curse on the last creature placed on the other side.
+        /// creature placed on its side; a Curse on the last creature placed on the other side (on that player if none was placed yet).
         /// </summary>
         private void PlaceShotCards()
         {
@@ -47,6 +47,7 @@ namespace RestartedTavern.Client.Table
                     var other = seat == 0 ? lastTheirs : lastMine;
                     if (def.Type == CardType.Equipment && own != null) c.AttachedToObject = own.Id;
                     if (def.Type == CardType.Curse && other != null) c.AttachedToObject = other.Id;
+                    else if (def.Type == CardType.Curse) c.AttachedToPlayer = st.Players[1 - seat].Id; // no creature there yet: curse the player
                     if (def.IsCreature) { if (seat == 0) lastMine = c; else lastTheirs = c; }
                     p.Battlefield.Add(c);
                 }

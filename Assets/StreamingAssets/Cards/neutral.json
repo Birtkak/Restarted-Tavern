@@ -336,7 +336,7 @@
     "subtypes": ["Human"],
     "rarity": "Rare",
     "faction": "neutral",
-    "text": "Whenever you bank Gold, heal that much from target creature you control.",
+    "text": "Whenever you bank Gold, heal 1 from target creature you control for each Gold you banked.",
     "triggers": [
       {
         "when": "GoldBanked",
