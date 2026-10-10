@@ -48,9 +48,9 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void VelvetEmbezzler_DrawsAtFiveOrMoreGold()
+        public void VelvetEmbezzler_DrawsAtThreeOrMoreGold()
         {
-            foreach (var (gold, draws) in new[] { (4, 0), (5, 1), (7, 1) })
+            foreach (var (gold, draws) in new[] { (2, 0), (3, 1), (7, 1) })
             {
                 var g = TestGame.AtFirstMainPhase();
                 var me = g.Active;
@@ -85,7 +85,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void TaxOffice_TakesGold_OrPaysYou()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             g.AddToBattlefield(g.Other, "tax_office");
             g.P(me).Gold = 2;
@@ -222,7 +222,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void PocketChange_OneToHandOneToBottom_InvestTakesBoth()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var top = g.P(me).Deck.Take(2).ToList();
             int hand = g.P(me).Hand.Count;

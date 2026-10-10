@@ -103,7 +103,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void AbyssalHeadliner_SacrificeOrLoseLife()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             g.AddToBattlefield(me, "abyssal_headliner");
             g.PassToStep(Step.Main1, g.Other);
@@ -172,7 +172,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void EverythingHasAPrice_StealsTheMostExpensive_OwnerPicksOnTies()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var other = g.Other;
             var a = g.AddToBattlefield(other, "pit_fighter");  // 4
@@ -193,7 +193,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void MidnightRitual_InvestCanBringBackTheSacrificedCreature()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var victim = g.AddToBattlefield(me, "hog_rider"); // cost 3
             var ritual = g.AddToHand(me, "midnight_ritual");

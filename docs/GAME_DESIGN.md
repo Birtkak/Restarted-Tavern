@@ -65,7 +65,7 @@ When a rule here and the MTG rules conflict, **this document wins**. When this d
 | Maximum hand size | 7 (discard down to 7 at the end of your turn) | 🔒 |
 | Mulligan | **London mulligan**: shuffle and draw 7, then put 1 card on the bottom for each mulligan taken | 🔒 |
 | Who goes first | Random | 🟡 |
-| Going-second compensation | **MTG default: the first player skips their turn-1 draw.** No bonus mana or Gold for the second player. Chosen on 2026-10-09 after trying "1 starting Gold" and "+1 first-turn mana" in simulations. Bots showed a first-player edge (playtest/RULES_REVIEW.md §1), but bots race more than people do, so human playtests will judge it | 🔒 |
+| Going-second compensation | **MTG default: the first player skips their turn-1 draw.** No bonus mana or Gold for the second player. Chosen on 2026-10-09 after trying "1 starting Gold" and "+1 first-turn mana" in simulations. Bots showed a first-player edge (playtest/RULES_REVIEW.md §1), but bots race more than people do, so human playtests will judge it. Since 2026-10-10 the round leader rotates (§6.1), so who goes first alternates every round | 🔒 |
 
 ---
 
@@ -86,15 +86,18 @@ The **Chain** (MTG: the stack) holds spells and abilities while they wait to res
 
 ## 5. Mana & Gold
 
+Since 2026-10-10 the Standard rules use **Legends of Runeterra-style mana**, adapted to full turns (locked after the first human playtest asked for slower mana and more interaction). The old rules (mana per turn, mana first, Gold cap 5) are kept in the engine as `FormatConfig.Classic()` for comparisons.
+
 ### 5.1 Mana crystals 🔒
-- At the start of your turn your **max mana goes up by 1** (cap **10**), and your mana refills to max.
+- A **round** is one turn for each player (§6.1). At the start of each round **every player's max mana goes up by 1** (cap **10**), and their mana refills to max.
+- Mana lasts the **whole round**: you can spend it on Instants, activated abilities and Tavern Dweller Powers during other players' turns too. Permanents and Sorceries are still cast only in your own main phase.
 - Mana has no color 🔒. Which cards a deck can use is decided by its Tavern Dweller's factions (§9).
 
 ### 5.2 Gold 🔒
 Unused mana is not lost.
 
-- At the end of your turn, each point of unspent mana becomes **1 Gold** (a separate counter).
-- Gold is **capped at 5** 🔒. Mana over the cap is lost. This allows big save-up turns, so Invest costs must be balanced with a 5-Gold burst in mind.
+- At the **end of the round**, each point of every player's unspent mana becomes **1 Gold** (a separate counter): Runeterra's spell mana.
+- Gold is **capped at 3** 🔒 (5 until 2026-10-10). Mana over the cap is lost. Invest costs stay at 3 or less.
 - 🔒 **What Gold can pay for**:
 
   | Cost | Mana | Gold |
@@ -104,14 +107,14 @@ Unused mana is not lost.
   | **Activated abilities**, including **Equip** and **Tavern Dweller Powers** | ✅ | ✅ |
   | **Invest X** (§11) | ❌ | ✅ **only Gold** |
 
-- 🔒 **Mana is always used first.** When a cost can be paid with both, your available mana is spent first automatically, and Gold pays only what mana can't. There's no choosing the split. (Invest is separate: it is always paid with Gold.)
-  - Timing doesn't change: a Sorcery is still cast in your own main phase. On other players' turns you have no mana, so Instants, abilities and Tavern Dweller Powers are paid with Gold there.
-  - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 2 mana and then 2 Gold.
+- 🔒 **Gold is always used first** (decided 2026-10-10, like Runeterra's spell mana). When a cost can be paid with both, your Gold is spent first automatically, and mana pays only what Gold can't. There's no choosing the split. (Invest is separate: it is always paid with Gold.)
+  - Gold can never pay for permanents, so spending it first is always right: casting a Sorcery before a creature can't use up the creature's mana any more (this was RULES_REVIEW #6 under the old mana-first rule).
+  - Example: with 2 mana and 3 Gold, a 4-cost Sorcery uses the 3 Gold and then 1 mana.
 - 🔒 Gold can't pay for permanents, so it can't be used to ramp out threats early. A few cards break this on purpose, and mana is still spent first: **Retainer Mage** (Gold can pay for it whenever it's cast, decided 2026-10-09) and **Shady Moneylender** (Gold can pay for your creature spells). **Silent Partner** lets mana pay for Invest (mana first, then Gold).
-- 🔒 **Clarification**: your mana pool is only filled during your own turn. On other players' turns you have **no mana, only Gold**, so Gold is how you cast Instants on opponents' turns.
+- 🔒 **Clarification**: the mana pool fills when a round starts and lasts until it ends, so mana you didn't spend on your own turn can still pay for Instants on an opponent's turn in the same round. What's left at the end of the round is banked as Gold.
 - 🔒 **Taxes** ("unless they pay N") can be paid with mana and Gold (mana first).
-- 🔒 Gold gained above the cap of 5 is lost.
-- 🔒 **Bank** (rules term, introduced with set v0.2): when unspent mana becomes Gold at the end of your turn, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
+- 🔒 Gold gained above the cap of 3 is lost.
+- 🔒 **Bank** (rules term, introduced with set v0.2): when unspent mana becomes Gold at the end of the round, you **bank** the Gold you actually gain (mana lost to the cap isn't banked). Cards can say "Whenever you bank Gold" or "Whenever you bank 2 or more Gold". These trigger in the cleanup step. As in MTG 514.3a, players then get priority, and the cleanup step repeats afterwards.
 - 🔒 Some cards change a player's Gold cap ("Your Gold cap is 8"). The cap is a per-player value that starts at the format's cap. If several effects set it, the newest one wins (MTG timestamp order).
 - 🔒 **When a cap goes down** (the card that raised it leaves), Gold above the new cap is **lost at once**, checked like a state-based action (decided 2026-10-09). The cap always means the cap.
 - 🔒 **Spend Gold** (rules term): a player spends Gold when they pay Gold for a cost: a spell, an activated ability, Invest, "pay any amount of Gold", or a tax. "Whenever you spend Gold" triggers **once per payment**, however much Gold it was; "3 or more Gold on a single spell or ability" looks at that one payment (decided 2026-10-09). Gold that is lost or taken (Tax Office, Debt Collector, Grand Heist) is not spent.
@@ -134,14 +137,20 @@ Unused mana is not lost.
 
 ## 6. Turn Structure 🔒
 
-1. **Start phase**: raise max mana by 1 (to a max of 10), refill mana, untap your permanents, trigger "at start of turn" effects.
+1. **Start phase**: if this turn starts a round, every player raises max mana by 1 (to a max of 10) and refills (§5.1). Untap your permanents, trigger "at start of turn" effects.
 2. **Draw phase**: draw 1 card (in 1v1 the first player skips their draw on turn 1, §3).
 3. **Main phase 1**: play creatures, sorceries and permanents; activate abilities.
 4. **Combat phase**: declare attackers, then declare blockers, then deal damage (see §7).
 5. **Main phase 2**: the same as main phase 1. Lets you react to the result of combat (for example, finish off wounded creatures).
-6. **End phase**: "at end of turn" effects trigger, you discard down to 7 cards, then unspent mana turns into Gold (up to the cap of 5).
+6. **End phase**: "at end of turn" effects trigger, you discard down to 7 cards. If this turn ends the round, every player's unspent mana turns into Gold (up to the cap of 3).
 
 There is **no automatic healing** at end of turn (see §7.3).
+
+### 6.1 Rounds and the attack token 🔒 (Legends of Runeterra, 2026-10-10)
+- A **round** is one turn for each player. The player who takes the first turn of a round is the **round leader**.
+- The round leader **rotates**: in 1v1 the turn order is A B | B A | A B ... So each player takes two turns in a row across the round boundary, and going first is shared out.
+- **Attack token**: only the round leader may declare attackers in that round. The other player's turn is for building, Instants and blocking next round.
+- Summoning sickness stays (§7.4).
 
 ---
 
@@ -301,6 +310,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Runeterra-style mana is the Standard rules** (§5–6): a round pool (every player gains +1 max mana and refills when a round starts, mana lasts the round), unspent mana becomes Gold at the end of the round, **Gold cap 3**, spells and abilities **pay Gold first** (permanents mana only), the round leader rotates (A B, B A ...) and only the round leader may attack (attack token), summoning sickness stays. Gold first also settles RULES_REVIEW #6 (the sequencing trap). The old rules stay in the engine as `FormatConfig.Classic()`. **Cards for the cap of 3**: Velvet Embezzler draws at **3 or more Gold**; Compound Interest reads "If **3 or more Gold was spent to cast it**, draw three instead" (with Gold first, "if you have 3 Gold" after paying could never happen). |
 | 2026-10-09 | **Set v0.3 approved: mana scarcity** (36 cards: 6 per faction and 6 Neutral; 2 card draw, 2 mana sinks, 2 finishers each). Goal: players count their mana out most rounds. **X costs**: the printed cost plus X, chosen on casting (at least 1), paid like the card (spells and abilities with mana and Gold, permanents with mana only); "(X): ..." abilities work the same way. **"Divided as you choose" without "target"** (Arc Cascade) is divided one point at a time on resolution. Invest costs stay at 3 or less so they work with a Gold cap of 3. |
 | 2026-10-09 | **Going first: keep the MTG default** (first player skips the turn-1 draw, nothing else) and let human playtests judge. Measured alternatives stay as experiment switches (playtest/RULES_REVIEW.md §1): a **round mana pool** (everyone refills when a round starts, unspent mana banked at the end of the round) doesn't help on its own, because the first player gets the free reaction window; a **rotating first player** (A B, B A, A B...) brings every mirror to 41-53% (3.3 points off 50% with the round pool and "Gold first on other players' turns"). If playtests confirm the edge, rotation is the candidate. |
 | 2026-10-09 | **Player choices instead of automatic ones** (MTG defaults). **Legendary rule**: one per name *per controller*, and **you choose which to keep**; the others go to the graveyard (they die). **Combat damage** among several blockers: divided freely (§7.2.6, now 🔒), Trample needs lethal on every blocker first, and the game **only asks when the creature can't kill them all**. **Simultaneous triggers**: still APNAP between players, and **each player orders their own** (MTG 603.3b). Triggers of the same ability of the same card count as identical and aren't asked about (like MTG Arena). |

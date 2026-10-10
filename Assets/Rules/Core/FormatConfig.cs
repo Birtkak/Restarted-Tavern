@@ -2,6 +2,8 @@ namespace RestartedTavern.Rules
 {
     /// <summary>
     /// All format numbers live here, never hard-coded (DEVELOPMENT §1.5, GAME_DESIGN §2–3).
+    /// The defaults are the Standard rules: Runeterra-style mana (GAME_DESIGN §5–6, adopted 2026-10-09).
+    /// <see cref="Classic"/> keeps the old per-turn mana for comparisons and older rules tests.
     /// </summary>
     public sealed class FormatConfig
     {
@@ -14,92 +16,92 @@ namespace RestartedTavern.Rules
         public int StartingHand { get; set; } = 7;
         public int MaxHandSize { get; set; } = 7;
         public int ManaCap { get; set; } = 10;
-        public int GoldCap { get; set; } = 5;
+        /// <summary>Gold is spell mana: 3, like Runeterra's three spell-mana gems (§5.2).</summary>
+        public int GoldCap { get; set; } = 3;
 
         /// <summary>1v1 (§3, MTG default): the first player skips their turn-1 draw. Multiplayer: everyone draws (§13).</summary>
         public bool FirstPlayerSkipsDraw { get; set; } = true;
 
-        /// <summary>Gold the second player starts with. 0 since 2026-10-09 (replaced by the first-turn mana bonus); kept for experiments.</summary>
-        public int SecondPlayerStartingGold { get; set; }
-
-        /// <summary>Experiment switch (going-second compensation): extra cards the second player draws before the first turn.</summary>
-        public int SecondPlayerExtraCards { get; set; }
-
-        /// <summary>Experiment switch: extra mana for the second player's first turn only (a Hearthstone-style Coin). 0 in the rules (§3).</summary>
-        public int SecondPlayerFirstTurnBonusMana { get; set; }
+        // ---------------------------------------------------------------- the mana model (§5–6)
 
         /// <summary>
-        /// Mana model under test (2026-10-09). false: today's rule, mana refills at the start of your own turn and
-        /// is banked as Gold at the end of it. true: the <b>round pool</b>: at the start of each round every player
-        /// gains +1 max mana and refills, mana can be spent on any turn of that round (permanents still only on
-        /// your own turn), and at the end of the round everyone's unspent mana is banked as Gold.
+        /// The <b>round pool</b> (§5.1): at the start of each round every player gains +1 max mana and refills, mana can be
+        /// spent on any turn of that round (permanents still only on your own turn), and at the end of the round everyone's
+        /// unspent mana is banked as Gold. false (Classic): mana refills at the start of your own turn and is banked at its end.
         /// </summary>
-        public bool ManaPerRound { get; set; }
+        public bool ManaPerRound { get; set; } = true;
 
         /// <summary>
-        /// Payment order under test (2026-10-09): on your own turn you pay mana first, then Gold (§5.2); on other
-        /// players' turns you pay Gold first, then mana, so answering on their turn doesn't eat the mana you need
-        /// for your own turn later in the round.
+        /// Each round starts with the next player in seat order (§6.1), so in 1v1 the order is A B | B A | A B ...
+        /// false (Classic): A B A B.
         /// </summary>
-        public bool GoldFirstOffTurn { get; set; }
+        public bool RotateRoundLeader { get; set; } = true;
 
         /// <summary>
-        /// Turn order under test (2026-10-09): each round starts with the next player in seat order, so in 1v1 the
-        /// order is A B | B A | A B ... (each player gets two turns in a row at a round boundary). false: A B A B.
+        /// The attack token (§6.1, Legends of Runeterra): only the player who starts the round may attack in it. With
+        /// RotateRoundLeader the token alternates between rounds.
         /// </summary>
-        public bool RotateRoundLeader { get; set; }
+        public bool AttackToken { get; set; } = true;
 
-        /// <summary>Going-first experiment: the first player gets no max mana on their first turn, so they stay one step behind.</summary>
-        public bool FirstPlayerSkipsFirstMana { get; set; }
+        /// <summary>Spells and abilities pay Gold first, then mana (§5.2, Runeterra spends spell mana first). Permanents use mana only.</summary>
+        public bool GoldFirstAlways { get; set; } = true;
 
-        // Runeterra-style mana (2026-10-09 experiment): round pool + RotateRoundLeader + the switches below.
+        // ---------------------------------------------------------------- experiment switches (not rules)
 
-        /// <summary>
-        /// Attack token (Legends of Runeterra): only the player who starts the round may attack in it. Use with
-        /// RotateRoundLeader, so the token alternates between rounds.
-        /// </summary>
-        public bool AttackToken { get; set; }
-
-        /// <summary>Creatures can attack and use Tap abilities the turn they arrive (Runeterra units attack the round they're played).</summary>
+        /// <summary>Creatures can attack and use Tap abilities the turn they arrive. Off in the rules (§7.4).</summary>
         public bool NoSummoningSickness { get; set; }
 
-        /// <summary>Spells and abilities always pay Gold first, then mana (Runeterra spends spell mana first). Permanents still use mana only.</summary>
-        public bool GoldFirstAlways { get; set; }
+        /// <summary>Pay Gold first only on other players' turns (an earlier experiment; GoldFirstAlways replaced it).</summary>
+        public bool GoldFirstOffTurn { get; set; }
 
-        /// <summary>
-        /// The Runeterra-style package being playtested: round pool, rotating first player with the attack token, Gold
-        /// first, Gold cap 3. Summoning sickness stays unless <paramref name="summoningSickness"/> is false.
-        /// </summary>
-        public static FormatConfig Runeterra(int goldCap = 3, bool summoningSickness = true)
-        {
-            var f = Standard();
-            f.Name = "Runeterra-style";
-            f.ManaPerRound = true;
-            f.RotateRoundLeader = true;
-            f.AttackToken = true;
-            f.NoSummoningSickness = !summoningSickness;
-            f.GoldFirstAlways = true;
-            f.GoldCap = goldCap;
-            return f;
-        }
+        /// <summary>Gold the second player starts with (going-second experiments).</summary>
+        public int SecondPlayerStartingGold { get; set; }
 
-        /// <summary>
-        /// Experiment switch, not a real rule: when true, damage on creatures is removed in the
-        /// cleanup step like in MTG. Used to measure what permanent damage (§7.3) changes.
-        /// </summary>
+        /// <summary>Extra cards the second player draws before the first turn (going-second experiments).</summary>
+        public int SecondPlayerExtraCards { get; set; }
+
+        /// <summary>Extra mana for the second player's first turn only (Classic going-second experiments).</summary>
+        public int SecondPlayerFirstTurnBonusMana { get; set; }
+
+        /// <summary>The first player gets no max mana on their first turn (going-second experiment).</summary>
+        public bool FirstPlayerSkipsFirstMana { get; set; }
+
+        /// <summary>Damage on creatures is removed in the cleanup step like in MTG. Used to measure what permanent damage (§7.3) changes.</summary>
         public bool DamageWearsOff { get; set; }
 
-        /// <summary>
-        /// Experiment switch, not a real rule: when false, games are played without Tavern Dwellers (no
-        /// Tavern Dweller zone, no passives, no Powers). Used to measure what Tavern Dweller Powers change.
-        /// </summary>
+        /// <summary>Games without Tavern Dwellers (no zone, passives or Powers). Used to measure what Tavern Dwellers change.</summary>
         public bool TavernDwellersEnabled { get; set; } = true;
 
         /// <summary>Set to false in tests or tools that build decks freely.</summary>
         public bool EnforceDeckRules { get; set; } = true;
 
+        /// <summary>The Standard rules (Runeterra-style mana).</summary>
         public static FormatConfig Standard() => new FormatConfig();
 
+        /// <summary>Standard with a different Gold cap or without summoning sickness (experiments).</summary>
+        public static FormatConfig Runeterra(int goldCap = 3, bool summoningSickness = true)
+        {
+            var f = Standard();
+            f.GoldCap = goldCap;
+            f.NoSummoningSickness = !summoningSickness;
+            return f;
+        }
+
+        /// <summary>
+        /// The rules before 2026-10-09: mana refills on your own turn and is banked at its end (Gold cap 5), mana first,
+        /// turns alternate A B A B and every player may attack every turn. For comparisons and older rules tests.
+        /// </summary>
+        public static FormatConfig Classic() => new FormatConfig
+        {
+            Name = "Classic",
+            GoldCap = 5,
+            ManaPerRound = false,
+            RotateRoundLeader = false,
+            AttackToken = false,
+            GoldFirstAlways = false,
+        };
+
+        /// <summary>❓ Multiplayer keeps the Standard mana model for now; the attack token in multiplayer is an open question (§13).</summary>
         public static FormatConfig MultiplayerStandard() => new FormatConfig
         {
             Name = "Multiplayer Standard",

@@ -100,7 +100,10 @@ Original analysis (before the v0.2 decks and the attack planner):
 
 Because "losing a buff can't kill" (§7.3), a "+0/+X until end of turn" effect absorbs up to X damage and the creature still survives with 1 Health. Example: Bark Skin makes a 2/2 into a 3/6 with a counter. It can take 5 damage, and at end of turn it becomes a 3/3 at 1 Health left. That's legal and intended, but it makes Health buffs much stronger than in MTG. Price them like healing plus protection.
 
-## 🟡 6. Mana-first payment creates a sequencing trap
+## ✅ 6. Mana-first payment creates a sequencing trap (solved 2026-10-10)
+
+**Solved:** the Standard rules now pay Gold first (GAME_DESIGN §5.2). Gold can't pay for permanents, so spending it first never strands a creature. Tested in `RuneterraManaTests.GoldFirst_NoSequencingTrap_SorceryThenCreature`.
+
 
 Mana is spent first automatically (§5.2). If you cast a 3-mana Sorcery before a 3-mana creature while holding 3 mana and 3 Gold, the Sorcery eats the mana and the creature can't be cast. The fix is to cast the creature first. Fine for experienced players, but the UI should warn or order plays. It also means you can never use Gold to save mana for banking.
 

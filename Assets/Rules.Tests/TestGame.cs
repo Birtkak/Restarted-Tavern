@@ -50,6 +50,14 @@ namespace RestartedTavern.Rules.Tests
             return game;
         }
 
+        /// <summary>
+        /// The same under the Classic rules (mana per turn, mana first, Gold cap 5): for tests of card logic
+        /// written before the Standard rules changed (2026-10-10), and for the Classic rules themselves.
+        /// </summary>
+        public static TestGame Classic(ulong seed = 1, IEnumerable<CardDefinition> extraCards = null,
+            string deckCard = "hired_sellsword", int deckSize = 20) =>
+            AtFirstMainPhase(seed, extraCards, deckCard, deckSize, FormatConfig.Classic());
+
         public PlayerState P(PlayerId id) => State.GetPlayer(id);
 
         public List<GameEvent> Do(PlayerAction action)

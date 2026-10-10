@@ -31,6 +31,7 @@ namespace RestartedTavern.SimRunner
             if (args.Contains("-trace")) return Trace(Arg("-decks", "0,1"), ulong.Parse(Arg("-seed", "1")), runeterra, Arg("-out"), Arg("-pass", "0,0"), Arg("-swap"));
             if (args.Contains("-h2h")) return HeadToHead(games, runeterra, Arg("-off"));
             if (args.Contains("-tweaks")) return TweakTest(games, runeterra);
+            if (args.Contains("-balance")) return Balance(games, runeterra, Arg("-out"));
             if (args.Contains("-decktest")) return args.Contains("-singles") ? SwapTest(games, runeterra) : DeckTest(games, runeterra);
             return Report(games, Arg("-simSections")?.ToLowerInvariant().Split(','), Arg("-out"));
         }
@@ -205,6 +206,63 @@ namespace RestartedTavern.SimRunner
             Console.WriteLine($"Card tweaks, {games} games each (A = with the swap; 50% = as good as the card it replaces).");
             for (int i = 0; i < tests.Length; i++)
                 Console.WriteLine($"  {before[i].Config.Name,-58} as printed {before[i].WinRateA,6:P1}   {tests[i].Change,-30} {after[i].WinRateA,6:P1}");
+            return 0;
+        }
+
+        /// <summary>
+        /// The balance dashboard: every deck against every deck (and each mirror), Greedy bots. Prints a win-rate matrix,
+        /// each deck's average against the other decks, the spread (mean distance from 50%), mirror first-player win%,
+        /// game length and mana left unspent per turn. With -out, appends the summary to that file.
+        /// </summary>
+        private static int Balance(int games, bool runeterra, string output)
+        {
+            var decks = Experiments.PrototypeDecks();
+            var configs = new List<MatchConfig>();
+            for (int i = 0; i < decks.Length; i++)
+                for (int j = i; j < decks.Length; j++)
+                    configs.Add(new MatchConfig
+                    {
+                        Name = decks[i].Name + " vs " + decks[j].Name, Format = Rules(runeterra), Games = games,
+                        DeckAName = decks[i].Name, DeckA = decks[i].Cards, TavernDwellerA = decks[i].TavernDweller,
+                        DeckBName = decks[j].Name, DeckB = decks[j].Cards, TavernDwellerB = decks[j].TavernDweller,
+                    });
+            var watch = Stopwatch.StartNew();
+            var results = MatchRunner.RunAll(configs, CardPool.CreateDatabase());
+            int n = decks.Length;
+            var win = new double[n, n];
+            var mirrors = new MatchResult[n];
+            int k = 0;
+            for (int i = 0; i < n; i++)
+                for (int j = i; j < n; j++)
+                {
+                    var r = results[k++];
+                    win[i, j] = r.WinRateA;
+                    win[j, i] = 1 - r.WinRateA;
+                    if (i == j) mirrors[i] = r;
+                }
+            string Short(string name) => name.Split(' ')[0].Replace("'s", "");
+            var lines = new List<string>
+            {
+                $"Balance, {(runeterra ? "Runeterra" : "classic")} rules, {games} games per pairing ({watch.Elapsed.TotalSeconds:0}s). Row deck's win% against the column deck.",
+                "            " + string.Join(" ", decks.Select(d => Short(d.Name).PadLeft(7))) + "   avg vs field",
+            };
+            double spread = 0, worst = 0;
+            for (int i = 0; i < n; i++)
+            {
+                double avg = Enumerable.Range(0, n).Where(j => j != i).Average(j => win[i, j]);
+                spread += Math.Abs(avg - 0.5) / n;
+                for (int j = 0; j < n; j++) if (j != i) worst = Math.Max(worst, Math.Abs(win[i, j] - 0.5));
+                lines.Add(Short(decks[i].Name).PadRight(11) + " " + string.Join(" ", Enumerable.Range(0, n).Select(j => i == j ? "     --" : (win[i, j] * 100).ToString("0.0").PadLeft(6) + "%"))
+                          + $"   {avg * 100,5:0.0}%");
+            }
+            var all = results;
+            double unspent = all.Sum(r => (double)r.UnspentMana) / all.Sum(r => r.GameLengths.Sum());
+            lines.Add($"Spread (mean |avg - 50%|): {spread * 100:0.0} points · worst matchup: {(0.5 + worst) * 100:0.0}%");
+            lines.Add("Mirrors, 1st player win%: " + string.Join("  ", Enumerable.Range(0, n).Select(i => Short(decks[i].Name) + " " + (mirrors[i].FirstPlayerWinRate * 100).ToString("0"))));
+            lines.Add("Mirrors, turns: " + string.Join("  ", Enumerable.Range(0, n).Select(i => Short(decks[i].Name) + " " + mirrors[i].AvgTurns.ToString("0.0"))));
+            lines.Add($"All games: {all.Average(r => r.AvgTurns):0.0} turns · unspent mana {unspent:0.00}/turn · lost to Gold cap {all.Sum(r => r.UnspentMana - r.GoldBanked) / (double)Math.Max(1, all.Sum(r => r.UnspentMana)) * 100:0}% · off-turn plays {all.Average(r => r.PerGame(r.InstantsOnOpponentsTurn + r.AbilitiesOnOpponentsTurn)):0.0}/game · draws {all.Sum(r => r.Draws)}");
+            lines.ForEach(Console.WriteLine);
+            if (output != null) File.AppendAllLines(output, lines.Prepend("").Prepend("### " + DateTime.Now.ToString("HH:mm")));
             return 0;
         }
 

@@ -77,7 +77,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void UnspentMana_BecomesGold_AtEndOfTurn()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var first = g.Active;
             g.PassToStep(Step.Main1, g.Other);
             Assert.AreEqual(1, g.P(first).Gold, "1 unspent mana banked");
@@ -87,7 +87,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Gold_IsCappedAtFive()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var first = g.Active;
             g.P(first).Gold = 4;
             g.SetMana(first, 5);
@@ -121,7 +121,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Payment_UsesManaFirst_ThenGold()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var zap = g.AddToHand(g.Active, "chain_zap"); // Sorcery, cost 3
             g.SetMana(g.Active, 2);
             g.P(g.Active).Gold = 3;
@@ -149,7 +149,7 @@ namespace RestartedTavern.Rules.Tests
         public void Permanents_AreManaOnly_EvenEquipment()
         {
             var shiv = new CardDefinition { Id = "test_shiv", Name = "Test Shiv", Type = CardType.Equipment, Cost = 2 };
-            var g = TestGame.AtFirstMainPhase(extraCards: new[] { shiv });
+            var g = TestGame.Classic(extraCards: new[] { shiv });
             var sword = g.AddToHand(g.Active, "hired_sellsword");
             var equipment = g.AddToHand(g.Active, "test_shiv");
             g.SetMana(g.Active, 0);

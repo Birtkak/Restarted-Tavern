@@ -108,6 +108,7 @@ namespace RestartedTavern.Rules
                 X = def.XGoldExtraCost || def.XCost ? a.X : 0,
                 SacrificedPower = sacrificedPower,
                 Division = a.Division,
+                GoldPaid = goldPaid,
             };
             item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
@@ -171,7 +172,7 @@ namespace RestartedTavern.Rules
                 else
                 {
                     RunEffects(item.Effects, item.Controller, item.SourceId, targets, item.X, sacrificedPower: item.SacrificedPower,
-                        sourceDefinitionId: item.SourceDefinitionId, invested: item.Invested, division: item.Division);
+                        sourceDefinitionId: item.SourceDefinitionId, invested: item.Invested, division: item.Division, goldSpent: item.GoldPaid);
                     MoveCard(item.Card, Zone.Graveyard);
                 }
             }
@@ -187,10 +188,10 @@ namespace RestartedTavern.Rules
         /// <summary><paramref name="targets"/> has null where a target became illegal.</summary>
         private void RunEffects(List<Effect> effects, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0,
             int eventAmount = 0, ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0,
-            string sourceDefinitionId = null, bool invested = false, int[] division = null)
+            string sourceDefinitionId = null, bool invested = false, int[] division = null, int goldSpent = 0)
         {
             var ctx = new EffectContext(this, controller, source, targets, x, eventAmount, eventObject, eventPlayer, sacrificedPower,
-                sourceDefinitionId, invested);
+                sourceDefinitionId, invested, goldSpent);
             if (division != null) ctx.Division = division;
             foreach (var e in effects)
             {

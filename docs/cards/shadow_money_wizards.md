@@ -23,7 +23,7 @@ Status tags: ✅ approved · 🟡 draft · ✏️ needs changes · ❌ cut
 | 4 | **Ledger Imp** | 1 | Creature: Imp | C | 1/2 | Arrival: You may lose 2 life. If you do, gain 1 Gold. | A 1-drop shady deal: early Gold for life. Enables a turn-2 trick | ✅ |
 | 5 | **Hush Money** | 2 | Instant | U | — | Counter target spell unless its controller pays 3. If they pay, you gain 2 Gold. | You profit either way. It is the faction's counterspell, and it's weak late in the game on purpose | ✅ |
 | 6 | **Crooked Accountant** | 3 | Creature: Wizard | C | 2/3 | Whenever you cast a spell that costs 5 or more, draw a card. | Engine for the big-spell plan | ✅ |
-| 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of your turn, if you have 5 or more Gold, draw a card. | Rewards banking up to the cap | ✅ |
+| 7 | **Velvet Embezzler** | 4 | Creature: Wizard | R | 3/3 | Flying. At the end of your turn, if you have 3 or more Gold, draw a card. | Rewards banking up to the cap | ✅ |
 | 8 | **Golden Handshake** | 5 | Sorcery | U | — | Return target creature to its owner's hand. Its controller gains Gold equal to its cost. | "Clean" removal of a big creature, but the opponent gets up to 5 Gold to spend on tricks. Damage is wiped when the creature returns to hand | ✅ |
 
 ## Legendary
@@ -66,14 +66,14 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| 21 | **Interest Broker** | 2 | Creature: Wizard | U | 1/3 | Whenever you bank 2 or more Gold, draw a card. | Rewards holding mana up. The cap fights it: at 5 Gold you bank nothing, so you have to spend Gold to keep drawing | ✓ implemented | ✅ |
+| 21 | **Interest Broker** | 2 | Creature: Wizard | U | 1/3 | Whenever you bank 2 or more Gold, draw a card. | Rewards holding mana up. The cap fights it: at 3 Gold you bank nothing, so you have to spend Gold to keep drawing | ✓ implemented | ✅ |
 | 22 | **Offshore Account** | 2 | Relic | U | — | Your Gold cap is 8. | Simulations: up to 70% of unspent mana is lost to the cap in long games. This is the Wizards' answer, and it makes Invest bursts bigger | ✓ implemented | ✅ |
 | 23 | **Fee Collector** | 2 | Creature: Wizard | C | 2/2 | Whenever an opponent spends Gold, you gain 1 Gold. | Taxes the opponent's instant-speed play. Every Gold they spend helps you a bit | ✓ implemented | ✅ |
 | 24 | **Retainer Mage** | 3 | Creature: Wizard | C | 2/3 | Flying. You may cast this whenever you could cast an Instant. If you do, you may pay for it with Gold. | An ambush creature: Gold creates a body on the opponent's turn. The only creature in the faction that Gold can pay for | ✓ implemented | ✅ |
 | 25 | **Bounced Check** | 2 | Instant | C | — | Return target creature with cost 3 or less to its owner's hand. Its controller gains 1 Gold. | Cheap bounce with the faction's 'shady' drawback. Bounce also wipes the creature's damage, so use it on an enemy that is healthy | ✓ implemented | ✅ |
 | 26 | **Golden Parachute** | 3 | Instant | C | — | Return target creature you control to your hand. Gain Gold equal to its cost. | Permanent-damage depth: rescue a wounded creature (it comes back fresh) and bank its value. A response on the Chain to removal | ✓ implemented | ✅ |
 | 27 | **Silent Partner** | 4 | Creature: Wizard | U | 2/5 | You may pay Invest costs with mana as well as Gold. | Opens Invest to big main-phase turns, the Wizards' 'big impressive spells'. Tough body, no attack | ✓ implemented | ✅ |
-| 28 | **Compound Interest** | 4 | Sorcery | C | — | Draw two cards. If you have 5 or more Gold, draw three instead. | Pays off sitting at the cap, the opposite tension to Interest Broker | ✓ implemented | ✅ |
+| 28 | **Compound Interest** | 4 | Sorcery | C | — | Draw two cards. If 3 or more Gold was spent to cast it, draw three instead. | Pays off sitting at the cap, the opposite tension to Interest Broker | ✓ implemented | ✅ |
 | 29 | **Hostile Takeover** | 6 | Sorcery | R | — | Gain control of target creature. Its controller gains Gold equal to its cost and draws a card. | A permanent steal with a shady deal. The victim gets resources back (capped by their Gold cap) | ✓ implemented | ✅ |
 | 30 | **Bribe the Referee** | 4 | Instant | R | — | Counter target spell or ability. Its controller gains 3 Gold and draws a card. | A hard counter, but you pay the other player off. Can also stop a Tavern Dweller Power or a Last Breath trigger | ✓ implemented | ✅ |
 
@@ -84,7 +84,7 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 ## Set v0.3 additions: mana scarcity (approved 2026-10-09)
 
 Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
-**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first, §5.2), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|

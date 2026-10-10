@@ -246,12 +246,12 @@ namespace RestartedTavern.Rules.Cards
             yield return accountant;
 
             var embezzler = Creature("velvet_embezzler", "Velvet Embezzler", 4, 3, 3, wizards, Rarity.Rare, "Wizard", Keyword.Flying,
-                "Flying. At the end of your turn, if you have 5 or more Gold, draw a card.");
+                "Flying. At the end of your turn, if you have 3 or more Gold, draw a card.");
             embezzler.Triggers.Add(new TriggeredAbility
             {
-                // Decided 2026-10-09: 5 or more (with Offshore Account the cap can be 8).
+                // Decided 2026-10-10: 3 or more, the Standard Gold cap (was 5 under the Classic cap of 5).
                 When = TriggerEvent.EndOfYourTurn,
-                Condition = (s, db, controller, source) => s.GetPlayer(controller).Gold >= 5,
+                Condition = (s, db, controller, source) => s.GetPlayer(controller).Gold >= 3,
                 Effects = { new DrawCardsEffect { Count = 1 } },
             });
             yield return embezzler;

@@ -71,7 +71,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void DiceGame_HighestBidDrawsTwo_TiesDrawOne()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var other = g.Other;
             var dice = g.AddToHand(me, "dice_game");
@@ -170,7 +170,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void RecklessCharge_InvestPumpsYourOtherGoobers()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var target = g.AddToBattlefield(me, "brawling_runt");   // Goober 2/2
             var goober = g.AddToBattlefield(me, "goober_rascal");   // Goober 2/1
@@ -189,7 +189,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GrandHeist_TakesAllTheirGold_InvestMakesGoobersForWhatYouGained()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var heist = g.AddToHand(me, "grand_heist");
             g.SetMana(me, 3);

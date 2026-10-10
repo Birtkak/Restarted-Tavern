@@ -138,8 +138,8 @@ namespace RestartedTavern.Rules.Cards
             {
                 Id = "compound_interest", Name = "Compound Interest", Type = CardType.Sorcery, Cost = 4,
                 Faction = "shadow_money_wizards", Rarity = Rarity.Common,
-                Text = "Draw two cards. If you have 5 or more Gold, draw three instead.",
-                SpellEffects = { new DrawIfGoldEffect { Count = 2, GoldAtLeast = 5, CountIfGold = 3 } },
+                Text = "Draw two cards. If 3 or more Gold was spent to cast it, draw three instead.",
+                SpellEffects = { new DrawIfGoldEffect { Count = 2, GoldAtLeast = 3, CountIfGold = 3 } },
             };
 
             // ---------------------------------------------------------------- Goobers

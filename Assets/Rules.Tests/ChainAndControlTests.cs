@@ -203,7 +203,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void HostileTakeover_IsPermanent_AndPaysThePreviousController()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var other = g.Other;
             var victim = g.AddToBattlefield(other, "pit_champion"); // cost 6

@@ -22,9 +22,10 @@ namespace RestartedTavern.Rules
 
         internal EffectContext(GameRunner runner, PlayerId controller, ObjectId source, List<Target?> targets, int x = 0, int eventAmount = 0,
             ObjectId eventObject = default, PlayerId? eventPlayer = null, int sacrificedPower = 0, string sourceDefinitionId = null,
-            bool invested = false)
+            bool invested = false, int goldSpent = 0)
         {
             Invested = invested;
+            GoldSpent = goldSpent;
             SourceDefinitionId = sourceDefinitionId;
             EventObject = eventObject;
             EventPlayer = eventPlayer;
@@ -57,6 +58,8 @@ namespace RestartedTavern.Rules
         public string SourceDefinitionId { get; }
         /// <summary>The spell was cast with its Invest cost paid (for effects that change with Invest, Pocket Change).</summary>
         public bool Invested { get; }
+        /// <summary>Spells: the Gold spent to cast it, Invest included (Compound Interest).</summary>
+        public int GoldSpent { get; }
         /// <summary>Chosen targets in slot order; null where a target became illegal (MTG 608.2b).</summary>
         public IReadOnlyList<Target?> Targets { get; }
         public Target? Target => TargetAt(0);

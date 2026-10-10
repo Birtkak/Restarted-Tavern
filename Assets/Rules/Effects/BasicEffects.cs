@@ -151,7 +151,10 @@ namespace RestartedTavern.Rules
         public override void Resolve(EffectContext ctx) => ctx.Draw(ctx.Controller, CountIsX ? ctx.X : Count);
     }
 
-    /// <summary>"Draw N cards. If you have G or more Gold, draw M instead." (Compound Interest)</summary>
+    /// <summary>
+    /// "Draw N cards. If G or more Gold was spent to cast it, draw M instead." (Compound Interest). Spells pay
+    /// Gold first (§5.2), so casting it while at the Gold cap of 3 spends 3 Gold.
+    /// </summary>
     public sealed class DrawIfGoldEffect : Effect
     {
         public int Count { get; set; }
@@ -159,7 +162,7 @@ namespace RestartedTavern.Rules
         public int CountIfGold { get; set; }
 
         public override void Resolve(EffectContext ctx) =>
-            ctx.Draw(ctx.Controller, ctx.State.GetPlayer(ctx.Controller).Gold >= GoldAtLeast ? CountIfGold : Count);
+            ctx.Draw(ctx.Controller, ctx.GoldSpent >= GoldAtLeast ? CountIfGold : Count);
     }
 
     /// <summary>"[Then] discard N cards." The controller chooses; it must be the last effect.</summary>

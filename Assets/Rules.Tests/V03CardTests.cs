@@ -198,7 +198,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void OpenCasket_ToHand_OrBattlefieldWhenInvested()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var dead = g.AddToBattlefield(me, "spark_drone");
             g.P(me).Battlefield.Remove(dead);
@@ -234,7 +234,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void ClosingBell_OnlyWhenEveryOpponentIsLow()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             g.AddToBattlefield(me, "closing_bell");
             g.PassUntil(s => s.ActivePlayer != me);

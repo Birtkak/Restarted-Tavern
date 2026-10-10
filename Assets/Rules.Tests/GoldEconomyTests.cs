@@ -13,7 +13,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void BankTrigger_GoesOnTheChainInCleanup_ThenCleanupRepeats()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var other = g.Other;
             g.AddToBattlefield(me, "interest_broker");
@@ -39,7 +39,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void BankTrigger_CountsOnlyTheGoldActuallyGained()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             g.AddToBattlefield(me, "interest_broker"); // "2 or more"
             g.SetMana(me, 3);
@@ -72,7 +72,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void OffshoreAccount_RaisesTheCap_AndExcessIsLostWhenItLeaves()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var account = g.AddToBattlefield(me, "offshore_account");
             g.SetMana(me, 6);
@@ -115,7 +115,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void TravelingBard_NeedsThreeGoldOnOneSpellOrAbility_InvestCounts()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             g.AddToBattlefield(me, "traveling_bard");
             var muscle = g.AddToBattlefield(me, "hired_muscle");
@@ -162,7 +162,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void SettleTheTab_PayAnyAmountOfGold_DrawXThenDiscard()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var settle = g.AddToHand(me, "settle_the_tab");
             g.SetMana(me, 3);
@@ -187,9 +187,10 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void CompoundInterest_DrawsThreeAtFiveGold()
+        public void CompoundInterest_DrawsThreeWhenThreeGoldWasSpent()
         {
-            foreach (var (gold, draws) in new[] { (4, 2), (5, 3) })
+            // Spells pay Gold first (§5.2): at the cap of 3 Gold, casting it spends 3 Gold.
+            foreach (var (gold, draws) in new[] { (2, 2), (3, 3) })
             {
                 var g = TestGame.AtFirstMainPhase();
                 var me = g.Active;

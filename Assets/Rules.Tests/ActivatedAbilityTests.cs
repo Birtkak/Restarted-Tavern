@@ -93,7 +93,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GenericCost_UsesManaFirst_ThenGold()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var sword = g.AddToBattlefield(g.Active, "hired_sellsword");
             var blade = g.AddToBattlefield(g.Active, "pulse_blade"); // Equip 2
             g.SetMana(g.Active, 1);

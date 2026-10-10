@@ -50,6 +50,8 @@ namespace RestartedTavern.Rules
         public PlayerId? EventPlayer { get; set; }
         /// <summary>Spells with "sacrifice a creature" as an extra cost: its last known Power.</summary>
         public int SacrificedPower { get; set; }
+        /// <summary>Spells: the Gold spent to cast it, Invest included ("if 3 or more Gold was spent to cast it").</summary>
+        public int GoldPaid { get; set; }
         /// <summary>Divided damage: the amount for each target (MTG 601.2d).</summary>
         public int[] Division { get; set; } = System.Array.Empty<int>();
         /// <summary>Triggered abilities: the intervening "if", checked again on resolution (MTG 603.4).</summary>

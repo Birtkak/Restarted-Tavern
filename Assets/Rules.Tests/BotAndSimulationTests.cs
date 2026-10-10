@@ -118,7 +118,7 @@ namespace RestartedTavern.Rules.Tests
         public void SecondPlayerCompensation_ExperimentSwitches()
         {
             var engine = new GameEngine(CardPool.CreateDatabase());
-            var format = FormatConfig.Standard();
+            var format = FormatConfig.Classic();
             format.SecondPlayerExtraCards = 1;
             format.SecondPlayerFirstTurnBonusMana = 1;
             format.FirstPlayerSkipsDraw = false;
@@ -148,7 +148,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void GoldBankedEvent_ReportsWhatTheCapWasted()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var first = g.Active;
             g.P(first).Gold = 4;
             g.SetMana(first, 3);

@@ -69,7 +69,7 @@ New rules terms used here are defined in GAME_DESIGN §5.2 (**bank**) and §11.1
 ## Set v0.3 additions: mana scarcity (approved 2026-10-09)
 
 Goal: players should have to count their mana out most rounds. Each faction gets 2 **card draw**, 2 **mana sinks** (X spells, repeatable abilities or a big Invest) and 2 **finishers** (X burn or drains), 2 C / 2 U / 2 R.
-**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first with Runeterra mana), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
+**X costs:** the printed cost plus X, chosen on casting. Paid like the card: spells and abilities use mana and Gold (Gold first, §5.2), permanents use mana only. Invest costs stay at 3 or less, so they work with a Gold cap of 3.
 
 | # | Name | Cost | Type | Rarity | Stats | Text | Role · design notes | Engine | Status |
 |---|---|---|---|---|---|---|---|---|---|

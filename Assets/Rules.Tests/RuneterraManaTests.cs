@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace RestartedTavern.Rules.Tests
 {
-    /// <summary>The Runeterra-style mana experiment (FormatConfig.Runeterra): round pool, rotating leader, attack token, Gold first.</summary>
+    /// <summary>The Standard mana rules (Runeterra-style, locked 2026-10-10): round pool, rotating leader, attack token, Gold first, Gold cap 3.</summary>
     public class RuneterraManaTests
     {
         private static TestGame Game(bool summoningSickness = true)
@@ -93,6 +93,37 @@ namespace RestartedTavern.Rules.Tests
             g.Do(g.Legal(me).First(a => a.Kind == ActionKind.PlayCard && a.Card == shock.Id));
             Assert.AreEqual(0, g.P(me).Gold, "Gold (spell mana) is spent first");
             Assert.AreEqual(2, g.P(me).Mana);
+        }
+
+        [Test]
+        public void GoldIsCappedAtThree()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            Assert.AreEqual(3, g.State.Format.GoldCap);
+            var me = g.Active;
+            g.P(me).Gold = 2;
+            g.SetMana(me, 4);
+            g.PassUntil(s => s.TurnNumber > 2);
+            Assert.AreEqual(3, g.P(me).Gold, "banked up to the cap, the rest is lost");
+        }
+
+        [Test]
+        public void GoldFirst_NoSequencingTrap_SorceryThenCreature()
+        {
+            // RULES_REVIEW #6: with mana first, a Sorcery cast before a creature ate the creature's mana.
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            g.SetMana(me, 3);
+            g.P(me).Gold = 3;
+            var sorcery = g.AddToHand(me, "round_on_the_house"); // Sorcery, cost 3
+            var creature = g.AddToHand(me, "tavern_bouncer");    // creature, cost 3
+            g.Do(PlayerAction.Play(me, sorcery.Id));
+            Assert.AreEqual(0, g.P(me).Gold, "the Sorcery is paid with Gold");
+            Assert.AreEqual(3, g.P(me).Mana, "the mana is still there for the creature");
+            g.PassRound();
+            g.Do(PlayerAction.Play(me, creature.Id));
+            g.PassRound();
+            Assert.IsNotNull(g.OnBattlefield(me, "tavern_bouncer"));
         }
 
         [Test]

@@ -62,7 +62,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Power_OnceEachTurn_AtInstantSpeed_PaidWithGoldOnTheOpponentsTurn()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var me = g.Active;
             var keeper = g.SetTavernDweller(me, "keeper_z00");
             var hurt = g.AddToBattlefield(me, "tavern_bouncer", damage: 4);
@@ -172,7 +172,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void Auditor_LowersInvestAndEquip_AndThePowerLooksAtTheTopCard()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var auditor = g.SetTavernDweller(g.Active, "auditor_prime");
             var ledger = g.AddToHand(g.Active, "the_grand_ledger"); // Invest 3
             g.SetMana(g.Active, 7);

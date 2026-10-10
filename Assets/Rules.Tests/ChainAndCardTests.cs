@@ -149,7 +149,7 @@ namespace RestartedTavern.Rules.Tests
         [Test]
         public void JungleRemedy_Invest_PaidWithGoldOnly()
         {
-            var g = TestGame.AtFirstMainPhase();
+            var g = TestGame.Classic();
             var beast = g.AddToBattlefield(g.Active, "ironbark_grizzly", damage: 4); // 4/5, 1 left
             var remedy = g.AddToHand(g.Active, "jungle_remedy");
             g.SetMana(g.Active, 5);
