@@ -72,7 +72,7 @@ namespace RestartedTavern.Rules
             return t.HasValue && !t.Value.IsPlayer ? State.FindOnBattlefield(t.Value.Object) : null;
         }
 
-        public void DealDamage(Target target, int amount) => _runner.DealDamage(Source, target, amount, false);
+        public void DealDamage(Target target, int amount) => _runner.DealDamage(Source, target, amount, false, Controller);
         /// <summary>The controller heals (this is what "whenever you heal a creature" watches).</summary>
         public void Heal(Target target, int amount) => _runner.Heal(target, amount, Controller);
         public void Draw(PlayerId player, int count) => _runner.Draw(player, count);
@@ -112,6 +112,9 @@ namespace RestartedTavern.Rules
         /// <summary>"Deal N damage divided as you choose among any number of creatures and/or opponents", one point at a time.</summary>
         public void AskChooseUpTo(List<ObjectId> choices, int count, List<Effect> then, string prompt) =>
             _runner.AskChooseUpTo(Controller, choices, count, then, Controller, Source, SourceDefinitionId, prompt);
+        /// <summary>A replacement effect for a while ("until end of turn", "the next time").</summary>
+        public void AddReplacement(ReplacementAbility ability, ObjectId affectedObject, bool untilEndOfTurn, int uses) =>
+            _runner.AddReplacement(ability, Controller, Source, SourceDefinitionId, affectedObject, untilEndOfTurn, uses);
         public void AskDivideDamage(int amount) => _runner.AskDivideDamage(Controller, Source, SourceDefinitionId, amount);
 
         public void AskYesNo(PlayerId chooser, List<Effect> then, List<Effect> otherwise, string prompt) =>

@@ -28,6 +28,22 @@ namespace RestartedTavern.Rules
             var def = Def(card);
             var lastController = card.Controller;
             bool dies = from == Zone.Battlefield && to == Zone.Graveyard && def.IsCreature;
+            ReplaceableEvent replaced = null;
+            if (dies)
+            {
+                // "If it would die, [exile it / return it to its owner's hand] instead" (MTG 614.1a).
+                replaced = new ReplaceableEvent
+                {
+                    Kind = ReplacementEvent.Dies, AffectedPlayer = card.Controller, Object = card, Destination = Zone.Graveyard,
+                };
+                ApplyReplacements(replaced);
+                if (!replaced.StillDies)
+                {
+                    dies = false;
+                    to = replaced.Destination;
+                    toBottom = replaced.ToBottom;
+                }
+            }
             int lastPower = dies ? Stats(card).Power : 0; // last known information (MTG 608.2h)
 
             // A lord/anthem leaving ends its buffs (§7.3: losing a buff can't kill).
@@ -84,10 +100,11 @@ namespace RestartedTavern.Rules
                 QueueWatcherTriggers(TriggerEvent.CurseToGraveyard, lastController);
             if (to == Zone.Battlefield)
             {
-                ApplyEntersWithCounters(moved);
+                ApplyEntersReplacements(moved);
                 QueueTriggers(moved, TriggerEvent.Arrival);
                 QueueCreatureEnters(moved);
             }
+            if (replaced != null) RunInsteadEffects(replaced);
 
             return moved;
         }
@@ -97,13 +114,21 @@ namespace RestartedTavern.Rules
             var p = S.GetPlayer(player);
             for (int i = 0; i < count; i++)
             {
-                if (p.Deck.Count == 0)
+                // "If you would draw a card, ... instead" (MTG 614.1a). The cards it turns into aren't replaced again (614.5).
+                var e = new ReplaceableEvent { Kind = ReplacementEvent.Draw, AffectedPlayer = player, Amount = 1 };
+                ApplyReplacements(e);
+                int draws = e.Skipped ? 0 : e.Amount;
+                for (int d = 0; d < draws; d++)
                 {
-                    p.DrewFromEmptyDeck = true; // §12: checked as a state-based action
-                    return;
+                    if (p.Deck.Count == 0)
+                    {
+                        p.DrewFromEmptyDeck = true; // §12: checked as a state-based action
+                        return;
+                    }
+                    var drawn = MoveCard(p.Deck[0], Zone.Hand);
+                    Emit(new CardDrawnEvent { Player = player, Card = drawn.Id, DefinitionId = drawn.DefinitionId });
                 }
-                var drawn = MoveCard(p.Deck[0], Zone.Hand);
-                Emit(new CardDrawnEvent { Player = player, Card = drawn.Id, DefinitionId = drawn.DefinitionId });
+                RunInsteadEffects(e);
             }
         }
 
@@ -114,7 +139,7 @@ namespace RestartedTavern.Rules
             token.SummoningSick = true;
             S.GetPlayer(controller).Battlefield.Add(token);
             Emit(new TokenCreatedEvent { Controller = controller, Token = token.Id, DefinitionId = definitionId });
-            ApplyEntersWithCounters(token);
+            ApplyEntersReplacements(token);
             QueueTriggers(token, TriggerEvent.Arrival);
             QueueCreatureEnters(token);
             return token;
@@ -128,24 +153,6 @@ namespace RestartedTavern.Rules
             QueueWatcherTriggers(TriggerEvent.CreatureEnters, permanent.Controller,
                 (t, source) => (!t.OthersOnly || source.Id != permanent.Id) && (t.MinPower <= 0 || power >= t.MinPower),
                 eventObject: permanent.Id, eventPlayer: permanent.Controller);
-        }
-
-        /// <summary>
-        /// "Your creatures with 5 or more Health enter with a +1/+1 counter" (Keeper Z-00). A
-        /// replacement effect (MTG 614.1c): Health is checked as the creature exists on the
-        /// battlefield, so static buffs count (MTG 614.12).
-        /// </summary>
-        private void ApplyEntersWithCounters(CardInstance permanent)
-        {
-            if (!Def(permanent).IsCreature) return;
-            var p = S.GetPlayer(permanent.Controller);
-            int counters = 0;
-            int health = Stats(permanent).MaxHealth;
-            foreach (var list in new[] { p.TavernDwellerZone, p.Battlefield })
-                foreach (var source in list)
-                    foreach (var st in Def(source).Statics)
-                        if (st is EntersWithCountersAbility e && health >= e.MinHealth) counters += e.Counters;
-            permanent.PlusOneCounters += counters;
         }
 
         /// <summary>
@@ -176,12 +183,30 @@ namespace RestartedTavern.Rules
         /// Lifelink: the damage also heals the source's controller (§11). Returns the damage actually
         /// dealt: "can't be dealt more than N damage each turn" (Hardlight Aegis) prevents the rest.
         /// </summary>
-        internal int DealDamage(ObjectId source, Target target, int amount, bool isCombat)
+        internal int DealDamage(ObjectId source, Target target, int amount, bool isCombat, PlayerId? sourceController = null)
         {
             if (amount <= 0) return 0;
+            var damaged = target.IsPlayer ? null : S.FindOnBattlefield(target.Object);
+            if (target.IsPlayer ? S.GetPlayer(target.Player).HasLost : damaged == null || !Def(damaged).IsCreature) return 0;
+
+            // Prevention and "deals double / that much plus 1" (MTG 614.1a, 615).
+            var e = new ReplaceableEvent
+            {
+                Kind = ReplacementEvent.DamageDealt, AffectedPlayer = target.IsPlayer ? target.Player : damaged.Controller, Object = damaged,
+                DamageSource = source, IsCombat = isCombat, Amount = amount,
+                DamageSourceController = sourceController ?? S.FindObject(source)?.Controller,
+            };
+            ApplyReplacements(e);
+            amount = e.Skipped ? 0 : e.Amount;
+            int dealt = amount > 0 ? DealDamageNow(source, target, amount, isCombat) : 0;
+            RunInsteadEffects(e);
+            return dealt;
+        }
+
+        private int DealDamageNow(ObjectId source, Target target, int amount, bool isCombat)
+        {
             if (target.IsPlayer)
             {
-                if (S.GetPlayer(target.Player).HasLost) return 0;
                 Emit(new DamageDealtEvent { Source = source, Target = target, Amount = amount, IsCombat = isCombat });
                 ChangeLife(target.Player, -amount);
                 var dealer = isCombat ? S.FindOnBattlefield(source) : null;
@@ -251,6 +276,10 @@ namespace RestartedTavern.Rules
             {
                 var p = S.GetPlayer(target.Player);
                 if (p.HasLost) return;
+                // Healing your Tavern Dweller is gaining life: "If you would gain life, ..." (MTG 614.1a).
+                var e = new ReplaceableEvent { Kind = ReplacementEvent.GainLife, AffectedPlayer = p.Id, Amount = amount };
+                ApplyReplacements(e);
+                amount = e.Skipped ? 0 : e.Amount;
                 healed = Math.Max(0, Math.Min(amount, S.Format.StartingLife - p.Life));
                 if (healed > 0) ChangeLife(p.Id, healed);
             }
@@ -279,6 +308,20 @@ namespace RestartedTavern.Rules
         /// Losing Gold never raises it, even if the player is somehow above the cap.
         /// </summary>
         internal void ChangeGold(PlayerId player, int delta)
+        {
+            ReplaceableEvent e = null;
+            if (delta > 0)
+            {
+                // "If you would gain Gold, ..." (banking included).
+                e = new ReplaceableEvent { Kind = ReplacementEvent.GainGold, AffectedPlayer = player, Amount = delta };
+                ApplyReplacements(e);
+                delta = e.Skipped ? 0 : e.Amount;
+            }
+            ChangeGoldNow(player, delta);
+            if (e != null) RunInsteadEffects(e);
+        }
+
+        private void ChangeGoldNow(PlayerId player, int delta)
         {
             var p = S.GetPlayer(player);
             int old = p.Gold;

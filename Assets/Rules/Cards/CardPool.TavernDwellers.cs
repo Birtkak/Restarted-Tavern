@@ -159,7 +159,8 @@ namespace RestartedTavern.Rules.Cards
                     Cost = 2, Targets = { TargetSlot.Of(TargetSpec.Creature) },
                     Effects = { new HealEffect { Amount = 3 } }, Text = "(2) Heal 3 from a creature.",
                 });
-            keeper.Statics.Add(new EntersWithCountersAbility { MinHealth = 5 });
+            // A replacement effect (MTG 614.1c); Health is checked as the creature exists on the battlefield (614.12).
+            keeper.Statics.Add(new ReplacementAbility { Event = ReplacementEvent.Enters, Affects = TriggerSubject.You, MinHealth = 5, Counters = 1 });
             yield return keeper;
         }
     }

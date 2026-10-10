@@ -198,6 +198,14 @@ Creatures can't attack the turn they enter the battlefield (unless they have **H
 - **Fixed windows** where players get priority even when the Chain is empty: 🟡 each main phase, the start of combat, after attackers are declared, after blockers are declared, and the end phase.
 - 🟡 UX note: the client should auto-pass for players who have no legal response (or who choose "auto-pass this turn"), so the back-and-forth stays fast, especially with 4 players.
 
+### 8.1 Replacement effects 🔒 (MTG 614–616, in the engine since 2026-10-10)
+"If [something] would happen, [something else] happens instead." They don't use the Chain; they change the event as it happens.
+- Events that can be replaced: a creature **dying**, **damage** being dealt (prevention, "double", "that much plus 1"), a permanent **entering** (with counters, tapped), **drawing** a card, **gaining life**, **gaining Gold** (banking included).
+- They come from permanents and Tavern Dwellers (static abilities), or from spells and abilities for a while ("until end of turn", "the next time ...").
+- Each replacement changes an event **at most once** (MTG 614.5). After one applies, the others are checked again: once a creature is exiled instead of dying, "if it would die" effects no longer apply.
+- **Order** when several apply: self-replacement effects first (MTG 614.15), then the others **oldest first**. ❓ MTG lets the affected player choose this order (616.1); the engine uses the fixed order until game actions can pause for a choice. Decide this when the first card that needs it is designed.
+- Keeper Z-00's "Your creatures with 5 or more Health enter with a +1/+1 counter" is a replacement effect.
+
 ---
 
 ## 9. Tavern Dwellers & Factions
@@ -207,7 +215,7 @@ Every deck is led by a **Tavern Dweller**, a tavern regular you play *as*. The T
 
 - The Tavern Dweller **is the player**: your 30 life is the Tavern Dweller's life, and "attack a player" means attacking their Tavern Dweller.
 - The Tavern Dweller sits in the **Tavern Dweller zone** (public). In v0.1 it can't be removed from the game.
-- **Tavern Dweller Power**: each Tavern Dweller has a unique activated power, paid with mana and/or Gold like any activated ability (mana first, §5.2) 🔒. 🔒 It can be used **once each turn** (MTG "once each turn": once on your turn and once on each opponent's turn), at instant speed, through the Chain, so opponents can respond to it.
+- **Tavern Dweller Power**: each Tavern Dweller has a unique activated power, paid with mana and/or Gold like any activated ability (Gold first, §5.2) 🔒. 🔒 It can be used **once each turn** (MTG "once each turn": once on your turn and once on each opponent's turn), at instant speed, through the Chain, so opponents can respond to it.
 - **Passive**: 🟡 each Tavern Dweller has one always-on ability: a triggered ability, a static ability, or a cost change. It works from the Tavern Dweller zone.
 - 🔒 **Deck rule**: every deck has exactly one Tavern Dweller, and every card in it is from one of the Tavern Dweller's two factions or Neutral.
 - 🔒 The Tavern Dweller **never attacks or blocks**, and Equipment only goes on creatures. Combat is entirely about creatures.
@@ -310,6 +318,7 @@ Kept deliberately **small**. 🔒 Trample is the only damage-related core keywor
 ## Decision Log
 | Date | Decision |
 |---|---|
+| 2026-10-10 | **Replacement effects are in the engine** (§8.1, MTG 614–616): dying, damage, entering, drawing, gaining life and gaining Gold can be replaced. Self-replacement effects first, then oldest first; each applies once per event. MTG's "the affected player chooses the order" is not asked yet (noted as open). No card uses them yet except Keeper Z-00, whose counter now goes through them. |
 | 2026-10-10 | **"Choose" without "target" is chosen on resolution** (MTG 608.2d). Snik pays X on activation and chooses up to X other Goobers when the ability resolves, one at a time, and may stop early; a Goober that left in response just can't be chosen. |
 | 2026-10-10 | **New Powers for three Tavern Dwellers** that sims showed were barely used (cards/tavern_dwellers.md): **Mukk** (3) a creature you control with Trample fights a creature you don't control; **Sparkwrench** (2) attach up to one target Equipment you control to target creature you control, and if none became attached, it gets +1/+1 until end of turn; **Auditor Prime** (2) draw a card, activate only if you have 3 or more Gold (checked before paying, MTG "activate only if"). |
 | 2026-10-10 | **Runeterra-style mana is the Standard rules** (§5–6): a round pool (every player gains +1 max mana and refills when a round starts, mana lasts the round), unspent mana becomes Gold at the end of the round, **Gold cap 3**, spells and abilities **pay Gold first** (permanents mana only), the round leader rotates (A B, B A ...) and only the round leader may attack (attack token), summoning sickness stays. Gold first also settles RULES_REVIEW #6 (the sequencing trap). The old rules stay in the engine as `FormatConfig.Classic()`. **Cards for the cap of 3**: Velvet Embezzler draws at **3 or more Gold**; Compound Interest reads "If **3 or more Gold was spent to cast it**, draw three instead" (with Gold first, "if you have 3 Gold" after paying could never happen). |

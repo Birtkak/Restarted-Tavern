@@ -9,6 +9,15 @@ namespace RestartedTavern.Rules
     {
     }
 
+    /// <summary>A replacement effect changed an event (MTG 614). For logs.</summary>
+    public sealed class ReplacedEvent : GameEvent
+    {
+        public ReplacementEvent Kind;
+        public string SourceDefinitionId;
+        public PlayerId AffectedPlayer;
+        public override string ToString() => SourceDefinitionId + " replaces " + Kind + " (" + AffectedPlayer + ")";
+    }
+
     public sealed class GameStartedEvent : GameEvent
     {
         public PlayerId StartingPlayer;

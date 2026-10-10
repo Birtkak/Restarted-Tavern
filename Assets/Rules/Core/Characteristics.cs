@@ -179,16 +179,6 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
-    /// "Your creatures with N or more Health enter with a +1/+1 counter" (Keeper Z-00). Health is
-    /// checked as the creature would exist on the battlefield (MTG 614.12), so buffs count.
-    /// </summary>
-    public sealed class EntersWithCountersAbility : StaticAbility
-    {
-        public int MinHealth { get; set; }
-        public int Counters { get; set; } = 1;
-    }
-
-    /// <summary>
     /// "Your Gold cap is N" (Offshore Account, GAME_DESIGN §5.2). The cap is a per-player value that
     /// starts at the format's cap; when several effects set it, the newest wins (MTG timestamp order).
     /// See <see cref="GoldRules.Cap"/>.

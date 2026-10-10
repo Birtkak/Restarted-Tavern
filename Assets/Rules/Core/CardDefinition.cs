@@ -83,6 +83,10 @@ namespace RestartedTavern.Rules
         /// <summary>Activated abilities (MTG 602), including Equip and a Tavern Dweller's Power.</summary>
         public List<ActivatedAbility> Abilities { get; set; } = new List<ActivatedAbility>();
 
+        private bool? _hasReplacement;
+        /// <summary>Has a replacement effect among its statics (cached: definitions don't change once the database is built).</summary>
+        internal bool HasReplacement => _hasReplacement ?? (_hasReplacement = Statics.Exists(s => s is ReplacementAbility)).Value;
+
         public bool IsPermanent => Type != CardType.Instant && Type != CardType.Sorcery && Type != CardType.TavernDweller;
         public bool IsCreature => Type == CardType.Creature;
         public bool IsTavernDweller => Type == CardType.TavernDweller;

@@ -352,7 +352,7 @@ namespace RestartedTavern.Rules
                 if (i < 0) totals.Add((t, 1));
                 else totals[i] = (t, totals[i].amount + 1);
             }
-            foreach (var (t, amount) in totals) DealDamage(d.Source, t, amount, false);
+            foreach (var (t, amount) in totals) DealDamage(d.Source, t, amount, false, d.Player);
             if (S.Pending == null && !S.IsGameOver) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
         }
 

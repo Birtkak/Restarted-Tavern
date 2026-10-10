@@ -308,6 +308,7 @@ namespace RestartedTavern.Rules
             EndTemporaryControl();
             var beforeBuffsEnd = SnapshotRemainingHealth();
             S.UntilEndOfTurn.Clear();
+            S.Replacements.RemoveAll(r => r.UntilEndOfTurn);
             CapDamageAfterBuffsEnd(beforeBuffsEnd);
             if (S.Format.DamageWearsOff)
                 foreach (var c in S.AllPermanents()) c.Damage = 0;

@@ -45,6 +45,8 @@ namespace RestartedTavern.Rules
 
         public CombatState Combat { get; set; }
         public List<TemporaryModifier> UntilEndOfTurn { get; set; } = new List<TemporaryModifier>();
+        /// <summary>Replacement effects created by resolving spells and abilities (MTG 614). Statics aren't listed here.</summary>
+        public List<ActiveReplacement> Replacements { get; set; } = new List<ActiveReplacement>();
         /// <summary>"Gain control of target creature until end of turn": who gets it back in the cleanup step.</summary>
         public List<TemporaryControl> ControlUntilEndOfTurn { get; set; } = new List<TemporaryControl>();
         /// <summary>
@@ -167,6 +169,8 @@ namespace RestartedTavern.Rules
             s.Combat = Combat?.Clone();
             s.UntilEndOfTurn = new List<TemporaryModifier>(UntilEndOfTurn.Count);
             foreach (var m in UntilEndOfTurn) s.UntilEndOfTurn.Add(m.Clone());
+            s.Replacements = new List<ActiveReplacement>(Replacements.Count);
+            foreach (var r in Replacements) s.Replacements.Add(r.Clone());
             s.ControlUntilEndOfTurn = new List<TemporaryControl>(ControlUntilEndOfTurn.Count);
             foreach (var c in ControlUntilEndOfTurn) s.ControlUntilEndOfTurn.Add(c.Clone());
             s.UsesThisTurn = new Dictionary<string, int>(UsesThisTurn);
@@ -217,6 +221,7 @@ namespace RestartedTavern.Rules
                 AppendZone(sb, "dweller", p.TavernDwellerZone);
             }
             foreach (var item in Chain) sb.Append("chain ").Append(item).Append('\n');
+            foreach (var r in Replacements) sb.Append("replacement ").Append(r.SourceDefinitionId).Append(r.AffectedObject).Append('\n');
             return sb.ToString();
         }
 
