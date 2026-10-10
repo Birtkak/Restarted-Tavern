@@ -1,9 +1,8 @@
 {
-    "name": "RestartedTavern.Client",
-    "rootNamespace": "RestartedTavern.Client",
+    "name": "RestartedTavern.Client.Logic",
+    "rootNamespace": "RestartedTavern.Client.Logic",
     "references": [
-        "RestartedTavern.Rules",
-        "RestartedTavern.Client.Logic"
+        "RestartedTavern.Rules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,5 +12,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false
+    "noEngineReferences": true
 }

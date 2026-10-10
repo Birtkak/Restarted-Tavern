@@ -34,6 +34,8 @@ Restarted-Tavern/
 │  ├─ StreamingAssets/Cards/      card data: one JSON file per faction + tavern_dwellers.json (§3)
 │  ├─ StreamingAssets/Decks/      prototype_decks.json
 │  ├─ Client/                     RestartedTavern.Client.asmdef: DebugTable.cs (IMGUI debug table); Editor/ builds the scene and the exe
+│  │   ├─ Logic/                  RestartedTavern.Client.Logic.asmdef (noEngineReferences): session, snapshot, picker, combat stage (CLIENT_DESIGN §2)
+│  │   └─ Logic.Tests/            its EditMode tests
 │  └─ Scenes/                     DebugTable.unity
 └─ Server/  (later)               a .NET host that compiles the same Assets/Rules source files
 ```
@@ -154,7 +156,7 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 1. ✅ **Ruleset v0.1 and first set**: 5 factions × 20 cards, 10 Neutral cards, 10 Tavern Dwellers.
 2. ✅ **Rules engine prototype**: the Rules assembly with EditMode tests, playable through a minimal debug UI in Unity, with about 20 test cards (§7).
 3. 🚧 **Playtest** (paper or the debug UI): tune the Gold cap, the curve and the impact of permanent damage. *Bot simulations and the first findings are in [playtest/PLAYTEST.md](playtest/PLAYTEST.md); human playtests are next.*
-4. **Minimal visual client** in Unity (Windows build): hot-seat 1v1.
+4. 🚧 **Visual client** in Unity (Windows build): hot-seat 1v1 and vs. the bot. Direction and client logic: [CLIENT_DESIGN.md](CLIENT_DESIGN.md) (logic layer in `Assets/Client/Logic`, 2026-10-10); the table scene is next.
 5. ✅ Implement the full first set (120 cards) and a basic AI. *All v0.1 and v0.2 cards run in the engine (2026-10-09); GreedyBot plays them.*
 6. Later: multiplayer (3–4 players), singleton format, online play.
 
