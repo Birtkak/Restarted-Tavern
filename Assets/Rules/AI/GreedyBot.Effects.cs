@@ -274,6 +274,18 @@ namespace RestartedTavern.Rules.AI
                             : PumpValue(s, me, creature, ap.Power, ap.Health, Keyword.None);
                         break;
                     }
+                    case ChooseUpToXYourCreaturesEffect cu:
+                    {
+                        // The X best ones it could choose now (they're chosen on resolution).
+                        var best = s.GetPlayer(me).Battlefield
+                            .Where(c => c.Id != source && Db.Get(c.DefinitionId).IsCreature
+                                        && (cu.Subtype == null || Db.Get(c.DefinitionId).HasSubtype(cu.Subtype)))
+                            .Select(c => Db.Get(c.DefinitionId).Cost).OrderByDescending(cost => cost).Take(x).ToList();
+                        if (cu.Then.Any(e => e is CreateTokenCopiesEffect))
+                            foreach (int cost in best) v += 0.8 * (2 * cost + 1);
+                        if (best.Count < x) v -= 0.5 * (x - best.Count); // X paid for nothing
+                        break;
+                    }
                     case CreateTokenCopiesEffect _:
                         foreach (var t in targets)
                         {

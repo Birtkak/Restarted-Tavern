@@ -224,10 +224,15 @@ namespace RestartedTavern.Rules.Cards
                 "X, Tap: Choose up to X other Goobers you control. For each one, create a token copy of it. The copies gain Haste until end of turn.");
             snik.Abilities.Add(new ActivatedAbility
             {
+                // The Goobers are chosen on resolution (MTG 608.2d), not on activation (changed 2026-10-10).
                 HasX = true, TapCost = true,
-                XTargets = TargetSlot.Of(TargetSpec.CreatureYouControl, subtype: "Goober"),
-                TargetsExcludeSource = true,
-                Effects = { new CreateTokenCopiesEffect { GrantUntilEndOfTurn = Keyword.Haste } },
+                Effects =
+                {
+                    new ChooseUpToXYourCreaturesEffect
+                    {
+                        Subtype = "Goober", Then = { new CreateTokenCopiesEffect { GrantUntilEndOfTurn = Keyword.Haste } },
+                    },
+                },
                 Text = "X, Tap: Copy up to X other Goobers you control. The copies gain Haste until end of turn.",
             });
             yield return snik;

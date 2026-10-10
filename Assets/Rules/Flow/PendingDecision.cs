@@ -68,6 +68,13 @@ namespace RestartedTavern.Rules
         /// points all the damage is dealt at once.
         /// </summary>
         DivideDamage,
+        /// <summary>
+        /// "Choose up to N [objects]" during resolution (Snik, MTG 608.2d: choices without "target" are made on resolution).
+        /// Pick one at a time: ChooseTarget adds one of <see cref="PendingDecision.Choices"/>, ChooseTarget with no target
+        /// stops. After <see cref="PendingDecision.Count"/> picks (or none left) <see cref="PendingDecision.Then"/> runs once,
+        /// with the chosen objects as its targets (<see cref="PendingDecision.Assigned"/>).
+        /// </summary>
+        ChooseUpTo,
     }
 
     /// <summary>

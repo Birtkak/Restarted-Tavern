@@ -136,30 +136,78 @@ namespace RestartedTavern.Rules.Tests
         }
 
         [Test]
-        public void Snik_CopiesUpToXGoobers_PayingX()
+        public void Snik_PaysX_ThenChoosesUpToXGoobersOnResolution()
         {
             var g = TestGame.AtFirstMainPhase();
-            var snik = g.AddToBattlefield(g.Active, "snik");
-            var warchief = g.AddToBattlefield(g.Active, "goober_warchief");
-            g.AddToBattlefield(g.Active, Cards.CardPool.GooberToken);
-            g.AddToBattlefield(g.Active, Cards.CardPool.GooberToken);
-            g.AddToBattlefield(g.Active, "hired_sellsword"); // not a Goober
-            g.SetMana(g.Active, 2);
+            var me = g.Active;
+            var snik = g.AddToBattlefield(me, "snik");
+            var warchief = g.AddToBattlefield(me, "goober_warchief");
+            var token = g.AddToBattlefield(me, Cards.CardPool.GooberToken);
+            g.AddToBattlefield(me, Cards.CardPool.GooberToken);
+            g.AddToBattlefield(me, "hired_sellsword"); // not a Goober
+            g.SetMana(me, 2);
 
-            var options = g.Activations(g.Active, snik);
-            // Warchief 0-1 × tokens 0-2 (tokens are interchangeable), at least 1, at most X = 2 affordable.
-            Assert.AreEqual(4, options.Count);
-            Assert.IsTrue(options.All(a => a.X == a.Targets.Length && a.X >= 1 && a.X <= 2));
-            Assert.IsFalse(options.Any(a => a.Targets.Contains(Target.ForObject(snik.Id))), "other Goobers only");
-
-            g.Do(options.Single(a => a.X == 2 && a.Targets.Contains(Target.ForObject(warchief.Id))));
-            Assert.AreEqual(0, g.P(g.Active).Mana);
+            var options = g.Activations(me, snik);
+            Assert.AreEqual(new[] { 1, 2 }, options.Select(a => a.X).OrderBy(x => x).ToArray(), "X from 1 up to what can be paid");
+            Assert.IsTrue(options.All(a => a.Targets.Length == 0), "nothing is targeted (MTG 608.2d)");
+            g.Do(options.Single(a => a.X == 2));
+            Assert.AreEqual(0, g.P(me).Mana);
             Assert.IsTrue(snik.Tapped);
             g.PassRound();
-            var copies = g.P(g.Active).Battlefield.Where(c => c.IsToken && c.DefinitionId == "goober_warchief").ToList();
+
+            Assert.AreEqual(DecisionKind.ChooseUpTo, g.State.Pending.Kind);
+            var picks = g.Legal(me).Where(a => a.Target.HasValue).Select(a => a.Target.Value.Object).ToList();
+            Assert.AreEqual(3, picks.Count, "the other Goobers you control, not Snik or the Sellsword");
+            Assert.IsFalse(picks.Contains(snik.Id));
+            g.Do(PlayerAction.ChooseTarget(me, Target.ForObject(warchief.Id)));
+            Assert.AreEqual(DecisionKind.ChooseUpTo, g.State.Pending.Kind, "one more pick");
+            Assert.IsFalse(g.Legal(me).Any(a => a.Target == Target.ForObject(warchief.Id)), "each creature once");
+            g.Do(PlayerAction.ChooseTarget(me, Target.ForObject(token.Id)));
+            Assert.IsNull(g.State.Pending, "X picks made");
+
+            var copies = g.P(me).Battlefield.Where(c => c.IsToken && c.DefinitionId == "goober_warchief").ToList();
             Assert.AreEqual(1, copies.Count);
             Assert.IsTrue(g.Stats(copies[0]).Has(Keyword.Haste), "the copies gain Haste");
-            Assert.AreEqual(3, g.P(g.Active).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
+            Assert.AreEqual(3, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
+        }
+
+        [Test]
+        public void Snik_AGooberThatLeftInResponse_JustCantBeChosen()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            var snik = g.AddToBattlefield(me, "snik");
+            var warchief = g.AddToBattlefield(me, "goober_warchief");
+            var token = g.AddToBattlefield(me, Cards.CardPool.GooberToken);
+            g.SetMana(me, 2);
+            g.Do(g.Activations(me, snik).Single(a => a.X == 2));
+            g.P(me).Battlefield.Remove(warchief); // gone in response (test shortcut)
+            warchief.Zone = Zone.Graveyard;
+            g.PassRound();
+            // Only the token is left to choose: pick it, then the choice ends by itself.
+            Assert.AreEqual(DecisionKind.ChooseUpTo, g.State.Pending.Kind);
+            g.Do(PlayerAction.ChooseTarget(me, Target.ForObject(token.Id)));
+            Assert.IsNull(g.State.Pending);
+            Assert.AreEqual(2, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
+            Assert.AreEqual(0, g.P(me).Battlefield.Count(c => c.DefinitionId == "goober_warchief"));
+        }
+
+        [Test]
+        public void Snik_UpTo_CanStopEarly()
+        {
+            var g = TestGame.AtFirstMainPhase();
+            var me = g.Active;
+            var snik = g.AddToBattlefield(me, "snik");
+            var warchief = g.AddToBattlefield(me, "goober_warchief");
+            g.AddToBattlefield(me, Cards.CardPool.GooberToken);
+            g.SetMana(me, 2);
+            g.Do(g.Activations(me, snik).Single(a => a.X == 2));
+            g.PassRound();
+            g.Do(PlayerAction.ChooseTarget(me, Target.ForObject(warchief.Id)));
+            g.Do(new PlayerAction { Kind = ActionKind.ChooseTarget, Player = me }); // done
+            Assert.IsNull(g.State.Pending);
+            Assert.AreEqual(1, g.P(me).Battlefield.Count(c => c.IsToken && c.DefinitionId == "goober_warchief"));
+            Assert.AreEqual(1, g.P(me).Battlefield.Count(c => c.DefinitionId == Cards.CardPool.GooberToken));
         }
 
         [Test]

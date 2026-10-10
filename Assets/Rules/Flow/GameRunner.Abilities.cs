@@ -7,9 +7,6 @@ namespace RestartedTavern.Rules
     /// </summary>
     internal sealed partial class GameRunner
     {
-        /// <summary>Most choices listed for one "choose up to X" ability (Snik), to keep the action list small.</summary>
-        private const int MaxXChoices = 256;
-
         private static readonly List<TriggeredAbility> NoTriggers = new List<TriggeredAbility>();
 
         /// <summary>
@@ -101,20 +98,12 @@ namespace RestartedTavern.Rules
 
                 int generic = Costs.AbilityCost(S, Db, p.Id, ab);
                 var exclude = ab.TargetsExcludeSource ? source.Id : ObjectId.None;
-                List<Target[]> choices;
-                if (ab.XTargets != null)
-                {
-                    choices = EnumerateXTargetChoices(p, ab, generic, exclude);
-                }
-                else
-                {
-                    if (Payment.GoldNeeded(p, generic, true, ab.GoldCost) < 0) continue;
-                    choices = EnumerateTargetChoices(p.Id, ab.Targets, exclude);
-                }
+                if (Payment.GoldNeeded(p, generic, true, ab.GoldCost) < 0) continue;
+                var choices = EnumerateTargetChoices(p.Id, ab.Targets, exclude);
 
-                // "(X): ..." (Rampaging Titan): one action per X from 1 up to what can be paid.
+                // "(X): ..." (Rampaging Titan, Snik): one action per X from 1 up to what can be paid.
                 int maxX = 0;
-                if (ab.HasX && ab.XTargets == null)
+                if (ab.HasX)
                     while (Payment.GoldNeeded(p, generic + maxX + 1, true, ab.GoldCost) >= 0) maxX++;
                 foreach (var targets in choices)
                 {
@@ -122,12 +111,12 @@ namespace RestartedTavern.Rules
                     foreach (var sacrifice in sacrifices)
                     {
                         if (!sacrifice.IsNone && System.Array.IndexOf(targets, Target.ForObject(sacrifice)) >= 0) continue;
-                        if (ab.HasX && ab.XTargets == null)
+                        if (ab.HasX)
                         {
                             for (int x = 1; x <= maxX; x++) result.Add(PlayerAction.Activate(p.Id, source.Id, i, targets, x, sacrifice));
                             continue;
                         }
-                        result.Add(PlayerAction.Activate(p.Id, source.Id, i, targets, ab.XTargets != null ? targets.Length : 0, sacrifice));
+                        result.Add(PlayerAction.Activate(p.Id, source.Id, i, targets, 0, sacrifice));
                     }
                 }
             }
@@ -139,47 +128,6 @@ namespace RestartedTavern.Rules
             if (source.Zone != Zone.Battlefield || source.Tapped) return false;
             if (!Def(source).IsCreature) return true;
             return !source.SummoningSick || S.Format.NoSummoningSickness || Stats(source).Has(Keyword.Haste);
-        }
-
-        /// <summary>
-        /// "Choose up to X ..." (Snik): X = the number chosen, at least 1, and it must be payable.
-        /// The effect only cares about which cards are chosen, so objects with the same definition
-        /// are interchangeable: choices are listed per definition (the first ones in battlefield order).
-        /// </summary>
-        private List<Target[]> EnumerateXTargetChoices(PlayerState p, ActivatedAbility ab, int generic, ObjectId exclude)
-        {
-            var groups = new List<List<Target>>();
-            var groupDefs = new List<string>();
-            foreach (var t in EnumerateTargets(p.Id, ab.XTargets, exclude))
-            {
-                string defId = S.FindObject(t.Object)?.DefinitionId;
-                int g = groupDefs.IndexOf(defId);
-                if (g < 0) { groupDefs.Add(defId); groups.Add(new List<Target>()); g = groups.Count - 1; }
-                groups[g].Add(t);
-            }
-
-            var result = new List<Target[]>();
-            var chosen = new List<Target>();
-            Fill(0);
-            return result;
-
-            void Fill(int group)
-            {
-                if (result.Count >= MaxXChoices) return;
-                if (group == groups.Count)
-                {
-                    if (chosen.Count > 0 && Payment.GoldNeeded(p, generic + chosen.Count, true, ab.GoldCost) >= 0)
-                        result.Add(chosen.ToArray());
-                    return;
-                }
-                int before = chosen.Count;
-                for (int k = 0; k <= groups[group].Count; k++)
-                {
-                    if (k > 0) chosen.Add(groups[group][k - 1]);
-                    Fill(group + 1);
-                }
-                chosen.RemoveRange(before, chosen.Count - before);
-            }
         }
 
         // ------------------------------------------------------------------ activation
@@ -222,10 +170,7 @@ namespace RestartedTavern.Rules
                 Text = ab.Text,
                 IsTavernDwellerPower = ab.IsTavernDwellerPower,
             };
-            if (ab.XTargets != null)
-                for (int i = 0; i < a.Targets.Length; i++) item.TargetSlots.Add(ab.XTargets);
-            else
-                item.TargetSlots = ab.Targets;
+            item.TargetSlots = ab.Targets;
             item.Targets.AddRange(a.Targets);
             S.Chain.Add(item);
 
@@ -419,6 +364,41 @@ namespace RestartedTavern.Rules
                 Kind = DecisionKind.YesNo, Player = chooser, Then = then, Else = otherwise,
                 EffectController = controller, Source = source, SourceDefinitionId = sourceDefinitionId, Prompt = prompt,
             });
+
+        /// <summary>
+        /// "Choose up to <paramref name="count"/> of <paramref name="choices"/>" on resolution (DecisionKind.ChooseUpTo). Then
+        /// <paramref name="then"/> runs once with the chosen objects as targets. Nothing to choose: nothing happens.
+        /// </summary>
+        internal void AskChooseUpTo(PlayerId chooser, List<ObjectId> choices, int count, List<Effect> then,
+            PlayerId controller, ObjectId source, string sourceDefinitionId, string prompt)
+        {
+            if (choices.Count == 0 || count <= 0) return;
+            Enqueue(new PendingDecision
+            {
+                Kind = DecisionKind.ChooseUpTo, Player = chooser, Choices = choices, Count = count, Optional = true, Then = then,
+                Assigned = new List<Target>(), EffectController = controller, Source = source, SourceDefinitionId = sourceDefinitionId,
+                Prompt = prompt,
+            });
+        }
+
+        private void AnswerChooseUpTo(Target? target)
+        {
+            var d = S.Pending;
+            if (target.HasValue)
+            {
+                d.Assigned.Add(target.Value);
+                d.Choices.Remove(target.Value.Object);
+                if (d.Assigned.Count < d.Count && d.Choices.Count > 0) return; // the next pick
+            }
+            S.Pending = null;
+            if (d.Assigned.Count > 0)
+            {
+                var targets = new List<Target?>();
+                foreach (var t in d.Assigned) targets.Add(t);
+                RunEffects(d.Then, d.EffectController, d.Source, targets, sourceDefinitionId: d.SourceDefinitionId);
+            }
+            if (S.Pending == null && !S.IsGameOver) GivePriority(S.ResumePriorityTo ?? S.ActivePlayer);
+        }
 
         private void Enqueue(PendingDecision d)
         {

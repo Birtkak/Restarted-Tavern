@@ -191,7 +191,6 @@ text: "Armor 1. Arrival: Deal 1 damage to any creature."
 
 **Not yet implemented** (next steps; a ready-made prompt for the next session is in [handoff/NEXT_SESSION.md](handoff/NEXT_SESSION.md))
 - A Tavern Dweller zone that can be targeted or removed (v0.1: it can't), and Tavern Dwellers in multiplayer politics.
-- Snik copies by **target** (chosen on activation). Copying something that left in response uses nothing (MTG would use last known information).
 - Replacement effects, and filtering events by hidden information.
 - Loading card data from JSON (see §0.1).
 

@@ -70,6 +70,11 @@ namespace RestartedTavern.Rules.AI
                     return legal.First(a => a.Option == bid);
                 }
                 case DecisionKind.ChooseObject: return ChooseObject(s, me, legal);
+                case DecisionKind.ChooseUpTo:
+                    // Choosing more is always better for the "choose up to" effects we have (Snik's copies): the most valuable first.
+                    return legal.Where(a => a.Target.HasValue)
+                               .OrderByDescending(a => Worth(s, s.FindObject(a.Target.Value.Object))).FirstOrDefault()
+                           ?? legal[0];
                 case DecisionKind.YesNo:
                 {
                     // Our own "you may lose 2 life": only with life to spare. Someone else's offer (The Dealer): pay.

@@ -110,6 +110,8 @@ namespace RestartedTavern.Rules
 
         /// <summary>A yes/no question ("you may lose 2 life", "may give you 2 Gold"). Same rules as <see cref="AskChoice"/>.</summary>
         /// <summary>"Deal N damage divided as you choose among any number of creatures and/or opponents", one point at a time.</summary>
+        public void AskChooseUpTo(List<ObjectId> choices, int count, List<Effect> then, string prompt) =>
+            _runner.AskChooseUpTo(Controller, choices, count, then, Controller, Source, SourceDefinitionId, prompt);
         public void AskDivideDamage(int amount) => _runner.AskDivideDamage(Controller, Source, SourceDefinitionId, amount);
 
         public void AskYesNo(PlayerId chooser, List<Effect> then, List<Effect> otherwise, string prompt) =>

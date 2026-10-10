@@ -265,6 +265,10 @@ namespace RestartedTavern.Rules
                 case ActionKind.ChooseTarget:
                     if (state.Pending?.Kind == DecisionKind.ChooseObject)
                         return a.Target.HasValue ? state.Pending.Prompt + ": " + Name(state, a.Target.Value) : "Choose nothing";
+                    if (state.Pending?.Kind == DecisionKind.ChooseUpTo)
+                        return a.Target.HasValue
+                            ? state.Pending.Prompt + ": " + Name(state, a.Target.Value) + "  (" + (state.Pending.Assigned.Count + 1) + " of up to " + state.Pending.Count + ")"
+                            : "Done choosing (" + state.Pending.Assigned.Count + " chosen)";
                     if (state.Pending?.Kind == DecisionKind.DivideDamage && a.Target.HasValue)
                         return "Deal 1 damage to " + Name(state, a.Target.Value) + "  (" + (state.Pending.Assigned.Count + 1) + " of " + state.Pending.Count + ")";
                     if (state.Pending?.Kind == DecisionKind.KeepLegendary)

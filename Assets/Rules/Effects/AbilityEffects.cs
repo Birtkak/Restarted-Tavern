@@ -62,6 +62,31 @@ namespace RestartedTavern.Rules
     }
 
     /// <summary>
+    /// "Choose up to X other [subtype] you control. [Then]" (Snik). The choice is made on resolution (MTG 608.2d: it doesn't
+    /// target), so a creature that left in response simply can't be chosen. Then runs once with the chosen creatures as
+    /// its targets.
+    /// </summary>
+    public sealed class ChooseUpToXYourCreaturesEffect : Effect
+    {
+        public string Subtype { get; set; }
+        public bool OthersOnly { get; set; } = true;
+        public List<Effect> Then { get; set; } = new List<Effect>();
+
+        public override void Resolve(EffectContext ctx)
+        {
+            var choices = new List<ObjectId>();
+            foreach (var c in ctx.State.GetPlayer(ctx.Controller).Battlefield)
+            {
+                var def = ctx.Cards.Get(c.DefinitionId);
+                if (!def.IsCreature || (OthersOnly && c.Id == ctx.Source)) continue;
+                if (Subtype != null && !def.HasSubtype(Subtype)) continue;
+                choices.Add(c.Id);
+            }
+            ctx.AskChooseUpTo(choices, ctx.X, Then, "Choose" + (Subtype != null ? " a " + Subtype : " a creature"));
+        }
+    }
+
+    /// <summary>
     /// "For each chosen creature, create a token copy of it. The copies gain Haste until end of
     /// turn." (Snik). Copies take the printed card (MTG 707.2): no damage, counters or buffs.
     /// </summary>

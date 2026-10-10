@@ -13,7 +13,7 @@ namespace RestartedTavern.Rules
     {
         /// <summary>Generic cost: mana first, then Gold (§5.2).</summary>
         public int Cost { get; set; }
-        /// <summary>"X, ...": X is added to the generic cost. See <see cref="XTargets"/>.</summary>
+        /// <summary>"X, ...": X is added to the generic cost, chosen on activation (one action per payable X).</summary>
         public bool HasX { get; set; }
         /// <summary>"Pay N Gold": paid only with Gold (decided 2026-10-09).</summary>
         public int GoldCost { get; set; }
@@ -38,11 +38,6 @@ namespace RestartedTavern.Rules
         public List<TargetSlot> Targets { get; set; } = new List<TargetSlot>();
         /// <summary>The source can't be one of its own targets.</summary>
         public bool TargetsExcludeSource { get; set; }
-        /// <summary>
-        /// "Choose up to X [slot]" (Snik): X is the number of targets chosen, from 1 up to what you
-        /// can pay. Paying for more X than you choose does nothing, so it isn't offered.
-        /// </summary>
-        public TargetSlot XTargets { get; set; }
         /// <summary>Extra legality check for a whole target combination (e.g. "another creature").</summary>
         public Func<GameState, CardInstance, Target[], bool> TargetsAllowed { get; set; }
 

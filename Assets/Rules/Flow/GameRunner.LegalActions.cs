@@ -84,6 +84,11 @@ namespace RestartedTavern.Rules
                     if (S.Pending.Optional) result.Add(new PlayerAction { Kind = ActionKind.ChooseTarget, Player = player });
                     break;
 
+                case DecisionKind.ChooseUpTo:
+                    foreach (var id in S.Pending.Choices) result.Add(PlayerAction.ChooseTarget(player, Target.ForObject(id)));
+                    result.Add(new PlayerAction { Kind = ActionKind.ChooseTarget, Player = player }); // stop: "up to"
+                    break;
+
                 case DecisionKind.YesNo:
                     result.Add(PlayerAction.ChooseOption(player, 0));
                     result.Add(PlayerAction.ChooseOption(player, 1));

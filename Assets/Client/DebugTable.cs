@@ -514,6 +514,8 @@ namespace RestartedTavern.Client
                     return "Legendary rule: keep one " + _text.Name(_state, d.Choices[0]) + ", the others go to the graveyard";
                 case DecisionKind.AssignCombatDamage:
                     return "divide " + _text.Name(_state, d.Card) + "'s " + d.Count + " combat damage";
+                case DecisionKind.ChooseUpTo:
+                    return d.Prompt + ", up to " + d.Count + " (" + _text.Name(d.SourceDefinitionId) + "): " + d.Assigned.Count + " chosen so far";
                 case DecisionKind.DivideDamage:
                     return "divide " + d.Count + " damage from " + _text.Name(d.SourceDefinitionId) + ": " + d.Assigned.Count + " assigned so far";
                 case DecisionKind.OrderTriggers:
