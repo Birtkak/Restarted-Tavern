@@ -165,7 +165,7 @@ engine's **building blocks**: effects (`Assets/Rules/Effects`, e.g. `DealDamageE
 ## 6. Open Technical Questions ❓
 - Card art pipeline and card frame rendering.
 - AI approach for vs.-AI play (rule-based first? Monte Carlo search, which works because the engine is deterministic?).
-- CI: running Unity tests on GitHub Actions needs a Unity license setup (GameCI). Decide when the prototype has tests worth guarding.
+- CI: GitHub Actions runs the rules tests without Unity (`Tools/RulesTests`, .NET 8 + NUnit, `.github/workflows/dotnet.yml`) and builds SimRunner on Windows with a short simulation smoke test, uploading it as an artifact (`dotnet-desktop.yml`). Running the Unity tests themselves (client logic, the scene) would need a Unity license setup (GameCI).
 - Online (later): hosting, and how matchmaking works.
 
 ---
