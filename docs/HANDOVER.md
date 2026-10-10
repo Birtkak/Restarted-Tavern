@@ -26,11 +26,11 @@ creatures and Gold (banked unspent mana).
 - [x] Sound effects (v2: smooth, LoR-style), sound settings, sound board, sound checking tools
 - [x] **Commit** the sound work (`edbd840`)
 - [x] **Rewrite the GitHub README** (§2.1) so it shows where the game is now
-- [ ] **Push** `main` to GitHub (github.com/Birtkak/Restarted-Tavern, public)
-- [ ] **Build**: Unity → **Restarted Tavern → Build Windows** (or headless, DEVELOPMENT §7) → `Builds/Table/`
-- [ ] **Zip**: `python Tools/Release/make_release_zip.py v1.0` → `Builds/RestartedTavern-v1.0-win64.zip` (~43 MB; your
+- [x] **Push** `main` to GitHub (github.com/Birtkak/Restarted-Tavern, public)
+- [x] **Build**: Unity → **Restarted Tavern → Build Windows** (or headless, DEVELOPMENT §7) → `Builds/Table/`
+- [x] **Zip**: `python Tools/Release/make_release_zip.py v1.0` → `Builds/RestartedTavern-v1.0-win64.zip` (~43 MB; your
       own BugReports/ and Playtests/ are left out)
-- [ ] **Release** on GitHub, so friends don't need Unity:
+- [x] **Release** on GitHub, so friends don't need Unity:
       ```
       gh release create v1.0 Builds/RestartedTavern-v1.0-win64.zip --title "Restarted Tavern v1.0" --notes-file docs/RELEASE_NOTES.md
       ```
